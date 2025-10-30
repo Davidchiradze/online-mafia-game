@@ -1,122 +1,131 @@
 name: Online Mafia Game
 description: |
-  A real-time, role-based Mafia game played online via video and voice.
-  Players join a table, are assigned roles (Mafia, Don, Detective, Citizen), and go through phases including discussion, voting, and elimination until win conditions are met.
+A real-time, role-based Mafia game played online via video and voice.
+Players join a table, are assigned roles (Mafia, Don, Detective, Citizen), and go through phases including discussion, voting, and elimination until win conditions are met.
 
 goals:
-  - Implement the entire game using a fullstack Next.js app (frontend + backend)
-  - Use Socket.IO for real-time game and player state updates
-  - Use WebRTC for video/audio communication (integrated via Daily API)
-  - Maintain centralized game state and enforce role-based visibility
-  - Allow host control of game flow
-  - Use Redis for all real-time updates and inter-server communication
-  - Build clean, scalable and testable architecture for game server logic
-  - MVP should support 10 players per room with basic role flow
+
+- Implement the entire game using a fullstack Next.js app (frontend + backend)
+- Use Socket.IO for real-time game and player state updates
+- Use WebRTC for video/audio communication (integrated via LiveKit)
+- Maintain centralized game state and enforce role-based visibility
+- Allow host control of game flow
+- Use Redis for all real-time updates and inter-server communication
+- Build clean, scalable and testable architecture for game server logic
+- MVP should support 10 players per room with basic role flow
 
 stack:
-  frontend:
-    framework: Next.js (React-based, App Router preferred)
-    styling: TailwindCSS + shadcn/ui
-    communication: Socket.IO client
-    video: Daily (WebRTC API for live video/audio, camera control, and connection events)
-  backend:
-    framework: Next.js API routes
-    real-time: Socket.IO server (custom server setup)
-    state management: In-memory game manager synced via Redis
-    redis: Redis Pub/Sub for broadcasting game state updates across all connected clients
-    database: Supabase for storing game data and user information
-    deployment: Vercel for frontend and crud operations, Redis for real-time updates
+frontend:
+framework: Next.js (React-based, App Router preferred)
+styling: TailwindCSS + shadcn/ui
+communication: Socket.IO client
+video: LiveKit (WebRTC API for live video/audio, camera control, and connection events)
+backend:
+framework: Next.js API routes
+real-time: Socket.IO server (custom server setup)
+state management: In-memory game manager synced via Redis
+redis: Redis Pub/Sub for broadcasting game state updates across all connected clients
+database: Supabase for storing game data and user information
+deployment: Vercel for frontend and crud operations, Redis for real-time updates
 
 rules:
-  - Game state should always be controlled server-side; clients never own game logic
-  - Redis must be used to broadcast real-time updates between backend instances
-  - Role information must only be sent to authorized clients (e.g., only mafia see other mafia)
-  - Do not hard-code role logic in frontend — everything must go through socket events
-  - Host controls should be privileged — only one player per room can trigger state transitions
-  - Game phase transitions must follow a strict order defined in a centralized state machine
-  - Use TypeScript throughout, with strict types for GameState, Player, Role, and Phases
-  - Avoid prompts asking what framework to use — always assume fullstack Next.js
-  - Prefer minimal dependencies and lightweight libraries unless essential
-  - Prioritize user experience — avoid unnecessary UI refreshes, ensure smooth real-time updates
-  - Daily must handle all video streaming, camera/microphone permissions, and connection loss detection
-  - Video/audio control (mute, hide, show) must be role and phase-aware, driven by server-side events
+
+- Game state should always be controlled server-side; clients never own game logic
+- Redis must be used to broadcast real-time updates between backend instances
+- Role information must only be sent to authorized clients (e.g., only mafia see other mafia)
+- Do not hard-code role logic in frontend — everything must go through socket events
+- Host controls should be privileged — only one player per room can trigger state transitions
+- Game phase transitions must follow a strict order defined in a centralized state machine
+- Use TypeScript throughout, with strict types for GameState, Player, Role, and Phases
+- Avoid prompts asking what framework to use — always assume fullstack Next.js
+- Prefer minimal dependencies and lightweight libraries unless essential
+- Prioritize user experience — avoid unnecessary UI refreshes, ensure smooth real-time updates
+- LiveKit must handle all video streaming, camera/microphone permissions, and connection loss detection
+- Video/audio control (mute, hide, show) must be role and phase-aware, driven by server-side events
 
 structure:
-  - /app (App Router pages)
-    - /lobby (List & join tables)
-    - /game/[tableId] (Game room with video & controls)
-  - /lib
-    - /socket (Socket.io client + hooks)
-    - /video/daily.ts (Daily client integration and helper hooks)
-    - /game/logic.ts (State machine transitions)
-    - /game/types.ts (Shared types)
-  - /pages/api/socket.ts (WebSocket server init)
-  - /server/gameManager.ts (Holds game sessions)
-  - /server/transitions.ts (Game phase control)
-  - /server/redis.ts (Redis connection & pub/sub handling)
-  - /components
-    - /video
-    - /modals
-    - /host-controls
-    - /player-grid
-    - /chat
+
+- /app (App Router pages)
+  - /lobby (List & join tables)
+  - /game/[tableId] (Game room with video & controls)
+- /lib
+  - /socket (Socket.io client + hooks)
+  - /video/livekit.ts (LiveKit client integration and helper hooks)
+  - /game/logic.ts (State machine transitions)
+  - /game/types.ts (Shared types)
+- /pages/api/socket.ts (WebSocket server init)
+- /server/gameManager.ts (Holds game sessions)
+- /server/transitions.ts (Game phase control)
+- /server/redis.ts (Redis connection & pub/sub handling)
+- /components
+  - /video
+  - /modals
+  - /host-controls
+  - /player-grid
+  - /chat
 
 inspirations:
-  - Use structure similar to TownHall / Gather Town-like apps
-  - Think of the game as a multiplayer turn-based room
-  - UI like Discord call + logic of Avalon / Mafia games
-  - Use shadcn/ui for components
-  - Use TailwindCSS for styling
-  - Use Socket.IO for real-time communication
-  - Use Daily for video/audio streaming
-  - Use Redis for real-time updates
-  - Use Supabase for database
+
+- Use structure similar to TownHall / Gather Town-like apps
+- Think of the game as a multiplayer turn-based room
+- UI like Discord call + logic of Avalon / Mafia games
+- Use shadcn/ui for components
+- Use TailwindCSS for styling
+- Use Socket.IO for real-time communication
+- Use LiveKit for video/audio streaming
+- Use Redis for real-time updates
+- Use Supabase for database
 
 mvp:
-  - Join lobby → Create/join table → Assign roles → Start game → Handle phases:
-      - Mafia meets
-      - Don check
-      - Detective check
-      - Day phase (talking)
-      - Voting
-      - Kill / no kill
-      - Repeat
-  - End game when win condition is met
 
-  - Daily integration for:
-      - Joining/leaving video rooms
-      - Camera/microphone toggling
-      - Detecting participant connection loss
-      - Role-based visibility control (e.g., mafia see mafia only at planning phase, at night no one can see each other)
+- Join lobby → Create/join table → Assign roles → Start game → Handle phases:
+  - Mafia meets
+  - Don check
+  - Detective check
+  - Day phase (talking)
+  - Voting
+  - Kill / no kill
+  - Repeat
+- End game when win condition is met
 
-  - Redis integration for:
-      - Real-time game state sync across all players
-      - Reliable voting updates
-      - Phase transitions broadcast
-      - Connection tracking and reconnection handling
+- LiveKit integration for:
+
+  - Joining/leaving video rooms
+  - Camera/microphone toggling
+  - Detecting participant connection loss
+  - Role-based visibility control (e.g., mafia see mafia only at planning phase, at night no one can see each other)
+
+- Redis integration for:
+  - Real-time game state sync across all players
+  - Reliable voting updates
+  - Phase transitions broadcast
+  - Connection tracking and reconnection handling
 
 Code structure and architecture:
-  - Always follow component-based architecture. Break down large UIs into small, reusable components.
-  - Use hooks (`useGameState`, `useSocket`, `useVideo`, etc.) for encapsulating reusable logic.
-  - Keep utility functions in `/lib/utils` — never mix logic inside components.
-  - Every complex feature (voting, roles, phases) should have its own isolated module with clear TypeScript types.
-  - Avoid any “magic strings” — define constants for roles, events, and phases in `/lib/constants`.
-  - Use server-side validation for all client events (never trust the client state).
-  - Use `zod` or similar schema validation for Socket events and API payloads.
-  - Organize Socket.IO events by namespace (e.g., `/lobby`, `/game/[tableId]`).
 
-  ## Reusability and scalability
-  - Components must be flexible and configurable via props (avoid hardcoding logic/UI).
-  - Reusable UI primitives (buttons, timers, cards) should be under `/components/ui`.
-  - Use composition over inheritance — e.g., `PlayerCard` should receive behavior props like `onMute`, `onVote`, `onSelect`.
-  - Keep game logic in pure functions — no side effects outside hooks or Socket handlers.
-  - Reuse game flow utilities (phase transitions, timers, validation) server-side and client-side via shared `/lib/game` code.
-  - Prefer TypeScript `enum` or discriminated unions for role and phase definitions.
+- Always follow component-based architecture. Break down large UIs into small, reusable components.
+- Use hooks (`useGameState`, `useSocket`, `useVideo`, etc.) for encapsulating reusable logic.
+- Keep utility functions in `/lib/utils` — never mix logic inside components.
+- Every complex feature (voting, roles, phases) should have its own isolated module with clear TypeScript types.
+- Avoid any “magic strings” — define constants for roles, events, and phases in `/lib/constants`.
+- Use server-side validation for all client events (never trust the client state).
+- Use `zod` or similar schema validation for Socket events and API payloads.
+- Organize Socket.IO events by namespace (e.g., `/lobby`, `/game/[tableId]`).
 
-  ## React best practices
-  - Use React hooks and avoid class components.
-  - Maintain clean separation: presentation (UI) vs logic (hooks/state).
-  - Use Redux Toolkit store for global state (e.g., `useGameStore`, `useUserStore`).
-  - Avoid prop drilling — prefer context or Redux toolkit selectors.
-  - Use memoization (`useMemo`, `useCallback`) for performance-critical UI updates.
-  - Add clear JSDoc comments above all major components, hooks, and utilities.
+## Reusability and scalability
+
+- Components must be flexible and configurable via props (avoid hardcoding logic/UI).
+- Reusable UI primitives (buttons, timers, cards) should be under `/components/ui`.
+- Use composition over inheritance — e.g., `PlayerCard` should receive behavior props like `onMute`, `onVote`, `onSelect`.
+- Keep game logic in pure functions — no side effects outside hooks or Socket handlers.
+- Reuse game flow utilities (phase transitions, timers, validation) server-side and client-side via shared `/lib/game` code.
+- Prefer TypeScript `enum` or discriminated unions for role and phase definitions.
+
+## React best practices
+
+- Use React hooks and avoid class components.
+- Maintain clean separation: presentation (UI) vs logic (hooks/state).
+- Use Redux Toolkit store for global state (e.g., `useGameStore`, `useUserStore`).
+- Avoid prop drilling — prefer context or Redux toolkit selectors.
+- Use memoization (`useMemo`, `useCallback`) for performance-critical UI updates.
+- Add clear JSDoc comments above all major components, hooks, and utilities.

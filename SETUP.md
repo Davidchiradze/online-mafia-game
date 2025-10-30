@@ -78,7 +78,7 @@ After setting up authentication, the next features to implement are:
 
 1. **Game Management**: Create and join games
 2. **Real-time Updates**: Socket.IO integration
-3. **Video Chat**: Daily API integration
+3. **Video Chat**: LiveKit integration
 4. **Game Logic**: Mafia game state machine
 5. **Redis Integration**: Real-time game state sync
 
@@ -94,6 +94,7 @@ After setting up authentication, the next features to implement are:
 ### Getting Help
 
 If you encounter issues:
+
 1. Check the browser console for errors
 2. Verify Supabase project settings
 3. Ensure all environment variables are set correctly

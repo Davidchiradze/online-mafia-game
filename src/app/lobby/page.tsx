@@ -9,6 +9,10 @@ import GameTable from "@/components/game/GameTable";
 import CreateGameModal from "@/components/modals/CreateGameModal";
 import { GameSession } from "@/types/game/type";
 import { fetchAllGameSessions, requestJoin } from "@/lib/gameSession/actions";
+import {
+  createLivekitRoom,
+  generateLivekitAccessToken,
+} from "@/lib/liveKit/actions";
 export default function LobbyPage() {
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [loading, setLoading] = useState(true);
@@ -40,9 +44,12 @@ export default function LobbyPage() {
     router.push("/auth");
   };
 
-  const handleCreated = (session: GameSession) => {
+  const handleCreated = async (session: GameSession) => {
     setSessions((prev) => [session, ...prev]);
-    router.push(`/game/${session.id}`);
+    await createLivekitRoom(session.id);
+    const token = await generateLivekitAccessToken(session.id, user?.id || "");
+
+    router.push(`/game/${session.id}?token=${token}`);
   };
 
   const handleGameRowClick = async (session: GameSession) => {
