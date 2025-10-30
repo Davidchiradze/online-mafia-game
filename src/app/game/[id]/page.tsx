@@ -1,49 +1,24 @@
-"use client";
 import Link from "next/link";
-import { useEffect, useState, use as usePromise } from "react";
-import { createClient } from "@/lib/supabase/client";
-import {
-  fetchGameSessionById,
-  onMyJoinRequestStatus,
-} from "@/lib/gameSession/actions";
-import { JoinRequest } from "@/types/game/type";
-import JoinRequestsDrawer from "@/components/host-controls/JoinRequestsDrawer";
+import { createClient } from "@/lib/supabase/server";
+import { fetchGameSessionById } from "@/lib/gameSession/actions";
+import { Suspense } from "react";
+import HostView from "@/components/game/HostView";
+import GuestView from "@/components/game/GuestView";
 
-type Props = {
+type PageProps = {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
-export default function GamePage({ params }: Props) {
-  const { id } = usePromise(params);
-  const supabase = createClient();
-  const [loading, setLoading] = useState(true);
-  const [isHost, setIsHost] = useState(false);
-  const [myStatus, setMyStatus] = useState<JoinRequest["status"] | null>(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
+export default async function GamePage({ params }: PageProps) {
+  const { id } = await params;
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const userId = userData.user?.id || null;
 
-  useEffect(() => {
-    let unsubMy: (() => void) | null = null;
-    const init = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
-      const sessionRes = await fetchGameSessionById(id);
-      if (!sessionRes.ok) return;
-      const host = sessionRes.data.host_id === user.id;
-      setIsHost(host);
-      if (!host) {
-        unsubMy = onMyJoinRequestStatus(id, user.id, (status) =>
-          setMyStatus(status)
-        );
-      }
-      setLoading(false);
-    };
-    init();
-    return () => {
-      if (unsubMy) unsubMy();
-    };
-  }, [id, supabase.auth]);
+  const sessionRes = await fetchGameSessionById(id);
+  const game = sessionRes.ok ? sessionRes.data : null;
+  const isHost = !!(userId && game && game.host_id === userId);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
@@ -76,46 +51,16 @@ export default function GamePage({ params }: Props) {
               </div>
             </div>
           </div>
-          {loading ? (
+          {!userId || !game ? (
             <div className="text-center text-gray-600 dark:text-gray-400">
               Loading...
             </div>
           ) : isHost ? (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-200 dark:border-gray-700 h-[480px]">
-                <button
-                  onClick={() => setDrawerOpen(true)}
-                  className="px-4 py-2 rounded-md bg-blue-600 text-white"
-                >
-                  Manage Join Requests
-                </button>
-              </div>
-              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-200 dark:border-gray-700 h-[480px]"></div>
-              <JoinRequestsDrawer
-                gameId={id}
-                open={drawerOpen}
-                onClose={() => setDrawerOpen(false)}
-              />
-            </div>
-          ) : myStatus !== "accepted" ? (
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-200 dark:border-gray-700">
-              <div className="text-gray-900 dark:text-white text-lg font-semibold mb-2">
-                Waiting for host approval
-              </div>
-              <div className="text-gray-600 dark:text-gray-400">
-                You will join automatically once approved.
-              </div>
-              {myStatus === "rejected" ? (
-                <div className="mt-4 text-red-600">
-                  Your request was rejected.
-                </div>
-              ) : null}
-            </div>
+            <HostView gameId={id} />
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-200 dark:border-gray-700 h-[480px]"></div>
-              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-200 dark:border-gray-700 h-[480px]"></div>
-            </div>
+            <Suspense>
+              <GuestView gameId={id} userId={userId} />
+            </Suspense>
           )}
         </div>
       </main>

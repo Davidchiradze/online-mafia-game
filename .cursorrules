@@ -75,6 +75,8 @@ inspirations:
 - Use LiveKit for video/audio streaming
 - Use Redis for real-time updates
 - Use Supabase for database
+- Use supabase database.types.ts to type anything that comes/ goes into database, avoid hardcoded types as much as we can
+- run npx tsc after every change, make sure we don't have any issues,if we do fix those
 
 mvp:
 

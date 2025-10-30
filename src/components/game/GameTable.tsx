@@ -3,8 +3,6 @@
 import { useMemo } from "react";
 import { GameSession } from "@/types/game/type";
 import {
-  GameStatus,
-  GameType,
   GAME_STATUS_LABEL,
   GAME_TYPE_LABEL,
   GAME_TYPE_MAX_PLAYER_NUMBER,
@@ -15,11 +13,11 @@ type Props = {
   onRowClick?: (session: GameSession) => void;
 };
 
-function StatusBadge({ status }: { status: GameStatus }) {
+function StatusBadge({ status }: { status: GameSession["game_status"] }) {
   const classes = useMemo(() => {
-    if (status === GameStatus.NotStarted)
+    if (status === "not_started")
       return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200";
-    if (status === GameStatus.Playing)
+    if (status === "playing")
       return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300";
     return "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300";
   }, [status]);

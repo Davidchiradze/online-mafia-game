@@ -1,23 +1,24 @@
-import { GameStatus, GameType } from "@/lib/constants/game";
+import { Tables } from "@/db/supabase/database.types";
 
-export type GameSession = {
-  id: string;
-  name: string;
-  host_id: string;
-  game_type: GameType;
-  game_status: GameStatus;
-  max_players: number;
-  current_players: number;
-  created_at: string;
-  updated_at: string;
-};
+export type DbGame = Tables<"games">;
+export type DbJoinRequest = Tables<"join_requests">;
 
-export type JoinRequest = {
-  id: string;
-  game_id: string;
-  requester_id: string;
-  requester_nickname: string;
-  status: "pending" | "accepted" | "rejected";
-  created_at: string;
-  updated_at: string;
+export type GameSession = Pick<
+  DbGame,
+  | "id"
+  | "name"
+  | "host_id"
+  | "game_type"
+  | "game_status"
+  | "max_players"
+  | "current_players"
+  | "created_at"
+  | "updated_at"
+>;
+
+export type JoinRequest = Pick<
+  DbJoinRequest,
+  "id" | "game_id" | "requester_id" | "status" | "created_at" | "updated_at"
+> & {
+  requester_nickname?: string;
 };

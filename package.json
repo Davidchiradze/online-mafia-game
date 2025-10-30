@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "supabase:gen-types-hosted": "mkdir -p src/db/supabase && supabase gen types typescript --project-id \"vqtggmnwewombbqbrgvu\" > src/db/supabase/database.types.ts",
+    "supabase:gen-types-hosted:npx": "mkdir -p src/db/supabase && npx --yes --package=supabase supabase gen types typescript --project-id \"vqtggmnwewombbqbrgvu\" > src/db/supabase/database.types.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
@@ -37,6 +39,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.4.6",
+    "supabase": "^2.54.11",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

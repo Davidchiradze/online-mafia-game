@@ -1,12 +1,12 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Drawer from "@/components/ui/Drawer";
 import {
   acceptJoinRequest,
   fetchPendingJoinRequests,
-  onPendingJoinRequests,
   rejectJoinRequest,
 } from "@/lib/gameSession/actions";
+import { usePendingJoinRequests } from "@/hooks/useJoinRequests";
 import { JoinRequest } from "@/types/game/type";
 
 type Props = {
@@ -20,27 +20,29 @@ export default function JoinRequestsDrawer({ gameId, open, onClose }: Props) {
 
   useEffect(() => {
     if (!open) return;
-    let unsub: (() => void) | null = null;
     const init = async () => {
       const res = await fetchPendingJoinRequests(gameId);
       if (res.ok) setPending(res.data);
-      unsub = onPendingJoinRequests(gameId, (event, req) => {
-        if (event === "insert") setPending((p) => [req, ...p]);
-        else if (event === "update")
-          setPending((p) =>
-            p
-              .map((r) => (r.id === req.id ? req : r))
-              .filter((r) => r.status === "pending")
-          );
-        else if (event === "delete")
-          setPending((p) => p.filter((r) => r.id !== req.id));
-      });
     };
     init();
-    return () => {
-      if (unsub) unsub();
-    };
   }, [gameId, open]);
+
+  const handlePendingEvent = useCallback(
+    (event: "insert" | "update" | "delete", req: JoinRequest) => {
+      if (event === "insert") setPending((p) => [req, ...p]);
+      else if (event === "update")
+        setPending((p) =>
+          p
+            .map((r) => (r.id === req.id ? req : r))
+            .filter((r) => r.status === "pending")
+        );
+      else if (event === "delete")
+        setPending((p) => p.filter((r) => r.id !== req.id));
+    },
+    []
+  );
+
+  usePendingJoinRequests(gameId, handlePendingEvent, open);
 
   const approve = async (id: string) => {
     await acceptJoinRequest(id);

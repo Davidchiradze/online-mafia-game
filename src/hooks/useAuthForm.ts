@@ -20,7 +20,7 @@ export function useAuthForm(mode: Mode) {
     [mode]
   );
   const form = useForm<SignInFormData | SignUpFormData>({
-    resolver: zodResolver(schema as any),
+    resolver: zodResolver(schema),
     mode: "onChange",
     reValidateMode: "onChange",
     criteriaMode: "all",
@@ -34,10 +34,22 @@ export function useAuthForm(mode: Mode) {
     setServerError("");
     if (mode === "signup") {
       const res = await signUpAction(values as SignUpFormData);
-      if (res && "success" in res && !res.success) setServerError(res.error);
+      if (res && "success" in res && !res.success) {
+        const message =
+          ("message" in res && (res as { message: string }).message) ||
+          ("error" in res && (res as { error: string }).error) ||
+          "Something went wrong";
+        setServerError(message);
+      }
     } else {
       const res = await signInAction(values as SignInFormData);
-      if (res && "success" in res && !res.success) setServerError(res.error);
+      if (res && "success" in res && !res.success) {
+        const message =
+          ("message" in res && (res as { message: string }).message) ||
+          ("error" in res && (res as { error: string }).error) ||
+          "Invalid credentials";
+        setServerError(message);
+      }
     }
   }
 

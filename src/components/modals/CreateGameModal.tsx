@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { GameType, GAME_TYPE_LABEL } from "@/lib/constants/game";
+import { GAME_TYPES, GAME_TYPE_LABEL } from "@/lib/constants/game";
 import Modal from "@/components/ui/Modal";
 import { createGameSession } from "@/lib/gameSession/actions";
 import { GameSession } from "@/types/game/type";
@@ -14,7 +14,7 @@ type Props = {
 
 export default function CreateGameModal({ open, onClose, onCreated }: Props) {
   const [name, setName] = useState("");
-  const [type, setType] = useState<GameType>(GameType.Traditional);
+  const [type, setType] = useState<(typeof GAME_TYPES)[number]>("traditional");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const canCreate = useMemo(() => name.trim().length > 0, [name]);
@@ -33,7 +33,7 @@ export default function CreateGameModal({ open, onClose, onCreated }: Props) {
     }
     onCreated?.(res.data);
     setName("");
-    setType(GameType.Traditional);
+    setType("traditional");
     setLoading(false);
     onClose();
   };
@@ -83,18 +83,14 @@ export default function CreateGameModal({ open, onClose, onCreated }: Props) {
           </label>
           <select
             value={type}
-            onChange={(e) => setType(e.target.value as GameType)}
+            onChange={(e) => setType(e.target.value as (typeof GAME_TYPES)[number])}
             className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:bg-gray-800 dark:text-white"
           >
-            <option value={GameType.Traditional}>
-              {GAME_TYPE_LABEL[GameType.Traditional]}
-            </option>
-            <option value={GameType.CityMafia}>
-              {GAME_TYPE_LABEL[GameType.CityMafia]}
-            </option>
-            <option value={GameType.JapaneseMafia}>
-              {GAME_TYPE_LABEL[GameType.JapaneseMafia]}
-            </option>
+            {GAME_TYPES.map((gt) => (
+              <option key={gt} value={gt}>
+                {GAME_TYPE_LABEL[gt]}
+              </option>
+            ))}
           </select>
         </div>
       </div>
