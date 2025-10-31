@@ -28,13 +28,12 @@ export async function generateLivekitAccessToken(
   at.addGrant(videoGrant);
 
   const token = await at.toJwt();
-  console.log("access token", token);
   return token;
 }
 
 export async function createLivekitRoom(roomId: string) {
   const roomService = new RoomServiceClient(
-    process.env.LIVEKIT_URL!,
+    process.env.NEXT_PUBLIC_LIVEKIT_URL!,
     process.env.LIVEKIT_API_KEY!,
     process.env.LIVEKIT_API_SECRET!
   );
@@ -51,7 +50,7 @@ export async function createLivekitRoom(roomId: string) {
 
 export async function deleteLivekitRoom(roomId: string) {
   const roomService = new RoomServiceClient(
-    process.env.LIVEKIT_URL!,
+    process.env.NEXT_PUBLIC_LIVEKIT_URL!,
     process.env.LIVEKIT_API_KEY!,
     process.env.LIVEKIT_API_SECRET!
   );

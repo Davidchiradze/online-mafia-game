@@ -1,84 +1,104 @@
-// "use client";
+"use client";
+
 import {
   ControlBar,
-  GridLayout,
-  ParticipantTile,
   RoomAudioRenderer,
-  useTracks,
   RoomContext,
+  useTracks,
 } from "@livekit/components-react";
 import { Room, Track } from "livekit-client";
 import "@livekit/components-styles";
-import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import PlayerCircle from "@/components/game/PlayerCircle";
+import { useEffect, useRef, useState } from "react";
+import { FullscreenEnterIcon, FullscreenExitIcon } from "@/assets/icons";
 
-type Props = {
-  roomId: string;
-};
-
-export default function LiveKitTestComponent({ roomId }: Props) {
-  const searchParams = useSearchParams();
-  const token = searchParams.get("token") || "";
-  const [room] = useState(
-    () =>
-      new Room({
-        // Optimize video quality for each participant's screen
-        adaptiveStream: true,
-        // Enable automatic audio/video quality optimization
-        dynacast: true,
-      })
-  );
-  console.log("🚀 ~ LiveKitTestComponent ~ room:", room);
-
+export default function LiveKitTestComponent({
+  room,
+  hostUserId,
+}: {
+  room: Room;
+  hostUserId: string;
+}) {
   // Connect to room
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+
   useEffect(() => {
-    let mounted = true;
-
-    const connect = async () => {
-      if (mounted) {
-        await room.connect(process.env.NEXT_PUBLIC_LIVEKIT_URL!, token || "");
-      }
+    const handleFullscreenChange = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement));
     };
-    connect();
 
-    return () => {
-      mounted = false;
-      room.disconnect();
-    };
-  }, [room, token]);
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () =>
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
+
+  const enterFullscreen = async () => {
+    if (!containerRef.current) return;
+    if (document.fullscreenElement) return;
+    try {
+      await containerRef.current.requestFullscreen();
+    } catch (err) {
+      // noop
+    }
+  };
+
+  const exitFullscreen = async () => {
+    if (!document.fullscreenElement) return;
+    try {
+      await document.exitFullscreen();
+    } catch (err) {
+      // noop
+    }
+  };
+
+  const toggleFullscreen = () => {
+    if (isFullscreen) {
+      void exitFullscreen();
+    } else {
+      void enterFullscreen();
+    }
+  };
 
   return (
     <RoomContext.Provider value={room}>
-      <div data-lk-theme="default" style={{ height: "100vh" }}>
-        {/* Your custom component with basic video conferencing functionality. */}
-        <MyVideoConference />
-        {/* The RoomAudioRenderer takes care of room-wide audio for you. */}
+      <div
+        ref={containerRef}
+        data-lk-theme="default"
+        style={{ height: "100vh", position: "relative" }}
+      >
+        <button
+          type="button"
+          aria-label={isFullscreen ? "Exit full screen" : "Enter full screen"}
+          onClick={toggleFullscreen}
+          className="absolute right-2 top-2 z-50 rounded-md bg-black/50 p-2 text-white hover:bg-black/70"
+        >
+          {isFullscreen ? <FullscreenExitIcon /> : <FullscreenEnterIcon />}
+        </button>
+
+        <MyVideoConference hostUserId={hostUserId} />
         <RoomAudioRenderer />
-        {/* Controls for the user to start/stop audio, video, and screen share tracks */}
         <ControlBar />
       </div>
     </RoomContext.Provider>
   );
 }
 
-function MyVideoConference() {
-  // `useTracks` returns all camera and screen share tracks. If a user
-  // joins without a published camera track, a placeholder track is returned.
+function MyVideoConference({ hostUserId }: { hostUserId: string }) {
   const tracks = useTracks(
-    [
-      { source: Track.Source.Camera, withPlaceholder: true },
-      { source: Track.Source.ScreenShare, withPlaceholder: false },
-    ],
+    [{ source: Track.Source.Camera, withPlaceholder: true }],
     { onlySubscribed: false }
   );
+  console.log("🚀 ~ MyVideoConference ~ tracks:", tracks);
   return (
-    <GridLayout
-      tracks={tracks}
-      style={{ height: "calc(100vh - var(--lk-control-bar-height))" }}
+    <div
+      style={{
+        height: "calc(100vh - var(--lk-control-bar-height))",
+        width: "100vh",
+      }}
+      className="w-full h-full"
     >
-      {/* The GridLayout accepts zero or one child. The child is used
-            as a template to render all passed in tracks. */}
-      <ParticipantTile />
-    </GridLayout>
+      <PlayerCircle tracks={tracks} hostUserId={hostUserId} />
+    </div>
   );
 }

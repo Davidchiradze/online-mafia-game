@@ -2,8 +2,10 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { fetchGameSessionById } from "@/lib/gameSession/actions";
 import { Suspense } from "react";
-import HostView from "@/components/game/HostView";
-import GuestView from "@/components/game/GuestView";
+import HostActions from "@/components/game/HostActions";
+import WaitingRoom from "@/components/game/WaitingRoom";
+import LiveKitTestComponent from "@/components/liveKit/LiveKitTestComponent";
+import { Room } from "livekit-client";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -18,6 +20,7 @@ export default async function GamePage({ params }: PageProps) {
 
   const sessionRes = await fetchGameSessionById(id);
   const game = sessionRes.ok ? sessionRes.data : null;
+
   const isHost = !!(userId && game && game.host_id === userId);
 
   return (
@@ -28,12 +31,15 @@ export default async function GamePage({ params }: PageProps) {
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
               Game Room
             </h1>
-            <Link
-              href="/lobby"
-              className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
-            >
-              Back to Lobby
-            </Link>
+            <div className="flex flex-row gap-6">
+              {isHost && <HostActions gameId={id} />}
+              <Link
+                href="/lobby"
+                className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                Back to Lobby
+              </Link>
+            </div>
           </div>
         </div>
       </header>
@@ -43,10 +49,10 @@ export default async function GamePage({ params }: PageProps) {
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-sm text-gray-500 dark:text-gray-400">
-                  Game ID
+                  Room name
                 </div>
                 <div className="text-xl font-semibold text-gray-900 dark:text-white">
-                  {id}
+                  {game?.name}
                 </div>
               </div>
             </div>
@@ -55,11 +61,14 @@ export default async function GamePage({ params }: PageProps) {
             <div className="text-center text-gray-600 dark:text-gray-400">
               Loading...
             </div>
-          ) : isHost ? (
-            <HostView gameId={id} />
           ) : (
             <Suspense>
-              <GuestView gameId={id} userId={userId} />
+              <WaitingRoom
+                gameId={id}
+                userId={userId}
+                isHost={isHost}
+                hostUserId={(game!.host_id as string) ?? ""}
+              />
             </Suspense>
           )}
         </div>

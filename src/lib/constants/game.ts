@@ -6,6 +6,12 @@ export const GAME_TYPES = [
 
 export const GAME_STATUSES = ["not_started", "playing", "finished"] as const;
 
+export enum JOIN_REQUEST_STATUSES {
+  PENDING = "pending",
+  ACCEPTED = "accepted",
+  REJECTED = "rejected",
+}
+
 export const GAME_TYPE_LABEL: Record<(typeof GAME_TYPES)[number], string> = {
   traditional: "Traditional",
   city_mafia: "City mafia",

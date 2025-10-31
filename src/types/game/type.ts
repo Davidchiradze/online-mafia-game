@@ -18,7 +18,11 @@ export type GameSession = Pick<
 
 export type JoinRequest = Pick<
   DbJoinRequest,
-  "id" | "game_id" | "requester_id" | "status" | "created_at" | "updated_at"
-> & {
-  requester_nickname?: string;
-};
+  | "id"
+  | "game_id"
+  | "requester_id"
+  | "status"
+  | "created_at"
+  | "updated_at"
+  | "requester_nickname"
+>;

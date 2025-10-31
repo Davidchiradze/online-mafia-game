@@ -1,7 +1,10 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { GAME_TYPE_MAX_PLAYER_NUMBER } from "@/lib/constants/game";
+import {
+  GAME_TYPE_MAX_PLAYER_NUMBER,
+  JOIN_REQUEST_STATUSES,
+} from "@/lib/constants/game";
 import { GameSession, JoinRequest } from "@/types/game/type";
 import { Tables } from "@/db/supabase/database.types";
 
@@ -18,6 +21,7 @@ function toJoinRequest(row: Tables<"join_requests">): JoinRequest {
     id: row.id,
     game_id: row.game_id,
     requester_id: row.requester_id,
+    requester_nickname: row.requester_nickname,
     status: row.status as JoinRequest["status"],
     created_at: row.created_at!,
     updated_at: row.updated_at!,
@@ -174,6 +178,105 @@ export async function fetchGameSessionById(
   return { ok: true, data: session } as const;
 }
 
+export async function checkOrRequestJoin(gameId: string): Promise<{
+  ok?: boolean;
+  allowed?: boolean;
+  status?: JoinRequest["status"];
+  request?: JoinRequest;
+  message?: string;
+}> {
+  const supabase = await createClient();
+  const {
+    data: { session },
+    error: sessionError,
+  } = await supabase.auth.getSession();
+  if (sessionError || !session?.user)
+    return { ok: false, message: "Not authenticated" } as const;
+
+  // 1) Ensure game exists and fetch host
+  const { data: gameRow, error: gameError } = await supabase
+    .from("games")
+    .select("id, host_id")
+    .eq("id", gameId)
+    .single<Tables<"games">>();
+  if (gameError || !gameRow)
+    return {
+      ok: false,
+      message: gameError?.message || "Game not found",
+    } as const;
+  // 2) Host is always allowed
+  if (gameRow.host_id === session.user.id)
+    return { ok: true, allowed: true } as const;
+
+  // 3) If already in players, allowed
+  const { data: existingPlayer } = await supabase
+    .from("game_players")
+    .select("id")
+    .eq("game_id", gameId)
+    .eq("player_id", session.user.id)
+    .maybeSingle<Tables<"game_players">>();
+  if (existingPlayer)
+    return {
+      ok: true,
+      allowed: true,
+      status: JOIN_REQUEST_STATUSES.ACCEPTED,
+    } as const;
+
+  // 4) If there is an accepted request, allowed
+  const { data: existingAccepted } = await supabase
+    .from("join_requests")
+    .select("*")
+    .eq("game_id", gameId)
+    .eq("requester_id", session.user.id)
+    .eq("status", JOIN_REQUEST_STATUSES.ACCEPTED)
+    .maybeSingle<Tables<"join_requests">>();
+  if (existingAccepted)
+    return {
+      ok: true,
+      allowed: true,
+      status: JOIN_REQUEST_STATUSES.ACCEPTED,
+    } as const;
+
+  // 5) If there is a pending request, return it
+  const { data: existingPending } = await supabase
+    .from("join_requests")
+    .select("*")
+    .eq("game_id", gameId)
+    .eq("requester_id", session.user.id)
+    .eq("status", JOIN_REQUEST_STATUSES.PENDING)
+    .maybeSingle<Tables<"join_requests">>();
+  if (existingPending)
+    return {
+      ok: true,
+      allowed: false,
+      status: JOIN_REQUEST_STATUSES.PENDING,
+    } as const;
+
+  // 6) Otherwise create a new pending request
+  const { data: inserted, error: insertError } = await supabase
+    .from("join_requests")
+    .insert({
+      game_id: gameId,
+      requester_id: session.user.id,
+      status: JOIN_REQUEST_STATUSES.PENDING,
+      requester_nickname: session.user.user_metadata.nickname,
+    })
+    .select("*")
+    .single<Tables<"join_requests">>();
+  if (insertError || !inserted)
+    return {
+      ok: false,
+      message: insertError?.message || "Unable to create join request",
+    } as const;
+
+  return {
+    ok: true,
+    allowed: false,
+    status: JOIN_REQUEST_STATUSES.PENDING,
+    request: toJoinRequest(inserted),
+  } as const;
+}
+
 export async function requestJoin(
   gameId: string
 ): Promise<
@@ -193,14 +296,18 @@ export async function requestJoin(
     .select("*")
     .eq("game_id", gameId)
     .eq("requester_id", session.user.id)
-    .in("status", ["pending", "accepted"])
+    .in("status", [
+      JOIN_REQUEST_STATUSES.PENDING,
+      JOIN_REQUEST_STATUSES.ACCEPTED,
+    ])
     .maybeSingle<Tables<"join_requests">>();
   if (existing)
     return {
       ok: true,
       data: toJoinRequest(existing),
       status:
-        (existing.status as unknown as JoinRequest["status"]) || "pending",
+        (existing.status as unknown as JoinRequest["status"]) ||
+        JOIN_REQUEST_STATUSES.PENDING,
     } as const;
 
   const { data, error } = await supabase
@@ -208,7 +315,8 @@ export async function requestJoin(
     .insert({
       game_id: gameId,
       requester_id: session.user.id,
-      status: "pending",
+      requester_nickname: session.user.user_metadata.nickname,
+      status: JOIN_REQUEST_STATUSES.PENDING,
     })
     .select("*")
     .single<Tables<"join_requests">>();
@@ -220,7 +328,7 @@ export async function requestJoin(
   return {
     ok: true,
     data: toJoinRequest(data),
-    status: "pending",
+    status: JOIN_REQUEST_STATUSES.PENDING,
   } as const;
 }
 
@@ -232,7 +340,6 @@ export async function fetchPendingJoinRequests(
     .from("join_requests")
     .select("*")
     .eq("game_id", gameId)
-    .eq("status", "pending")
     .order("created_at", { ascending: true })
     .returns<Tables<"join_requests">[]>();
   if (error) return { ok: false, message: error.message } as const;
@@ -248,7 +355,7 @@ export async function acceptJoinRequest(
   const supabase = await createClient();
   const { error } = await supabase
     .from("join_requests")
-    .update({ status: "accepted" })
+    .update({ status: JOIN_REQUEST_STATUSES.ACCEPTED })
     .eq("id", requestId);
   if (error) return { ok: false, message: error.message } as const;
   return { ok: true } as const;
@@ -260,7 +367,7 @@ export async function rejectJoinRequest(
   const supabase = await createClient();
   const { error } = await supabase
     .from("join_requests")
-    .update({ status: "rejected" })
+    .update({ status: JOIN_REQUEST_STATUSES.REJECTED })
     .eq("id", requestId);
   if (error) return { ok: false, message: error.message } as const;
   return { ok: true } as const;

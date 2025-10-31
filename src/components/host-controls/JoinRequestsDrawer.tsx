@@ -8,7 +8,7 @@ import {
 } from "@/lib/gameSession/actions";
 import { usePendingJoinRequests } from "@/hooks/useJoinRequests";
 import { JoinRequest } from "@/types/game/type";
-
+import { JOIN_REQUEST_STATUSES } from "@/lib/constants/game";
 type Props = {
   gameId: string;
   open: boolean;
@@ -16,34 +16,37 @@ type Props = {
 };
 
 export default function JoinRequestsDrawer({ gameId, open, onClose }: Props) {
-  const [pending, setPending] = useState<JoinRequest[]>([]);
+  const [requests, setRequests] = useState<JoinRequest[]>([]);
 
   useEffect(() => {
     if (!open) return;
     const init = async () => {
       const res = await fetchPendingJoinRequests(gameId);
-      if (res.ok) setPending(res.data);
+      if (res.ok) setRequests(res.data);
     };
     init();
   }, [gameId, open]);
 
   const handlePendingEvent = useCallback(
-    (event: "insert" | "update" | "delete", req: JoinRequest) => {
-      if (event === "insert") setPending((p) => [req, ...p]);
-      else if (event === "update")
-        setPending((p) =>
-          p
-            .map((r) => (r.id === req.id ? req : r))
-            .filter((r) => r.status === "pending")
+    (event: "insert" | "update", req: JoinRequest) => {
+      if (event === "insert") setRequests((p) => [req, ...p]);
+      else if (event === "update") {
+        setRequests((prev) =>
+          prev.map((r) =>
+            r.id === req.id
+              ? {
+                  ...req,
+                  status: req.status,
+                }
+              : r
+          )
         );
-      else if (event === "delete")
-        setPending((p) => p.filter((r) => r.id !== req.id));
+      }
     },
     []
   );
 
   usePendingJoinRequests(gameId, handlePendingEvent, open);
-
   const approve = async (id: string) => {
     await acceptJoinRequest(id);
   };
@@ -53,32 +56,48 @@ export default function JoinRequestsDrawer({ gameId, open, onClose }: Props) {
 
   return (
     <Drawer open={open} onClose={onClose} title="Join Requests" size="md">
-      {pending.length === 0 ? (
+      {requests.length === 0 ? (
         <div className="text-gray-600 dark:text-gray-400">
           No pending requests
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          {pending.map((r) => (
+          {requests.map((r) => (
             <div
               key={r.id}
               className="flex items-center justify-between p-3 rounded-lg border border-gray-200 dark:border-gray-700"
             >
               <div className="text-gray-800 dark:text-gray-200 text-sm">
-                {r.requester_id}
+                {r.requester_nickname}
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <button
-                  onClick={() => approve(r.id)}
-                  className="px-3 py-1 rounded-md bg-green-600 text-white"
+                  type="button"
+                  aria-label="Toggle accept"
+                  // aria-pressed={r.status === JOIN_REQUEST_STATUSES.ACCEPTED}
+                  onClick={() =>
+                    r.status === JOIN_REQUEST_STATUSES.ACCEPTED
+                      ? reject(r.id)
+                      : approve(r.id)
+                  }
+                  className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer"
                 >
-                  Approve
-                </button>
-                <button
-                  onClick={() => reject(r.id)}
-                  className="px-3 py-1 rounded-md bg-red-600 text-white"
-                >
-                  Reject
+                  <span
+                    className={
+                      `absolute inset-0 rounded-full transition-colors ` +
+                      (r.status === JOIN_REQUEST_STATUSES.ACCEPTED
+                        ? `bg-green-500`
+                        : `bg-gray-300 dark:bg-gray-700`)
+                    }
+                  />
+                  <span
+                    className={
+                      `pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ` +
+                      (r.status === JOIN_REQUEST_STATUSES.ACCEPTED
+                        ? `translate-x-6`
+                        : `translate-x-1`)
+                    }
+                  />
                 </button>
               </div>
             </div>

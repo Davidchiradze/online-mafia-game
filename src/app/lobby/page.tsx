@@ -45,22 +45,18 @@ export default function LobbyPage() {
   };
 
   const handleCreated = async (session: GameSession) => {
+    if (!user) return;
     setSessions((prev) => [session, ...prev]);
     await createLivekitRoom(session.id);
-    const token = await generateLivekitAccessToken(session.id, user?.id || "");
-
-    router.push(`/game/${session.id}?token=${token}`);
+    router.push(`/game/${session.id}`);
   };
 
   const handleGameRowClick = async (session: GameSession) => {
     if (!user) return;
-    if (session.host_id === user.id) {
-      router.push(`/game/${session.id}`);
-      return;
-    }
-    const res = await requestJoin(session.id);
-
-    if (res.ok) router.push(`/game/${session.id}`);
+    router.push(`/game/${session.id}`);
+    // if (session.host_id === user.id) {
+    // return;
+    // }
   };
 
   if (loading) {

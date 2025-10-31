@@ -10,11 +10,6 @@ export function useMyJoinRequestStatus(
   requesterId: string,
   onChange: (status: JoinRequest["status"]) => void
 ) {
-  const onChangeRef = useRef(onChange);
-  useEffect(() => {
-    onChangeRef.current = onChange;
-  }, [onChange]);
-
   useEffect(() => {
     const supabase = createClient();
     const channel = supabase
@@ -30,8 +25,9 @@ export function useMyJoinRequestStatus(
         (payload) => {
           const row = (payload as { new: unknown })
             .new as Tables<"join_requests">;
-          if (row.requester_id === requesterId)
-            onChangeRef.current(row.status as JoinRequest["status"]);
+          if (row.requester_id === requesterId) {
+            onChange(row.status as JoinRequest["status"]);
+          }
         }
       )
       .on(
@@ -46,22 +42,19 @@ export function useMyJoinRequestStatus(
           const row = (payload as { new: unknown })
             .new as Tables<"join_requests">;
           if (row.requester_id === requesterId)
-            onChangeRef.current(row.status as JoinRequest["status"]);
+            onChange(row.status as JoinRequest["status"]);
         }
       )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [gameId, requesterId]);
+  }, [gameId, requesterId, onChange]);
 }
 
 export function usePendingJoinRequests(
   gameId: string,
-  onEvent: (
-    event: "insert" | "update" | "delete",
-    request: JoinRequest
-  ) => void,
+  onEvent: (event: "insert" | "update", request: JoinRequest) => void,
   enabled: boolean = true
 ) {
   useEffect(() => {
@@ -97,21 +90,6 @@ export function usePendingJoinRequests(
             "update",
             (payload as { new: unknown })
               .new as Tables<"join_requests"> as unknown as JoinRequest
-          )
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "DELETE",
-          schema: "public",
-          table: "join_requests",
-          filter: `game_id=eq.${gameId}`,
-        },
-        (payload) =>
-          onEvent(
-            "delete",
-            (payload as { old: unknown })
-              .old as Tables<"join_requests"> as unknown as JoinRequest
           )
       )
       .subscribe();
