@@ -24,3 +24,11 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Hide LiveKit default metadata overlays when opted-in via parent class */
+.lk-hide-metadata .lk-participant-metadata {
+  display: none !important;
+}
+.lk-hide-metadata .lk-participant-placeholder {
+  display: none !important;
+}

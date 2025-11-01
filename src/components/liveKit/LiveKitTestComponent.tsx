@@ -2,8 +2,10 @@
 
 import {
   ControlBar,
+  DisconnectButton,
   RoomAudioRenderer,
   RoomContext,
+  StartAudio,
   useTracks,
 } from "@livekit/components-react";
 import { Room, Track } from "livekit-client";
@@ -15,9 +17,11 @@ import { FullscreenEnterIcon, FullscreenExitIcon } from "@/assets/icons";
 export default function LiveKitTestComponent({
   room,
   hostUserId,
+  token,
 }: {
   room: Room;
   hostUserId: string;
+  token: string;
 }) {
   // Connect to room
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -76,15 +80,29 @@ export default function LiveKitTestComponent({
           {isFullscreen ? <FullscreenExitIcon /> : <FullscreenEnterIcon />}
         </button>
 
-        <MyVideoConference hostUserId={hostUserId} />
+        <MyVideoConference
+          hostUserId={hostUserId}
+          isFullscreen={isFullscreen}
+        />
         <RoomAudioRenderer />
-        <ControlBar />
+        {/* <ControlBar /> */}
+
+        <DisconnectButton onClick={() => room.disconnect()}>
+          Leave room
+        </DisconnectButton>
+        <StartAudio label="Click to allow audio playback" />
       </div>
     </RoomContext.Provider>
   );
 }
 
-function MyVideoConference({ hostUserId }: { hostUserId: string }) {
+function MyVideoConference({
+  hostUserId,
+  isFullscreen,
+}: {
+  hostUserId: string;
+  isFullscreen: boolean;
+}) {
   const tracks = useTracks(
     [{ source: Track.Source.Camera, withPlaceholder: true }],
     { onlySubscribed: false }
@@ -93,7 +111,7 @@ function MyVideoConference({ hostUserId }: { hostUserId: string }) {
     <div
       style={{
         height: "calc(100vh - var(--lk-control-bar-height))",
-        width: "100vh",
+        width: isFullscreen ? "100vw" : "100vh",
       }}
       className="w-full h-full"
     >

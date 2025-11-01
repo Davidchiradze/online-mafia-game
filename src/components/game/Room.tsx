@@ -9,6 +9,7 @@ import LiveKitTestComponent from "../liveKit/LiveKitTestComponent";
 import { Room as LiveKitRoom } from "livekit-client";
 import { generateLivekitAccessToken } from "@/lib/liveKit/actions";
 import WaitingRoom from "./WaitingRoom";
+import { useLivekitRoom } from "@/hooks/useLivekitRoom";
 
 export default function Room({
   gameId,
@@ -24,6 +25,7 @@ export default function Room({
   const [status, setStatus] = useState<JoinRequest["status"] | undefined>(
     undefined
   );
+  const [token, setToken] = useState<string | null>(null);
   const [room] = useState(
     () =>
       new LiveKitRoom({
@@ -33,6 +35,9 @@ export default function Room({
         dynacast: true,
       })
   );
+
+  // Redirect to lobby when room disconnects (button click, network, or kick)
+  useLivekitRoom(room, { redirectOnDisconnect: true, redirectPath: "/lobby" });
 
   useEffect(() => {
     checkOrRequestJoin(gameId).then((res) => {
@@ -45,6 +50,7 @@ export default function Room({
   useEffect(() => {
     if (status === JOIN_REQUEST_STATUSES.ACCEPTED || isHost) {
       generateLivekitAccessToken(gameId, userId).then((token) => {
+        setToken(token);
         room.connect(process.env.NEXT_PUBLIC_LIVEKIT_URL!, token || "");
         room.localParticipant.setCameraEnabled(true);
       });
@@ -64,7 +70,11 @@ export default function Room({
       )}
 
       {(status === JOIN_REQUEST_STATUSES.ACCEPTED || isHost) && (
-        <LiveKitTestComponent room={room} hostUserId={hostUserId} />
+        <LiveKitTestComponent
+          room={room}
+          hostUserId={hostUserId}
+          token={token ?? ""}
+        />
       )}
     </div>
   );

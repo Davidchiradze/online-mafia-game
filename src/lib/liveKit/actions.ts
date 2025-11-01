@@ -5,16 +5,28 @@ import {
   Room,
   RoomServiceClient,
 } from "livekit-server-sdk";
+import { createClient } from "@/lib/supabase/server";
 
 export async function generateLivekitAccessToken(
   roomId: string,
   participantId: string
 ) {
+  // Resolve participant display name from the authenticated session
+  const supabase = await createClient();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const participantName =
+    (session?.user?.user_metadata as any)?.nickname ||
+    session?.user?.email ||
+    participantId;
+
   const at = new AccessToken(
     process.env.LIVEKIT_API_KEY!,
     process.env.LIVEKIT_API_SECRET!,
     {
       identity: participantId,
+      name: participantName,
     }
   );
 

@@ -1,10 +1,8 @@
 "use client";
 
-import {
-  ParticipantTile,
-  TrackReferenceOrPlaceholder,
-} from "@livekit/components-react";
+import { TrackReferenceOrPlaceholder } from "@livekit/components-react";
 import React, { useMemo } from "react";
+import ParticipantComponent from "../participant/ParticipantComponent";
 
 type PlayerCircleProps = {
   tracks: TrackReferenceOrPlaceholder[];
@@ -19,7 +17,7 @@ type PlayerCircleProps = {
 // Row2: [10,  h,  x,  3]
 // Row3: [ 9,  x,  x,  4]
 // Row4: [ 8,  7,  6,  5]
-function gridPositionForPlayerIndex(playerIndex: number): {
+function gridPositionForPlayerIndex(playerIndex: number | "host"): {
   gridRow: number;
   gridColumn: number;
 } {
@@ -48,6 +46,8 @@ function gridPositionForPlayerIndex(playerIndex: number): {
       return { gridRow: 1, gridColumn: 1 };
     case 12:
       return { gridRow: 1, gridColumn: 2 };
+    case "host":
+      return { gridRow: 2, gridColumn: 2 };
     default:
       return { gridRow: 4, gridColumn: 4 };
   }
@@ -58,22 +58,27 @@ export default function PlayerCircle({
   hostUserId,
   maxPlayers = 12,
 }: PlayerCircleProps) {
-  const { hostTrack, playerTracks } = useMemo(() => {
-    const hostT = tracks.find((t) => t.participant.identity === hostUserId);
-    const rest = tracks.filter((t) => t.participant.identity !== hostUserId);
-    return { hostTrack: hostT, playerTracks: rest.slice(0, maxPlayers) };
-  }, [tracks, hostUserId, maxPlayers]);
+  const slotDescriptors = useMemo(() => {
+    const hostTrack = tracks.find((t) => t.participant.identity === hostUserId);
+    const nonHostTracks = tracks
+      .filter((t) => t.participant.identity !== hostUserId)
+      .slice(0, maxPlayers);
 
-  // Build exactly maxPlayers slots, fill placeholders with undefined
-  const slots: Array<TrackReferenceOrPlaceholder | undefined> = useMemo(() => {
-    const arr = new Array<TrackReferenceOrPlaceholder | undefined>(
-      maxPlayers
-    ).fill(undefined);
-    for (let i = 0; i < Math.min(playerTracks.length, maxPlayers); i++) {
-      arr[i] = playerTracks[i];
+    const slots: Array<{
+      key: number | "host";
+      track?: TrackReferenceOrPlaceholder;
+    }> = [];
+
+    // host is always at row 2, col 2
+    slots.push({ key: "host", track: hostTrack });
+
+    // numbered player positions 1..maxPlayers
+    for (let i = 1; i <= maxPlayers; i++) {
+      slots.push({ key: i as number, track: nonHostTracks[i - 1] });
     }
-    return arr;
-  }, [playerTracks, maxPlayers]);
+
+    return slots;
+  }, [tracks, hostUserId, maxPlayers]);
 
   return (
     <div
@@ -83,40 +88,28 @@ export default function PlayerCircle({
         gridTemplateRows: "repeat(4, minmax(0, 1fr))",
       }}
     >
-      {/* Host centered, spanning two rows */}
-      <div
-        className="relative rounded-xl overflow-hidden border border-yellow-400 shadow-[0_0_0_2px_rgba(250,204,21,0.5)] bg-black/60"
-        style={{ gridColumn: 2, gridRow: "2" }}
-      >
-        {hostTrack ? (
-          <div className="w-full h-full flex flex-col items-center justify-center text-sm text-gray-300">
-            <ParticipantTile trackRef={hostTrack} />
-          </div>
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-sm text-gray-300">
-            Host
-          </div>
-        )}
-      </div>
-
-      {/* Players around the host */}
-      {slots.map((t, index) => {
-        const playerIndex = index + 1;
-        const pos = gridPositionForPlayerIndex(playerIndex);
+      {slotDescriptors.map(({ key, track }) => {
+        const pos = gridPositionForPlayerIndex(key);
+        const isHost = key === "host";
         return (
           <div
-            key={t?.participant.identity ?? `slot-${playerIndex}`}
-            className="relative rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-black/60"
+            key={
+              (track as TrackReferenceOrPlaceholder | undefined)?.participant
+                .identity ?? `slot-${String(key)}`
+            }
+            className={
+              "relative rounded-xl overflow-hidden bg-black/60 border " +
+              (isHost
+                ? "border-yellow-400 shadow-[0_0_0_2px_rgba(250,204,21,0.5)]"
+                : "border-gray-200 dark:border-gray-700")
+            }
             style={{ gridColumn: pos.gridColumn, gridRow: pos.gridRow }}
           >
-            {t ? (
-              <div className="w-full h-full flex flex-col items-center justify-center text-sm text-gray-300">
-                <ParticipantTile trackRef={t} />
-                <div className="text-xs text-gray-400">{playerIndex}</div>
-              </div>
+            {track ? (
+              <ParticipantComponent trackRef={track} playerIndex={key} />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">
-                {playerIndex} Empty
+                {isHost ? "Host" : `${key} Empty`}
               </div>
             )}
           </div>
