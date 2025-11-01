@@ -65,7 +65,7 @@ export default function LiveKitTestComponent({
       <div
         ref={containerRef}
         data-lk-theme="default"
-        style={{ height: "100vh", position: "relative" }}
+        className="w-full h-[calc(100vh-var(--lk-control-bar-height))] position-relative flex flex-col items-center justify-center"
       >
         <button
           type="button"
@@ -89,7 +89,6 @@ function MyVideoConference({ hostUserId }: { hostUserId: string }) {
     [{ source: Track.Source.Camera, withPlaceholder: true }],
     { onlySubscribed: false }
   );
-  console.log("🚀 ~ MyVideoConference ~ tracks:", tracks);
   return (
     <div
       style={{

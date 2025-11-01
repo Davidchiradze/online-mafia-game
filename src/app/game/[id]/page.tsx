@@ -3,9 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { fetchGameSessionById } from "@/lib/gameSession/actions";
 import { Suspense } from "react";
 import HostActions from "@/components/game/HostActions";
-import WaitingRoom from "@/components/game/WaitingRoom";
-import LiveKitTestComponent from "@/components/liveKit/LiveKitTestComponent";
-import { Room } from "livekit-client";
+import Room from "@/components/game/Room";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -29,7 +27,7 @@ export default async function GamePage({ params }: PageProps) {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Game Room
+              Game Room: {game?.name}
             </h1>
             <div className="flex flex-row gap-6">
               {isHost && <HostActions gameId={id} />}
@@ -45,25 +43,13 @@ export default async function GamePage({ params }: PageProps) {
       </header>
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-5xl mx-auto flex flex-col gap-8">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-200 dark:border-gray-700">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">
-                  Room name
-                </div>
-                <div className="text-xl font-semibold text-gray-900 dark:text-white">
-                  {game?.name}
-                </div>
-              </div>
-            </div>
-          </div>
           {!userId || !game ? (
             <div className="text-center text-gray-600 dark:text-gray-400">
               Loading...
             </div>
           ) : (
             <Suspense>
-              <WaitingRoom
+              <Room
                 gameId={id}
                 userId={userId}
                 isHost={isHost}
