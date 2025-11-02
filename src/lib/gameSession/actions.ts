@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { adminClient } from "@/lib/supabase/admin";
 import {
   GAME_TYPE_MAX_PLAYER_NUMBER,
   JOIN_REQUEST_STATUSES,
@@ -373,3 +374,72 @@ export async function rejectJoinRequest(
   return { ok: true } as const;
 }
 // Realtime listeners moved to client hooks/components.
+
+export async function kickPlayer(
+  gameId: string,
+  userId: string
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  const supabase = await createClient();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session?.user) return { ok: false, message: "Not authenticated" };
+  const { data: gameRow, error: gameErr } = await supabase
+    .from("games")
+    .select("host_id")
+    .eq("id", gameId)
+    .single<Tables<"games">>();
+  if (gameErr || !gameRow) return { ok: false, message: "Game not found" };
+  if (gameRow.host_id !== session.user.id)
+    return { ok: false, message: "Forbidden" };
+  const { error } = await supabase
+    .from("join_requests")
+    .update({ status: JOIN_REQUEST_STATUSES.REJECTED })
+    .eq("game_id", gameId)
+    .eq("requester_id", userId)
+    .in("status", [
+      JOIN_REQUEST_STATUSES.PENDING,
+      JOIN_REQUEST_STATUSES.ACCEPTED,
+    ]);
+  if (error) return { ok: false, message: error.message } as const;
+  return { ok: true } as const;
+}
+
+export async function transferHost(
+  gameId: string,
+  newHostUserId: string
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  const supabase = await createClient();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session?.user) return { ok: false, message: "Not authenticated" };
+  const { data: gameRow, error: gameErr } = await supabase
+    .from("games")
+    .select("host_id")
+    .eq("id", gameId)
+    .single<Tables<"games">>();
+  if (gameErr || !gameRow) return { ok: false, message: "Game not found" };
+  if (gameRow.host_id !== session.user.id)
+    return { ok: false, message: "Forbidden" };
+  // Ensure new host exists in profiles to satisfy FK
+  const { data: profile, error: profileErr } = await adminClient
+    .from("profiles")
+    .select("id")
+    .eq("id", newHostUserId)
+    .maybeSingle();
+  if (profileErr) return { ok: false, message: profileErr.message } as const;
+  if (!profile)
+    return {
+      ok: false,
+      message: "New host user not found in profiles",
+    } as const;
+
+  // Use admin client to bypass RLS for the update
+  const { error } = await adminClient
+    .from("games")
+    .update({ host_id: newHostUserId })
+    .eq("id", gameId);
+  if (error) return { ok: false, message: error.message } as const;
+  return { ok: true } as const;
+}

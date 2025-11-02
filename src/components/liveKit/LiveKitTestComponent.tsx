@@ -15,13 +15,17 @@ import { useEffect, useRef, useState } from "react";
 import { FullscreenEnterIcon, FullscreenExitIcon } from "@/assets/icons";
 
 export default function LiveKitTestComponent({
+  gameId,
   room,
   hostUserId,
   token,
+  userId,
 }: {
+  gameId: string;
   room: Room;
   hostUserId: string;
   token: string;
+  userId: string;
 }) {
   // Connect to room
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -81,7 +85,9 @@ export default function LiveKitTestComponent({
         </button>
 
         <MyVideoConference
+          gameId={gameId}
           hostUserId={hostUserId}
+          userId={userId}
           isFullscreen={isFullscreen}
         />
         <RoomAudioRenderer />
@@ -97,11 +103,15 @@ export default function LiveKitTestComponent({
 }
 
 function MyVideoConference({
+  gameId,
   hostUserId,
   isFullscreen,
+  userId,
 }: {
+  gameId: string;
   hostUserId: string;
   isFullscreen: boolean;
+  userId: string;
 }) {
   const tracks = useTracks(
     [{ source: Track.Source.Camera, withPlaceholder: true }],
@@ -115,7 +125,12 @@ function MyVideoConference({
       }}
       className="w-full h-full"
     >
-      <PlayerCircle tracks={tracks} hostUserId={hostUserId} />
+      <PlayerCircle
+        gameId={gameId}
+        tracks={tracks}
+        hostUserId={hostUserId}
+        userId={userId}
+      />
     </div>
   );
 }

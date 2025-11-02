@@ -17,14 +17,26 @@ CREATE TABLE public.games (
   code text NOT NULL UNIQUE,
   name text NOT NULL,
   host_id uuid,
-  game_status text NOT NULL DEFAULT 'waiting'::text CHECK (game_status = ANY (ARRAY['not_started'::text, 'playing'::text, 'finished'::text])),
-  max_players integer NOT NULL DEFAULT 10,
   current_players integer NOT NULL DEFAULT 0,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
-  game_type text,
+  game_status USER-DEFINED NOT NULL DEFAULT 'not_started'::"game-status",
+  game_type USER-DEFINED NOT NULL DEFAULT 'traditional'::game_type,
+  max_players USER-DEFINED NOT NULL DEFAULT '10'::max_player_number,
   CONSTRAINT games_pkey PRIMARY KEY (id),
   CONSTRAINT games_host_id_fkey FOREIGN KEY (host_id) REFERENCES public.profiles(id)
+);
+CREATE TABLE public.join_requests (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  game_id uuid NOT NULL,
+  requester_id uuid NOT NULL,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  status USER-DEFINED NOT NULL DEFAULT 'pending'::join_request_status,
+  requester_nickname text NOT NULL,
+  CONSTRAINT join_requests_pkey PRIMARY KEY (id),
+  CONSTRAINT join_requests_game_id_fkey FOREIGN KEY (game_id) REFERENCES public.games(id),
+  CONSTRAINT join_requests_requester_id_fkey FOREIGN KEY (requester_id) REFERENCES public.profiles(id)
 );
 CREATE TABLE public.profiles (
   id uuid NOT NULL,

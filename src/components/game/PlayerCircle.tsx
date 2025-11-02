@@ -3,8 +3,10 @@
 import { TrackReferenceOrPlaceholder } from "@livekit/components-react";
 import React, { useMemo } from "react";
 import ParticipantComponent from "../participant/ParticipantComponent";
+import HostControls from "./HostControls";
 
 type PlayerCircleProps = {
+  gameId: string;
   tracks: TrackReferenceOrPlaceholder[];
   hostUserId: string;
   maxPlayers?: number; // number of player slots around the host
@@ -54,10 +56,18 @@ function gridPositionForPlayerIndex(playerIndex: number | "host"): {
 }
 
 export default function PlayerCircle({
+  gameId,
   tracks,
   hostUserId,
+  userId,
   maxPlayers = 12,
-}: PlayerCircleProps) {
+}: {
+  gameId: string;
+  tracks: TrackReferenceOrPlaceholder[];
+  hostUserId: string;
+  userId: string;
+  maxPlayers?: number;
+}) {
   const slotDescriptors = useMemo(() => {
     const hostTrack = tracks.find((t) => t.participant.identity === hostUserId);
     const nonHostTracks = tracks
@@ -79,6 +89,7 @@ export default function PlayerCircle({
 
     return slots;
   }, [tracks, hostUserId, maxPlayers]);
+  console.log("🚀 ~ PlayerCircle ~ slotDescriptors:", slotDescriptors);
 
   return (
     <div
@@ -106,7 +117,13 @@ export default function PlayerCircle({
             style={{ gridColumn: pos.gridColumn, gridRow: pos.gridRow }}
           >
             {track ? (
-              <ParticipantComponent trackRef={track} playerIndex={key} />
+              <ParticipantComponent
+                gameId={gameId}
+                hostUserId={hostUserId}
+                currentUserId={userId}
+                trackRef={track}
+                playerIndex={key}
+              />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">
                 {isHost ? "Host" : `${key} Empty`}
@@ -115,6 +132,9 @@ export default function PlayerCircle({
           </div>
         );
       })}
+      <div style={{ gridColumn: 3, gridRow: 2 }}>
+        {userId === hostUserId && <HostControls />}
+      </div>
     </div>
   );
 }
