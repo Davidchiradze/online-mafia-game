@@ -42,7 +42,7 @@ export default async function GamePage({ params }: PageProps) {
         </div>
       </header>
       <main className="container mx-auto px-4 py-8">
-        <div className="max-w-5xl mx-auto flex flex-col gap-8">
+        <div className="mx-auto flex flex-col gap-8">
           {!userId || !game ? (
             <div className="text-center text-gray-600 dark:text-gray-400">
               Loading...

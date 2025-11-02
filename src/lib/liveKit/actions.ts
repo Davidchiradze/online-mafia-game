@@ -70,3 +70,15 @@ export async function deleteLivekitRoom(roomId: string) {
     console.log("room deleted");
   });
 }
+
+export async function removeParticipantFromRoom(
+  roomId: string,
+  participantId: string
+) {
+  const roomService = new RoomServiceClient(
+    process.env.NEXT_PUBLIC_LIVEKIT_URL!,
+    process.env.LIVEKIT_API_KEY!,
+    process.env.LIVEKIT_API_SECRET!
+  );
+  await roomService.removeParticipant(roomId, participantId);
+}

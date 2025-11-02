@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMyJoinRequestStatus } from "@/hooks/useJoinRequests";
 import { JoinRequest } from "@/types/game/type";
 import { JOIN_REQUEST_STATUSES } from "@/lib/constants/game";
@@ -10,6 +10,7 @@ import { Room as LiveKitRoom } from "livekit-client";
 import { generateLivekitAccessToken } from "@/lib/liveKit/actions";
 import WaitingRoom from "./WaitingRoom";
 import { useLivekitRoom } from "@/hooks/useLivekitRoom";
+import { useGameHostSubscription } from "@/hooks/useGameHostSubscription";
 
 export default function Room({
   gameId,
@@ -25,6 +26,7 @@ export default function Room({
   const [status, setStatus] = useState<JoinRequest["status"] | undefined>(
     undefined
   );
+  const [currentHostId, setCurrentHostId] = useState<string>(hostUserId);
   const [token, setToken] = useState<string | null>(null);
   const [room] = useState(
     () =>
@@ -56,7 +58,28 @@ export default function Room({
       });
       //
     }
+    return () => {
+      console.log("disconnecting");
+      room.disconnect();
+    };
   }, [status, gameId, userId]);
+
+  // Listen to my join request updates (kick -> disconnect)
+  useMyJoinRequestStatus(gameId, userId, (nextStatus) => {
+    setStatus(nextStatus);
+    if (nextStatus === JOIN_REQUEST_STATUSES.REJECTED) {
+      room.disconnect();
+    }
+  });
+
+  // Subscribe to host changes for realtime seat/controls updates
+  useGameHostSubscription(
+    gameId,
+    (newHostId) => {
+      setCurrentHostId(newHostId);
+    },
+    true
+  );
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-200 dark:border-gray-700">
@@ -65,15 +88,16 @@ export default function Room({
           status={status ?? undefined}
           gameId={gameId}
           userId={userId}
-          setStatus={setStatus}
         />
       )}
 
       {(status === JOIN_REQUEST_STATUSES.ACCEPTED || isHost) && (
         <LiveKitTestComponent
+          gameId={gameId}
           room={room}
-          hostUserId={hostUserId}
+          hostUserId={currentHostId}
           token={token ?? ""}
+          userId={userId}
         />
       )}
     </div>
