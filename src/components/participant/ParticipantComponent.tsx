@@ -57,7 +57,7 @@ export default function ParticipantComponent({
 
   return (
     <div
-      className="relative w-full h-full flex flex-col items-stretch justify-stretch text-sm text-gray-300 group"
+      className="relative w-full h-full flex flex-col items-stretch justify-stretch text-sm text-gray-200 group"
       onMouseLeave={() => setMenuOpen(false)}
     >
       <ParticipantTile
@@ -71,17 +71,17 @@ export default function ParticipantComponent({
           <TrackToggle source={Track.Source.Microphone} showIcon={true} />
         </div>
       ) : (
-        <div className="absolute left-2 top-2 z-10 rounded-md bg-black/60 px-2 py-1 text-white">
+        <div className="absolute left-2 top-2 z-10 rounded-full border border-white/10 bg-black/40 backdrop-blur px-2 py-1 text-white">
           {isMicEnabled ? <MicOnIcon /> : <MicOffIcon />}
         </div>
       )}
 
       {displayName ? (
-        <div className="absolute bottom-2 left-2 z-10 rounded-md bg-black/50 px-2 py-1 text-xs text-gray-100">
+        <div className="absolute bottom-2 left-2 z-10 rounded-full border border-white/10 bg-black/40 backdrop-blur px-3 py-1 text-xs font-medium text-gray-100">
           {displayName}
         </div>
       ) : (
-        <div className="absolute bottom-2 left-2 z-10 rounded-md bg-black/50 px-2 py-1 text-xs text-gray-100">
+        <div className="absolute bottom-2 left-2 z-10 rounded-full border border-white/10 bg-black/40 backdrop-blur px-3 py-1 text-xs font-medium text-gray-100">
           {playerIndex === "host" ? "Host" : playerIndex}
         </div>
       )}
@@ -92,7 +92,7 @@ export default function ParticipantComponent({
             type="button"
             aria-label="Participant settings"
             onClick={() => setMenuOpen((p) => !p)}
-            className="rounded-md bg-black/50 p-1.5 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+            className="rounded-md border border-white/10 bg-black/40 backdrop-blur p-1.5 text-white opacity-0 group-hover:opacity-100 transition"
           >
             <MoreVerticalIcon width={18} height={18} />
           </button>
@@ -108,7 +108,7 @@ export default function ParticipantComponent({
               },
               { label: "Make host", onClick: onMakeHost },
             ]}
-            className="absolute right-0 mt-2 w-40"
+            className="absolute right-0 mt-2 w-44"
           />
         </div>
       )}

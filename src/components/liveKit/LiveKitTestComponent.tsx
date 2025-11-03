@@ -3,6 +3,7 @@
 import {
   ControlBar,
   DisconnectButton,
+  LeaveIcon,
   RoomAudioRenderer,
   RoomContext,
   StartAudio,
@@ -12,7 +13,7 @@ import { Room, Track } from "livekit-client";
 import "@livekit/components-styles";
 import PlayerCircle from "@/components/game/PlayerCircle";
 import { useEffect, useRef, useState } from "react";
-import { FullscreenEnterIcon, FullscreenExitIcon } from "@/assets/icons";
+import FloatingOptions from "./FloatingOptions";
 
 export default function LiveKitTestComponent({
   gameId,
@@ -20,12 +21,14 @@ export default function LiveKitTestComponent({
   hostUserId,
   token,
   userId,
+  isHost,
 }: {
   gameId: string;
   room: Room;
   hostUserId: string;
   token: string;
   userId: string;
+  isHost: boolean;
 }) {
   // Connect to room
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -73,16 +76,15 @@ export default function LiveKitTestComponent({
       <div
         ref={containerRef}
         data-lk-theme="default"
-        className="w-full h-[calc(100vh-var(--lk-control-bar-height))] position-relative flex flex-col items-center justify-center"
+        className="w-full h-full flex flex-col items-center justify-center"
       >
-        <button
-          type="button"
-          aria-label={isFullscreen ? "Exit full screen" : "Enter full screen"}
-          onClick={toggleFullscreen}
-          className="absolute right-2 top-2 z-50 rounded-md bg-black/50 p-2 text-white hover:bg-black/70"
-        >
-          {isFullscreen ? <FullscreenExitIcon /> : <FullscreenEnterIcon />}
-        </button>
+        <FloatingOptions
+          gameId={gameId}
+          isHost={isHost}
+          isFullscreen={isFullscreen}
+          onToggleFullscreen={toggleFullscreen}
+          onLeaveRoom={() => room.disconnect()}
+        />
 
         <MyVideoConference
           gameId={gameId}
@@ -92,11 +94,6 @@ export default function LiveKitTestComponent({
         />
         <RoomAudioRenderer />
         {/* <ControlBar /> */}
-
-        <DisconnectButton onClick={() => room.disconnect()}>
-          Leave room
-        </DisconnectButton>
-        <StartAudio label="Click to allow audio playback" />
       </div>
     </RoomContext.Provider>
   );

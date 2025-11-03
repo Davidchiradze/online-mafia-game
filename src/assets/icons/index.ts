@@ -4,3 +4,4 @@ export type { IconProps } from "./FullscreenEnter";
 export { default as MicOnIcon } from "./MicOn";
 export { default as MicOffIcon } from "./MicOff";
 export { default as MoreVerticalIcon } from "./MoreVertical";
+export { default as UsersIcon } from "./Users";

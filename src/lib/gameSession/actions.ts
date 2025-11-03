@@ -441,5 +441,58 @@ export async function transferHost(
     .update({ host_id: newHostUserId })
     .eq("id", gameId);
   if (error) return { ok: false, message: error.message } as const;
+
+  // Remove any join_requests for the new host (they are now the host and shouldn't have a request)
+  const { error: deleteNewHostReqErr } = await adminClient
+    .from("join_requests")
+    .delete()
+    .eq("game_id", gameId)
+    .eq("requester_id", newHostUserId);
+  if (deleteNewHostReqErr)
+    return { ok: false, message: deleteNewHostReqErr.message } as const;
+
+  // Ensure previous host remains a player: create or update an accepted join_request for them
+  const previousHostUserId = gameRow.host_id!;
+
+  const { data: oldHostProfile, error: oldHostProfileErr } = await adminClient
+    .from("profiles")
+    .select("nickname")
+    .eq("id", previousHostUserId)
+    .single<{ nickname: string }>();
+  if (oldHostProfileErr)
+    return { ok: false, message: oldHostProfileErr.message } as const;
+
+  const { data: existingOldReq, error: existingOldReqErr } = await adminClient
+    .from("join_requests")
+    .select("id,status")
+    .eq("game_id", gameId)
+    .eq("requester_id", previousHostUserId)
+    .maybeSingle<{ id: string; status: string }>();
+  if (existingOldReqErr)
+    return { ok: false, message: existingOldReqErr.message } as const;
+
+  if (existingOldReq) {
+    const { error: updateOldReqErr } = await adminClient
+      .from("join_requests")
+      .update({
+        status: JOIN_REQUEST_STATUSES.ACCEPTED,
+        requester_nickname: oldHostProfile!.nickname,
+      })
+      .eq("id", existingOldReq.id);
+    if (updateOldReqErr)
+      return { ok: false, message: updateOldReqErr.message } as const;
+  } else {
+    const { error: insertOldReqErr } = await adminClient
+      .from("join_requests")
+      .insert({
+        game_id: gameId,
+        requester_id: previousHostUserId,
+        requester_nickname: oldHostProfile!.nickname,
+        status: JOIN_REQUEST_STATUSES.ACCEPTED,
+      });
+    if (insertOldReqErr)
+      return { ok: false, message: insertOldReqErr.message } as const;
+  }
+
   return { ok: true } as const;
 }

@@ -15,18 +15,17 @@ import { useGameHostSubscription } from "@/hooks/useGameHostSubscription";
 export default function Room({
   gameId,
   userId,
-  isHost,
   hostUserId,
 }: {
   gameId: string;
   userId: string;
-  isHost: boolean;
   hostUserId: string;
 }) {
   const [status, setStatus] = useState<JoinRequest["status"] | undefined>(
     undefined
   );
   const [currentHostId, setCurrentHostId] = useState<string>(hostUserId);
+  const isHost = currentHostId === userId;
   const [token, setToken] = useState<string | null>(null);
   const [room] = useState(
     () =>
@@ -82,7 +81,7 @@ export default function Room({
   );
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-200 dark:border-gray-700">
+    <>
       {status !== JOIN_REQUEST_STATUSES.ACCEPTED && !isHost && (
         <WaitingRoom
           status={status ?? undefined}
@@ -97,9 +96,10 @@ export default function Room({
           room={room}
           hostUserId={currentHostId}
           token={token ?? ""}
+          isHost={isHost}
           userId={userId}
         />
       )}
-    </div>
+    </>
   );
 }
