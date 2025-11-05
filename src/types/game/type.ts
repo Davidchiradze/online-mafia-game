@@ -14,7 +14,9 @@ export type GameSession = Pick<
   | "current_players"
   | "created_at"
   | "updated_at"
->;
+> & {
+  participant_names: string[];
+};
 
 export type JoinRequest = Pick<
   DbJoinRequest,

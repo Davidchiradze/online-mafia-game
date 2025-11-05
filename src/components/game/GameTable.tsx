@@ -5,7 +5,7 @@ import GameTableRow from "./GameTableRow";
 import GameCard from "./GameCard";
 
 type Props = {
-  data: (GameSession & { participant_names: string[] })[];
+  data: GameSession[];
   onRowClick?: (session: GameSession) => void;
 };
 

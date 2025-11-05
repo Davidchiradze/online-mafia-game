@@ -176,6 +176,11 @@ export async function fetchGameSessionById(
     return { ok: false, message: error?.message || "Not found" } as const;
 
   const gameRow = data;
+  const participantsByRoom = await listParticipantsForRooms([id]);
+  const participantData = participantsByRoom[id] || {
+    count: 0,
+    names: [],
+  };
   const session: GameSession = {
     id: gameRow.id,
     name: gameRow.name,
@@ -183,7 +188,8 @@ export async function fetchGameSessionById(
     game_type: gameRow.game_type as GameSession["game_type"],
     game_status: gameRow.game_status as GameSession["game_status"],
     max_players: gameRow.max_players,
-    current_players: gameRow.current_players,
+    current_players: participantData.count,
+    participant_names: participantData.names,
     created_at: gameRow.created_at!,
     updated_at: gameRow.updated_at!,
   };
