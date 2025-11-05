@@ -49,13 +49,24 @@ export default function Room({
   }, [gameId]);
 
   useEffect(() => {
-    if (status === JOIN_REQUEST_STATUSES.ACCEPTED || isHost) {
-      generateLivekitAccessToken(gameId, userId).then((token) => {
+    if (status === JOIN_REQUEST_STATUSES.ACCEPTED && !isHost) {
+      generateLivekitAccessToken(gameId, userId, {
+        hidden: false,
+        roomAdmin: false,
+      }).then((token) => {
         setToken(token);
         room.connect(process.env.NEXT_PUBLIC_LIVEKIT_URL!, token || "");
         room.localParticipant.setCameraEnabled(true);
       });
-      //
+    } else if (isHost) {
+      generateLivekitAccessToken(gameId, userId, {
+        hidden: false,
+        roomAdmin: true,
+      }).then((token) => {
+        setToken(token);
+        room.connect(process.env.NEXT_PUBLIC_LIVEKIT_URL!, token || "");
+        room.localParticipant.setCameraEnabled(true);
+      });
     }
     return () => {
       console.log("disconnecting");

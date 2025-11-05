@@ -9,7 +9,11 @@ import { createClient } from "@/lib/supabase/server";
 
 export async function generateLivekitAccessToken(
   roomId: string,
-  participantId: string
+  participantId: string,
+  permissions: {
+    hidden: boolean;
+    roomAdmin: boolean;
+  }
 ) {
   // Resolve participant display name from the authenticated session
   const supabase = await createClient();
@@ -35,6 +39,8 @@ export async function generateLivekitAccessToken(
     roomJoin: true,
     canPublish: true,
     canSubscribe: true,
+    hidden: permissions.hidden || false,
+    roomAdmin: permissions.roomAdmin || false,
   };
 
   at.addGrant(videoGrant);
@@ -81,4 +87,24 @@ export async function removeParticipantFromRoom(
     process.env.LIVEKIT_API_SECRET!
   );
   await roomService.removeParticipant(roomId, participantId);
+}
+
+export async function listParticipantsForRooms(roomIds: string[]) {
+  const roomService = new RoomServiceClient(
+    process.env.NEXT_PUBLIC_LIVEKIT_URL!,
+    process.env.LIVEKIT_API_KEY!,
+    process.env.LIVEKIT_API_SECRET!
+  );
+
+  const results: Record<string, { count: number; names: string[] }> = {};
+  for (const roomId of roomIds) {
+    try {
+      const participants = await roomService.listParticipants(roomId);
+      const names = participants.map((p) => p.name || p.identity || "");
+      results[roomId] = { count: participants.length, names };
+    } catch (_e) {
+      results[roomId] = { count: 0, names: [] };
+    }
+  }
+  return results;
 }

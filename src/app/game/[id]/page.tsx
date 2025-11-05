@@ -38,7 +38,7 @@ export default async function GamePage({ params }: PageProps) {
           </div>
         </div>
       </header>
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 h-[calc(100vh-56px)]">
+      <div className="mx-auto px-4 sm:px-6 lg:px-8 py-6 h-[calc(100vh-56px)]">
         <div className="flex flex-col gap-6 h-full">
           {!userId || !game ? (
             <div className="flex h-full items-center justify-center text-gray-600 dark:text-gray-400">
@@ -54,7 +54,7 @@ export default async function GamePage({ params }: PageProps) {
             </Suspense>
           )}
         </div>
-      </main>
+      </div>
     </div>
   );
 }

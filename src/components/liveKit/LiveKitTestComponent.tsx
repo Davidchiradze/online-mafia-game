@@ -1,12 +1,8 @@
 "use client";
 
 import {
-  ControlBar,
-  DisconnectButton,
-  LeaveIcon,
   RoomAudioRenderer,
   RoomContext,
-  StartAudio,
   useTracks,
 } from "@livekit/components-react";
 import { Room, Track } from "livekit-client";
@@ -117,8 +113,8 @@ function MyVideoConference({
   return (
     <div
       style={{
-        height: "calc(100vh - var(--lk-control-bar-height))",
-        width: isFullscreen ? "100vw" : "100vh",
+        height: "calc(100vh)",
+        width: "100%",
       }}
       className="w-full h-full"
     >

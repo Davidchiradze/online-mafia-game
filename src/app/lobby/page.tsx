@@ -8,11 +8,8 @@ import { User as SupabaseUser } from "@supabase/supabase-js";
 import GameTable from "@/components/game/GameTable";
 import CreateGameModal from "@/components/modals/CreateGameModal";
 import { GameSession } from "@/types/game/type";
-import { fetchAllGameSessions, requestJoin } from "@/lib/gameSession/actions";
-import {
-  createLivekitRoom,
-  generateLivekitAccessToken,
-} from "@/lib/liveKit/actions";
+import { fetchAllGameSessions } from "@/lib/gameSession/actions";
+import { createLivekitRoom } from "@/lib/liveKit/actions";
 export default function LobbyPage() {
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [loading, setLoading] = useState(true);

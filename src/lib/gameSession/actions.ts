@@ -8,6 +8,7 @@ import {
 } from "@/lib/constants/game";
 import { GameSession, JoinRequest } from "@/types/game/type";
 import { Tables } from "@/db/supabase/database.types";
+import { listParticipantsForRooms } from "../liveKit/actions";
 
 function generateGameCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -136,17 +137,27 @@ export async function fetchAllGameSessions(): Promise<
     | "updated_at"
   >;
   const rows = (data ?? []) as GameSelect[];
-  const sessions: GameSession[] = rows.map((row) => ({
-    id: row.id,
-    name: row.name,
-    host_id: row.host_id!,
-    game_type: row.game_type as GameSession["game_type"],
-    game_status: row.game_status as GameSession["game_status"],
-    max_players: row.max_players,
-    current_players: row.current_players,
-    created_at: row.created_at!,
-    updated_at: row.updated_at!,
-  }));
+  const participantsByRoom = await listParticipantsForRooms(
+    rows.map((row) => row.id)
+  );
+  const sessions: GameSession[] = rows.map((row) => {
+    const participantData = participantsByRoom[row.id] || {
+      count_players: 0,
+      participant_names: [],
+    };
+    return {
+      id: row.id,
+      name: row.name,
+      host_id: row.host_id!,
+      game_type: row.game_type as GameSession["game_type"],
+      game_status: row.game_status as GameSession["game_status"],
+      max_players: row.max_players,
+      current_players: participantData.count,
+      participant_names: participantData.names,
+      created_at: row.created_at!,
+      updated_at: row.updated_at!,
+    };
+  });
   return { ok: true, data: sessions } as const;
 }
 

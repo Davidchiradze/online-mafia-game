@@ -1,37 +1,42 @@
 "use client";
 
-import { useMemo } from "react";
 import { GameSession } from "@/types/game/type";
-import {
-  GAME_STATUS_LABEL,
-  GAME_TYPE_LABEL,
-  GAME_TYPE_MAX_PLAYER_NUMBER,
-} from "@/lib/constants/game";
+import GameTableRow from "./GameTableRow";
+import GameCard from "./GameCard";
 
 type Props = {
-  data: GameSession[];
+  data: (GameSession & { participant_names: string[] })[];
   onRowClick?: (session: GameSession) => void;
 };
-
-function StatusBadge({ status }: { status: GameSession["game_status"] }) {
-  const classes = useMemo(() => {
-    if (status === "not_started")
-      return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200";
-    if (status === "playing")
-      return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300";
-    return "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300";
-  }, [status]);
-  return (
-    <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${classes}`}>
-      {GAME_STATUS_LABEL[status]}
-    </span>
-  );
-}
 
 export default function GameTable({ data, onRowClick }: Props) {
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm bg-white dark:bg-gray-900">
-      <div className="min-w-full overflow-x-auto">
+      {/* Mobile: grid of cards */}
+      <div className="p-4 md:hidden">
+        {data.length === 0 ? (
+          <div className="px-2 py-8 text-center text-gray-500 dark:text-gray-400">
+            No games yet
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {data.map((session) => {
+              return (
+                <GameCard
+                  key={session.id}
+                  session={session}
+                  onClick={onRowClick}
+                  participantCount={session.current_players}
+                  participantNames={session?.participant_names || []}
+                />
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Desktop: table */}
+      <div className="min-w-full overflow-x-auto hidden md:block">
         <table className="min-w-full">
           <thead className="bg-gray-50 dark:bg-gray-800/60">
             <tr>
@@ -64,30 +69,14 @@ export default function GameTable({ data, onRowClick }: Props) {
               </tr>
             ) : (
               data.map((session) => {
-                const playersLabel =
-                  GAME_TYPE_MAX_PLAYER_NUMBER[session.game_type];
                 return (
-                  <tr
+                  <GameTableRow
                     key={session.id}
-                    onClick={() => onRowClick?.(session)}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors cursor-pointer"
-                  >
-                    <td className="px-6 py-4 text-gray-900 dark:text-gray-100">
-                      {session.name}
-                    </td>
-                    <td className="px-6 py-4 text-gray-700 dark:text-gray-300">
-                      {GAME_TYPE_LABEL[session.game_type]}
-                    </td>
-                    <td className="px-6 py-4 text-gray-700 dark:text-gray-300">
-                      {session.current_players}/{playersLabel}
-                    </td>
-                    <td className="px-6 py-4">
-                      <StatusBadge status={session.game_status} />
-                    </td>
-                    <td className="px-6 py-4 text-gray-700 dark:text-gray-300">
-                      {session.current_players}
-                    </td>
-                  </tr>
+                    session={session}
+                    onRowClick={onRowClick}
+                    participantCount={session.current_players}
+                    participantNames={session?.participant_names || []}
+                  />
                 );
               })
             )}
