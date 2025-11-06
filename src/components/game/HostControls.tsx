@@ -1,10 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
-import {
-  TrackReferenceOrPlaceholder,
-  useRoomContext,
-  useTracks,
-} from "@livekit/components-react";
-import { Track } from "livekit-client";
+import React, { useMemo } from "react";
+import { TrackReferenceOrPlaceholder } from "@livekit/components-react";
 
 const HostControls = ({
   gameId,

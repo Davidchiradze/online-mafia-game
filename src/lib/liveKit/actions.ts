@@ -119,10 +119,82 @@ export async function setParticipantReady(
     process.env.LIVEKIT_API_KEY!,
     process.env.LIVEKIT_API_SECRET!
   );
+  // Merge with existing metadata so seatIndex is preserved
+  let existingMeta: Record<string, unknown> = {};
+  try {
+    const participants = await roomService.listParticipants(roomId);
+    const target = participants.find((p) => p.identity === participantId);
+    if (target?.metadata) {
+      try {
+        existingMeta = JSON.parse(target.metadata) as Record<string, unknown>;
+      } catch (_e) {
+        existingMeta = {};
+      }
+    }
+  } catch (_e) {
+    existingMeta = {};
+  }
 
-  // For MVP, overwrite metadata with a simple JSON containing `ready`.
-  // In future, merge with existing metadata if needed.
   await roomService.updateParticipant(roomId, participantId, {
-    metadata: JSON.stringify({ ready }),
+    metadata: JSON.stringify({ ...existingMeta, ready }),
+  });
+}
+
+export async function assignSeatIfMissing(
+  roomId: string,
+  participantId: string,
+  maxPlayers: number = 12
+) {
+  const roomService = new RoomServiceClient(
+    process.env.NEXT_PUBLIC_LIVEKIT_URL!,
+    process.env.LIVEKIT_API_KEY!,
+    process.env.LIVEKIT_API_SECRET!
+  );
+  const participants = await roomService.listParticipants(roomId);
+  const target = participants.find((p) => p.identity === participantId);
+  if (!target) return;
+
+  let meta: Record<string, unknown> = {};
+  try {
+    meta = target.metadata ? (JSON.parse(target.metadata) as any) : {};
+  } catch (_e) {
+    meta = {};
+  }
+
+  const hasSeat =
+    typeof (meta as any).seatIndex === "number" &&
+    Number.isInteger((meta as any).seatIndex) &&
+    (meta as any).seatIndex >= 1 &&
+    (meta as any).seatIndex <= maxPlayers;
+  if (hasSeat) return;
+
+  const used = new Set<number>();
+  for (const p of participants) {
+    if (p.identity === participantId) continue;
+    try {
+      const pm = p.metadata ? (JSON.parse(p.metadata) as any) : {};
+      const s = pm?.seatIndex;
+      if (
+        typeof s === "number" &&
+        Number.isInteger(s) &&
+        s >= 1 &&
+        s <= maxPlayers
+      ) {
+        used.add(s);
+      }
+    } catch (_e) {}
+  }
+
+  let seat: number | undefined;
+  for (let i = 1; i <= maxPlayers; i++) {
+    if (!used.has(i)) {
+      seat = i;
+      break;
+    }
+  }
+  if (!seat) return;
+
+  await roomService.updateParticipant(roomId, participantId, {
+    metadata: JSON.stringify({ ...meta, seatIndex: seat }),
   });
 }

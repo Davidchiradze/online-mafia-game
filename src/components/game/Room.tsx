@@ -7,7 +7,10 @@ import { JOIN_REQUEST_STATUSES } from "@/lib/constants/game";
 import { checkOrRequestJoin } from "@/lib/gameSession/actions";
 import LiveKitTestComponent from "../liveKit/LiveKitTestComponent";
 import { Room as LiveKitRoom } from "livekit-client";
-import { generateLivekitAccessToken } from "@/lib/liveKit/actions";
+import {
+  assignSeatIfMissing,
+  generateLivekitAccessToken,
+} from "@/lib/liveKit/actions";
 import WaitingRoom from "./WaitingRoom";
 import { useLivekitRoom } from "@/hooks/useLivekitRoom";
 import { useGameHostSubscription } from "@/hooks/useGameHostSubscription";
@@ -50,26 +53,25 @@ export default function Room({
 
   useEffect(() => {
     if (status === JOIN_REQUEST_STATUSES.ACCEPTED && !isHost) {
-      generateLivekitAccessToken(
-        gameId,
-        userId + "-" + Math.random().toString(36).substring(2, 15),
-        {
-          hidden: false,
-          roomAdmin: false,
-        }
-      ).then((token) => {
+      const identity = userId;
+      generateLivekitAccessToken(gameId, identity, {
+        hidden: false,
+        roomAdmin: false,
+      }).then(async (token) => {
         setToken(token);
-        room.connect(process.env.NEXT_PUBLIC_LIVEKIT_URL!, token || "");
+        await room.connect(process.env.NEXT_PUBLIC_LIVEKIT_URL!, token || "");
         room.localParticipant.setCameraEnabled(true);
+        await assignSeatIfMissing(gameId, identity, 12);
       });
     } else if (isHost) {
       generateLivekitAccessToken(gameId, userId, {
         hidden: false,
         roomAdmin: true,
-      }).then((token) => {
+      }).then(async (token) => {
         setToken(token);
-        room.connect(process.env.NEXT_PUBLIC_LIVEKIT_URL!, token || "");
+        await room.connect(process.env.NEXT_PUBLIC_LIVEKIT_URL!, token || "");
         room.localParticipant.setCameraEnabled(true);
+        // Host is centered tile; no seat assignment
       });
     }
     return () => {
