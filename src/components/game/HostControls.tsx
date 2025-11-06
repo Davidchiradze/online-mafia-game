@@ -3,9 +3,11 @@ import { TrackReferenceOrPlaceholder } from "@livekit/components-react";
 
 const HostControls = ({
   gameId,
+  maxPlayers,
   tracks,
 }: {
   gameId?: string;
+  maxPlayers: number;
   tracks: TrackReferenceOrPlaceholder[];
 }) => {
   const { readyCount, totalPlayers, allReady } = useMemo(() => {
@@ -24,7 +26,7 @@ const HostControls = ({
     return {
       readyCount: ready,
       totalPlayers: total,
-      allReady: total >= 12 && ready >= 12,
+      allReady: total >= maxPlayers && ready >= maxPlayers,
     };
   }, [tracks]);
 
@@ -40,7 +42,7 @@ const HostControls = ({
         </button>
       ) : (
         <div className="text-xs text-gray-300/80">
-          {readyCount}/{Math.max(12, totalPlayers)} ready
+          {readyCount}/{Math.max(maxPlayers, totalPlayers)} ready
         </div>
       )}
     </div>

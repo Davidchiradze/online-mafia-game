@@ -1,9 +1,10 @@
 "use client";
 
 import { TrackReferenceOrPlaceholder } from "@livekit/components-react";
-import React, { useMemo } from "react";
+import React from "react";
 import ParticipantComponent from "../participant/ParticipantComponent";
 import HostControls from "./HostControls";
+import { usePlayerSlots } from "../../hooks/usePlayerSlots";
 
 // 4x5 grid placement for 12 players around a centered host (spanning 2 rows)
 // Player indices are 1..12 (clockwise-ish around the host)
@@ -61,62 +62,11 @@ export default function PlayerCircle({
   userId: string;
   maxPlayers?: number;
 }) {
-  console.log("🚀 ~ PlayerCircle ~ tracks:", tracks);
-  const slotDescriptors = useMemo(() => {
-    const hostTrack = tracks.find((t) => t.participant.identity === hostUserId);
-    const nonHostTracks = tracks.filter(
-      (t) => t.participant.identity !== hostUserId
-    );
-
-    const slots: Array<{
-      key: number | "host";
-      track?: TrackReferenceOrPlaceholder;
-    }> = [];
-
-    // host is always at row 2, col 2
-    slots.push({ key: "host", track: hostTrack });
-
-    // numbered player positions 1..maxPlayers
-    // Build a seat map from participant.metadata.seatIndex
-    const seatToTrack: Record<number, TrackReferenceOrPlaceholder> = {};
-    for (const t of nonHostTracks) {
-      try {
-        const raw = (t as any)?.participant?.metadata as string | undefined;
-        if (!raw) continue;
-        const parsed = JSON.parse(raw) as Record<string, unknown>;
-        const seatIndex = (parsed as any)?.seatIndex;
-        if (
-          typeof seatIndex === "number" &&
-          Number.isInteger(seatIndex) &&
-          seatIndex >= 1 &&
-          seatIndex <= maxPlayers &&
-          !seatToTrack[seatIndex]
-        ) {
-          seatToTrack[seatIndex] = t;
-        }
-      } catch (_e) {
-        // ignore malformed metadata
-      }
-    }
-
-    // Fallback: fill remaining seats with any unseated tracks in stable identity order
-    const unseated = nonHostTracks
-      .filter((t) => !Object.values(seatToTrack).includes(t))
-      .sort((a, b) => {
-        const ai = (a as any)?.participant?.identity ?? "";
-        const bi = (b as any)?.participant?.identity ?? "";
-        return String(ai).localeCompare(String(bi));
-      });
-
-    let idx = 0;
-    for (let i = 1; i <= maxPlayers; i++) {
-      const trackAtSeat = seatToTrack[i] ?? unseated[idx];
-      slots.push({ key: i as number, track: trackAtSeat });
-      if (!seatToTrack[i] && unseated[idx]) idx++;
-    }
-
-    return slots;
-  }, [tracks, hostUserId, maxPlayers]);
+  const slotDescriptors = usePlayerSlots({
+    tracks,
+    hostUserId,
+    maxPlayers,
+  });
   //
 
   return (
@@ -162,7 +112,11 @@ export default function PlayerCircle({
       })}
       <div style={{ gridColumn: 3, gridRow: 2 }}>
         {userId === hostUserId && (
-          <HostControls gameId={gameId} tracks={tracks} />
+          <HostControls
+            gameId={gameId}
+            tracks={tracks}
+            maxPlayers={maxPlayers}
+          />
         )}
       </div>
     </div>
