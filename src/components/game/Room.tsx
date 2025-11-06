@@ -50,10 +50,14 @@ export default function Room({
 
   useEffect(() => {
     if (status === JOIN_REQUEST_STATUSES.ACCEPTED && !isHost) {
-      generateLivekitAccessToken(gameId, userId, {
-        hidden: false,
-        roomAdmin: false,
-      }).then((token) => {
+      generateLivekitAccessToken(
+        gameId,
+        userId + "-" + Math.random().toString(36).substring(2, 15),
+        {
+          hidden: false,
+          roomAdmin: false,
+        }
+      ).then((token) => {
         setToken(token);
         room.connect(process.env.NEXT_PUBLIC_LIVEKIT_URL!, token || "");
         room.localParticipant.setCameraEnabled(true);

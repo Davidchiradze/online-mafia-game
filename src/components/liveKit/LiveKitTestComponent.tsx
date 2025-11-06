@@ -111,13 +111,7 @@ function MyVideoConference({
     { onlySubscribed: false }
   );
   return (
-    <div
-      style={{
-        height: "calc(100vh)",
-        width: "100%",
-      }}
-      className="w-full h-full"
-    >
+    <div className="w-full h-full">
       <PlayerCircle
         gameId={gameId}
         tracks={tracks}

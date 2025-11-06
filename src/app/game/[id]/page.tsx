@@ -18,8 +18,9 @@ export default async function GamePage({ params }: PageProps) {
   const sessionRes = await fetchGameSessionById(id);
   if (
     sessionRes.ok &&
-    Number(sessionRes.data.max_players) -
-      Number(sessionRes.data.current_players) <=
+    Number(sessionRes.data.max_players) +
+      1 -
+      Number(sessionRes.data.current_players) ===
       0
   ) {
     return (
@@ -34,24 +35,6 @@ export default async function GamePage({ params }: PageProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-black">
-      <header className="sticky top-0 z-40 border-b border-gray-200/60 dark:border-gray-800/60 bg-white/70 dark:bg-gray-900/50 backdrop-blur supports-[backdrop-filter]:bg-white/60 supports-[backdrop-filter]:dark:bg-gray-900/40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <div className="flex items-center justify-between gap-4">
-            <h1 className="truncate text-lg sm:text-xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">
-              Game Room: {game?.name ?? ""}
-            </h1>
-            <div className="flex items-center gap-3">
-              <Link
-                href="/lobby"
-                aria-label="Back to Lobby"
-                className="inline-flex items-center gap-2 rounded-md border border-gray-300/70 dark:border-gray-700/70 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100/60 dark:hover:bg-gray-800/60 transition-colors"
-              >
-                Back to Lobby
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
       <div className="mx-auto px-4 sm:px-6 lg:px-8 py-6 h-[calc(100vh-56px)]">
         <div className="flex flex-col gap-6 h-full">
           {!userId || !game ? (
