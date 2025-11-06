@@ -5,13 +5,6 @@ import React, { useMemo } from "react";
 import ParticipantComponent from "../participant/ParticipantComponent";
 import HostControls from "./HostControls";
 
-type PlayerCircleProps = {
-  gameId: string;
-  tracks: TrackReferenceOrPlaceholder[];
-  hostUserId: string;
-  maxPlayers?: number; // number of player slots around the host
-};
-
 // 4x5 grid placement for 12 players around a centered host (spanning 2 rows)
 // Player indices are 1..12 (clockwise-ish around the host)
 // Visual rows with playerIndex labels:
@@ -68,11 +61,13 @@ export default function PlayerCircle({
   userId: string;
   maxPlayers?: number;
 }) {
+  console.log("🚀 ~ PlayerCircle ~ tracks:", tracks);
   const slotDescriptors = useMemo(() => {
     const hostTrack = tracks.find((t) => t.participant.identity === hostUserId);
     const nonHostTracks = tracks
       .filter((t) => t.participant.identity !== hostUserId)
       .slice(0, maxPlayers);
+    console.log("🚀 ~ PlayerCircle ~ nonHostTracks:", nonHostTracks);
 
     const slots: Array<{
       key: number | "host";
@@ -133,7 +128,9 @@ export default function PlayerCircle({
         );
       })}
       <div style={{ gridColumn: 3, gridRow: 2 }}>
-        {userId === hostUserId && <HostControls />}
+        {userId === hostUserId && (
+          <HostControls gameId={gameId} tracks={tracks} />
+        )}
       </div>
     </div>
   );

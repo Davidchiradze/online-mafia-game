@@ -108,3 +108,21 @@ export async function listParticipantsForRooms(roomIds: string[]) {
   }
   return results;
 }
+
+export async function setParticipantReady(
+  roomId: string,
+  participantId: string,
+  ready: boolean
+) {
+  const roomService = new RoomServiceClient(
+    process.env.NEXT_PUBLIC_LIVEKIT_URL!,
+    process.env.LIVEKIT_API_KEY!,
+    process.env.LIVEKIT_API_SECRET!
+  );
+
+  // For MVP, overwrite metadata with a simple JSON containing `ready`.
+  // In future, merge with existing metadata if needed.
+  await roomService.updateParticipant(roomId, participantId, {
+    metadata: JSON.stringify({ ready }),
+  });
+}

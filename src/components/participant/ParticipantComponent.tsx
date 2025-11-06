@@ -11,6 +11,8 @@ import { useCallback, useMemo, useState } from "react";
 import { kickPlayer, transferHost } from "@/lib/gameSession/actions";
 import { removeParticipantFromRoom } from "@/lib/liveKit/actions";
 import PopupMenu from "@/components/ui/PopupMenu";
+import { useParticipantReady } from "@/hooks/useParticipantReady";
+import ReadyButton from "@/components/ui/ReadyButton";
 
 export default function ParticipantComponent({
   gameId,
@@ -34,6 +36,11 @@ export default function ParticipantComponent({
   const isViewerHost = currentUserId === hostUserId;
   const isTargetHost = participantId === hostUserId;
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
+  const { isReady, markReady, markUnready } = useParticipantReady(
+    gameId,
+    participantId,
+    trackRef
+  );
 
   const canShowMenu = useMemo(() => {
     // Only show menu when viewer is host, a real participant exists, and it's not the host tile
@@ -54,6 +61,14 @@ export default function ParticipantComponent({
     await transferHost(gameId, participantId);
     setMenuOpen(false);
   }, [gameId, participantId]);
+
+  const onReady = useCallback(async () => {
+    await markReady();
+  }, [markReady]);
+
+  const onUnready = useCallback(async () => {
+    await markUnready();
+  }, [markUnready]);
 
   return (
     <div
@@ -109,6 +124,25 @@ export default function ParticipantComponent({
               { label: "Make host", onClick: onMakeHost },
             ]}
             className="absolute right-0 mt-2 w-44"
+          />
+        </div>
+      )}
+
+      {/* Ready indicator (top-right) */}
+      {isReady && (
+        <div className="absolute right-2 top-2 z-10 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-bold shadow">
+          ✓
+        </div>
+      )}
+
+      {/* Local participant hover-ready/unready button (non-host) */}
+      {isLocal && !isTargetHost && (
+        <div className="flex items-center justify-center absolute bottom-[50px] left-[50%]">
+          <ReadyButton
+            isReady={isReady}
+            onReady={onReady}
+            onUnready={onUnready}
+            className="opacity-0 group-hover:opacity-100 absolute top-0"
           />
         </div>
       )}

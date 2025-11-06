@@ -106,6 +106,7 @@ export async function createGameSession(input: {
     game_status: inserted.game_status as GameSession["game_status"],
     max_players: inserted.max_players,
     current_players: inserted.current_players,
+    participant_names: [],
     created_at: inserted.created_at!,
     updated_at: inserted.updated_at!,
   };
