@@ -7,7 +7,7 @@ import {
 } from "@livekit/components-react";
 import { Track } from "livekit-client";
 import { MicOffIcon, MicOnIcon, MoreVerticalIcon } from "@/assets/icons";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { kickPlayer, transferHost } from "@/lib/gameSession/actions";
 import { removeParticipantFromRoom } from "@/lib/liveKit/actions";
 import PopupMenu from "@/components/ui/PopupMenu";
@@ -36,6 +36,9 @@ export default function ParticipantComponent({
   const isViewerHost = currentUserId === hostUserId;
   const isTargetHost = participantId === hostUserId;
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
+  const [isMobileReadyVisible, setIsMobileReadyVisible] =
+    useState<boolean>(false);
+  const mobileReadyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { isReady, markReady, markUnready } = useParticipantReady(
     gameId,
     participantId,
@@ -70,10 +73,30 @@ export default function ParticipantComponent({
     await markUnready();
   }, [markUnready]);
 
+  const handleTileClick = useCallback(() => {
+    // Only applicable for the local participant who isn't the host
+    if (!isLocal || isTargetHost) return;
+    // Show Ready button briefly on mobile/tap interactions
+    setIsMobileReadyVisible(true);
+    if (mobileReadyTimeoutRef.current)
+      clearTimeout(mobileReadyTimeoutRef.current);
+    mobileReadyTimeoutRef.current = setTimeout(() => {
+      setIsMobileReadyVisible(false);
+    }, 3000);
+  }, [isLocal, isTargetHost]);
+
+  useEffect(() => {
+    return () => {
+      if (mobileReadyTimeoutRef.current)
+        clearTimeout(mobileReadyTimeoutRef.current);
+    };
+  }, []);
+
   return (
     <div
       className="relative w-full h-full flex flex-col items-stretch justify-stretch text-sm text-gray-200 group"
       onMouseLeave={() => setMenuOpen(false)}
+      onClick={handleTileClick}
     >
       <ParticipantTile
         className="lk-hide-metadata"
@@ -82,34 +105,38 @@ export default function ParticipantComponent({
       />
 
       {isLocal ? (
-        <div className="absolute left-2 top-2 z-10">
+        <div className="absolute left-1 top-1 md:left-2 md:top-2 z-10 scale-90 md:scale-100">
           <TrackToggle source={Track.Source.Microphone} showIcon={true} />
         </div>
       ) : (
-        <div className="absolute left-2 top-2 z-10 rounded-full border border-white/10 bg-black/40 backdrop-blur px-2 py-1 text-white">
-          {isMicEnabled ? <MicOnIcon /> : <MicOffIcon />}
+        <div className="absolute left-1 top-1 md:left-2 md:top-2 z-10 rounded-full border border-white/10 bg-black/40 backdrop-blur px-1.5 py-0.5 md:px-2 md:py-1 text-white text-[10px] md:text-[12px]">
+          {isMicEnabled ? (
+            <MicOnIcon width={14} height={14} />
+          ) : (
+            <MicOffIcon width={14} height={14} />
+          )}
         </div>
       )}
 
       {displayName ? (
-        <div className="absolute bottom-2 left-2 z-10 rounded-full border border-white/10 bg-black/40 backdrop-blur px-3 py-1 text-xs font-medium text-gray-100">
+        <div className="absolute bottom-1 left-1 md:bottom-2 md:left-2 z-10 rounded-full border border-white/10 bg-black/40 backdrop-blur px-2 py-0.5 md:px-3 md:py-1 text-[10px] md:text-xs font-medium text-gray-100">
           {displayName}
         </div>
       ) : (
-        <div className="absolute bottom-2 left-2 z-10 rounded-full border border-white/10 bg-black/40 backdrop-blur px-3 py-1 text-xs font-medium text-gray-100">
+        <div className="absolute bottom-1 left-1 md:bottom-2 md:left-2 z-10 rounded-full border border-white/10 bg-black/40 backdrop-blur px-2 py-0.5 md:px-3 md:py-1 text-[10px] md:text-xs font-medium text-gray-100">
           {playerIndex === "host" ? "Host" : playerIndex}
         </div>
       )}
 
       {canShowMenu && (
-        <div className="absolute right-2 top-2 z-20">
+        <div className="absolute right-1 top-1 md:right-2 md:top-2 z-20">
           <button
             type="button"
             aria-label="Participant settings"
             onClick={() => setMenuOpen((p) => !p)}
-            className="rounded-md border border-white/10 bg-black/40 backdrop-blur p-1.5 text-white opacity-0 group-hover:opacity-100 transition"
+            className="rounded-md border border-white/10 bg-black/40 backdrop-blur p-1 md:p-1.5 text-white opacity-0 group-hover:opacity-100 transition"
           >
-            <MoreVerticalIcon width={18} height={18} />
+            <MoreVerticalIcon width={16} height={16} />
           </button>
 
           <PopupMenu
@@ -130,19 +157,21 @@ export default function ParticipantComponent({
 
       {/* Ready indicator (top-right) */}
       {isReady && (
-        <div className="absolute right-2 top-2 z-10 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-bold shadow">
+        <div className="absolute right-1 top-[34px] md:right-2 md:top-2 z-20 w-5 h-5 md:w-6 md:h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px] md:text-xs font-bold shadow">
           ✓
         </div>
       )}
 
       {/* Local participant hover-ready/unready button (non-host) */}
       {isLocal && !isTargetHost && (
-        <div className="flex items-center justify-center absolute bottom-[50px] left-[50%]">
+        <div className="flex items-center justify-center absolute bottom-10 md:bottom-12 left-1/2 -translate-x-1/2 z-20">
           <ReadyButton
             isReady={isReady}
             onReady={onReady}
             onUnready={onUnready}
-            className="opacity-0 group-hover:opacity-100 absolute top-0"
+            className={`${
+              isMobileReadyVisible ? "block" : "hidden"
+            } md:group-hover:block`}
           />
         </div>
       )}
