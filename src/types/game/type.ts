@@ -3,7 +3,7 @@ import { Tables } from "@/db/supabase/database.types";
 export type DbGame = Tables<"games">;
 export type DbJoinRequest = Tables<"join_requests">;
 
-export type GameSession = Pick<
+export type GameRoom = Pick<
   DbGame,
   | "id"
   | "name"

@@ -7,13 +7,13 @@ import { LogOut, User } from "lucide-react";
 import { User as SupabaseUser } from "@supabase/supabase-js";
 import GameTable from "@/components/game/GameTable";
 import CreateGameModal from "@/components/modals/CreateGameModal";
-import { GameSession } from "@/types/game/type";
-import { fetchAllGameSessions } from "@/lib/gameRoom/actions";
+import { GameRoom } from "@/types/game/type";
+import { fetchAllGameRooms } from "@/lib/gameRoom/actions";
 import { createLivekitRoom } from "@/lib/liveKit/actions";
 export default function LobbyPage() {
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const [sessions, setSessions] = useState<GameSession[]>([]);
+  const [sessions, setSessions] = useState<GameRoom[]>([]);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const router = useRouter();
   const supabase = createClient();
@@ -28,7 +28,7 @@ export default function LobbyPage() {
         return;
       }
       setUser(user);
-      const res = await fetchAllGameSessions();
+      const res = await fetchAllGameRooms();
       if (res.ok) setSessions(res.data);
       setLoading(false);
     };
@@ -41,14 +41,14 @@ export default function LobbyPage() {
     router.push("/auth");
   };
 
-  const handleCreated = async (session: GameSession) => {
+  const handleCreated = async (session: GameRoom) => {
     if (!user) return;
     setSessions((prev) => [session, ...prev]);
     await createLivekitRoom(session.id);
     router.push(`/game/${session.id}`);
   };
 
-  const handleGameRowClick = async (session: GameSession) => {
+  const handleGameRowClick = async (session: GameRoom) => {
     if (!user) return;
     router.push(`/game/${session.id}`);
     // if (session.host_id === user.id) {

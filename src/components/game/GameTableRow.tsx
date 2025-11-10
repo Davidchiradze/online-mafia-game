@@ -1,6 +1,6 @@
 "use client";
 
-import { GameSession } from "@/types/game/type";
+import { GameRoom } from "@/types/game/type";
 import {
   GAME_TYPE_LABEL,
   GAME_TYPE_MAX_PLAYER_NUMBER,
@@ -9,8 +9,8 @@ import GameStatusBadge from "./GameStatusBadge";
 import Tooltip from "@/components/ui/Tooltip";
 
 type Props = {
-  session: GameSession;
-  onRowClick?: (session: GameSession) => void;
+  session: GameRoom;
+  onRowClick?: (session: GameRoom) => void;
   participantCount: number;
   participantNames: string[];
 };

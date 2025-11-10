@@ -1,12 +1,12 @@
 "use client";
 
 import { useMemo } from "react";
-import { GameSession } from "@/types/game/type";
+import { GameRoom } from "@/types/game/type";
 
 export default function GameStatusBadge({
   status,
 }: {
-  status: GameSession["game_status"];
+  status: GameRoom["game_status"];
 }) {
   const classes = useMemo(() => {
     if (status === "not_started")

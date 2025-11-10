@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import type { GameSession } from "@/types/game/type";
+import type { GameRoom } from "@/types/game/type";
 import { startGame as startGameAction } from "@/lib/gameSession/actions";
 
 type UseGameSessionOptions = {
@@ -14,7 +14,7 @@ export function useGameSession(
   options?: UseGameSessionOptions
 ) {
   const [gameStatus, setGameStatus] =
-    useState<GameSession["game_status"]>("not_started");
+    useState<GameRoom["game_status"]>("not_started");
 
   // Subscribe to games row updates for status (and future phase if added)
   useEffect(() => {
@@ -31,7 +31,7 @@ export function useGameSession(
           filter: `id=eq.${gameId}`,
         },
         (payload: any) => {
-          const next = payload?.new?.game_status as GameSession["game_status"];
+          const next = payload?.new?.game_status as GameRoom["game_status"];
           if (next) setGameStatus(next);
         }
       )

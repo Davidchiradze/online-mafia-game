@@ -10,7 +10,7 @@ import {
 } from "react";
 import type { PropsWithChildren } from "react";
 import { Room as LiveKitRoom } from "livekit-client";
-import type { GameSession, JoinRequest } from "@/types/game/type";
+import type { GameRoom, JoinRequest } from "@/types/game/type";
 import { useLivekitRoom } from "@/hooks/useLivekitRoom";
 import { useGameSession } from "@/hooks/useGameSession";
 import { useMyJoinRequestStatus } from "@/hooks/useJoinRequests";
@@ -30,7 +30,7 @@ type GameRoomContextValue = {
   room: LiveKitRoom;
   livekitToken: string | null;
   joinStatus: JoinRequest["status"] | undefined;
-  gameStatus: GameSession["game_status"];
+  gameStatus: GameRoom["game_status"];
   startGame: () => Promise<{ ok: boolean; message?: string }>;
   disconnect: () => void;
 };
@@ -42,7 +42,7 @@ export function GameRoomProvider({
   game,
   children,
 }: PropsWithChildren<{
-  game: GameSession;
+  game: GameRoom;
   userId: string;
 }>) {
   const { id: gameId, host_id, max_players: maxPlayers } = game;

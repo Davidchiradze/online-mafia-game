@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { fetchGameSessionById } from "@/lib/gameRoom/actions";
+import { fetchGameRoomById } from "@/lib/gameRoom/actions";
 import { Suspense } from "react";
 import Room from "@/components/game/Room";
 import { redirect } from "next/navigation";
@@ -19,7 +19,7 @@ export default async function GamePage({ params }: PageProps) {
   }
   const userId = userData.user?.id || null;
 
-  const sessionRes = await fetchGameSessionById(id);
+  const sessionRes = await fetchGameRoomById(id);
   if (
     sessionRes.ok &&
     Number(sessionRes.data.max_players) +

@@ -6,7 +6,7 @@ import {
   GAME_TYPE_MAX_PLAYER_NUMBER,
   JOIN_REQUEST_STATUSES,
 } from "@/lib/constants/game";
-import { GameSession, JoinRequest } from "@/types/game/type";
+import { GameRoom, JoinRequest } from "@/types/game/type";
 import { Tables } from "@/db/supabase/database.types";
 import { listParticipantsForRooms } from "../liveKit/actions";
 
@@ -30,14 +30,14 @@ function toJoinRequest(row: Tables<"join_requests">): JoinRequest {
   };
 }
 
-export async function createGameSession(input: {
+export async function createGameRoom(input: {
   name: string;
   type: keyof typeof GAME_TYPE_MAX_PLAYER_NUMBER extends infer K
     ? K extends string
       ? K
       : never
     : never;
-}): Promise<{ ok: true; data: GameSession } | { ok: false; message: string }> {
+}): Promise<{ ok: true; data: GameRoom } | { ok: false; message: string }> {
   const supabase = await createClient();
   const {
     data: { session },
@@ -98,12 +98,12 @@ export async function createGameSession(input: {
   if (!inserted)
     return { ok: false, message: "Unable to create game" } as const;
 
-  const gameSession: GameSession = {
+  const gameSession: GameRoom = {
     id: inserted.id,
     name: inserted.name,
     host_id: dataToInsert.host_id,
     game_type: input.type,
-    game_status: inserted.game_status as GameSession["game_status"],
+    game_status: inserted.game_status as GameRoom["game_status"],
     max_players: inserted.max_players,
     current_players: inserted.current_players,
     participant_names: [],
@@ -114,8 +114,8 @@ export async function createGameSession(input: {
   return { ok: true, data: gameSession } as const;
 }
 
-export async function fetchAllGameSessions(): Promise<
-  { ok: true; data: GameSession[] } | { ok: false; message: string }
+export async function fetchAllGameRooms(): Promise<
+  { ok: true; data: GameRoom[] } | { ok: false; message: string }
 > {
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -141,17 +141,17 @@ export async function fetchAllGameSessions(): Promise<
   const participantsByRoom = await listParticipantsForRooms(
     rows.map((row) => row.id)
   );
-  const sessions: GameSession[] = rows.map((row) => {
+  const sessions: GameRoom[] = rows.map((row) => {
     const participantData = participantsByRoom[row.id] || {
-      count_players: 0,
-      participant_names: [],
+      count: 0,
+      names: [],
     };
     return {
       id: row.id,
       name: row.name,
       host_id: row.host_id!,
-      game_type: row.game_type as GameSession["game_type"],
-      game_status: row.game_status as GameSession["game_status"],
+      game_type: row.game_type as GameRoom["game_type"],
+      game_status: row.game_status as GameRoom["game_status"],
       max_players: row.max_players,
       current_players: participantData.count,
       participant_names: participantData.names,
@@ -162,9 +162,9 @@ export async function fetchAllGameSessions(): Promise<
   return { ok: true, data: sessions } as const;
 }
 
-export async function fetchGameSessionById(
+export async function fetchGameRoomById(
   id: string
-): Promise<{ ok: true; data: GameSession } | { ok: false; message: string }> {
+): Promise<{ ok: true; data: GameRoom } | { ok: false; message: string }> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("games")
@@ -182,12 +182,12 @@ export async function fetchGameSessionById(
     count: 0,
     names: [],
   };
-  const session: GameSession = {
+  const session: GameRoom = {
     id: gameRow.id,
     name: gameRow.name,
     host_id: gameRow.host_id!,
-    game_type: gameRow.game_type as GameSession["game_type"],
-    game_status: gameRow.game_status as GameSession["game_status"],
+    game_type: gameRow.game_type as GameRoom["game_type"],
+    game_status: gameRow.game_status as GameRoom["game_status"],
     max_players: gameRow.max_players,
     current_players: participantData.count,
     participant_names: participantData.names,

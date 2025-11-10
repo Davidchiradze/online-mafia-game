@@ -1,12 +1,12 @@
 "use client";
 
-import { GameSession } from "@/types/game/type";
+import { GameRoom } from "@/types/game/type";
 import GameTableRow from "./GameTableRow";
 import GameCard from "./GameCard";
 
 type Props = {
-  data: GameSession[];
-  onRowClick?: (session: GameSession) => void;
+  data: GameRoom[];
+  onRowClick?: (session: GameRoom) => void;
 };
 
 export default function GameTable({ data, onRowClick }: Props) {

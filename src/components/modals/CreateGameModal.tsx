@@ -3,13 +3,13 @@
 import { useMemo, useState } from "react";
 import { GAME_TYPES, GAME_TYPE_LABEL } from "@/lib/constants/game";
 import Modal from "@/components/ui/Modal";
-import { createGameSession } from "@/lib/gameRoom/actions";
-import { GameSession } from "@/types/game/type";
+import { createGameRoom } from "@/lib/gameRoom/actions";
+import { GameRoom } from "@/types/game/type";
 
 type Props = {
   open: boolean;
   onClose: () => void;
-  onCreated?: (session: GameSession) => void;
+  onCreated?: (session: GameRoom) => void;
 };
 
 export default function CreateGameModal({ open, onClose, onCreated }: Props) {
@@ -25,7 +25,7 @@ export default function CreateGameModal({ open, onClose, onCreated }: Props) {
     if (!canCreate || loading) return;
     setLoading(true);
     setError(null);
-    const res = await createGameSession({ name: name.trim(), type });
+    const res = await createGameRoom({ name: name.trim(), type });
     if (!res.ok) {
       setError(res.message);
       setLoading(false);
