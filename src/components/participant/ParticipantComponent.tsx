@@ -8,8 +8,11 @@ import {
 import { Track } from "livekit-client";
 import { MicOffIcon, MicOnIcon, MoreVerticalIcon } from "@/assets/icons";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { kickPlayer, transferHost } from "@/lib/gameSession/actions";
-import { removeParticipantFromRoom } from "@/lib/liveKit/actions";
+import { kickPlayer, transferHost } from "@/lib/gameRoom/actions";
+import {
+  clearSeatIndex,
+  removeParticipantFromRoom,
+} from "@/lib/liveKit/actions";
 import PopupMenu from "@/components/ui/PopupMenu";
 import { useParticipantReady } from "@/hooks/useParticipantReady";
 import ReadyButton from "@/components/ui/ReadyButton";
@@ -22,7 +25,7 @@ export default function ParticipantComponent({
   playerIndex,
 }: {
   gameId: string;
-  hostUserId: string;
+  hostUserId: string | null;
   currentUserId: string;
   trackRef: TrackReferenceOrPlaceholder;
   playerIndex: number | "host";
@@ -62,6 +65,8 @@ export default function ParticipantComponent({
   const onMakeHost = useCallback(async () => {
     if (!participantId) return;
     await transferHost(gameId, participantId);
+    // If I became the host, ensure I no longer occupy a seat
+    await clearSeatIndex(gameId, participantId);
     setMenuOpen(false);
   }, [gameId, participantId]);
 

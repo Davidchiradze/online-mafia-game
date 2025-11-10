@@ -21,7 +21,7 @@ export default function LiveKitTestComponent({
 }: {
   gameId: string;
   room: Room;
-  hostUserId: string;
+  hostUserId: string | null;
   token: string;
   userId: string;
   isHost: boolean;
@@ -102,7 +102,7 @@ function MyVideoConference({
   userId,
 }: {
   gameId: string;
-  hostUserId: string;
+  hostUserId: string | null;
   isFullscreen: boolean;
   userId: string;
 }) {

@@ -8,7 +8,7 @@ export type PlayerSlotDescriptor = {
 
 type UsePlayerSlotsParams = {
   tracks: TrackReferenceOrPlaceholder[];
-  hostUserId: string;
+  hostUserId: string | null;
   maxPlayers: number;
 };
 
@@ -28,6 +28,7 @@ export function usePlayerSlots({
     const nonHostTracks = tracks.filter(
       (t) => t.participant.identity !== hostUserId
     );
+    console.log("🚀 ~ usePlayerSlots ~ nonHostTracks:", nonHostTracks);
 
     const slots: PlayerSlotDescriptor[] = [];
 

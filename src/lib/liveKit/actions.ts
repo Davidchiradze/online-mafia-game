@@ -198,3 +198,30 @@ export async function assignSeatIfMissing(
     metadata: JSON.stringify({ ...meta, seatIndex: seat }),
   });
 }
+
+export async function clearSeatIndex(
+  roomId: string,
+  participantId: string
+): Promise<void> {
+  const roomService = new RoomServiceClient(
+    process.env.NEXT_PUBLIC_LIVEKIT_URL!,
+    process.env.LIVEKIT_API_KEY!,
+    process.env.LIVEKIT_API_SECRET!
+  );
+  const participants = await roomService.listParticipants(roomId);
+  const target = participants.find((p) => p.identity === participantId);
+  if (!target) return;
+  let meta: Record<string, unknown> = {};
+  try {
+    meta = target.metadata ? (JSON.parse(target.metadata) as any) : {};
+  } catch (_e) {
+    meta = {};
+  }
+  if (Object.prototype.hasOwnProperty.call(meta, "seatIndex")) {
+    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+    delete (meta as any).seatIndex;
+    await roomService.updateParticipant(roomId, participantId, {
+      metadata: JSON.stringify(meta),
+    });
+  }
+}

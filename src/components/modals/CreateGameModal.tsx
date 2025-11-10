@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { GAME_TYPES, GAME_TYPE_LABEL } from "@/lib/constants/game";
 import Modal from "@/components/ui/Modal";
-import { createGameSession } from "@/lib/gameSession/actions";
+import { createGameSession } from "@/lib/gameRoom/actions";
 import { GameSession } from "@/types/game/type";
 
 type Props = {
@@ -83,7 +83,9 @@ export default function CreateGameModal({ open, onClose, onCreated }: Props) {
           </label>
           <select
             value={type}
-            onChange={(e) => setType(e.target.value as (typeof GAME_TYPES)[number])}
+            onChange={(e) =>
+              setType(e.target.value as (typeof GAME_TYPES)[number])
+            }
             className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:bg-gray-800 dark:text-white"
           >
             {GAME_TYPES.map((gt) => (

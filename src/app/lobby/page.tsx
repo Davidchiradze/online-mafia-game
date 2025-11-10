@@ -8,7 +8,7 @@ import { User as SupabaseUser } from "@supabase/supabase-js";
 import GameTable from "@/components/game/GameTable";
 import CreateGameModal from "@/components/modals/CreateGameModal";
 import { GameSession } from "@/types/game/type";
-import { fetchAllGameSessions } from "@/lib/gameSession/actions";
+import { fetchAllGameSessions } from "@/lib/gameRoom/actions";
 import { createLivekitRoom } from "@/lib/liveKit/actions";
 export default function LobbyPage() {
   const [user, setUser] = useState<SupabaseUser | null>(null);
