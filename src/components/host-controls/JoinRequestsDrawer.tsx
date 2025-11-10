@@ -5,7 +5,7 @@ import {
   acceptJoinRequest,
   fetchPendingJoinRequests,
   rejectJoinRequest,
-} from "@/lib/gameSession/actions";
+} from "@/lib/gameRoom/actions";
 import { usePendingJoinRequests } from "@/hooks/useJoinRequests";
 import { JoinRequest } from "@/types/game/type";
 import { JOIN_REQUEST_STATUSES } from "@/lib/constants/game";

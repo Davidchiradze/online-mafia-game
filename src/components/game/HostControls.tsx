@@ -1,15 +1,15 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { TrackReferenceOrPlaceholder } from "@livekit/components-react";
-
 const HostControls = ({
   gameId,
   maxPlayers,
   tracks,
 }: {
-  gameId?: string;
+  gameId: string;
   maxPlayers: number;
   tracks: TrackReferenceOrPlaceholder[];
 }) => {
+  const [starting, setStarting] = useState(false);
   const { readyCount, totalPlayers, allReady } = useMemo(() => {
     const nonHostTracks = tracks.filter(
       (t) => !(t as any)?.participant?.isLocal
@@ -30,15 +30,28 @@ const HostControls = ({
     };
   }, [tracks]);
 
+  const handleStartGame = async () => {
+    if (starting) return;
+    setStarting(true);
+    try {
+      // const res = await startGame();
+      // if (!res?.ok) {
+      //   console.error("Failed to start game:", res?.message);
+      // }
+    } finally {
+      setStarting(false);
+    }
+  };
   return (
     <div className="w-full h-full flex items-center justify-center">
       {allReady ? (
         <button
           type="button"
-          className="rounded-md bg-amber-600 hover:bg-amber-500 text-white font-semibold px-4 py-2 shadow"
-          // onClick={startGame}
+          className="rounded-md bg-amber-600 hover:bg-amber-500 text-white font-semibold px-4 py-2 shadow disabled:opacity-60 disabled:cursor-not-allowed"
+          disabled={starting}
+          onClick={handleStartGame}
         >
-          Start Game
+          {starting ? "Starting..." : "Start Game"}
         </button>
       ) : (
         <div className="text-xs text-gray-300/80">

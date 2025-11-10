@@ -1,17 +1,41 @@
 -- WARNING: This schema is for context only and is not meant to be run.
 -- Table order and constraints may not be valid for execution.
 
-CREATE TABLE public.game_players (
-  id uuid NOT NULL DEFAULT uuid_generate_v4(),
-  game_id uuid,
-  player_id uuid,
-  role text CHECK (role = ANY (ARRAY['mafia'::text, 'don'::text, 'detective'::text, 'citizen'::text])),
-  is_alive boolean DEFAULT true,
-  joined_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT game_players_pkey PRIMARY KEY (id),
-  CONSTRAINT game_players_game_id_fkey FOREIGN KEY (game_id) REFERENCES public.games(id),
-  CONSTRAINT game_players_player_id_fkey FOREIGN KEY (player_id) REFERENCES public.profiles(id)
-);
+create table public.game_players (
+  id uuid not null default extensions.uuid_generate_v4 (),
+  game_id uuid null,
+  player_id uuid null,
+  role text null,
+  is_alive boolean null default true,
+  joined_at timestamp with time zone null default now(),
+  seat_number numeric null,
+  fouls numeric null,
+  constraint game_players_pkey primary key (id),
+  constraint game_players_game_id_player_id_key unique (game_id, player_id),
+  constraint game_players_game_id_fkey foreign KEY (game_id) references games (id) on delete CASCADE,
+  constraint game_players_player_id_fkey foreign KEY (player_id) references profiles (id) on delete CASCADE,
+  constraint game_players_role_check check (
+    (
+      role = any (
+        array[
+          'DON'::text,
+          'MAFIA'::text,
+          'MAFIA_RIGHT_HAND'::text,
+          'SHOGUN'::text,
+          'YAKUZA'::text,
+          'DETECTIVE'::text,
+          'CITIZEN'::text,
+          'DOCTOR'::text
+        ]
+      )
+    )
+  )
+) TABLESPACE pg_default;
+
+create index IF not exists idx_game_players_game_id on public.game_players using btree (game_id) TABLESPACE pg_default;
+create index IF not exists idx_game_players_player_id on public.game_players using btree (player_id) TABLESPACE pg_default;
+
+
 CREATE TABLE public.games (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
   code text NOT NULL UNIQUE,

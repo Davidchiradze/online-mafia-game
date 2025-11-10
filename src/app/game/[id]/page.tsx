@@ -1,9 +1,9 @@
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { fetchGameSessionById } from "@/lib/gameSession/actions";
+import { fetchGameSessionById } from "@/lib/gameRoom/actions";
 import { Suspense } from "react";
 import Room from "@/components/game/Room";
 import { redirect } from "next/navigation";
+import { GameRoomProvider } from "@/lib/context/gameRoomContext";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -47,11 +47,9 @@ export default async function GamePage({ params }: PageProps) {
             </div>
           ) : (
             <Suspense>
-              <Room
-                gameId={id}
-                userId={userId}
-                hostUserId={(game!.host_id as string) ?? ""}
-              />
+              <GameRoomProvider userId={userId} game={game}>
+                <Room />
+              </GameRoomProvider>
             </Suspense>
           )}
         </div>

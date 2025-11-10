@@ -8,7 +8,7 @@ import {
 import { Track } from "livekit-client";
 import { MicOffIcon, MicOnIcon, MoreVerticalIcon } from "@/assets/icons";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { kickPlayer, transferHost } from "@/lib/gameSession/actions";
+import { kickPlayer, transferHost } from "@/lib/gameRoom/actions";
 import { removeParticipantFromRoom } from "@/lib/liveKit/actions";
 import PopupMenu from "@/components/ui/PopupMenu";
 import { useParticipantReady } from "@/hooks/useParticipantReady";
@@ -22,7 +22,7 @@ export default function ParticipantComponent({
   playerIndex,
 }: {
   gameId: string;
-  hostUserId: string;
+  hostUserId: string | null;
   currentUserId: string;
   trackRef: TrackReferenceOrPlaceholder;
   playerIndex: number | "host";

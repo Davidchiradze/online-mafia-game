@@ -58,7 +58,7 @@ export default function PlayerCircle({
 }: {
   gameId: string;
   tracks: TrackReferenceOrPlaceholder[];
-  hostUserId: string;
+  hostUserId: string | null;
   userId: string;
   maxPlayers?: number;
 }) {
