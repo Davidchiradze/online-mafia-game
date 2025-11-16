@@ -1,4 +1,5 @@
 import { Tables } from "@/db/supabase/database.types";
+import { GAME_PHASES } from "@/lib/constants/game";
 
 export type DbGame = Tables<"games">;
 export type DbJoinRequest = Tables<"join_requests">;
@@ -28,3 +29,14 @@ export type JoinRequest = Pick<
   | "updated_at"
   | "requester_nickname"
 >;
+
+export type GameSessionState = {
+  id: string;
+  game_id: string;
+  game_phase: string;
+  isFinished: boolean;
+  nominatedPlayers: number[];
+  attempt_to_kill_players: number[];
+  healed_players: number[];
+  playerData: Tables<"game_players">;
+};

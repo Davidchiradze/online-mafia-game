@@ -10,7 +10,11 @@ import {
 } from "react";
 import type { PropsWithChildren } from "react";
 import { Room as LiveKitRoom } from "livekit-client";
-import type { GameRoom, JoinRequest } from "@/types/game/type";
+import type {
+  GameRoom,
+  GameSessionState,
+  JoinRequest,
+} from "@/types/game/type";
 import { useLivekitRoom } from "@/hooks/useLivekitRoom";
 import { useGameSession } from "@/hooks/useGameSession";
 import { useMyJoinRequestStatus } from "@/hooks/useJoinRequests";
@@ -30,7 +34,7 @@ type GameRoomContextValue = {
   room: LiveKitRoom;
   livekitToken: string | null;
   joinStatus: JoinRequest["status"] | undefined;
-  gameStatus: GameRoom["game_status"];
+  gameSessionState: GameSessionState | null;
   startGame: () => Promise<{ ok: boolean; message?: string }>;
   disconnect: () => void;
 };
@@ -63,7 +67,7 @@ export function GameRoomProvider({
   );
 
   // Game session subscription (status + startGame action)
-  const { gameStatus, startGame } = useGameSession(gameId, { subscribe: true });
+  const { gameSessionState, startGame } = useGameSession(gameId, userId);
 
   // Redirect back to lobby on disconnect by default
   useLivekitRoom(room, { redirectOnDisconnect: true, redirectPath: "/lobby" });
@@ -153,7 +157,7 @@ export function GameRoomProvider({
       room,
       livekitToken,
       joinStatus,
-      gameStatus,
+      gameSessionState,
       startGame: async () => {
         const res = await startGame();
         return { ok: Boolean(res?.ok), message: (res as any)?.message };
@@ -168,7 +172,7 @@ export function GameRoomProvider({
       room,
       livekitToken,
       joinStatus,
-      gameStatus,
+      gameSessionState,
       startGame,
       disconnect,
     ]

@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { TrackReferenceOrPlaceholder } from "@livekit/components-react";
+import { useGameRoom } from "@/lib/context/gameRoomContext";
 const HostControls = ({
   gameId,
   maxPlayers,
@@ -10,6 +11,7 @@ const HostControls = ({
   tracks: TrackReferenceOrPlaceholder[];
 }) => {
   const [starting, setStarting] = useState(false);
+  const { startGame, gameSessionState } = useGameRoom();
   const { readyCount, totalPlayers, allReady } = useMemo(() => {
     const nonHostTracks = tracks.filter(
       (t) => !(t as any)?.participant?.isLocal
@@ -34,10 +36,10 @@ const HostControls = ({
     if (starting) return;
     setStarting(true);
     try {
-      // const res = await startGame();
-      // if (!res?.ok) {
-      //   console.error("Failed to start game:", res?.message);
-      // }
+      const res = await startGame();
+      if (!res?.ok) {
+        console.error("Failed to start game:", res?.message);
+      }
     } finally {
       setStarting(false);
     }
@@ -47,7 +49,7 @@ const HostControls = ({
       {allReady ? (
         <button
           type="button"
-          className="rounded-md bg-amber-600 hover:bg-amber-500 text-white font-semibold px-4 py-2 shadow disabled:opacity-60 disabled:cursor-not-allowed"
+          className="rounded-md bg-amber-600 hover:bg-amber-500 text-white font-semibold px-4 py-2 shadow disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed"
           disabled={starting}
           onClick={handleStartGame}
         >

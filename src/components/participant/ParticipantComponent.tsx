@@ -16,6 +16,7 @@ import {
 import PopupMenu from "@/components/ui/PopupMenu";
 import { useParticipantReady } from "@/hooks/useParticipantReady";
 import ReadyButton from "@/components/ui/ReadyButton";
+import { useGameRoom } from "@/lib/context/gameRoomContext";
 
 export default function ParticipantComponent({
   gameId,
@@ -30,6 +31,8 @@ export default function ParticipantComponent({
   trackRef: TrackReferenceOrPlaceholder;
   playerIndex: number | "host";
 }) {
+  const { gameSessionState } = useGameRoom();
+
   const participant = (trackRef as any)?.participant;
   const isLocal = Boolean(participant?.isLocal);
   const isMicEnabled = Boolean(participant?.isMicrophoneEnabled);
@@ -168,7 +171,7 @@ export default function ParticipantComponent({
       )}
 
       {/* Local participant hover-ready/unready button (non-host) */}
-      {isLocal && !isTargetHost && (
+      {isLocal && !isTargetHost && !gameSessionState && (
         <div className="flex items-center justify-center absolute bottom-10 md:bottom-12 left-1/2 -translate-x-1/2 z-20">
           <ReadyButton
             isReady={isReady}

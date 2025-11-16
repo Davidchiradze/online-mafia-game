@@ -28,7 +28,6 @@ export function usePlayerSlots({
     const nonHostTracks = tracks.filter(
       (t) => t.participant.identity !== hostUserId
     );
-    console.log("🚀 ~ usePlayerSlots ~ nonHostTracks:", nonHostTracks);
 
     const slots: PlayerSlotDescriptor[] = [];
 

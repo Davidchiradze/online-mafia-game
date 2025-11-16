@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { Tables } from "@/db/supabase/database.types";
 import { adminClient } from "@/lib/supabase/admin";
 import { RoomServiceClient, ParticipantInfo } from "livekit-server-sdk";
+import { GAME_PHASES } from "../constants/game";
+import { GameSessionState } from "@/types/game/type";
 
 // **
 //  * Starts a game:
@@ -129,4 +131,61 @@ export async function startGame(
   if (updateErr) return { ok: false, message: updateErr.message };
 
   return { ok: true };
+}
+
+export async function createGameSession(
+  gameId: string
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  const supabase = await createClient();
+  const { error: createErr } = await adminClient
+    .from("game_sessions")
+    .insert({ game_id: gameId, game_phase: GAME_PHASES[0] });
+  if (createErr) return { ok: false, message: createErr.message };
+  return { ok: true };
+}
+
+export async function updateGameSession(
+  gameSessionId: string,
+  gameSessionState: GameSessionState
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  const supabase = await createClient();
+  const { error: updateErr } = await adminClient
+    .from("game_sessions")
+    .update(gameSessionState)
+    .eq("id", gameSessionId);
+  if (updateErr) return { ok: false, message: updateErr.message };
+  return { ok: true };
+}
+
+export async function getGameSession(
+  gameId: string,
+  userId: string
+): Promise<
+  | { ok: true; gameSessionState: GameSessionState; playerData: any }
+  | { ok: false; message: string }
+> {
+  const supabase = await createClient();
+
+  // Get game session state
+  const { data: gameSessionState, error: gameSessionStateError } =
+    await supabase
+      .from("game_sessions")
+      .select("*")
+      .eq("game_id", gameId)
+      .single<GameSessionState>();
+
+  if (gameSessionStateError)
+    return { ok: false, message: gameSessionStateError.message };
+
+  // Get player data
+  const { data: playerData, error: playerDataError } = await supabase
+    .from("game_players")
+    .select("*")
+    .eq("game_id", gameId)
+    .eq("player_id", userId)
+    .single();
+
+  if (playerDataError) return { ok: false, message: playerDataError.message };
+
+  return { ok: true, gameSessionState, playerData };
 }
