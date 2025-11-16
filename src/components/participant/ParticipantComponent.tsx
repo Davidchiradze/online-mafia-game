@@ -33,7 +33,7 @@ export default function ParticipantComponent({
 }) {
   const { gameSessionState } = useGameRoom();
 
-  const participant = (trackRef as any)?.participant;
+  const participant = trackRef?.participant;
   const isLocal = Boolean(participant?.isLocal);
   const isMicEnabled = Boolean(participant?.isMicrophoneEnabled);
   const displayName: string | undefined =
@@ -56,7 +56,7 @@ export default function ParticipantComponent({
     return Boolean(
       isViewerHost && participantId && participantId !== hostUserId
     );
-  }, [isViewerHost, participantId]);
+  }, [isViewerHost, participantId, hostUserId]);
 
   const onKick = useCallback(async () => {
     if (!participantId) return;

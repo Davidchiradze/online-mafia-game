@@ -1,12 +1,9 @@
 "use client";
-import { useMyJoinRequestStatus } from "@/hooks/useJoinRequests";
 import { JOIN_REQUEST_STATUSES } from "@/lib/constants/game";
 import { JoinRequest } from "@/types/game/type";
 
 export default function WaitingRoom({
   status,
-  gameId,
-  userId,
 }: {
   status: JoinRequest["status"] | undefined;
   gameId: string;

@@ -44,13 +44,7 @@ export function useLivekitRoom(
       room.off(RoomEvent.Disconnected, handleDisconnected);
       room.off(RoomEvent.ConnectionStateChanged, handleConnectionStateChanged);
     };
-  }, [
-    room,
-    router,
-    options?.redirectOnDisconnect,
-    options?.redirectPath,
-    options?.onDisconnect,
-  ]);
+  }, [room, router, options]);
 
   return { room };
 }

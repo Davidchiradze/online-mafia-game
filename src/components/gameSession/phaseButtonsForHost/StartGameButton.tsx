@@ -1,18 +1,36 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { startGame, createGameSession } from "@/lib/gameSession/actions";
-
-type StartGameButtonProps = {
-  gameId: string;
-};
+import { useTracks } from "@livekit/components-react";
+import { useGameRoom } from "@/lib/context/gameRoomContext";
 
 /**
  * Button to start the game session
  * Handles game initialization and session creation
  */
-const StartGameButton = ({ gameId }: StartGameButtonProps) => {
+const StartGameButton = () => {
+  const tracks = useTracks();
+  const { maxPlayers, gameId } = useGameRoom();
+
   const [isLoading, setIsLoading] = useState(false);
+  const { readyCount, totalPlayers, allReady } = useMemo(() => {
+    const nonHostTracks = tracks.filter((t) => !t?.participant?.isLocal);
+    const total = nonHostTracks.length;
+    const ready = nonHostTracks.filter((t) => {
+      const p = t?.participant;
+      try {
+        return Boolean(JSON.parse(p?.metadata || "{}")?.ready);
+      } catch {
+        return false;
+      }
+    }).length;
+    return {
+      readyCount: ready,
+      totalPlayers: total,
+      allReady: total >= maxPlayers && ready >= maxPlayers,
+    };
+  }, [tracks, maxPlayers]);
 
   const handleStartGame = async () => {
     if (isLoading) return;
@@ -36,7 +54,7 @@ const StartGameButton = ({ gameId }: StartGameButtonProps) => {
     }
   };
 
-  return (
+  return allReady ? (
     <button
       type="button"
       className="rounded-md bg-amber-600 hover:bg-amber-500 text-white font-semibold px-4 py-2 shadow disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed transition-colors"
@@ -45,6 +63,10 @@ const StartGameButton = ({ gameId }: StartGameButtonProps) => {
     >
       {isLoading ? "Starting..." : "Start Game"}
     </button>
+  ) : (
+    <div className="text-xs text-gray-300/80">
+      {readyCount}/{Math.max(maxPlayers, totalPlayers)} ready
+    </div>
   );
 };
 

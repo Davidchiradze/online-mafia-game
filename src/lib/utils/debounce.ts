@@ -1,4 +1,4 @@
-export function debounce<F extends (...args: any[]) => void>(
+export function debounce<F extends (...args: never[]) => void>(
   fn: F,
   delay: number
 ) {

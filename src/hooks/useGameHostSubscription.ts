@@ -21,8 +21,8 @@ export function useGameHostSubscription(
           table: "games",
           filter: `id=eq.${gameId}`,
         },
-        (payload: any) => {
-          const newHost = payload?.new?.host_id as string | undefined;
+        (payload) => {
+          const newHost = payload?.new?.host_id;
           if (newHost) onChange(newHost);
         }
       )

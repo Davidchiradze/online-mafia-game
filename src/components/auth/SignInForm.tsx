@@ -23,7 +23,7 @@ export default function SignInForm() {
           </p>
         </div>
 
-        <FormProvider {...(form as any)}>
+        <FormProvider {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div>
               <label

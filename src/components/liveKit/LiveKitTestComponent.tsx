@@ -15,7 +15,6 @@ export default function LiveKitTestComponent({
   gameId,
   room,
   hostUserId,
-  token,
   userId,
   isHost,
 }: {
@@ -45,7 +44,7 @@ export default function LiveKitTestComponent({
     if (document.fullscreenElement) return;
     try {
       await containerRef.current.requestFullscreen();
-    } catch (err) {
+    } catch {
       // noop
     }
   };
@@ -54,7 +53,7 @@ export default function LiveKitTestComponent({
     if (!document.fullscreenElement) return;
     try {
       await document.exitFullscreen();
-    } catch (err) {
+    } catch {
       // noop
     }
   };
@@ -86,7 +85,6 @@ export default function LiveKitTestComponent({
           gameId={gameId}
           hostUserId={hostUserId}
           userId={userId}
-          isFullscreen={isFullscreen}
         />
         <RoomAudioRenderer />
         {/* <ControlBar /> */}
@@ -98,12 +96,10 @@ export default function LiveKitTestComponent({
 function MyVideoConference({
   gameId,
   hostUserId,
-  isFullscreen,
   userId,
 }: {
   gameId: string;
   hostUserId: string | null;
-  isFullscreen: boolean;
   userId: string;
 }) {
   const tracks = useTracks(

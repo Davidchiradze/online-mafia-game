@@ -25,6 +25,7 @@ import {
   assignSeatIfMissing,
   generateLivekitAccessToken,
 } from "@/lib/liveKit/actions";
+import { Enums } from "@/db/supabase/database.types";
 
 type GameRoomContextValue = {
   gameId: string;
@@ -32,6 +33,7 @@ type GameRoomContextValue = {
   hostUserId: string | null;
   isHost: boolean;
   room: LiveKitRoom;
+  maxPlayers: number;
   livekitToken: string | null;
   joinStatus: JoinRequest["status"] | undefined;
   gameSessionState: GameSessionState | null;
@@ -50,7 +52,6 @@ export function GameRoomProvider({
   userId: string;
 }>) {
   const { id: gameId, host_id, max_players: maxPlayers } = game;
-
   const [currentHostId, setCurrentHostId] = useState<string | null>(host_id);
   const isHost = currentHostId === userId;
 
@@ -111,7 +112,7 @@ export function GameRoomProvider({
         if (!isHost) {
           await assignSeatIfMissing(gameId, identity, 12);
         }
-      } catch (_e) {
+      } catch {
         // noop: connection errors handled by LiveKit listeners/hooks
       }
     }
@@ -142,7 +143,7 @@ export function GameRoomProvider({
   const disconnect = useCallback(() => {
     try {
       room.disconnect();
-    } catch (_e) {
+    } catch {
       // noop
     }
   }, [room]);
@@ -158,9 +159,13 @@ export function GameRoomProvider({
       livekitToken,
       joinStatus,
       gameSessionState,
+      maxPlayers,
       startGame: async () => {
         const res = await startGame();
-        return { ok: Boolean(res?.ok), message: (res as any)?.message };
+        return {
+          ok: Boolean(res?.ok),
+          message: res?.ok ? undefined : res?.message,
+        };
       },
       disconnect,
     }),
@@ -171,6 +176,7 @@ export function GameRoomProvider({
       isHost,
       room,
       livekitToken,
+      maxPlayers,
       joinStatus,
       gameSessionState,
       startGame,

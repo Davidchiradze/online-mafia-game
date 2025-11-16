@@ -3,14 +3,10 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 
-type EndGameControlsProps = {
-  gameId: string;
-};
-
 /**
  * Controls displayed when the game has ended
  */
-const EndGameControls = ({ gameId }: EndGameControlsProps) => {
+const EndGameControls = () => {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 

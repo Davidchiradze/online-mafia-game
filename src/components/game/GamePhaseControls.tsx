@@ -1,5 +1,4 @@
 import React from "react";
-import { GameSessionState } from "@/types/game/type";
 import { GAME_PHASES } from "@/lib/constants/game";
 import StartGameButton from "../gameSession/phaseButtonsForHost/StartGameButton";
 import StartPickingRolesButton from "../gameSession/phaseButtonsForHost/StartPickingRolesButton";
@@ -21,22 +20,16 @@ import StartVotingButton from "../gameSession/phaseButtonsForHost/StartVotingBut
 import EndVotingButton from "../gameSession/phaseButtonsForHost/EndVotingButton";
 import ContinueNextRoundButton from "../gameSession/phaseButtonsForHost/ContinueNextRoundButton";
 import EndGameControls from "../gameSession/phaseButtonsForHost/EndGameControls";
-
-type GamePhaseControlsProps = {
-  gameId: string;
-  gameSessionState: GameSessionState | null;
-};
+import { useGameRoom } from "@/lib/context/gameRoomContext";
 
 /**
  * Component that renders appropriate action buttons based on the current game phase
  */
-const GamePhaseControls = ({
-  gameId,
-  gameSessionState,
-}: GamePhaseControlsProps) => {
+const GamePhaseControls = () => {
+  const { gameSessionState } = useGameRoom();
   // If no game session exists, show "Start Game" button
   if (!gameSessionState) {
-    return <StartGameButton gameId={gameId} />;
+    return <StartGameButton />;
   }
 
   const currentPhase = gameSessionState.game_phase;
@@ -103,7 +96,7 @@ const GamePhaseControls = ({
         return <ContinueNextRoundButton gameSessionState={gameSessionState} />;
 
       case GAME_PHASES[18]: // "end_game"
-        return <EndGameControls gameId={gameId} />;
+        return <EndGameControls />;
 
       default:
         return (
@@ -114,7 +107,11 @@ const GamePhaseControls = ({
     }
   };
 
-  return <div className="flex items-center gap-2">{renderPhaseButton()}</div>;
+  return (
+    <div className="w-full h-full flex items-center justify-center">
+      {renderPhaseButton()}
+    </div>
+  );
 };
 
 export default GamePhaseControls;

@@ -13,7 +13,7 @@ export function useParticipantReady(
   const metadata = useParticipantMetadata(trackRef);
 
   const isReady = useMemo(() => {
-    return Boolean((metadata as any)?.ready);
+    return Boolean(metadata?.ready);
   }, [metadata]);
 
   const markReady = useCallback(async () => {

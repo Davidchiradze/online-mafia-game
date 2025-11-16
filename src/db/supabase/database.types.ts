@@ -65,7 +65,7 @@ export type Database = {
           game_type: Database["public"]["Enums"]["game_type"];
           host_id: string | null;
           id: string;
-          max_players: Database["public"]["Enums"]["max_player_number"];
+          max_players: number;
           name: string;
           updated_at: string | null;
         };
@@ -77,7 +77,7 @@ export type Database = {
           game_type?: Database["public"]["Enums"]["game_type"];
           host_id?: string | null;
           id?: string;
-          max_players?: Database["public"]["Enums"]["max_player_number"];
+          max_players?: number;
           name: string;
           updated_at?: string | null;
         };
@@ -89,7 +89,7 @@ export type Database = {
           game_type?: Database["public"]["Enums"]["game_type"];
           host_id?: string | null;
           id?: string;
-          max_players?: Database["public"]["Enums"]["max_player_number"];
+          max_players?: number;
           name?: string;
           updated_at?: string | null;
         };
@@ -315,7 +315,7 @@ export const Constants = {
       game_type: ["traditional", "city_mafia", "japanese_mafia"],
       "game-status": ["not_started", "playing", "finished"],
       join_request_status: ["pending", "accepted", "rejected"],
-      max_player_number: ["10", "12"],
+      max_player_number: [10, 12],
     },
   },
 } as const;

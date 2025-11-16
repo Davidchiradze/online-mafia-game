@@ -1,61 +1,24 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
-import type { GameRoom, GameSessionState } from "@/types/game/type";
+import type { GameSessionState } from "@/types/game/type";
 import {
   createGameSession,
   getGameSession,
   startGame as startGameAction,
-  updateGameSession,
 } from "@/lib/gameSession/actions";
+import { useGameSessionListener } from "./useGameSessionListener";
+import { useGamePlayerListener } from "./useGamePlayerListener";
 
 export function useGameSession(gameId: string, userId: string) {
   const [gameSessionState, setGameSessionState] =
     useState<GameSessionState | null>(null);
 
-  // Subscribe to games row updates for status (and future phase if added)
-  useEffect(() => {
-    if (!gameId) return;
-    const supabase = createClient();
+  // Subscribe to game_sessions table updates
+  useGameSessionListener(gameId, setGameSessionState);
 
-    // Single channel for both INSERT and UPDATE events
-    const channel = supabase
-      .channel(`game_session_changes_${gameId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "game_sessions",
-          filter: `game_id=eq.${gameId}`,
-        },
-        (payload: any) => {
-          console.log("🔵 [INSERT] Game Session:", payload);
-          const next = payload?.new as GameSessionState;
-          if (next) setGameSessionState(next);
-        }
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "game_sessions",
-          filter: `game_id=eq.${gameId}`,
-        },
-        (payload: any) => {
-          console.log("🟢 [UPDATE] Game Session:", payload);
-          const next = payload?.new as GameSessionState;
-          if (next) setGameSessionState(next);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [gameId]);
+  // Subscribe to game_players table updates for current user
+  useGamePlayerListener(gameId, userId, setGameSessionState);
 
   useEffect(() => {
     if (!gameId) return;
@@ -68,7 +31,7 @@ export function useGameSession(gameId: string, userId: string) {
       });
     };
     getGameSessionFunc();
-  }, [gameId]);
+  }, [gameId, userId]);
 
   const startGame = useCallback(async () => {
     if (!gameId) return { ok: false as const, message: "Missing gameId" };
@@ -77,7 +40,7 @@ export function useGameSession(gameId: string, userId: string) {
     const res2 = await createGameSession(gameId);
     if (!res2?.ok) return { ok: false as const, message: res2?.message };
     return { ok: true as const, gameSessionState };
-  }, [gameId]);
+  }, [gameId, gameSessionState]);
 
   return {
     gameSessionState,

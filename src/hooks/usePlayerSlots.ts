@@ -38,10 +38,10 @@ export function usePlayerSlots({
     const seatToTrack: Record<number, TrackReferenceOrPlaceholder> = {};
     for (const t of nonHostTracks) {
       try {
-        const raw = (t as any)?.participant?.metadata as string | undefined;
+        const raw = t?.participant?.metadata;
         if (!raw) continue;
         const parsed = JSON.parse(raw) as Record<string, unknown>;
-        const seatIndex = (parsed as any)?.seatIndex;
+        const seatIndex = parsed?.seatIndex;
         if (
           typeof seatIndex === "number" &&
           Number.isInteger(seatIndex) &&
@@ -51,7 +51,7 @@ export function usePlayerSlots({
         ) {
           seatToTrack[seatIndex] = t;
         }
-      } catch (_e) {
+      } catch {
         // ignore malformed metadata
       }
     }
@@ -60,8 +60,8 @@ export function usePlayerSlots({
     const unseated = nonHostTracks
       .filter((t) => !Object.values(seatToTrack).includes(t))
       .sort((a, b) => {
-        const ai = (a as any)?.participant?.identity ?? "";
-        const bi = (b as any)?.participant?.identity ?? "";
+        const ai = a?.participant?.identity ?? "";
+        const bi = b?.participant?.identity ?? "";
         return String(ai).localeCompare(String(bi));
       });
 

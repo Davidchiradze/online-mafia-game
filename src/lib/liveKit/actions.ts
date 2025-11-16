@@ -21,7 +21,8 @@ export async function generateLivekitAccessToken(
     data: { session },
   } = await supabase.auth.getSession();
   const participantName =
-    (session?.user?.user_metadata as any)?.nickname ||
+    ((session?.user?.user_metadata as Record<string, unknown>)
+      ?.nickname as string) ||
     session?.user?.email ||
     participantId;
 
@@ -102,7 +103,7 @@ export async function listParticipantsForRooms(roomIds: string[]) {
       const participants = await roomService.listParticipants(roomId);
       const names = participants.map((p) => p.name || p.identity || "");
       results[roomId] = { count: participants.length, names };
-    } catch (_e) {
+    } catch {
       results[roomId] = { count: 0, names: [] };
     }
   }
@@ -127,11 +128,11 @@ export async function setParticipantReady(
     if (target?.metadata) {
       try {
         existingMeta = JSON.parse(target.metadata) as Record<string, unknown>;
-      } catch (_e) {
+      } catch {
         existingMeta = {};
       }
     }
-  } catch (_e) {
+  } catch {
     existingMeta = {};
   }
 
@@ -156,23 +157,27 @@ export async function assignSeatIfMissing(
 
   let meta: Record<string, unknown> = {};
   try {
-    meta = target.metadata ? (JSON.parse(target.metadata) as any) : {};
-  } catch (_e) {
+    meta = target.metadata
+      ? (JSON.parse(target.metadata) as Record<string, unknown>)
+      : {};
+  } catch {
     meta = {};
   }
 
   const hasSeat =
-    typeof (meta as any).seatIndex === "number" &&
-    Number.isInteger((meta as any).seatIndex) &&
-    (meta as any).seatIndex >= 1 &&
-    (meta as any).seatIndex <= maxPlayers;
+    typeof meta.seatIndex === "number" &&
+    Number.isInteger(meta.seatIndex as number) &&
+    (meta.seatIndex as number) >= 1 &&
+    (meta.seatIndex as number) <= maxPlayers;
   if (hasSeat) return;
 
   const used = new Set<number>();
   for (const p of participants) {
     if (p.identity === participantId) continue;
     try {
-      const pm = p.metadata ? (JSON.parse(p.metadata) as any) : {};
+      const pm = p.metadata
+        ? (JSON.parse(p.metadata) as Record<string, unknown>)
+        : {};
       const s = pm?.seatIndex;
       if (
         typeof s === "number" &&
@@ -182,7 +187,7 @@ export async function assignSeatIfMissing(
       ) {
         used.add(s);
       }
-    } catch (_e) {}
+    } catch {}
   }
 
   let seat: number | undefined;
@@ -213,13 +218,14 @@ export async function clearSeatIndex(
   if (!target) return;
   let meta: Record<string, unknown> = {};
   try {
-    meta = target.metadata ? (JSON.parse(target.metadata) as any) : {};
-  } catch (_e) {
+    meta = target.metadata
+      ? (JSON.parse(target.metadata) as Record<string, unknown>)
+      : {};
+  } catch {
     meta = {};
   }
   if (Object.prototype.hasOwnProperty.call(meta, "seatIndex")) {
-    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-    delete (meta as any).seatIndex;
+    delete meta.seatIndex;
     await roomService.updateParticipant(roomId, participantId, {
       metadata: JSON.stringify(meta),
     });

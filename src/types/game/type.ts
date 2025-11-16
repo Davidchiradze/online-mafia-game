@@ -1,5 +1,4 @@
 import { Tables } from "@/db/supabase/database.types";
-import { GAME_PHASES } from "@/lib/constants/game";
 
 export type DbGame = Tables<"games">;
 export type DbJoinRequest = Tables<"join_requests">;

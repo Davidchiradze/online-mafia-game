@@ -46,10 +46,10 @@ export async function startGame(
   let participants: ParticipantInfo[] = [];
   try {
     participants = await roomService.listParticipants(gameId);
-  } catch (e: any) {
+  } catch (e) {
     return {
       ok: false,
-      message: e?.message || "Unable to list participants",
+      message: e instanceof Error ? e.message : "Unable to list participants",
     };
   }
   // Partition into host vs non-host by identity
@@ -68,19 +68,26 @@ export async function startGame(
   }
 
   // Prepare DB upsert: clear existing rows for this game and insert fresh
-  const toInsert: any[] = [];
+  type GamePlayerInsert = {
+    game_id: string;
+    player_id: string;
+    is_alive: boolean;
+    seat_number?: number;
+  };
+
+  const toInsert: GamePlayerInsert[] = [];
   // include host (no seat)
   toInsert.push({
-    game_id: gameId as any,
-    player_id: hostIdentity as any,
+    game_id: gameId,
+    player_id: hostIdentity,
     is_alive: true,
   });
   for (const { participantId, seat } of seatAssignments) {
     toInsert.push({
-      game_id: gameId as any,
-      player_id: participantId as any,
+      game_id: gameId,
+      player_id: participantId,
       is_alive: true,
-      seat_number: seat as any,
+      seat_number: seat,
     });
   }
 
@@ -94,8 +101,7 @@ export async function startGame(
   if (toInsert.length > 0) {
     const { error: insErr } = await adminClient
       .from("game_players")
-      // Cast to any to allow additional columns not present in generated types (e.g., seat_number)
-      .insert(toInsert as any);
+      .insert(toInsert);
     if (insErr) return { ok: false, message: insErr.message };
   }
 
@@ -118,7 +124,7 @@ export async function startGame(
       await roomService.updateParticipant(gameId, participantId, {
         metadata: JSON.stringify({ ...existingMeta, seatIndex: seat }),
       });
-    } catch (_e) {
+    } catch {
       // continue best-effort
     }
   }
@@ -136,7 +142,6 @@ export async function startGame(
 export async function createGameSession(
   gameId: string
 ): Promise<{ ok: true } | { ok: false; message: string }> {
-  const supabase = await createClient();
   const { error: createErr } = await adminClient
     .from("game_sessions")
     .insert({ game_id: gameId, game_phase: GAME_PHASES[0] });
@@ -148,7 +153,6 @@ export async function updateGameSession(
   gameSessionId: string,
   gameSessionState: GameSessionState
 ): Promise<{ ok: true } | { ok: false; message: string }> {
-  const supabase = await createClient();
   const { error: updateErr } = await adminClient
     .from("game_sessions")
     .update(gameSessionState)
@@ -161,7 +165,11 @@ export async function getGameSession(
   gameId: string,
   userId: string
 ): Promise<
-  | { ok: true; gameSessionState: GameSessionState; playerData: any }
+  | {
+      ok: true;
+      gameSessionState: GameSessionState;
+      playerData: Tables<"game_players">;
+    }
   | { ok: false; message: string }
 > {
   const supabase = await createClient();

@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { TrackReferenceOrPlaceholder } from "@livekit/components-react";
-import { tr } from "zod/v4/locales";
 
 type ParticipantLike = {
   metadata?: string | null;
@@ -12,7 +11,7 @@ export function useParticipantMetadata(
   trackRef: TrackReferenceOrPlaceholder | undefined
 ): Record<string, unknown> | null {
   const participant: ParticipantLike | undefined = useMemo(
-    () => (trackRef as any)?.participant as ParticipantLike | undefined,
+    () => trackRef?.participant as ParticipantLike | undefined,
     [trackRef]
   );
 
@@ -21,7 +20,7 @@ export function useParticipantMetadata(
       try {
         if (!participant?.metadata) return null;
         return JSON.parse(participant.metadata) as Record<string, unknown>;
-      } catch (_e) {
+      } catch {
         return null;
       }
     }
@@ -39,7 +38,7 @@ export function useParticipantMetadata(
           unknown
         >;
         setMetadata(parsed);
-      } catch (_e) {
+      } catch {
         setMetadata(null);
       }
     };
