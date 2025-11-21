@@ -37,5 +37,6 @@ export type GameSessionState = {
   nominatedPlayers: number[];
   attempt_to_kill_players: number[];
   healed_players: number[];
-  playerData: Tables<"game_players">;
+  playerData: Tables<"game_players">; // Current user's player data
+  allPlayers?: Tables<"game_players">[]; // All players in the game (for visibility checks)
 };

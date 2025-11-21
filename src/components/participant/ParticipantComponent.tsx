@@ -17,6 +17,8 @@ import PopupMenu from "@/components/ui/PopupMenu";
 import { useParticipantReady } from "@/hooks/useParticipantReady";
 import ReadyButton from "@/components/ui/ReadyButton";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
+import { useParticipantVisibility } from "@/hooks/useParticipantVisibility";
+import ParticipantCover from "@/components/video/ParticipantCover";
 
 export default function ParticipantComponent({
   gameId,
@@ -50,6 +52,9 @@ export default function ParticipantComponent({
     participantId,
     trackRef
   );
+
+  // Determine visibility based on game phase and roles
+  const { isVisible, coverMessage } = useParticipantVisibility(trackRef);
 
   const canShowMenu = useMemo(() => {
     // Only show menu when viewer is host, a real participant exists, and it's not the host tile
@@ -106,12 +111,16 @@ export default function ParticipantComponent({
       onMouseLeave={() => setMenuOpen(false)}
       onClick={handleTileClick}
     >
-      <ParticipantTile
-        className="lk-hide-metadata"
-        trackRef={trackRef}
-        style={{ height: "100%" }}
-      />
-
+      {/* Show cover when participant should not be visible */}
+      {isVisible ? (
+        <ParticipantTile
+          className="lk-hide-metadata"
+          trackRef={trackRef}
+          style={{ height: "100%" }}
+        />
+      ) : (
+        <ParticipantCover message={coverMessage} />
+      )}
       {isLocal ? (
         <div className="absolute left-1 top-1 md:left-2 md:top-2 z-10 scale-90 md:scale-100">
           <TrackToggle source={Track.Source.Microphone} showIcon={true} />
@@ -125,7 +134,6 @@ export default function ParticipantComponent({
           )}
         </div>
       )}
-
       {displayName ? (
         <div className="absolute bottom-1 left-1 md:bottom-2 md:left-2 z-10 rounded-full border border-white/10 bg-black/40 backdrop-blur px-2 py-0.5 md:px-3 md:py-1 text-[10px] md:text-xs font-medium text-gray-100">
           {displayName}
@@ -135,7 +143,6 @@ export default function ParticipantComponent({
           {playerIndex === "host" ? "Host" : playerIndex}
         </div>
       )}
-
       {canShowMenu && (
         <div className="absolute right-1 top-1 md:right-2 md:top-2 z-20">
           <button
@@ -162,14 +169,12 @@ export default function ParticipantComponent({
           />
         </div>
       )}
-
       {/* Ready indicator (top-right) */}
       {isReady && (
         <div className="absolute right-1 top-[34px] md:right-2 md:top-2 z-20 w-5 h-5 md:w-6 md:h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px] md:text-xs font-bold shadow">
           ✓
         </div>
       )}
-
       {/* Local participant hover-ready/unready button (non-host) */}
       {isLocal && !isTargetHost && !gameSessionState && (
         <div className="flex items-center justify-center absolute bottom-10 md:bottom-12 left-1/2 -translate-x-1/2 z-20">

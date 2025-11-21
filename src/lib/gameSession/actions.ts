@@ -153,9 +153,10 @@ export async function updateGameSession(
   gameSessionId: string,
   gameSessionState: GameSessionState
 ): Promise<{ ok: true } | { ok: false; message: string }> {
+  const { playerData, ...rest } = gameSessionState;
   const { error: updateErr } = await adminClient
     .from("game_sessions")
-    .update(gameSessionState)
+    .update(rest)
     .eq("id", gameSessionId);
   if (updateErr) return { ok: false, message: updateErr.message };
   return { ok: true };
@@ -169,6 +170,7 @@ export async function getGameSession(
       ok: true;
       gameSessionState: GameSessionState;
       playerData: Tables<"game_players">;
+      allPlayers: Tables<"game_players">[];
     }
   | { ok: false; message: string }
 > {
@@ -185,7 +187,7 @@ export async function getGameSession(
   if (gameSessionStateError)
     return { ok: false, message: gameSessionStateError.message };
 
-  // Get player data
+  // Get current user's player data
   const { data: playerData, error: playerDataError } = await supabase
     .from("game_players")
     .select("*")
@@ -195,5 +197,18 @@ export async function getGameSession(
 
   if (playerDataError) return { ok: false, message: playerDataError.message };
 
-  return { ok: true, gameSessionState, playerData };
+  // Get all players for the game (needed for visibility checks)
+  const { data: allPlayers, error: allPlayersError } = await supabase
+    .from("game_players")
+    .select("*")
+    .eq("game_id", gameId);
+
+  if (allPlayersError) return { ok: false, message: allPlayersError.message };
+
+  return {
+    ok: true,
+    gameSessionState,
+    playerData,
+    allPlayers: allPlayers || [],
+  };
 }

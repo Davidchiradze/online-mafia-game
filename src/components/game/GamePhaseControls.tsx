@@ -29,7 +29,11 @@ const GamePhaseControls = () => {
   const { gameSessionState } = useGameRoom();
   // If no game session exists, show "Start Game" button
   if (!gameSessionState) {
-    return <StartGameButton />;
+    return (
+      <div className="w-full h-full flex items-center justify-center">
+        <StartGameButton />
+      </div>
+    );
   }
 
   const currentPhase = gameSessionState.game_phase;
