@@ -10,6 +10,7 @@ import "@livekit/components-styles";
 import PlayerCircle from "@/components/game/PlayerCircle";
 import { useEffect, useRef, useState } from "react";
 import FloatingOptions from "./FloatingOptions";
+import { useRoleAssignmentNotification } from "@/hooks/useRoleAssignmentNotification";
 
 export default function LiveKitTestComponent({
   gameId,
@@ -28,6 +29,9 @@ export default function LiveKitTestComponent({
   // Connect to room
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+
+  // Role assignment notification
+  useRoleAssignmentNotification(gameId, userId);
 
   useEffect(() => {
     const handleFullscreenChange = () => {

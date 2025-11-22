@@ -36,6 +36,7 @@ type GameRoomContextValue = {
   livekitToken: string | null;
   joinStatus: JoinRequest["status"] | undefined;
   gameSessionState: GameSessionState | null;
+  setGameSessionState: (gameSessionState: GameSessionState) => void;
   startGame: () => Promise<{ ok: boolean; message?: string }>;
   disconnect: () => void;
   isGameInProgress: boolean;
@@ -69,7 +70,10 @@ export function GameRoomProvider({
   );
 
   // Game session subscription (status + startGame action)
-  const { gameSessionState, startGame } = useGameSession(gameId, userId);
+  const { gameSessionState, startGame, setGameSessionState } = useGameSession(
+    gameId,
+    userId
+  );
   console.log("🚀 ~ GameRoomProvider ~ gameSessionState:", gameSessionState);
 
   // Redirect back to lobby on disconnect by default
@@ -162,6 +166,7 @@ export function GameRoomProvider({
       livekitToken,
       joinStatus,
       gameSessionState,
+      setGameSessionState,
       maxPlayers,
       startGame: async () => {
         const res = await startGame();
@@ -183,8 +188,10 @@ export function GameRoomProvider({
       maxPlayers,
       joinStatus,
       gameSessionState,
+      setGameSessionState,
       startGame,
       disconnect,
+      isGameInProgress,
     ]
   );
 

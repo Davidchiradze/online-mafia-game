@@ -1,7 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { updateGameSession } from "@/lib/gameSession/actions";
+import {
+  updateGameSession,
+  assignRandomRoles,
+} from "@/lib/gameSession/actions";
 import { GameSessionState } from "@/types/game/type";
 import { GAME_PHASES } from "@/lib/constants/game";
 
@@ -10,7 +13,7 @@ type StartPickingRolesButtonProps = {
 };
 
 /**
- * Button to start the role picking phase
+ * Button to start the role picking phase and assign random roles to all players
  */
 const StartPickingRolesButton = ({
   gameSessionState,
@@ -21,6 +24,14 @@ const StartPickingRolesButton = ({
     if (isLoading) return;
     setIsLoading(true);
     try {
+      // Assign random roles to all 12 players
+      const assignRes = await assignRandomRoles(gameSessionState.game_id);
+      if (!assignRes?.ok) {
+        console.error("Failed to assign roles:", assignRes?.message);
+        alert(`Failed to assign roles: ${assignRes?.message}`);
+        return;
+      }
+
       // Update game session to picking_roles phase
       const res = await updateGameSession(gameSessionState.id, {
         ...gameSessionState,
@@ -28,6 +39,7 @@ const StartPickingRolesButton = ({
       });
       if (!res?.ok) {
         console.error("Failed to start picking roles:", res?.message);
+        alert(`Failed to start picking roles: ${res?.message}`);
       }
     } finally {
       setIsLoading(false);
@@ -41,7 +53,7 @@ const StartPickingRolesButton = ({
       disabled={isLoading}
       onClick={handleStartPickingRoles}
     >
-      {isLoading ? "Starting..." : "Start Picking Roles"}
+      {isLoading ? "Assigning Roles..." : "Start Picking Roles"}
     </button>
   );
 };

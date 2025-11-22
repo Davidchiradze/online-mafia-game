@@ -23,20 +23,7 @@ export function useGameSessionListener(
       .on(
         "postgres_changes",
         {
-          event: "INSERT",
-          schema: "public",
-          table: "game_sessions",
-          filter: `game_id=eq.${gameId}`,
-        },
-        (payload) => {
-          const next = payload?.new as GameSessionState;
-          if (next) setGameSessionState((prev) => ({ ...prev, ...next }));
-        }
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
+          event: "*",
           schema: "public",
           table: "game_sessions",
           filter: `game_id=eq.${gameId}`,

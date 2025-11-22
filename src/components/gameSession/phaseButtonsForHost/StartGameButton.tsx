@@ -66,7 +66,7 @@ const StartGameButton = () => {
     </button>
   ) : (
     <div className="text-xs text-gray-300/80">
-      {readyCount}/{Math.max(maxPlayers ?? 0, totalPlayers)} ready
+      {readyCount}/{maxPlayers} ready
     </div>
   );
 };

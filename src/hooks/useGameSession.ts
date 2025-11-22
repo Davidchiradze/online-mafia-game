@@ -32,7 +32,7 @@ export function useGameSession(gameId: string, userId: string) {
       });
     };
     getGameSessionFunc();
-  }, [gameId, userId]);
+  }, [gameId, userId, gameSessionState?.game_phase]);
 
   const startGame = useCallback(async () => {
     if (!gameId) return { ok: false as const, message: "Missing gameId" };
@@ -45,6 +45,7 @@ export function useGameSession(gameId: string, userId: string) {
 
   return {
     gameSessionState,
+    setGameSessionState,
     startGame,
   } as const;
 }
