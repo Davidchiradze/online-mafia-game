@@ -44,7 +44,6 @@ export function useParticipantVisibility(
   const targetUserId = useMemo(() => {
     return trackRef?.participant?.identity;
   }, [trackRef]);
-  console.log("🚀 ~ useParticipantVisibility ~ targetUserId:", targetUserId);
 
   // Determine roles and host status
   const viewerRole = useMemo(() => {

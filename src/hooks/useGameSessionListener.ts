@@ -42,7 +42,6 @@ export function useGameSessionListener(
           filter: `game_id=eq.${gameId}`,
         },
         (payload) => {
-          console.log("🚀 ~ useGameSessionListener ~ payload:", payload);
           const next = payload?.new as GameSessionState;
           if (next) setGameSessionState((prev) => ({ ...prev, ...next }));
         }

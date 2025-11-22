@@ -27,11 +27,6 @@ export function canSeeParticipant(
   isViewerHost: boolean,
   isTargetHost: boolean
 ): boolean {
-  console.log(
-    "🚀 ~ canSeeParticipant ~ viewerRole, targetRole:",
-    viewerRole,
-    targetRole
-  );
   // If no game session has started yet, everyone can see everyone
   if (!gamePhase) {
     return true;

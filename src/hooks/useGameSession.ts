@@ -13,7 +13,6 @@ import { useGamePlayerListener } from "./useGamePlayerListener";
 export function useGameSession(gameId: string, userId: string) {
   const [gameSessionState, setGameSessionState] =
     useState<GameSessionState | null>(null);
-  console.log("🚀 ~ useGameSession ~ gameSessionState:", gameSessionState);
 
   // Subscribe to game_sessions table updates
   useGameSessionListener(gameId, setGameSessionState);

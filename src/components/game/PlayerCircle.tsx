@@ -54,7 +54,7 @@ export default function PlayerCircle({
   tracks,
   hostUserId,
   userId,
-  maxPlayers = 3,
+  maxPlayers = 12,
 }: {
   gameId: string;
   tracks: TrackReferenceOrPlaceholder[];

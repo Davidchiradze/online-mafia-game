@@ -31,7 +31,6 @@ export function useGamePlayerListener(
           filter: `game_id=eq.${gameId}`,
         },
         (payload) => {
-          console.log("🔵 [INSERT] Game Player:", payload);
           const newPlayerData = payload?.new as Tables<"game_players">;
           if (newPlayerData?.player_id === userId) {
             setGameSessionState((prev: GameSessionState | null) => {

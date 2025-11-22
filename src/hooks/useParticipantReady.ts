@@ -17,7 +17,6 @@ export function useParticipantReady(
   }, [metadata]);
 
   const markReady = useCallback(async () => {
-    console.log("🚀 ~ useParticipantReady ~ participantId:", participantId);
     if (!gameId || !participantId) return;
     await setParticipantReady(gameId, participantId, true);
   }, [gameId, participantId]);

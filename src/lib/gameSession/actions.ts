@@ -153,7 +153,7 @@ export async function updateGameSession(
   gameSessionId: string,
   gameSessionState: GameSessionState
 ): Promise<{ ok: true } | { ok: false; message: string }> {
-  const { playerData, ...rest } = gameSessionState;
+  const { playerData, allPlayers, ...rest } = gameSessionState;
   const { error: updateErr } = await adminClient
     .from("game_sessions")
     .update(rest)

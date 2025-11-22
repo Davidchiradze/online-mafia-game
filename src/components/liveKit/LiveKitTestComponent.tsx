@@ -106,7 +106,6 @@ function MyVideoConference({
     [{ source: Track.Source.Camera, withPlaceholder: true }],
     { onlySubscribed: false }
   );
-  console.log("🚀 ~ MyVideoConference ~ tracks:", tracks);
   return (
     <div className="w-full h-full">
       <PlayerCircle

@@ -69,6 +69,7 @@ export function GameRoomProvider({
 
   // Game session subscription (status + startGame action)
   const { gameSessionState, startGame } = useGameSession(gameId, userId);
+  console.log("🚀 ~ GameRoomProvider ~ gameSessionState:", gameSessionState);
 
   // Redirect back to lobby on disconnect by default
   useLivekitRoom(room, { redirectOnDisconnect: true, redirectPath: "/lobby" });
@@ -86,8 +87,9 @@ export function GameRoomProvider({
     });
     return () => {
       mounted = false;
+      room.disconnect();
     };
-  }, [gameId]);
+  }, [gameId, room]);
 
   // Connect to LiveKit based on role and joinStatus
   useEffect(() => {
