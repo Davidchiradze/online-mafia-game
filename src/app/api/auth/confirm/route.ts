@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
   }
 
   update_user_data: {
-    if (!userSessionData.user) {
+    if (!userSessionData.user || !userSessionData.user.email) {
       const errorMessage = "Missing user data";
       redirect(`/auth/login?message=${errorMessage}&type=error`);
     }

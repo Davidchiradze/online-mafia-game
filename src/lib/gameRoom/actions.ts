@@ -63,7 +63,7 @@ export async function createGameRoom(input: {
     code,
     name: input.name,
     host_id: session.user.id,
-    game_status: "not_started",
+    game_status: "not_started" as const,
     game_type: input.type,
     max_players: GAME_TYPE_MAX_PLAYER_NUMBER[input.type],
     current_players: 0,

@@ -26,7 +26,7 @@ const ContinueNextRoundButton = ({
       const res = await updateGameSession(gameSessionState.id, {
         ...gameSessionState,
         game_phase: GAME_PHASES[8], // "night_phase"
-        nominatedPlayers: [], // Reset nominations
+        nominated_players: [], // Reset nominations
       });
       if (!res?.ok) {
         console.error("Failed to continue to next round:", res?.message);

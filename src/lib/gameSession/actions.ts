@@ -5,6 +5,7 @@ import { adminClient } from "@/lib/supabase/admin";
 import { RoomServiceClient, ParticipantInfo } from "livekit-server-sdk";
 import { GAME_PHASES } from "../constants/game";
 import { GameSessionState } from "@/types/game/type";
+import { filterPlayerRoles } from "@/lib/utils/filterPlayerRoles";
 
 // **
 //  * Starts a game:
@@ -176,6 +177,15 @@ export async function getGameSession(
 > {
   const supabase = await createClient();
 
+  // Get game to find host
+  const { data: game, error: gameError } = await supabase
+    .from("games")
+    .select("host_id")
+    .eq("id", gameId)
+    .single();
+
+  if (gameError) return { ok: false, message: gameError.message };
+
   // Get game session state
   const { data: gameSessionState, error: gameSessionStateError } =
     await supabase
@@ -197,7 +207,7 @@ export async function getGameSession(
 
   if (playerDataError) return { ok: false, message: playerDataError.message };
 
-  // Get all players for the game (needed for visibility checks)
+  // Get all players for the game
   const { data: allPlayers, error: allPlayersError } = await supabase
     .from("game_players")
     .select("*")
@@ -205,10 +215,20 @@ export async function getGameSession(
 
   if (allPlayersError) return { ok: false, message: allPlayersError.message };
 
+  // 🔒 SECURITY: Filter roles based on team relationships
+  // Teammates always have access to each other's roles in the state
+  // Phase-based visibility (video/UI) is handled separately
+  const filteredPlayers = filterPlayerRoles({
+    allPlayers: allPlayers || [],
+    requestingUserId: userId,
+    requestingRole: playerData.role as string | null,
+    isHost: game.host_id === userId,
+  });
+
   return {
     ok: true,
     gameSessionState,
     playerData,
-    allPlayers: allPlayers || [],
+    allPlayers: filteredPlayers,
   };
 }

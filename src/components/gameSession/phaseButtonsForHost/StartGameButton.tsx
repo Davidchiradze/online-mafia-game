@@ -28,7 +28,8 @@ const StartGameButton = () => {
     return {
       readyCount: ready,
       totalPlayers: total,
-      allReady: total >= maxPlayers && ready >= maxPlayers,
+      allReady:
+        maxPlayers !== null && total >= maxPlayers && ready >= maxPlayers,
     };
   }, [tracks, maxPlayers]);
 
@@ -65,7 +66,7 @@ const StartGameButton = () => {
     </button>
   ) : (
     <div className="text-xs text-gray-300/80">
-      {readyCount}/{Math.max(maxPlayers, totalPlayers)} ready
+      {readyCount}/{Math.max(maxPlayers ?? 0, totalPlayers)} ready
     </div>
   );
 };

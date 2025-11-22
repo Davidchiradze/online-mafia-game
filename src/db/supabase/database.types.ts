@@ -16,28 +16,34 @@ export type Database = {
     Tables: {
       game_players: {
         Row: {
+          fouls: number | null;
           game_id: string | null;
           id: string;
           is_alive: boolean | null;
           joined_at: string | null;
           player_id: string | null;
           role: string | null;
+          seat_number: number | null;
         };
         Insert: {
+          fouls?: number | null;
           game_id?: string | null;
           id?: string;
           is_alive?: boolean | null;
           joined_at?: string | null;
           player_id?: string | null;
           role?: string | null;
+          seat_number?: number | null;
         };
         Update: {
+          fouls?: number | null;
           game_id?: string | null;
           id?: string;
           is_alive?: boolean | null;
           joined_at?: string | null;
           player_id?: string | null;
           role?: string | null;
+          seat_number?: number | null;
         };
         Relationships: [
           {
@@ -56,6 +62,47 @@ export type Database = {
           }
         ];
       };
+      game_sessions: {
+        Row: {
+          attempt_to_kill_players: number[];
+          created_at: string | null;
+          game_id: string;
+          game_phase: string;
+          healed_players: number[];
+          id: string;
+          is_finished: boolean;
+          nominated_players: number[];
+        };
+        Insert: {
+          attempt_to_kill_players?: number[];
+          created_at?: string | null;
+          game_id: string;
+          game_phase: string;
+          healed_players?: number[];
+          id?: string;
+          is_finished?: boolean;
+          nominated_players?: number[];
+        };
+        Update: {
+          attempt_to_kill_players?: number[];
+          created_at?: string | null;
+          game_id?: string;
+          game_phase?: string;
+          healed_players?: number[];
+          id?: string;
+          is_finished?: boolean;
+          nominated_players?: number[];
+        };
+        Relationships: [
+          {
+            foreignKeyName: "game_sessions_game_id_fkey";
+            columns: ["game_id"];
+            isOneToOne: true;
+            referencedRelation: "games";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
       games: {
         Row: {
           code: string;
@@ -65,7 +112,7 @@ export type Database = {
           game_type: Database["public"]["Enums"]["game_type"];
           host_id: string | null;
           id: string;
-          max_players: number;
+          max_players: number | null;
           name: string;
           updated_at: string | null;
         };
@@ -77,7 +124,7 @@ export type Database = {
           game_type?: Database["public"]["Enums"]["game_type"];
           host_id?: string | null;
           id?: string;
-          max_players?: number;
+          max_players?: number | null;
           name: string;
           updated_at?: string | null;
         };
@@ -89,7 +136,7 @@ export type Database = {
           game_type?: Database["public"]["Enums"]["game_type"];
           host_id?: string | null;
           id?: string;
-          max_players?: number;
+          max_players?: number | null;
           name?: string;
           updated_at?: string | null;
         };
@@ -118,6 +165,7 @@ export type Database = {
           game_id: string;
           id?: string;
           requester_id: string;
+          requester_nickname: string;
           status?: Database["public"]["Enums"]["join_request_status"];
           updated_at?: string | null;
         };
@@ -126,6 +174,7 @@ export type Database = {
           game_id?: string;
           id?: string;
           requester_id?: string;
+          requester_nickname?: string;
           status?: Database["public"]["Enums"]["join_request_status"];
           updated_at?: string | null;
         };
@@ -181,7 +230,6 @@ export type Database = {
       game_type: "traditional" | "city_mafia" | "japanese_mafia";
       "game-status": "not_started" | "playing" | "finished";
       join_request_status: "pending" | "accepted" | "rejected";
-      max_player_number: "10" | "12";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -315,7 +363,6 @@ export const Constants = {
       game_type: ["traditional", "city_mafia", "japanese_mafia"],
       "game-status": ["not_started", "playing", "finished"],
       join_request_status: ["pending", "accepted", "rejected"],
-      max_player_number: [10, 12],
     },
   },
 } as const;

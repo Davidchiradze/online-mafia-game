@@ -25,7 +25,6 @@ import {
   assignSeatIfMissing,
   generateLivekitAccessToken,
 } from "@/lib/liveKit/actions";
-import { Enums } from "@/db/supabase/database.types";
 
 type GameRoomContextValue = {
   gameId: string;
@@ -33,12 +32,13 @@ type GameRoomContextValue = {
   hostUserId: string | null;
   isHost: boolean;
   room: LiveKitRoom;
-  maxPlayers: number;
+  maxPlayers: number | null;
   livekitToken: string | null;
   joinStatus: JoinRequest["status"] | undefined;
   gameSessionState: GameSessionState | null;
   startGame: () => Promise<{ ok: boolean; message?: string }>;
   disconnect: () => void;
+  isGameInProgress: boolean;
 };
 
 const GameRoomContext = createContext<GameRoomContextValue | null>(null);
@@ -51,6 +51,7 @@ export function GameRoomProvider({
   game: GameRoom;
   userId: string;
 }>) {
+  const isGameInProgress = game.game_status === "playing";
   const { id: gameId, host_id, max_players: maxPlayers } = game;
   const [currentHostId, setCurrentHostId] = useState<string | null>(host_id);
   const isHost = currentHostId === userId;
@@ -170,6 +171,7 @@ export function GameRoomProvider({
         };
       },
       disconnect,
+      isGameInProgress,
     }),
     [
       gameId,

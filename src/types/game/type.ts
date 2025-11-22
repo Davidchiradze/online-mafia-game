@@ -29,14 +29,9 @@ export type JoinRequest = Pick<
   | "requester_nickname"
 >;
 
-export type GameSessionState = {
-  id: string;
-  game_id: string;
-  game_phase: string;
-  isFinished: boolean;
-  nominatedPlayers: number[];
-  attempt_to_kill_players: number[];
-  healed_players: number[];
+export type GameSession = Tables<"game_sessions">;
+
+export type GameSessionState = GameSession & {
   playerData: Tables<"game_players">; // Current user's player data
   allPlayers?: Tables<"game_players">[]; // All players in the game (for visibility checks)
 };
