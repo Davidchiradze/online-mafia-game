@@ -47,11 +47,12 @@ export default function ParticipantComponent({
   const [isMobileReadyVisible, setIsMobileReadyVisible] =
     useState<boolean>(false);
   const mobileReadyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const { isReady, markReady, markUnready } = useParticipantReady(
-    gameId,
-    participantId,
-    trackRef
-  );
+  const {
+    isReady,
+    markReady,
+    markUnready,
+    isLoading: isLoadingReady,
+  } = useParticipantReady(gameId, participantId, trackRef);
 
   // Determine visibility based on game phase and roles
   const { isVisible, coverMessage } = useParticipantVisibility(trackRef);
@@ -182,9 +183,10 @@ export default function ParticipantComponent({
             isReady={isReady}
             onReady={onReady}
             onUnready={onUnready}
+            disabled={isLoadingReady}
             className={`${
-              isMobileReadyVisible ? "block" : "hidden"
-            } md:group-hover:block`}
+              isMobileReadyVisible ? "flex" : "hidden"
+            } md:group-hover:flex flex items-center justify-center`}
           />
         </div>
       )}

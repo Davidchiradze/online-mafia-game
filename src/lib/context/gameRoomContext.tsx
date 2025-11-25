@@ -22,8 +22,9 @@ import { useGameHostSubscription } from "@/hooks/useGameHostSubscription";
 import { JOIN_REQUEST_STATUSES } from "@/lib/constants/game";
 import { checkOrRequestJoin } from "@/lib/gameRoom/actions";
 import {
-  assignSeatIfMissing,
+  clearSeatIndex,
   generateLivekitAccessToken,
+  preassignSeat,
 } from "@/lib/liveKit/actions";
 
 type GameRoomContextValue = {
@@ -92,6 +93,7 @@ export function GameRoomProvider({
     });
     return () => {
       mounted = false;
+      void clearSeatIndex(gameId, userId);
       room.disconnect();
     };
   }, [gameId, room]);
@@ -101,34 +103,43 @@ export function GameRoomProvider({
     let cancelled = false;
     async function connectIfNeeded() {
       if (!gameId || !userId) return;
+
       // Host connects immediately; players connect when accepted
       const canConnect =
         isHost || joinStatus === JOIN_REQUEST_STATUSES.ACCEPTED;
       if (!canConnect) return;
-      const identity = userId;
-      const token = await generateLivekitAccessToken(gameId, identity, {
+
+      // Pre-calculate seat for non-host players BEFORE connecting
+      // This seat will be included in the initial token metadata,
+      // preventing the visual "jump" when players first appear
+      let seatIndex: number | undefined;
+      if (!isHost) {
+        const seat = await preassignSeat(gameId, userId, maxPlayers ?? 12);
+        if (seat) {
+          seatIndex = seat;
+        }
+      }
+
+      // Generate token with seat included in initial metadata
+      const token = await generateLivekitAccessToken(gameId, userId, {
         hidden: false,
         roomAdmin: isHost,
+        seatIndex,
       });
+
       if (cancelled) return;
+
       setLivekitToken(token ?? null);
-      try {
-        await room.connect(process.env.NEXT_PUBLIC_LIVEKIT_URL!, token || "");
-        await room.localParticipant.setCameraEnabled(true);
-        // Host doesn't take a seat; players do
-        if (!isHost) {
-          await assignSeatIfMissing(gameId, identity, 12);
-        }
-      } catch {
-        // noop: connection errors handled by LiveKit listeners/hooks
-      }
+      await room.connect(process.env.NEXT_PUBLIC_LIVEKIT_URL!, token || "");
+      await room.localParticipant.setCameraEnabled(true);
     }
+
     void connectIfNeeded();
     return () => {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameId, userId, isHost, joinStatus]);
+  }, [gameId, userId, isHost, joinStatus, maxPlayers]);
 
   // Listen to my join request updates (kick -> disconnect)
   useMyJoinRequestStatus(gameId, userId, (nextStatus) => {

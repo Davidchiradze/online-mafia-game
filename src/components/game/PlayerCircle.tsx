@@ -82,10 +82,7 @@ export default function PlayerCircle({
         const isHost = key === "host";
         return (
           <div
-            key={
-              (track as TrackReferenceOrPlaceholder | undefined)?.participant
-                .identity ?? `slot-${String(key)}`
-            }
+            key={`seat-${String(key)}`}
             className={
               "relative rounded-xl overflow-hidden bg-black/40 backdrop-blur-sm border " +
               (isHost

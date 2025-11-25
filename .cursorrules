@@ -130,7 +130,6 @@ Code structure and architecture:
 - Use Redux Toolkit store for global state (e.g., `useGameStore`, `useUserStore`).
 - Avoid prop drilling — prefer context or Redux toolkit selectors.
 - Use memoization (`useMemo`, `useCallback`) for performance-critical UI updates.
-- Add clear JSDoc comments above all major components, hooks, and utilities.
 - Always extract data fetching, side effects, and shared logic into custom hooks under src/hooks.
   React components should remain pure and focused on UI only.
 - Do not define helper or formatting functions inside React components.
