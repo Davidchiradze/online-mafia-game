@@ -12,7 +12,6 @@ export type Role = (typeof JAPANESE_MAFIA_ROLES)[number];
 
 export interface ParticipantMetadata {
   role?: Role;
-  seatIndex?: number;
   [key: string]: unknown;
 }
 
@@ -53,10 +52,9 @@ export async function updateLocalMetadata(
  * Set participant role in metadata
  * This should typically be called from the server/backend when roles are assigned
  */
-export function createMetadataWithRole(role: Role, seatIndex?: number): string {
+export function createMetadataWithRole(role: Role): string {
   const metadata: ParticipantMetadata = {
     role,
-    ...(seatIndex !== undefined && { seatIndex }),
   };
 
   return JSON.stringify(metadata);

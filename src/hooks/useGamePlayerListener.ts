@@ -14,10 +14,11 @@ export function useGamePlayerListener(
   userId: string,
   setGameSessionState: React.Dispatch<
     React.SetStateAction<GameSessionState | null>
-  >
+  >,
+  enabled: boolean = true
 ) {
   useEffect(() => {
-    if (!gameId || !userId) return;
+    if (!gameId || !userId || !enabled) return;
     const supabase = createClient();
 
     const playerChannel = supabase
@@ -32,12 +33,17 @@ export function useGamePlayerListener(
         },
         (payload) => {
           const newPlayerData = payload?.new as Tables<"game_players">;
-          if (newPlayerData?.player_id === userId) {
-            setGameSessionState((prev: GameSessionState | null) => {
-              if (!prev) return prev;
-              return { ...prev, playerData: newPlayerData };
-            });
-          }
+          setGameSessionState((prev: GameSessionState | null) => {
+            if (!prev) return prev;
+            const nextAll = [...(prev.allPlayers ?? [])];
+            const idx = nextAll.findIndex((p) => p.id === newPlayerData.id);
+            if (idx >= 0) nextAll[idx] = newPlayerData;
+            else nextAll.push(newPlayerData);
+            const nextState: GameSessionState = { ...prev, allPlayers: nextAll };
+            if (newPlayerData?.player_id === userId)
+              nextState.playerData = newPlayerData;
+            return nextState;
+          });
         }
       )
       .on(
@@ -46,13 +52,49 @@ export function useGamePlayerListener(
           event: "UPDATE",
           schema: "public",
           table: "game_players",
-          filter: `player_id=eq.${userId}`,
+          filter: `game_id=eq.${gameId}`,
         },
         (payload) => {
           const updatedPlayerData = payload?.new as Tables<"game_players">;
           setGameSessionState((prev: GameSessionState | null) => {
             if (!prev) return prev;
-            return { ...prev, playerData: updatedPlayerData };
+            const nextAll = [...(prev.allPlayers ?? [])];
+            const idx = nextAll.findIndex((p) => p.id === updatedPlayerData.id);
+            if (idx >= 0) nextAll[idx] = updatedPlayerData;
+            else nextAll.push(updatedPlayerData);
+
+            const nextState: GameSessionState = { ...prev, allPlayers: nextAll };
+            if (updatedPlayerData.player_id === userId) {
+              nextState.playerData = updatedPlayerData;
+            }
+            return nextState;
+          });
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "DELETE",
+          schema: "public",
+          table: "game_players",
+          filter: `game_id=eq.${gameId}`,
+        },
+        (payload) => {
+          const deleted = payload?.old as Tables<"game_players">;
+          setGameSessionState((prev: GameSessionState | null) => {
+            if (!prev) return prev;
+            const filtered = (prev.allPlayers || []).filter(
+              (p) => p.id !== deleted.id
+            );
+            const nextState: GameSessionState = {
+              ...prev,
+              allPlayers: filtered,
+            };
+            if (deleted.player_id === userId) {
+              // Keep playerData as-is; viewer has left the game
+              nextState.playerData = prev.playerData;
+            }
+            return nextState;
           });
         }
       )
@@ -61,5 +103,5 @@ export function useGamePlayerListener(
     return () => {
       supabase.removeChannel(playerChannel);
     };
-  }, [gameId, userId, setGameSessionState]);
+  }, [enabled, gameId, userId, setGameSessionState]);
 }

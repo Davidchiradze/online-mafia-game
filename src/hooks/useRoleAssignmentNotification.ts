@@ -36,10 +36,6 @@ export function useRoleAssignmentNotification(gameId: string, userId: string) {
                 newRole as keyof typeof JAPANESE_MAFIA_ROLE_LABEL
               ] || newRole;
 
-            console.log(
-              "🚀 ~ useRoleAssignmentNotification ~ roleLabel:",
-              roleLabel
-            );
             toast.success(`🎭 Your role: ${roleLabel}!`, {
               position: "top-right",
               autoClose: 8000,

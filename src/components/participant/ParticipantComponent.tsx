@@ -10,7 +10,6 @@ import { MicOffIcon, MicOnIcon, MoreVerticalIcon } from "@/assets/icons";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { kickPlayer, transferHost } from "@/lib/gameRoom/actions";
 import {
-  clearSeatIndex,
   removeParticipantFromRoom,
 } from "@/lib/liveKit/actions";
 import PopupMenu from "@/components/ui/PopupMenu";
@@ -74,8 +73,6 @@ export default function ParticipantComponent({
   const onMakeHost = useCallback(async () => {
     if (!participantId) return;
     await transferHost(gameId, participantId);
-    // If I became the host, ensure I no longer occupy a seat
-    await clearSeatIndex(gameId, participantId);
     setMenuOpen(false);
   }, [gameId, participantId]);
 

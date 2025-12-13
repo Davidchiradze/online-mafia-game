@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { TrackReferenceOrPlaceholder } from "@livekit/components-react";
+import { Tables } from "@/db/supabase/database.types";
 
 export type PlayerSlotDescriptor = {
   key: number | "host";
@@ -10,18 +11,20 @@ type UsePlayerSlotsParams = {
   tracks: TrackReferenceOrPlaceholder[];
   hostUserId: string | null;
   maxPlayers: number;
+  players?: Tables<"game_players">[];
 };
 
 /**
  * Derives stable seat descriptors for the player circle layout.
  * - Host is always placed at the "host" slot.
- * - Non-host tracks are seated by `participant.metadata.seatIndex` when valid.
+ * - Non-host tracks are seated by game_players.seat_number (DB-sourced).
  * - Remaining seats are filled in stable identity order.
  */
 export function usePlayerSlots({
   tracks,
   hostUserId,
   maxPlayers,
+  players,
 }: UsePlayerSlotsParams): PlayerSlotDescriptor[] {
   return useMemo(() => {
     const hostTrack = tracks.find((t) => t.participant.identity === hostUserId);
@@ -34,25 +37,31 @@ export function usePlayerSlots({
     // host is always at row 2, col 2 (handled by consumer)
     slots.push({ key: "host", track: hostTrack });
 
-    // Build a seat map from participant.metadata.seatIndex
+    // Build a seat map from DB seats
     const seatToTrack: Record<number, TrackReferenceOrPlaceholder> = {};
+    const seatAssignments = new Map<string, number>();
+    for (const player of players || []) {
+      if (player.player_id === null || player.seat_number === null) continue;
+      const seatIndex = Number(player.seat_number);
+      if (
+        Number.isInteger(seatIndex) &&
+        seatIndex >= 1 &&
+        seatIndex <= maxPlayers
+      ) {
+        seatAssignments.set(player.player_id, seatIndex);
+      }
+    }
+
     for (const t of nonHostTracks) {
-      try {
-        const raw = t?.participant?.metadata;
-        if (!raw) continue;
-        const parsed = JSON.parse(raw) as Record<string, unknown>;
-        const seatIndex = parsed?.seatIndex;
-        if (
-          typeof seatIndex === "number" &&
-          Number.isInteger(seatIndex) &&
-          seatIndex >= 1 &&
-          seatIndex <= maxPlayers &&
-          !seatToTrack[seatIndex]
-        ) {
-          seatToTrack[seatIndex] = t;
-        }
-      } catch {
-        // ignore malformed metadata
+      const participantId = t?.participant?.identity;
+      if (!participantId) continue;
+      const seatIndex = seatAssignments.get(participantId);
+      if (
+        seatIndex !== undefined &&
+        seatIndex !== null &&
+        !seatToTrack[seatIndex]
+      ) {
+        seatToTrack[seatIndex] = t;
       }
     }
 
@@ -73,5 +82,5 @@ export function usePlayerSlots({
     }
 
     return slots;
-  }, [tracks, hostUserId, maxPlayers]);
+  }, [tracks, hostUserId, maxPlayers, players]);
 }

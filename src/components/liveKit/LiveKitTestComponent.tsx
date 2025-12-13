@@ -11,6 +11,8 @@ import PlayerCircle from "@/components/game/PlayerCircle";
 import { useEffect, useRef, useState } from "react";
 import FloatingOptions from "./FloatingOptions";
 import { useRoleAssignmentNotification } from "@/hooks/useRoleAssignmentNotification";
+import { useGameRoom } from "@/lib/context/gameRoomContext";
+import LoadingSpinner from "../ui/LoadingSpinner";
 
 export default function LiveKitTestComponent({
   gameId,
@@ -26,6 +28,7 @@ export default function LiveKitTestComponent({
   userId: string;
   isHost: boolean;
 }) {
+  const { disconnect } = useGameRoom();
   // Connect to room
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
@@ -82,7 +85,7 @@ export default function LiveKitTestComponent({
           isHost={isHost}
           isFullscreen={isFullscreen}
           onToggleFullscreen={toggleFullscreen}
-          onLeaveRoom={() => room.disconnect()}
+          onLeaveRoom={disconnect}
         />
 
         <MyVideoConference
@@ -110,14 +113,18 @@ function MyVideoConference({
     [{ source: Track.Source.Camera, withPlaceholder: true }],
     { onlySubscribed: false }
   );
+  const track = tracks.find((t) => t.participant.identity === userId);
   return (
-    <div className="w-full h-full">
-      <PlayerCircle
-        gameId={gameId}
-        tracks={tracks}
-        hostUserId={hostUserId}
-        userId={userId}
-      />
+    <div className="w-full h-full flex items-center justify-center">
+      {!track && <LoadingSpinner message="Loading..." />}
+      {track && (
+        <PlayerCircle
+          gameId={gameId}
+          tracks={tracks}
+          hostUserId={hostUserId}
+          userId={userId}
+        />
+      )}
     </div>
   );
 }

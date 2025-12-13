@@ -24,6 +24,7 @@ export type Database = {
           player_id: string | null;
           role: string | null;
           seat_number: number | null;
+          state: string | null;
         };
         Insert: {
           fouls?: number | null;
@@ -34,6 +35,7 @@ export type Database = {
           player_id?: string | null;
           role?: string | null;
           seat_number?: number | null;
+          state?: string | null;
         };
         Update: {
           fouls?: number | null;
@@ -44,6 +46,7 @@ export type Database = {
           player_id?: string | null;
           role?: string | null;
           seat_number?: number | null;
+          state?: string | null;
         };
         Relationships: [
           {

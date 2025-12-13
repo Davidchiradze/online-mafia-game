@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import Room from "@/components/game/Room";
 import { redirect } from "next/navigation";
 import { GameRoomProvider } from "@/lib/context/gameRoomContext";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -43,7 +44,7 @@ export default async function GamePage({ params }: PageProps) {
         <div className="flex flex-col gap-6 h-full w-full sm:w-[80%] md:w-[90%] lg:w-[90%]">
           {!userId || !game ? (
             <div className="flex h-full items-center justify-center text-gray-600 dark:text-gray-400">
-              <span className="animate-pulse">Loading…</span>
+              <LoadingSpinner message="Loading..." />
             </div>
           ) : (
             <Suspense>
