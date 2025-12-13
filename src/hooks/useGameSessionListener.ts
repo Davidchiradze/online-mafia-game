@@ -12,10 +12,11 @@ export function useGameSessionListener(
   gameId: string,
   setGameSessionState: React.Dispatch<
     React.SetStateAction<GameSessionState | null>
-  >
+  >,
+  enabled: boolean = true
 ) {
   useEffect(() => {
-    if (!gameId) return;
+    if (!gameId || !enabled) return;
     const supabase = createClient();
 
     const channel = supabase
@@ -38,5 +39,5 @@ export function useGameSessionListener(
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [gameId, setGameSessionState]);
+  }, [enabled, gameId, setGameSessionState]);
 }

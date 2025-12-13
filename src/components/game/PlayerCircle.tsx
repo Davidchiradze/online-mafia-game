@@ -5,6 +5,7 @@ import React from "react";
 import ParticipantComponent from "../participant/ParticipantComponent";
 import { usePlayerSlots } from "../../hooks/usePlayerSlots";
 import GamePhaseControls from "./GamePhaseControls";
+import { useGameRoom } from "@/lib/context/gameRoomContext";
 
 // 4x5 grid placement for 12 players around a centered host (spanning 2 rows)
 // Player indices are 1..12 (clockwise-ish around the host)
@@ -62,10 +63,12 @@ export default function PlayerCircle({
   userId: string;
   maxPlayers?: number;
 }) {
+  const { gameSessionState } = useGameRoom();
   const slotDescriptors = usePlayerSlots({
     tracks,
     hostUserId,
-    maxPlayers,
+    maxPlayers: maxPlayers,
+    players: gameSessionState?.allPlayers,
   });
   // test
 

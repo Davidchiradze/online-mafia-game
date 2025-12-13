@@ -10,18 +10,23 @@ import {
 import { useGameSessionListener } from "./useGameSessionListener";
 import { useGamePlayerListener } from "./useGamePlayerListener";
 
-export function useGameSession(gameId: string, userId: string) {
+export function useGameSession(
+  gameId: string,
+  userId: string,
+  options?: { enabled?: boolean }
+) {
+  const enabled = options?.enabled ?? true;
   const [gameSessionState, setGameSessionState] =
     useState<GameSessionState | null>(null);
 
   // Subscribe to game_sessions table updates
-  useGameSessionListener(gameId, setGameSessionState);
+  useGameSessionListener(gameId, setGameSessionState, enabled);
 
   // Subscribe to game_players table updates for current user
-  useGamePlayerListener(gameId, userId, setGameSessionState);
+  useGamePlayerListener(gameId, userId, setGameSessionState, enabled);
 
   useEffect(() => {
-    if (!gameId) return;
+    if (!gameId || !enabled) return;
     const getGameSessionFunc = async () => {
       const res = await getGameSession(gameId, userId);
       if (!res?.ok) return;
@@ -32,10 +37,11 @@ export function useGameSession(gameId: string, userId: string) {
       });
     };
     getGameSessionFunc();
-  }, [gameId, userId, gameSessionState?.game_phase]);
+  }, [enabled, gameId, userId, gameSessionState?.game_phase]);
 
   const startGame = useCallback(async () => {
-    if (!gameId) return { ok: false as const, message: "Missing gameId" };
+    if (!enabled || !gameId)
+      return { ok: false as const, message: "Missing gameId" };
     const res = await startGameAction(gameId);
     if (!res?.ok) return { ok: false as const, message: res?.message };
     const res2 = await createGameSession(gameId);

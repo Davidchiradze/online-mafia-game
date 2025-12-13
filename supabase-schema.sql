@@ -9,6 +9,7 @@ CREATE TABLE public.game_players (
   is_alive boolean DEFAULT true,
   joined_at timestamp with time zone DEFAULT now(),
   seat_number numeric,
+  state text,
   fouls numeric,
   CONSTRAINT game_players_pkey PRIMARY KEY (id),
   CONSTRAINT game_players_game_id_fkey FOREIGN KEY (game_id) REFERENCES public.games(id),
