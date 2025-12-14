@@ -18,11 +18,10 @@ export async function startGame(
 ): Promise<{ ok: true } | { ok: false; message: string }> {
   const supabase = await createClient();
   const {
-    data: { session },
-    error: sessionError,
-  } = await supabase.auth.getSession();
-  if (sessionError || !session?.user)
-    return { ok: false, message: "Not authenticated" };
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  if (userError || !user) return { ok: false, message: "Not authenticated" };
 
   // Fetch game, ensure host, get max_players
   const { data: gameRow, error: gameErr } = await supabase
@@ -33,8 +32,7 @@ export async function startGame(
       Pick<Tables<"games">, "id" | "host_id" | "max_players" | "game_status">
     >();
   if (gameErr || !gameRow) return { ok: false, message: "Game not found" };
-  if (gameRow.host_id !== session.user.id)
-    return { ok: false, message: "Forbidden" };
+  if (gameRow.host_id !== user.id) return { ok: false, message: "Forbidden" };
 
   // Ensure players exist with seats (assigned during join)
   const { data: players, error: playersErr } = await adminClient
@@ -180,11 +178,10 @@ export async function assignRandomRoles(
 ): Promise<{ ok: true } | { ok: false; message: string }> {
   const supabase = await createClient();
   const {
-    data: { session },
-    error: sessionError,
-  } = await supabase.auth.getSession();
-  if (sessionError || !session?.user)
-    return { ok: false, message: "Not authenticated" };
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  if (userError || !user) return { ok: false, message: "Not authenticated" };
 
   // Verify user is the host
   const { data: gameRow, error: gameErr } = await supabase
@@ -193,7 +190,7 @@ export async function assignRandomRoles(
     .eq("id", gameId)
     .single<Pick<Tables<"games">, "id" | "host_id" | "game_type">>();
   if (gameErr || !gameRow) return { ok: false, message: "Game not found" };
-  if (gameRow.host_id !== session.user.id)
+  if (gameRow.host_id !== user.id)
     return { ok: false, message: "Forbidden: Only host can assign roles" };
 
   // Get all players

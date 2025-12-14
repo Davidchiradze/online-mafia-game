@@ -37,25 +37,38 @@ export function usePlayerSlots({
     // host is always at row 2, col 2 (handled by consumer)
     slots.push({ key: "host", track: hostTrack });
 
-    // Build a seat map from DB seats
-    const seatToTrack: Record<number, TrackReferenceOrPlaceholder> = {};
-    const seatAssignments = new Map<string, number>();
-    for (const player of players || []) {
-      if (player.player_id === null || player.seat_number === null) continue;
-      const seatIndex = Number(player.seat_number);
-      if (
-        Number.isInteger(seatIndex) &&
-        seatIndex >= 1 &&
-        seatIndex <= maxPlayers
-      ) {
-        seatAssignments.set(player.player_id, seatIndex);
+    // Build a seat map from DB seats: map player_id -> seat_number
+    const playerIdToSeat = new Map<string, number>();
+    if (players) {
+      for (let i = 1; i <= maxPlayers; i++) {
+        const player = players.find((p) => p.seat_number === i);
+        if (!player) continue;
+        if (
+          player.player_id &&
+          player.seat_number !== null &&
+          player.seat_number !== undefined
+        ) {
+          const seatNum = Number(player.seat_number);
+          // Only assign seats 1..maxPlayers (exclude host sentinel seat)
+          if (
+            Number.isInteger(seatNum) &&
+            seatNum >= 1 &&
+            seatNum <= maxPlayers
+          ) {
+            playerIdToSeat.set(player.player_id, seatNum);
+          }
+        }
       }
     }
+
+    // Map tracks to seats based on database assignments
+    const seatToTrack: Record<number, TrackReferenceOrPlaceholder> = {};
 
     for (const t of nonHostTracks) {
       const participantId = t?.participant?.identity;
       if (!participantId) continue;
-      const seatIndex = seatAssignments.get(participantId);
+
+      const seatIndex = playerIdToSeat.get(participantId);
       if (
         seatIndex !== undefined &&
         seatIndex !== null &&
@@ -65,20 +78,9 @@ export function usePlayerSlots({
       }
     }
 
-    // Fallback: fill remaining seats with any unseated tracks in stable identity order
-    const unseated = nonHostTracks
-      .filter((t) => !Object.values(seatToTrack).includes(t))
-      .sort((a, b) => {
-        const ai = a?.participant?.identity ?? "";
-        const bi = b?.participant?.identity ?? "";
-        return String(ai).localeCompare(String(bi));
-      });
-
-    let idx = 0;
+    // Fill remaining seats with empty slots (don't rearrange existing players)
     for (let i = 1; i <= maxPlayers; i++) {
-      const trackAtSeat = seatToTrack[i] ?? unseated[idx];
-      slots.push({ key: i as number, track: trackAtSeat });
-      if (!seatToTrack[i] && unseated[idx]) idx++;
+      slots.push({ key: i as number, track: seatToTrack[i] });
     }
 
     return slots;
