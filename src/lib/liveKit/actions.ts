@@ -15,15 +15,14 @@ export async function generateLivekitAccessToken(
     roomAdmin: boolean;
   }
 ) {
-  // Resolve participant display name from the authenticated session
+  // Resolve participant display name from the authenticated user
   const supabase = await createClient();
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
   const participantName =
-    ((session?.user?.user_metadata as Record<string, unknown>)
-      ?.nickname as string) ||
-    session?.user?.email ||
+    ((user?.user_metadata as Record<string, unknown>)?.nickname as string) ||
+    user?.email ||
     participantId;
 
   const at = new AccessToken(

@@ -10,7 +10,6 @@ type Params = {
   isHost: boolean;
   joinStatus: JoinRequest["status"] | undefined;
   hasPlayerRecord: boolean;
-  isJoiningGame: boolean;
   setIsJoiningGame: (v: boolean) => void;
   setJoinError: (v: string | null) => void;
   setHasPlayerRecord: (v: boolean) => void;
@@ -26,7 +25,6 @@ export function useEnsurePlayerSeat({
   isHost,
   joinStatus,
   hasPlayerRecord,
-  isJoiningGame,
   setIsJoiningGame,
   setJoinError,
   setHasPlayerRecord,
@@ -35,7 +33,7 @@ export function useEnsurePlayerSeat({
 }: Params) {
   useEffect(() => {
     const canConnect = isHost || joinStatus === JOIN_REQUEST_STATUSES.ACCEPTED;
-    if (!canConnect || hasPlayerRecord || isJoiningGame) return;
+    if (!canConnect || hasPlayerRecord) return;
 
     const ensurePlayerSeat = async () => {
       setIsJoiningGame(true);
@@ -77,7 +75,6 @@ export function useEnsurePlayerSeat({
     gameId,
     hasPlayerRecord,
     isHost,
-    isJoiningGame,
     joinStatus,
     setCurrentHostId,
     setHasPlayerRecord,

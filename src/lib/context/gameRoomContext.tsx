@@ -75,6 +75,16 @@ export function GameRoomProvider({
       })
   );
 
+  // Disconnect handler - defined early so it can be used in hooks
+  const disconnect = useCallback(async () => {
+    try {
+      if (hasPlayerRecord) await leaveGamePlayer(gameId);
+      room.disconnect();
+    } catch {
+      // noop
+    }
+  }, [gameId, hasPlayerRecord, room]);
+
   // Game session subscription (status + startGame action)
   const { gameSessionState, startGame, setGameSessionState } = useGameSession(
     gameId,
@@ -83,7 +93,22 @@ export function GameRoomProvider({
   );
 
   // Redirect back to lobby on disconnect by default
-  useLivekitRoom(room, { redirectOnDisconnect: true, redirectPath: "/lobby" });
+  useLivekitRoom(room, {
+    redirectOnDisconnect: true,
+    redirectPath: "/lobby",
+    onDisconnect: () => {
+      // disconnect();
+    },
+  });
+
+  // Handle tab close/unload events to ensure cleanup
+  // useTabCloseCleanup({
+  //   gameId,
+  //   room,
+  //   enabled: hasPlayerRecord,
+  //   onCleanup: disconnect,
+  // });
+
   useJoinPermissionListener({ gameId, room, hasPlayerRecord, setJoinStatus });
 
   useEnsurePlayerSeat({
@@ -91,7 +116,6 @@ export function GameRoomProvider({
     isHost,
     joinStatus,
     hasPlayerRecord,
-    isJoiningGame,
     setIsJoiningGame,
     setJoinError,
     setHasPlayerRecord,
@@ -127,15 +151,6 @@ export function GameRoomProvider({
     },
     true
   );
-
-  const disconnect = useCallback(async () => {
-    try {
-      if (hasPlayerRecord) await leaveGamePlayer(gameId);
-      room.disconnect();
-    } catch {
-      // noop
-    }
-  }, [gameId, hasPlayerRecord, room]);
 
   // In the future, we may subscribe to host changes in a hook and update currentHostId here.
   const value: GameRoomContextValue = useMemo(

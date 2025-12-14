@@ -40,10 +40,10 @@ export async function createGameRoom(input: {
 }): Promise<{ ok: true; data: GameRoom } | { ok: false; message: string }> {
   const supabase = await createClient();
   const {
-    data: { session },
-    error: sessionError,
-  } = await supabase.auth.getSession();
-  if (sessionError || !session?.user)
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  if (userError || !user)
     return { ok: false, message: "Not authenticated" } as const;
 
   let attempt = 0;
@@ -62,7 +62,7 @@ export async function createGameRoom(input: {
   const dataToInsert = {
     code,
     name: input.name,
-    host_id: session.user.id,
+    host_id: user.id,
     game_status: "not_started" as const,
     game_type: input.type,
     max_players: GAME_TYPE_MAX_PLAYER_NUMBER[input.type],
@@ -206,10 +206,10 @@ export async function checkOrRequestJoin(gameId: string): Promise<{
 }> {
   const supabase = await createClient();
   const {
-    data: { session },
-    error: sessionError,
-  } = await supabase.auth.getSession();
-  if (sessionError || !session?.user)
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  if (userError || !user)
     return { ok: false, message: "Not authenticated" } as const;
 
   // 1) Ensure game exists and fetch host
@@ -224,15 +224,14 @@ export async function checkOrRequestJoin(gameId: string): Promise<{
       message: gameError?.message || "Game not found",
     } as const;
   // 2) Host is always allowed
-  if (gameRow.host_id === session.user.id)
-    return { ok: true, allowed: true } as const;
+  if (gameRow.host_id === user.id) return { ok: true, allowed: true } as const;
 
   // 3) If already in players, allowed
   const { data: existingPlayer } = await supabase
     .from("game_players")
     .select("id")
     .eq("game_id", gameId)
-    .eq("player_id", session.user.id)
+    .eq("player_id", user.id)
     .maybeSingle<Tables<"game_players">>();
   if (existingPlayer)
     return {
@@ -246,7 +245,7 @@ export async function checkOrRequestJoin(gameId: string): Promise<{
     .from("join_requests")
     .select("*")
     .eq("game_id", gameId)
-    .eq("requester_id", session.user.id)
+    .eq("requester_id", user.id)
     .eq("status", JOIN_REQUEST_STATUSES.ACCEPTED)
     .maybeSingle<Tables<"join_requests">>();
   if (existingAccepted)
@@ -261,7 +260,7 @@ export async function checkOrRequestJoin(gameId: string): Promise<{
     .from("join_requests")
     .select("*")
     .eq("game_id", gameId)
-    .eq("requester_id", session.user.id)
+    .eq("requester_id", user.id)
     .eq("status", JOIN_REQUEST_STATUSES.PENDING)
     .maybeSingle<Tables<"join_requests">>();
   if (existingPending)
@@ -276,9 +275,9 @@ export async function checkOrRequestJoin(gameId: string): Promise<{
     .from("join_requests")
     .insert({
       game_id: gameId,
-      requester_id: session.user.id,
+      requester_id: user.id,
       status: JOIN_REQUEST_STATUSES.PENDING,
-      requester_nickname: session.user.user_metadata.nickname,
+      requester_nickname: user.user_metadata.nickname,
     })
     .select("*")
     .single<Tables<"join_requests">>();
@@ -304,17 +303,17 @@ export async function requestJoin(
 > {
   const supabase = await createClient();
   const {
-    data: { session },
-    error: sessionError,
-  } = await supabase.auth.getSession();
-  if (sessionError || !session?.user)
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  if (userError || !user)
     return { ok: false, message: "Not authenticated" } as const;
 
   const { data: existing } = await supabase
     .from("join_requests")
     .select("*")
     .eq("game_id", gameId)
-    .eq("requester_id", session.user.id)
+    .eq("requester_id", user.id)
     .in("status", [
       JOIN_REQUEST_STATUSES.PENDING,
       JOIN_REQUEST_STATUSES.ACCEPTED,
@@ -333,8 +332,8 @@ export async function requestJoin(
     .from("join_requests")
     .insert({
       game_id: gameId,
-      requester_id: session.user.id,
-      requester_nickname: session.user.user_metadata.nickname,
+      requester_id: user.id,
+      requester_nickname: user.user_metadata.nickname,
       status: JOIN_REQUEST_STATUSES.PENDING,
     })
     .select("*")
@@ -399,17 +398,16 @@ export async function kickPlayer(
 ): Promise<{ ok: true } | { ok: false; message: string }> {
   const supabase = await createClient();
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  if (!session?.user) return { ok: false, message: "Not authenticated" };
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, message: "Not authenticated" };
   const { data: gameRow, error: gameErr } = await supabase
     .from("games")
     .select("host_id")
     .eq("id", gameId)
     .single<Tables<"games">>();
   if (gameErr || !gameRow) return { ok: false, message: "Game not found" };
-  if (gameRow.host_id !== session.user.id)
-    return { ok: false, message: "Forbidden" };
+  if (gameRow.host_id !== user.id) return { ok: false, message: "Forbidden" };
   const { error } = await supabase
     .from("join_requests")
     .update({ status: JOIN_REQUEST_STATUSES.REJECTED })
@@ -429,17 +427,16 @@ export async function transferHost(
 ): Promise<{ ok: true } | { ok: false; message: string }> {
   const supabase = await createClient();
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  if (!session?.user) return { ok: false, message: "Not authenticated" };
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, message: "Not authenticated" };
   const { data: gameRow, error: gameErr } = await supabase
     .from("games")
     .select("host_id")
     .eq("id", gameId)
     .single<Tables<"games">>();
   if (gameErr || !gameRow) return { ok: false, message: "Game not found" };
-  if (gameRow.host_id !== session.user.id)
-    return { ok: false, message: "Forbidden" };
+  if (gameRow.host_id !== user.id) return { ok: false, message: "Forbidden" };
   // Ensure new host exists in profiles to satisfy FK
   const { data: profile, error: profileErr } = await adminClient
     .from("profiles")

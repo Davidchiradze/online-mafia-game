@@ -23,12 +23,11 @@ function isGameStarted(status: Tables<"games">["game_status"] | null) {
 export async function joinGamePlayer(gameId: string): Promise<JoinResult> {
   const supabase = await createClient();
   const {
-    data: { session },
-    error: sessionError,
-  } = await supabase.auth.getSession();
-  if (sessionError || !session?.user)
-    return { ok: false, message: "Not authenticated" };
-  const userId = session.user.id;
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  if (userError || !user) return { ok: false, message: "Not authenticated" };
+  const userId = user.id;
 
   const { data: gameRow, error: gameErr } = await adminClient
     .from("games")
@@ -46,8 +45,16 @@ export async function joinGamePlayer(gameId: string): Promise<JoinResult> {
   if (playersErr) return { ok: false, message: playersErr.message };
 
   const existingForUser = (players || []).find((p) => p.player_id === userId);
-  if (existingForUser)
+  if (existingForUser) {
+    const { error: updateErr } = await adminClient
+      .from("game_players")
+      .update({ state: "joined" })
+      .eq("game_id", gameId)
+      .eq("player_id", userId);
+    if (updateErr) return { ok: false, message: updateErr.message };
+
     return { ok: true, player: existingForUser, game: gameRow };
+  }
 
   const isHost = gameRow.host_id === userId;
   const maxSeats = Number(gameRow.max_players ?? 0) || 12;
@@ -115,20 +122,15 @@ export async function joinGamePlayer(gameId: string): Promise<JoinResult> {
 }
 
 /**
- * Handle player leaving a game.
+ * Admin version: Handle player leaving a game by userId.
  * - If the game has not started, the game_players row is deleted.
  * - If the game is in progress/finished, the row is left intact for reconnection.
+ * Used by webhooks and server-side operations where userId is known.
  */
-export async function leaveGamePlayer(gameId: string): Promise<LeaveResult> {
-  const supabase = await createClient();
-  const {
-    data: { session },
-    error: sessionError,
-  } = await supabase.auth.getSession();
-  if (sessionError || !session?.user)
-    return { ok: false, message: "Not authenticated" };
-  const userId = session.user.id;
-
+async function leaveGamePlayerByUserId(
+  gameId: string,
+  userId: string
+): Promise<LeaveResult> {
   const { data: gameRow, error: gameErr } = await adminClient
     .from("games")
     .select("id, game_status")
@@ -172,4 +174,32 @@ export async function leaveGamePlayer(gameId: string): Promise<LeaveResult> {
   }
 
   return { ok: true };
+}
+
+/**
+ * Handle player leaving a game.
+ * - If the game has not started, the game_players row is deleted.
+ * - If the game is in progress/finished, the row is left intact for reconnection.
+ */
+export async function leaveGamePlayer(gameId: string): Promise<LeaveResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  if (userError || !user) return { ok: false, message: "Not authenticated" };
+  const userId = user.id;
+
+  return leaveGamePlayerByUserId(gameId, userId);
+}
+
+/**
+ * Admin function to leave a game player by userId.
+ * Exported for use in webhooks and server-side operations.
+ */
+export async function leaveGamePlayerAdmin(
+  gameId: string,
+  userId: string
+): Promise<LeaveResult> {
+  return leaveGamePlayerByUserId(gameId, userId);
 }

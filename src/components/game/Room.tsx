@@ -37,15 +37,19 @@ export default function Room() {
 
   return (
     <>
-      {joinStatus !== JOIN_REQUEST_STATUSES.ACCEPTED && !isHost && (
-        <WaitingRoom
-          status={joinStatus ?? undefined}
-          gameId={gameId}
-          userId={userId}
-        />
-      )}
+      {joinStatus !== undefined &&
+        joinStatus !== JOIN_REQUEST_STATUSES.ACCEPTED &&
+        !isHost && (
+          <WaitingRoom
+            status={joinStatus ?? undefined}
+            gameId={gameId}
+            userId={userId}
+          />
+        )}
 
-      {(joinStatus === JOIN_REQUEST_STATUSES.ACCEPTED || isHost) && (
+      {((joinStatus !== undefined &&
+        joinStatus === JOIN_REQUEST_STATUSES.ACCEPTED) ||
+        isHost) && (
         <LiveKitTestComponent
           gameId={gameId}
           room={room}
@@ -54,6 +58,11 @@ export default function Room() {
           isHost={isHost}
           userId={userId}
         />
+      )}
+      {joinStatus === JOIN_REQUEST_STATUSES.REJECTED && (
+        <div className="flex h-full items-center justify-center text-red-500">
+          You have been rejected from the game.
+        </div>
       )}
     </>
   );
