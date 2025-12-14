@@ -80,7 +80,10 @@ export function usePlayerSlots({
 
     // Fill remaining seats with empty slots (don't rearrange existing players)
     for (let i = 1; i <= maxPlayers; i++) {
-      slots.push({ key: i as number, track: seatToTrack[i] });
+      slots.push({
+        key: i as number,
+        track: seatToTrack[i],
+      });
     }
 
     return slots;

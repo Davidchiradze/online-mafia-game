@@ -9,15 +9,14 @@ import { Track } from "livekit-client";
 import { MicOffIcon, MicOnIcon, MoreVerticalIcon } from "@/assets/icons";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { kickPlayer, transferHost } from "@/lib/gameRoom/actions";
-import {
-  removeParticipantFromRoom,
-} from "@/lib/liveKit/actions";
+import { removeParticipantFromRoom } from "@/lib/liveKit/actions";
 import PopupMenu from "@/components/ui/PopupMenu";
 import { useParticipantReady } from "@/hooks/useParticipantReady";
 import ReadyButton from "@/components/ui/ReadyButton";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { useParticipantVisibility } from "@/hooks/useParticipantVisibility";
 import ParticipantCover from "@/components/video/ParticipantCover";
+import { Tables } from "@/db/supabase/database.types";
 
 export default function ParticipantComponent({
   gameId,
@@ -25,12 +24,14 @@ export default function ParticipantComponent({
   currentUserId,
   trackRef,
   playerIndex,
+  player,
 }: {
   gameId: string;
   hostUserId: string | null;
   currentUserId: string;
   trackRef: TrackReferenceOrPlaceholder;
   playerIndex: number | "host";
+  player: Tables<"game_players">;
 }) {
   const { gameSessionState } = useGameRoom();
 
@@ -52,6 +53,11 @@ export default function ParticipantComponent({
     markUnready,
     isLoading: isLoadingReady,
   } = useParticipantReady(gameId, participantId, trackRef);
+
+  // Check if participant is disconnected
+  const isDisconnected = useMemo(() => {
+    return player?.state === "disconnected";
+  }, [player]);
 
   // Determine visibility based on game phase and roles
   const { isVisible, coverMessage } = useParticipantVisibility(trackRef);
@@ -109,8 +115,10 @@ export default function ParticipantComponent({
       onMouseLeave={() => setMenuOpen(false)}
       onClick={handleTileClick}
     >
-      {/* Show cover when participant should not be visible */}
-      {isVisible ? (
+      {/* Show network issues UI when disconnected, otherwise show cover or video based on visibility */}
+      {isDisconnected ? (
+        <ParticipantCover isDisconnected={true} />
+      ) : isVisible ? (
         <ParticipantTile
           className="lk-hide-metadata"
           trackRef={trackRef}

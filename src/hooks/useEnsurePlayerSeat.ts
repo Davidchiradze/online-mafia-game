@@ -13,7 +13,6 @@ type Params = {
   setIsJoiningGame: (v: boolean) => void;
   setJoinError: (v: string | null) => void;
   setHasPlayerRecord: (v: boolean) => void;
-  setMaxPlayers: (v: number | null) => void;
   setCurrentHostId: (v: string | null) => void;
 };
 
@@ -28,7 +27,6 @@ export function useEnsurePlayerSeat({
   setIsJoiningGame,
   setJoinError,
   setHasPlayerRecord,
-  setMaxPlayers,
   setCurrentHostId,
 }: Params) {
   useEffect(() => {
@@ -55,11 +53,6 @@ export function useEnsurePlayerSeat({
 
         setHasPlayerRecord(true);
         setJoinError(null);
-        if (
-          res.game?.max_players !== null &&
-          res.game?.max_players !== undefined
-        )
-          setMaxPlayers(res.game.max_players);
         if (res.game?.host_id) setCurrentHostId(res.game.host_id);
       } catch (err) {
         setJoinError(
@@ -80,6 +73,5 @@ export function useEnsurePlayerSeat({
     setHasPlayerRecord,
     setIsJoiningGame,
     setJoinError,
-    setMaxPlayers,
   ]);
 }

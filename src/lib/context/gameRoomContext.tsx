@@ -37,7 +37,6 @@ type GameRoomContextValue = {
   setGameSessionState: (gameSessionState: GameSessionState) => void;
   startGame: () => Promise<{ ok: boolean; message?: string }>;
   disconnect: () => void;
-  isGameInProgress: boolean;
   isJoiningGame: boolean;
   joinError: string | null;
 };
@@ -52,17 +51,13 @@ export function GameRoomProvider({
   game: GameRoom;
   userId: string;
 }>) {
-  const isGameInProgress = game.game_status === "playing";
+  const { max_players: maxPlayers } = game;
   const { id: gameId, host_id } = game;
   const [currentHostId, setCurrentHostId] = useState<string | null>(host_id);
   const isHost = currentHostId === userId;
-  const [maxPlayers, setMaxPlayers] = useState<number | null>(
-    game.max_players ?? null
-  );
   const [hasPlayerRecord, setHasPlayerRecord] = useState(false);
   const [isJoiningGame, setIsJoiningGame] = useState(false);
   const [joinError, setJoinError] = useState<string | null>(null);
-
   const [joinStatus, setJoinStatus] = useState<
     JoinRequest["status"] | undefined
   >(undefined);
@@ -119,7 +114,6 @@ export function GameRoomProvider({
     setIsJoiningGame,
     setJoinError,
     setHasPlayerRecord,
-    setMaxPlayers,
     setCurrentHostId,
   });
 
@@ -173,7 +167,6 @@ export function GameRoomProvider({
         };
       },
       disconnect,
-      isGameInProgress,
       isJoiningGame,
       joinError,
     }),
@@ -190,7 +183,6 @@ export function GameRoomProvider({
       setGameSessionState,
       startGame,
       disconnect,
-      isGameInProgress,
       isJoiningGame,
       joinError,
     ]
