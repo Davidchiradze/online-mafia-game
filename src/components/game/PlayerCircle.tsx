@@ -7,6 +7,7 @@ import { usePlayerSlots } from "../../hooks/usePlayerSlots";
 import GamePhaseControls from "./GamePhaseControls";
 import { useGamePlayers } from "@/hooks/useGamePlayers";
 import { Tables } from "@/db/supabase/database.types";
+import { useGameRoom } from "@/lib/context/gameRoomContext";
 
 // 4x5 grid placement for 12 players around a centered host (spanning 2 rows)
 // Player indices are 1..12 (clockwise-ish around the host)
@@ -15,7 +16,7 @@ import { Tables } from "@/db/supabase/database.types";
 // Row2: [10,  h,  x,  3]
 // Row3: [ 9,  x,  x,  4]
 // Row4: [ 8,  7,  6,  5]
-function gridPositionForPlayerIndex(playerIndex: number | "host"): {
+function gridPositionForPlayerIndex(playerIndex: number): {
   gridRow: number;
   gridColumn: number;
 } {
@@ -44,7 +45,7 @@ function gridPositionForPlayerIndex(playerIndex: number | "host"): {
       return { gridRow: 1, gridColumn: 1 };
     case 12:
       return { gridRow: 1, gridColumn: 2 };
-    case "host":
+    case 13:
       return { gridRow: 2, gridColumn: 2 };
     default:
       return { gridRow: 4, gridColumn: 4 };
@@ -64,8 +65,7 @@ export default function PlayerCircle({
   userId: string;
   maxPlayers?: number;
 }) {
-  const players = useGamePlayers(gameId);
-
+  const { players } = useGameRoom();
   const slotDescriptors = usePlayerSlots({
     tracks,
     hostUserId,
@@ -83,7 +83,10 @@ export default function PlayerCircle({
     >
       {slotDescriptors.map(({ key, track }) => {
         const pos = gridPositionForPlayerIndex(key);
-        const isHost = key === "host";
+        const isHost = key === maxPlayers + 1;
+        const player = players.find(
+          (p) => p.seat_number === key
+        ) as Tables<"game_players">;
         return (
           <div
             key={`seat-${String(key)}`}
@@ -95,13 +98,9 @@ export default function PlayerCircle({
             }
             style={{ gridColumn: pos.gridColumn, gridRow: pos.gridRow }}
           >
-            {track ? (
+            {player ? (
               <ParticipantComponent
-                player={
-                  players.find(
-                    (p) => p.seat_number === key
-                  ) as Tables<"game_players">
-                }
+                player={player}
                 gameId={gameId}
                 hostUserId={hostUserId}
                 currentUserId={userId}

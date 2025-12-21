@@ -4,8 +4,8 @@ import { Tables } from "@/db/supabase/database.types";
 import { adminClient } from "@/lib/supabase/admin";
 import { GAME_PHASES, JAPANESE_MAFIA_ROLES } from "../constants/game";
 import { GameSessionState } from "@/types/game/type";
-import { filterPlayerRoles } from "@/lib/utils/filterPlayerRoles";
 import { buildShuffledSeatAssignments } from "@/lib/game/shuffleSeats";
+import { assignPlayerRole } from "@/lib/gamePlayerRoles/actions";
 
 // **
 //  * Starts a game:
@@ -46,6 +46,21 @@ export async function startGame(
   // Shuffle seat_number for all non-host seats (keep host sentinel if present)
   const maxSeats = Number(gameRow.max_players ?? 0) || 12;
   const assignments = buildShuffledSeatAssignments(players, maxSeats);
+
+  // Two-pass update to avoid unique constraint violation:
+  // 1. First, clear all seats to NULL
+  const playerIds = assignments.map((a) => a.playerId);
+  const { error: clearSeatsErr } = await adminClient
+    .from("game_players")
+    .update({ seat_number: null })
+    .in("id", playerIds);
+  if (clearSeatsErr)
+    return {
+      ok: false,
+      message: clearSeatsErr.message || "Failed to clear seats",
+    };
+
+  // 2. Then, assign the new shuffled seat numbers
   for (const { playerId, newSeat } of assignments) {
     const { error: updateSeatErr } = await adminClient
       .from("game_players")
@@ -82,10 +97,9 @@ export async function updateGameSession(
   gameSessionId: string,
   gameSessionState: GameSessionState
 ): Promise<{ ok: true } | { ok: false; message: string }> {
-  const { playerData, allPlayers, ...rest } = gameSessionState;
   const { error: updateErr } = await adminClient
     .from("game_sessions")
-    .update(rest)
+    .update(gameSessionState)
     .eq("id", gameSessionId);
   if (updateErr) return { ok: false, message: updateErr.message };
   return { ok: true };
@@ -98,21 +112,10 @@ export async function getGameSession(
   | {
       ok: true;
       gameSessionState: GameSessionState;
-      playerData: Tables<"game_players">;
-      allPlayers: Tables<"game_players">[];
     }
   | { ok: false; message: string }
 > {
   const supabase = await createClient();
-
-  // Get game to find host
-  const { data: game, error: gameError } = await supabase
-    .from("games")
-    .select("host_id")
-    .eq("id", gameId)
-    .single();
-
-  if (gameError) return { ok: false, message: gameError.message };
 
   // Get game session state
   const { data: gameSessionState, error: gameSessionStateError } =
@@ -121,43 +124,12 @@ export async function getGameSession(
       .select("*")
       .eq("game_id", gameId)
       .single<GameSessionState>();
-
   if (gameSessionStateError)
     return { ok: false, message: gameSessionStateError.message };
-
-  // Get current user's player data
-  const { data: playerData, error: playerDataError } = await supabase
-    .from("game_players")
-    .select("*")
-    .eq("game_id", gameId)
-    .eq("player_id", userId)
-    .single();
-
-  if (playerDataError) return { ok: false, message: playerDataError.message };
-
-  // Get all players for the game
-  const { data: allPlayers, error: allPlayersError } = await supabase
-    .from("game_players")
-    .select("*")
-    .eq("game_id", gameId);
-
-  if (allPlayersError) return { ok: false, message: allPlayersError.message };
-
-  // 🔒 SECURITY: Filter roles based on team relationships
-  // Teammates always have access to each other's roles in the state
-  // Phase-based visibility (video/UI) is handled separately
-  const filteredPlayers = filterPlayerRoles({
-    allPlayers: allPlayers || [],
-    requestingUserId: userId,
-    requestingRole: playerData.role as string | null,
-    isHost: game.host_id === userId,
-  });
 
   return {
     ok: true,
     gameSessionState,
-    playerData,
-    allPlayers: filteredPlayers,
   };
 }
 
@@ -186,9 +158,11 @@ export async function assignRandomRoles(
   // Verify user is the host
   const { data: gameRow, error: gameErr } = await supabase
     .from("games")
-    .select("id, host_id, game_type")
+    .select("id, host_id, game_type, max_players")
     .eq("id", gameId)
-    .single<Pick<Tables<"games">, "id" | "host_id" | "game_type">>();
+    .single<
+      Pick<Tables<"games">, "id" | "host_id" | "game_type" | "max_players">
+    >();
   if (gameErr || !gameRow) return { ok: false, message: "Game not found" };
   if (gameRow.host_id !== user.id)
     return { ok: false, message: "Forbidden: Only host can assign roles" };
@@ -224,8 +198,11 @@ export async function assignRandomRoles(
   // Shuffle the roles
   const shuffledRoles = [...roleDistribution].sort(() => Math.random() - 0.5);
 
-  // Assign roles to players (excluding host if they don't have a seat)
-  const playersWithSeats = players.filter((p) => p.seat_number !== null);
+  // Assign roles to players (excluding host seat which is max_players + 1)
+  const hostSeatNumber = (gameRow.max_players ?? 12) + 1;
+  const playersWithSeats = players.filter(
+    (p) => p.seat_number !== null && p.seat_number !== hostSeatNumber
+  );
 
   if (playersWithSeats.length !== shuffledRoles.length) {
     return {
@@ -234,20 +211,23 @@ export async function assignRandomRoles(
     };
   }
 
-  // Update each player with their assigned role
+  // Assign roles to players in the secure game_player_roles table
   for (let i = 0; i < playersWithSeats.length; i++) {
     const player = playersWithSeats[i];
     const role = shuffledRoles[i];
 
-    const { error: updateErr } = await adminClient
-      .from("game_players")
-      .update({ role })
-      .eq("id", player.id);
-
-    if (updateErr) {
+    if (!player.player_id) {
       return {
         ok: false,
-        message: `Failed to assign role: ${updateErr.message}`,
+        message: `Player ${player.id} has no player_id`,
+      };
+    }
+
+    const result = await assignPlayerRole(gameId, player.player_id, role);
+    if (!result.ok) {
+      return {
+        ok: false,
+        message: `Failed to assign role: ${result.message}`,
       };
     }
   }

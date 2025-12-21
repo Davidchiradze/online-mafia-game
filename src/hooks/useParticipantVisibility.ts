@@ -12,6 +12,7 @@ import type { TrackReferenceOrPlaceholder } from "@livekit/components-react";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { canSeeParticipant, getCoverMessage } from "@/lib/game/visibility";
 import type { GamePhase, Role } from "@/lib/game/visibility";
+import { usePlayerRoles } from "./usePlayerRoles";
 
 interface UseParticipantVisibilityResult {
   /** Whether the participant's video should be visible */
@@ -36,9 +37,16 @@ export function useParticipantVisibility(
   const {
     gameSessionState,
     userId: viewerUserId,
+    gameId,
     hostUserId,
     isHost: isViewerHost,
   } = useGameRoom();
+
+  // Fetch roles securely via server action
+  const { viewerRole: fetchedViewerRole, getRoleForUser } = usePlayerRoles(
+    gameId || "",
+    viewerUserId || ""
+  );
 
   // Extract target participant's identity (userId) from trackRef
   const targetUserId = useMemo(() => {
@@ -47,25 +55,17 @@ export function useParticipantVisibility(
 
   // Determine roles and host status
   const viewerRole = useMemo(() => {
-    // Get viewer's role from game session player data
-    // Note: playerData contains only the current viewer's player record
+    // Get viewer's role from secure role fetching
     // During early phases (game_session_started, picking_roles), role will be null
-    if (!gameSessionState?.playerData) return null;
-
-    return (gameSessionState.playerData.role as Role) || null;
-  }, [gameSessionState]);
+    return (fetchedViewerRole as Role) || null;
+  }, [fetchedViewerRole]);
 
   const targetRole = useMemo(() => {
-    // Look up target's role from allPlayers using their identity
+    // Get target's role from secure role fetching
     // During early phases (game_session_started, picking_roles), roles will be null
-    if (!targetUserId || !gameSessionState?.allPlayers) return null;
-
-    const targetPlayer = gameSessionState.allPlayers.find(
-      (player) => player.player_id === targetUserId
-    );
-
-    return (targetPlayer?.role as Role) || null;
-  }, [targetUserId, gameSessionState]);
+    if (!targetUserId) return null;
+    return (getRoleForUser(targetUserId) as Role) || null;
+  }, [targetUserId, getRoleForUser]);
 
   const isTargetHost = useMemo(() => {
     return targetUserId === hostUserId;

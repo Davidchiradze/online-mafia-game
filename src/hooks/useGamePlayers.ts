@@ -18,22 +18,26 @@ export function useGamePlayers(
     if (!gameId || !enabled) return;
     const supabase = createClient();
 
-    // Initial fetch
-    const fetchPlayers = async () => {
-      const { data, error } = await supabase
+    const upsertMany = (incoming: Tables<"game_players">[]) => {
+      setPlayers((prev) => {
+        const byId = new Map(prev.map((p) => [p.id, p]));
+        for (const p of incoming) byId.set(p.id, p);
+        return Array.from(byId.values()).sort(
+          (a, b) => Number(a.seat_number ?? 0) - Number(b.seat_number ?? 0)
+        );
+      });
+    };
+
+    const refetch = async () => {
+      const { data } = await supabase
         .from("game_players")
         .select("*")
         .eq("game_id", gameId)
         .order("seat_number", { ascending: true });
 
-      if (!error && data) {
-        setPlayers(data);
-      }
+      if (data) upsertMany(data);
     };
 
-    fetchPlayers();
-
-    // Subscribe to real-time updates
     const channel = supabase
       .channel(`game_players_${gameId}`)
       .on(
@@ -45,17 +49,7 @@ export function useGamePlayers(
           filter: `game_id=eq.${gameId}`,
         },
         (payload) => {
-          const newPlayer = payload?.new as Tables<"game_players">;
-          setPlayers((prev) => {
-            // Check if player already exists (by id)
-            const exists = prev.some((p) => p.id === newPlayer.id);
-            if (exists) return prev;
-            return [...prev, newPlayer].sort((a, b) => {
-              const aSeat = a.seat_number ?? 0;
-              const bSeat = b.seat_number ?? 0;
-              return Number(aSeat) - Number(bSeat);
-            });
-          });
+          upsertMany([payload.new as Tables<"game_players">]);
         }
       )
       .on(
@@ -67,17 +61,7 @@ export function useGamePlayers(
           filter: `game_id=eq.${gameId}`,
         },
         (payload) => {
-          const updatedPlayer = payload?.new as Tables<"game_players">;
-          setPlayers((prev) => {
-            const updated = prev.map((p) =>
-              p.id === updatedPlayer.id ? updatedPlayer : p
-            );
-            return updated.sort((a, b) => {
-              const aSeat = a.seat_number ?? 0;
-              const bSeat = b.seat_number ?? 0;
-              return Number(aSeat) - Number(bSeat);
-            });
-          });
+          upsertMany([payload.new as Tables<"game_players">]);
         }
       )
       .on(
@@ -89,13 +73,23 @@ export function useGamePlayers(
           filter: `game_id=eq.${gameId}`,
         },
         (payload) => {
-          const deletedPlayer = payload?.old as Tables<"game_players">;
-          setPlayers((prev) => prev.filter((p) => p.id !== deletedPlayer.id));
+          const deleted = payload.old as Tables<"game_players">;
+          setPlayers((prev) => prev.filter((p) => p.id !== deleted.id));
         }
       )
-      .subscribe();
+      .subscribe(async (status) => {
+        if (status === "SUBSCRIBED") {
+          void refetch();
+        }
+      });
+
+    // Backfill timeouts to catch any missed INSERT events
+    const timeout5s = window.setTimeout(() => void refetch(), 5000);
+    const timeout15s = window.setTimeout(() => void refetch(), 15000);
 
     return () => {
+      window.clearTimeout(timeout5s);
+      window.clearTimeout(timeout15s);
       supabase.removeChannel(channel);
     };
   }, [gameId, enabled]);

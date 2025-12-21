@@ -23,6 +23,8 @@ import { leaveGamePlayer } from "@/lib/gamePlayers/actions";
 import { useJoinPermissionListener } from "@/hooks/useJoinPermissionListener";
 import { useEnsurePlayerSeat } from "@/hooks/useEnsurePlayerSeat";
 import { useLivekitConnect } from "@/hooks/useLivekitConnect";
+import { useGamePlayers } from "@/hooks/useGamePlayers";
+import { Tables } from "@/db/supabase/database.types";
 
 type GameRoomContextValue = {
   gameId: string;
@@ -39,6 +41,7 @@ type GameRoomContextValue = {
   disconnect: () => void;
   isJoiningGame: boolean;
   joinError: string | null;
+  players: Tables<"game_players">[];
 };
 
 const GameRoomContext = createContext<GameRoomContextValue | null>(null);
@@ -52,6 +55,7 @@ export function GameRoomProvider({
   userId: string;
 }>) {
   const { max_players: maxPlayers } = game;
+
   const { id: gameId, host_id } = game;
   const [currentHostId, setCurrentHostId] = useState<string | null>(host_id);
   const isHost = currentHostId === userId;
@@ -87,14 +91,18 @@ export function GameRoomProvider({
     { enabled: hasPlayerRecord }
   );
 
+  // Game players subscription
+  const players = useGamePlayers(gameId, hasPlayerRecord);
+
   // Redirect back to lobby on disconnect by default
-  useLivekitRoom(room, {
-    redirectOnDisconnect: true,
-    redirectPath: "/lobby",
-    onDisconnect: () => {
-      // disconnect();
+  useLivekitRoom(
+    room,
+    {
+      redirectOnDisconnect: true,
+      redirectPath: "/lobby",
     },
-  });
+    hasPlayerRecord
+  );
 
   // Handle tab close/unload events to ensure cleanup
   // useTabCloseCleanup({
@@ -169,6 +177,7 @@ export function GameRoomProvider({
       disconnect,
       isJoiningGame,
       joinError,
+      players,
     }),
     [
       gameId,
@@ -185,6 +194,7 @@ export function GameRoomProvider({
       disconnect,
       isJoiningGame,
       joinError,
+      players,
     ]
   );
 

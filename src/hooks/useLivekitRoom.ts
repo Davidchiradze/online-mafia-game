@@ -16,12 +16,13 @@ type UseLivekitRoomOptions = {
 
 export function useLivekitRoom(
   room: LiveKitRoom | null | undefined,
-  options?: UseLivekitRoomOptions
+  options?: UseLivekitRoomOptions,
+  enabled: boolean = true
 ) {
   const router = useRouter();
 
   useEffect(() => {
-    if (!room) return;
+    if (!room || !enabled) return;
 
     const handleDisconnected = () => {
       if (options?.onDisconnect) options.onDisconnect();
@@ -44,7 +45,7 @@ export function useLivekitRoom(
       room.off(RoomEvent.Disconnected, handleDisconnected);
       room.off(RoomEvent.ConnectionStateChanged, handleConnectionStateChanged);
     };
-  }, [room, router, options]);
+  }, [room, router, options, enabled]);
 
   return { room };
 }

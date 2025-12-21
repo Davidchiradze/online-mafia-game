@@ -8,7 +8,7 @@ import {
   startGame as startGameAction,
 } from "@/lib/gameSession/actions";
 import { useGameSessionListener } from "./useGameSessionListener";
-import { useGamePlayerListener } from "./useGamePlayerListener";
+// import { useGamePlayerListener } from "./useGamePlayerListener";
 
 export function useGameSession(
   gameId: string,
@@ -23,18 +23,14 @@ export function useGameSession(
   useGameSessionListener(gameId, setGameSessionState, enabled);
 
   // Subscribe to game_players table updates for current user
-  useGamePlayerListener(gameId, userId, setGameSessionState, enabled);
+  // useGamePlayerListener(gameId, userId, setGameSessionState, enabled);
 
   useEffect(() => {
     if (!gameId || !enabled) return;
     const getGameSessionFunc = async () => {
       const res = await getGameSession(gameId, userId);
       if (!res?.ok) return;
-      setGameSessionState({
-        ...res?.gameSessionState,
-        playerData: res?.playerData,
-        allPlayers: res?.allPlayers,
-      });
+      setGameSessionState(res.gameSessionState);
     };
     getGameSessionFunc();
   }, [enabled, gameId, userId, gameSessionState?.game_phase]);

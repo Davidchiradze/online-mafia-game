@@ -89,8 +89,7 @@ export async function joinGamePlayer(gameId: string): Promise<JoinResult> {
     seat_number: seatIndex,
     is_alive: true,
     joined_at: new Date().toISOString(),
-    // Host has a DB row but no game role; roles assigned later server-side
-    role: null,
+    // Roles are stored in game_player_roles table, not here
     state: "joined",
   };
 

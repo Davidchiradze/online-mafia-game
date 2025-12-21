@@ -3,7 +3,7 @@ import { TrackReferenceOrPlaceholder } from "@livekit/components-react";
 import { Tables } from "@/db/supabase/database.types";
 
 export type PlayerSlotDescriptor = {
-  key: number | "host";
+  key: number;
   track?: TrackReferenceOrPlaceholder;
 };
 
@@ -35,7 +35,7 @@ export function usePlayerSlots({
     const slots: PlayerSlotDescriptor[] = [];
 
     // host is always at row 2, col 2 (handled by consumer)
-    slots.push({ key: "host", track: hostTrack });
+    slots.push({ key: maxPlayers + 1, track: hostTrack });
 
     // Build a seat map from DB seats: map player_id -> seat_number
     const playerIdToSeat = new Map<string, number>();

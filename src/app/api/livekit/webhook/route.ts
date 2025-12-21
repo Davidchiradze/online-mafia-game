@@ -49,7 +49,8 @@ export async function POST(request: NextRequest) {
     // Verify and decode the webhook event
     // Note: receive validates the webhook signature and returns the event
     const event = await receiver.receive(body, authHeader);
-
+    if (event.event === "participant_joined") {
+    }
     // Handle participant disconnection events
     // Note: According to LiveKit docs, the event is "participant_left" (not "participant_disconnected")
     if (

@@ -29,8 +29,8 @@ export default function ParticipantComponent({
   gameId: string;
   hostUserId: string | null;
   currentUserId: string;
-  trackRef: TrackReferenceOrPlaceholder;
-  playerIndex: number | "host";
+  trackRef: TrackReferenceOrPlaceholder | undefined;
+  playerIndex: number;
   player: Tables<"game_players">;
 }) {
   const { gameSessionState } = useGameRoom();
@@ -118,7 +118,7 @@ export default function ParticipantComponent({
       {/* Show network issues UI when disconnected, otherwise show cover or video based on visibility */}
       {isDisconnected ? (
         <ParticipantCover isDisconnected={true} />
-      ) : isVisible ? (
+      ) : isVisible && trackRef ? (
         <ParticipantTile
           className="lk-hide-metadata"
           trackRef={trackRef}
@@ -127,28 +127,27 @@ export default function ParticipantComponent({
       ) : (
         <ParticipantCover message={coverMessage} />
       )}
-      {isLocal ? (
-        <div className="absolute left-1 top-1 md:left-2 md:top-2 z-10 scale-90 md:scale-100">
-          <TrackToggle source={Track.Source.Microphone} showIcon={true} />
-        </div>
-      ) : (
-        <div className="absolute left-1 top-1 md:left-2 md:top-2 z-10 rounded-full border border-white/10 bg-black/40 backdrop-blur px-1.5 py-0.5 md:px-2 md:py-1 text-white text-[10px] md:text-[12px]">
-          {isMicEnabled ? (
-            <MicOnIcon width={14} height={14} />
-          ) : (
-            <MicOffIcon width={14} height={14} />
-          )}
-        </div>
-      )}
-      {displayName ? (
-        <div className="absolute bottom-1 left-1 md:bottom-2 md:left-2 z-10 rounded-full border border-white/10 bg-black/40 backdrop-blur px-2 py-0.5 md:px-3 md:py-1 text-[10px] md:text-xs font-medium text-gray-100">
-          {displayName}
-        </div>
-      ) : (
-        <div className="absolute bottom-1 left-1 md:bottom-2 md:left-2 z-10 rounded-full border border-white/10 bg-black/40 backdrop-blur px-2 py-0.5 md:px-3 md:py-1 text-[10px] md:text-xs font-medium text-gray-100">
-          {playerIndex === "host" ? "Host" : playerIndex}
-        </div>
-      )}
+      {(!gameSessionState || (isLocal && isTargetHost)) &&
+        (isLocal ? (
+          <div className="absolute left-1 top-1 md:left-2 md:top-2 z-10 scale-90 md:scale-100">
+            <TrackToggle source={Track.Source.Microphone} showIcon={true} />
+          </div>
+        ) : (
+          <div className="absolute left-1 top-1 md:left-2 md:top-2 z-10 rounded-full border border-white/10 bg-black/40 backdrop-blur px-1.5 py-0.5 md:px-2 md:py-1 text-white text-[10px] md:text-[12px]">
+            {isMicEnabled ? (
+              <MicOnIcon width={14} height={14} />
+            ) : (
+              <MicOffIcon width={14} height={14} />
+            )}
+          </div>
+        ))}
+      <div className="absolute bottom-1 left-1 md:bottom-2 md:left-2 z-10 rounded-full border border-white/10 bg-black/40 backdrop-blur px-2 py-0.5 md:px-3 md:py-1 text-[10px] md:text-xs font-medium text-gray-100">
+        {gameSessionState
+          ? playerIndex === 13
+            ? "Host"
+            : playerIndex
+          : displayName || (playerIndex === 13 ? "Host" : playerIndex)}
+      </div>
       {canShowMenu && (
         <div className="absolute right-1 top-1 md:right-2 md:top-2 z-20">
           <button
@@ -175,8 +174,8 @@ export default function ParticipantComponent({
           />
         </div>
       )}
-      {/* Ready indicator (top-right) */}
-      {isReady && (
+      {/* Ready indicator (top-right) - only show before game starts */}
+      {!gameSessionState && isReady && (
         <div className="absolute right-1 top-[34px] md:right-2 md:top-2 z-20 w-5 h-5 md:w-6 md:h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px] md:text-xs font-bold shadow">
           ✓
         </div>
