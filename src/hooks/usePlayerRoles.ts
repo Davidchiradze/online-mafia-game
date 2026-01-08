@@ -26,7 +26,6 @@ export function usePlayerRoles(
   const [playerRolesMap, setPlayerRolesMap] = useState<PlayerRolesMap>(
     new Map()
   );
-  console.log("🚀 ~ usePlayerRoles ~ playerRolesMap:", playerRolesMap);
   const [isLoading, setIsLoading] = useState(false);
 
   const fetchRoles = useCallback(async () => {

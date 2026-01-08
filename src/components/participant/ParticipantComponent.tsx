@@ -33,7 +33,6 @@ export default function ParticipantComponent({
   playerIndex: number;
   player: Tables<"game_players">;
 }) {
-  console.log("🚀 ~ ParticipantComponent ~ trackRef:", trackRef);
   const { gameSessionState } = useGameRoom();
 
   const participant = trackRef?.participant;
