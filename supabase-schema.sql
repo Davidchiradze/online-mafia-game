@@ -5,7 +5,6 @@ CREATE TABLE public.game_players (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
   game_id uuid,
   player_id uuid,
-  role text CHECK (role = ANY (ARRAY['DON'::text, 'MAFIA'::text, 'MAFIA_RIGHT_HAND'::text, 'SHOGUN'::text, 'YAKUZA'::text, 'DETECTIVE'::text, 'CITIZEN'::text, 'DOCTOR'::text])),
   is_alive boolean DEFAULT true,
   joined_at timestamp with time zone DEFAULT now(),
   seat_number numeric,
@@ -14,6 +13,21 @@ CREATE TABLE public.game_players (
   CONSTRAINT game_players_pkey PRIMARY KEY (id),
   CONSTRAINT game_players_game_id_fkey FOREIGN KEY (game_id) REFERENCES public.games(id),
   CONSTRAINT game_players_player_id_fkey FOREIGN KEY (player_id) REFERENCES public.profiles(id)
+);
+
+-- Roles are stored separately for security (role-based visibility)
+-- Only teammates and host can see each other's roles
+CREATE TABLE public.game_player_roles (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  game_id uuid NOT NULL,
+  player_id uuid NOT NULL,
+  role text NOT NULL CHECK (role = ANY (ARRAY['DON'::text, 'MAFIA'::text, 'MAFIA_RIGHT_HAND'::text, 'SHOGUN'::text, 'YAKUZA'::text, 'DETECTIVE'::text, 'CITIZEN'::text, 'DOCTOR'::text])),
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT game_player_roles_pkey PRIMARY KEY (id),
+  CONSTRAINT game_player_roles_game_id_player_id_key UNIQUE (game_id, player_id),
+  CONSTRAINT game_player_roles_game_id_fkey FOREIGN KEY (game_id) REFERENCES public.games(id),
+  CONSTRAINT game_player_roles_player_id_fkey FOREIGN KEY (player_id) REFERENCES public.profiles(id)
 );
 CREATE TABLE public.game_sessions (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),

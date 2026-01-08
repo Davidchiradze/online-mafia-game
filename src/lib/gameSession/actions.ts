@@ -204,12 +204,12 @@ export async function assignRandomRoles(
     (p) => p.seat_number !== null && p.seat_number !== hostSeatNumber
   );
 
-  if (playersWithSeats.length !== shuffledRoles.length) {
-    return {
-      ok: false,
-      message: `Expected ${shuffledRoles.length} players with seats, but found ${playersWithSeats.length}`,
-    };
-  }
+  // if (playersWithSeats.length !== shuffledRoles.length) {
+  //   return {
+  //     ok: false,
+  //     message: `Expected ${shuffledRoles.length} players with seats, but found ${playersWithSeats.length}`,
+  //   };
+  // }
 
   // Assign roles to players in the secure game_player_roles table
   for (let i = 0; i < playersWithSeats.length; i++) {

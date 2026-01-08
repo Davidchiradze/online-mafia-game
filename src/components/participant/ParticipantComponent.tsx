@@ -33,6 +33,7 @@ export default function ParticipantComponent({
   playerIndex: number;
   player: Tables<"game_players">;
 }) {
+  console.log("🚀 ~ ParticipantComponent ~ trackRef:", trackRef);
   const { gameSessionState } = useGameRoom();
 
   const participant = trackRef?.participant;
@@ -61,6 +62,7 @@ export default function ParticipantComponent({
 
   // Determine visibility based on game phase and roles
   const { isVisible, coverMessage } = useParticipantVisibility(trackRef);
+  console.log("🚀 ~ ParticipantComponent ~ isVisible:", isVisible);
 
   const canShowMenu = useMemo(() => {
     // Only show menu when viewer is host, a real participant exists, and it's not the host tile

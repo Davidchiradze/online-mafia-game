@@ -6,6 +6,8 @@
  * Also handles disconnected state with network issues UI.
  */
 
+import LoadingSpinner from "../ui/LoadingSpinner";
+
 interface ParticipantCoverProps {
   /** Message/emoji to display on the cover */
   message?: string;
@@ -16,7 +18,7 @@ interface ParticipantCoverProps {
 }
 
 export default function ParticipantCover({
-  message = "💤",
+  message = "",
   className = "",
   isDisconnected = false,
 }: ParticipantCoverProps) {
@@ -46,7 +48,9 @@ export default function ParticipantCover({
       className={`absolute inset-0 z-10 flex flex-col items-center justify-center bg-gradient-to-br from-slate-800 via-slate-900 to-black ${className}`}
     >
       {/* Animated sleeping emoji */}
-      <div className="text-6xl md:text-8xl animate-pulse">{message}</div>
+      <div className="text-6xl md:text-8xl animate-pulse">
+        {message || <LoadingSpinner />}
+      </div>
 
       {/* Subtle overlay pattern for visual interest */}
       <div className="absolute inset-0 opacity-5 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent pointer-events-none" />

@@ -3,6 +3,8 @@
  *
  * This hook uses the visibility rules based on game phase and roles to determine
  * whether a participant's video should be shown or hidden behind a cover.
+ *
+ * Roles are consumed from GameRoomContext (fetched once, not per participant)
  */
 
 "use client";
@@ -12,7 +14,6 @@ import type { TrackReferenceOrPlaceholder } from "@livekit/components-react";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { canSeeParticipant, getCoverMessage } from "@/lib/game/visibility";
 import type { GamePhase, Role } from "@/lib/game/visibility";
-import { usePlayerRoles } from "./usePlayerRoles";
 
 interface UseParticipantVisibilityResult {
   /** Whether the participant's video should be visible */
@@ -36,17 +37,12 @@ export function useParticipantVisibility(
 ): UseParticipantVisibilityResult {
   const {
     gameSessionState,
-    userId: viewerUserId,
-    gameId,
     hostUserId,
     isHost: isViewerHost,
+    // Get roles from context (fetched once at context level)
+    viewerRole: fetchedViewerRole,
+    getRoleForUser,
   } = useGameRoom();
-
-  // Fetch roles securely via server action
-  const { viewerRole: fetchedViewerRole, getRoleForUser } = usePlayerRoles(
-    gameId || "",
-    viewerUserId || ""
-  );
 
   // Extract target participant's identity (userId) from trackRef
   const targetUserId = useMemo(() => {
@@ -55,13 +51,13 @@ export function useParticipantVisibility(
 
   // Determine roles and host status
   const viewerRole = useMemo(() => {
-    // Get viewer's role from secure role fetching
+    // Get viewer's role from context
     // During early phases (game_session_started, picking_roles), role will be null
     return (fetchedViewerRole as Role) || null;
   }, [fetchedViewerRole]);
 
   const targetRole = useMemo(() => {
-    // Get target's role from secure role fetching
+    // Get target's role from context (filtered by team visibility)
     // During early phases (game_session_started, picking_roles), roles will be null
     if (!targetUserId) return null;
     return (getRoleForUser(targetUserId) as Role) || null;

@@ -32,3 +32,18 @@ export type JoinRequest = Pick<
 export type GameSession = Tables<"game_sessions">;
 
 export type GameSessionState = GameSession;
+
+/**
+ * Player role entry - role is null if the current user can't see this player's role
+ * (they're not on the same team)
+ */
+export type PlayerRole = {
+  playerId: string;
+  role: string | null;
+};
+
+/**
+ * Map of player roles for the game
+ * Key: playerId (userId), Value: role (null if not visible to current user)
+ */
+export type PlayerRolesMap = Map<string, string | null>;

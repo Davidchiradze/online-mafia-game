@@ -24,7 +24,9 @@ import { useJoinPermissionListener } from "@/hooks/useJoinPermissionListener";
 import { useEnsurePlayerSeat } from "@/hooks/useEnsurePlayerSeat";
 import { useLivekitConnect } from "@/hooks/useLivekitConnect";
 import { useGamePlayers } from "@/hooks/useGamePlayers";
+import { usePlayerRoles } from "@/hooks/usePlayerRoles";
 import { Tables } from "@/db/supabase/database.types";
+import type { PlayerRolesMap } from "@/types/game/type";
 
 type GameRoomContextValue = {
   gameId: string;
@@ -42,6 +44,12 @@ type GameRoomContextValue = {
   isJoiningGame: boolean;
   joinError: string | null;
   players: Tables<"game_players">[];
+  /** Current user's role (null if no role assigned yet) */
+  viewerRole: string | null;
+  /** Map of player roles filtered by team visibility */
+  playerRolesMap: PlayerRolesMap;
+  /** Get role for a specific player (returns null if not visible to current user) */
+  getRoleForUser: (targetUserId: string) => string | null;
 };
 
 const GameRoomContext = createContext<GameRoomContextValue | null>(null);
@@ -54,9 +62,13 @@ export function GameRoomProvider({
   game: GameRoom;
   userId: string;
 }>) {
-  const { max_players: maxPlayers } = game;
+  const {
+    id: gameId,
+    host_id,
+    max_players: maxPlayers,
+    game_status: gameStatus,
+  } = game;
 
-  const { id: gameId, host_id } = game;
   const [currentHostId, setCurrentHostId] = useState<string | null>(host_id);
   const isHost = currentHostId === userId;
   const [hasPlayerRecord, setHasPlayerRecord] = useState(false);
@@ -93,6 +105,13 @@ export function GameRoomProvider({
 
   // Game players subscription
   const players = useGamePlayers(gameId, hasPlayerRecord);
+
+  // Player roles (fetched once, filtered by team visibility)
+  const { viewerRole, playerRolesMap, getRoleForUser } = usePlayerRoles(
+    gameId,
+    userId,
+    { enabled: hasPlayerRecord && !!gameSessionState }
+  );
 
   // Redirect back to lobby on disconnect by default
   useLivekitRoom(
@@ -178,6 +197,9 @@ export function GameRoomProvider({
       isJoiningGame,
       joinError,
       players,
+      viewerRole,
+      playerRolesMap,
+      getRoleForUser,
     }),
     [
       gameId,
@@ -195,6 +217,9 @@ export function GameRoomProvider({
       isJoiningGame,
       joinError,
       players,
+      viewerRole,
+      playerRolesMap,
+      getRoleForUser,
     ]
   );
 

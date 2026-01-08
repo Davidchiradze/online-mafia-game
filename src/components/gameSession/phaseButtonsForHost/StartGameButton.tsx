@@ -2,6 +2,7 @@
 
 import React, { useMemo, useState } from "react";
 import { startGame, createGameSession } from "@/lib/gameSession/actions";
+import { muteAllParticipantsExceptHost } from "@/lib/liveKit/actions";
 import { useTracks } from "@livekit/components-react";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 
@@ -11,7 +12,8 @@ import { useGameRoom } from "@/lib/context/gameRoomContext";
  */
 const StartGameButton = () => {
   const tracks = useTracks();
-  const { maxPlayers, gameId } = useGameRoom();
+  const maxPlayers = 1;
+  const { gameId, hostUserId } = useGameRoom();
 
   const [isLoading, setIsLoading] = useState(false);
   const { readyCount, totalPlayers, allReady } = useMemo(() => {
@@ -49,6 +51,15 @@ const StartGameButton = () => {
       if (!sessionRes?.ok) {
         console.error("Failed to create game session:", sessionRes?.message);
         return;
+      }
+
+      // Mute all players except the host (server-side)
+      if (hostUserId) {
+        const muteRes = await muteAllParticipantsExceptHost(gameId, hostUserId);
+        if (!muteRes?.ok) {
+          console.error("Failed to mute participants:", muteRes?.message);
+          // Don't return - game already started, muting is not critical
+        }
       }
     } finally {
       setIsLoading(false);

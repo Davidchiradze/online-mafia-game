@@ -218,5 +218,5 @@ export function getCoverMessage(gamePhase: GamePhase | null): string {
     return "💤";
   }
 
-  return "💤";
+  return "";
 }
