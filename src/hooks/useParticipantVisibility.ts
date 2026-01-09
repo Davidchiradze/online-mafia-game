@@ -12,12 +12,18 @@
 import { useMemo } from "react";
 import type { TrackReferenceOrPlaceholder } from "@livekit/components-react";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
-import { canSeeParticipant, getCoverMessage } from "@/lib/game/visibility";
-import type { GamePhase, Role } from "@/lib/game/visibility";
+import {
+  canSeeParticipant,
+  getCoverMessage,
+  getVisibilityState,
+} from "@/lib/game/visibility";
+import type { GamePhase, Role, VisibilityState } from "@/lib/game/visibility";
 
 interface UseParticipantVisibilityResult {
   /** Whether the participant's video should be visible */
   isVisible: boolean;
+  /** Visibility state: "visible", "dimmed", or "covered" */
+  visibilityState: VisibilityState;
   /** Message to show on the cover if not visible */
   coverMessage: string;
   /** The viewer's role */
@@ -71,7 +77,18 @@ export function useParticipantVisibility(
     return (gameSessionState?.game_phase as GamePhase) || null;
   }, [gameSessionState]);
 
-  // Calculate visibility
+  // Calculate visibility state (visible, dimmed, or covered)
+  const visibilityState = useMemo(() => {
+    return getVisibilityState(
+      viewerRole,
+      targetRole,
+      gamePhase,
+      isViewerHost,
+      isTargetHost
+    );
+  }, [viewerRole, targetRole, gamePhase, isViewerHost, isTargetHost]);
+
+  // Calculate basic visibility (for backwards compatibility)
   const isVisible = useMemo(() => {
     return canSeeParticipant(
       viewerRole,
@@ -88,6 +105,7 @@ export function useParticipantVisibility(
 
   return {
     isVisible,
+    visibilityState,
     coverMessage,
     viewerRole,
     targetRole,

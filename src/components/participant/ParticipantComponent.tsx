@@ -15,6 +15,7 @@ import { useParticipantReady } from "@/hooks/useParticipantReady";
 import ReadyButton from "@/components/ui/ReadyButton";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { useParticipantVisibility } from "@/hooks/useParticipantVisibility";
+import { VisibilityState } from "@/lib/game/visibility";
 import ParticipantCover from "@/components/video/ParticipantCover";
 import { Tables } from "@/db/supabase/database.types";
 
@@ -60,8 +61,7 @@ export default function ParticipantComponent({
   }, [player]);
 
   // Determine visibility based on game phase and roles
-  const { isVisible, coverMessage } = useParticipantVisibility(trackRef);
-  console.log("🚀 ~ ParticipantComponent ~ isVisible:", isVisible);
+  const { visibilityState, coverMessage } = useParticipantVisibility(trackRef);
 
   const canShowMenu = useMemo(() => {
     // Only show menu when viewer is host, a real participant exists, and it's not the host tile
@@ -119,14 +119,29 @@ export default function ParticipantComponent({
       {/* Show network issues UI when disconnected, otherwise show cover or video based on visibility */}
       {isDisconnected ? (
         <ParticipantCover isDisconnected={true} />
-      ) : isVisible && trackRef ? (
-        <ParticipantTile
-          className="lk-hide-metadata"
-          trackRef={trackRef}
-          style={{ height: "100%" }}
-        />
-      ) : (
+      ) : visibilityState === VisibilityState.COVERED || !trackRef ? (
         <ParticipantCover message={coverMessage} />
+      ) : (
+        <div className="relative w-full h-full">
+          <ParticipantTile
+            className="lk-hide-metadata"
+            trackRef={trackRef}
+            style={{ height: "100%" }}
+          />
+          {/* Dimmed overlay for sleeping players (host view) */}
+          {visibilityState === VisibilityState.DIMMED && (
+            <div className="absolute inset-0 z-[5] pointer-events-none">
+              {/* Blur + darken overlay */}
+              <div className="absolute inset-0 backdrop-blur-sm bg-slate-900/50" />
+              {/* Sleeping indicator */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-4xl md:text-5xl opacity-80 animate-pulse">
+                  💤
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
       )}
       {(!gameSessionState || (isLocal && isTargetHost)) &&
         (isLocal ? (

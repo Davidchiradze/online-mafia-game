@@ -11,6 +11,18 @@ export type GamePhase = (typeof GAME_PHASES)[number];
 export type Role = (typeof JAPANESE_MAFIA_ROLES)[number] | null;
 
 /**
+ * Visibility state for a participant
+ * - VISIBLE: Full visibility (video shown normally)
+ * - DIMMED: Visible but blurred/dimmed (for host seeing sleeping players)
+ * - COVERED: Completely hidden behind a cover
+ */
+export enum VisibilityState {
+  VISIBLE = "visible",
+  DIMMED = "dimmed",
+  COVERED = "covered",
+}
+
+/**
  * Determines if the viewer can see the target participant's video
  *
  * @param viewerRole - The role of the person viewing
@@ -181,6 +193,125 @@ export function canSeeParticipant(
 
   // Default: everyone can see everyone (for phases like game_session_started, repeat, end_game)
   return true;
+}
+
+/**
+ * Determines which roles are "awake" (active) during a specific game phase
+ */
+function getAwakeRoles(gamePhase: GamePhase): Role[] {
+  switch (gamePhase) {
+    case "mafia_meet":
+    case "mafia_chooses_target":
+      return ["DON", "MAFIA", "MAFIA_RIGHT_HAND"];
+
+    case "don_chooses_right_hand":
+    case "don_checks_for_detective":
+      return ["DON"];
+
+    case "yakuda_shogun_meet":
+    case "yakuza_and_shogun_chooses_target":
+      return ["YAKUZA", "SHOGUN"];
+
+    case "detective_meet":
+    case "detective_checks_for_mafia":
+      return ["DETECTIVE"];
+
+    case "doctor_meet":
+    case "doctor_heals_player":
+      return ["DOCTOR"];
+
+    case "right_hand_checks_for_yakuza":
+      return ["MAFIA_RIGHT_HAND"];
+
+    default:
+      return [];
+  }
+}
+
+/**
+ * Checks if a phase is a "night" phase where some players are asleep
+ */
+function isNightActivityPhase(gamePhase: GamePhase): boolean {
+  const nightPhases: GamePhase[] = [
+    "picking_roles",
+    "night_phase",
+    "mafia_meet",
+    "don_chooses_right_hand",
+    "yakuda_shogun_meet",
+    "detective_meet",
+    "doctor_meet",
+    "mafia_chooses_target",
+    "don_checks_for_detective",
+    "right_hand_checks_for_yakuza",
+    "yakuza_and_shogun_chooses_target",
+    "detective_checks_for_mafia",
+    "doctor_heals_player",
+  ];
+  return nightPhases.includes(gamePhase);
+}
+
+/**
+ * Determines the visibility state for a participant
+ *
+ * This is an enhanced version of canSeeParticipant that returns three states:
+ * - VISIBLE: Full visibility
+ * - DIMMED: Visible but blurred (for host seeing sleeping players during night phases)
+ * - COVERED: Completely hidden
+ *
+ * @param viewerRole - The role of the person viewing
+ * @param targetRole - The role of the person being viewed (or null if host)
+ * @param gamePhase - Current phase of the game
+ * @param isViewerHost - Whether the viewer is the host
+ * @param isTargetHost - Whether the target is the host
+ * @returns VisibilityState indicating how the participant should be displayed
+ */
+export function getVisibilityState(
+  viewerRole: Role,
+  targetRole: Role,
+  gamePhase: GamePhase | null,
+  isViewerHost: boolean,
+  isTargetHost: boolean
+): VisibilityState {
+  // Use existing logic to determine base visibility
+  const isVisible = canSeeParticipant(
+    viewerRole,
+    targetRole,
+    gamePhase,
+    isViewerHost,
+    isTargetHost
+  );
+
+  // If not visible at all, return covered
+  if (!isVisible) {
+    return VisibilityState.COVERED;
+  }
+
+  // If viewer is host and we're in a night activity phase, check if target is "awake"
+  if (isViewerHost && gamePhase && isNightActivityPhase(gamePhase)) {
+    // Host always sees host tile as visible
+    if (isTargetHost) {
+      return VisibilityState.VISIBLE;
+    }
+
+    // During picking_roles and night_phase, everyone is "asleep"
+    if (gamePhase === "picking_roles" || gamePhase === "night_phase") {
+      return VisibilityState.DIMMED;
+    }
+
+    // Get which roles are awake during this phase
+    const awakeRoles = getAwakeRoles(gamePhase);
+
+    // If target's role is in the awake list, they're visible; otherwise dimmed
+    if (awakeRoles.length > 0 && awakeRoles.includes(targetRole)) {
+      return VisibilityState.VISIBLE;
+    }
+
+    // Target is sleeping during this phase
+    return VisibilityState.DIMMED;
+  }
+
+  // Default: fully visible
+  return VisibilityState.VISIBLE;
 }
 
 /**
