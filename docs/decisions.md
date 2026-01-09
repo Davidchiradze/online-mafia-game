@@ -275,22 +275,29 @@ components/
 
 **Implementation**:
 
-- `filterPlayerRoles()` function in `src/lib/utils/filterPlayerRoles.ts`
-- Called in `getGameSession()` server action
-- Teammates can see each other's roles
+- Roles stored in separate `game_player_roles` table (not in `game_players`)
+- `getFilteredPlayerRoles()` server action in `src/lib/gamePlayerRoles/actions.ts`
+- `usePlayerRoles` hook fetched ONCE at `GameRoomContext` level (not per participant)
+- `usePlayerRolesListener` subscribes to role changes in real-time
+- Teammates can see each other's roles:
+  - Mafia team (DON, MAFIA, MAFIA_RIGHT_HAND) see each other
+  - Yakuza team (YAKUZA, SHOGUN) see each other
 - Host can see all roles
-- Others cannot see roles
+- Others cannot see roles (returned as `null`)
 
 **Consequences**:
 
 - ✅ Security (roles never leaked)
 - ✅ Game integrity maintained
+- ✅ Efficient (roles fetched once, not per participant)
+- ✅ Real-time updates via Supabase subscription
 - ⚠️ More server-side logic
 - ⚠️ Must remember to filter in all queries
 
 **Rejected**:
 
 - **Client-side filtering**: Security risk, roles could be exposed
+- **Per-participant role fetching**: Inefficient (N calls instead of 1)
 
 ---
 

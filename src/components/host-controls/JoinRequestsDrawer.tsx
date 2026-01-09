@@ -17,7 +17,7 @@ type Props = {
 
 export default function JoinRequestsDrawer({ gameId, open, onClose }: Props) {
   const [requests, setRequests] = useState<JoinRequest[]>([]);
-
+  const [isLoading, setIsLoading] = useState(false);
   useEffect(() => {
     if (!open) return;
     const init = async () => {
@@ -48,10 +48,14 @@ export default function JoinRequestsDrawer({ gameId, open, onClose }: Props) {
 
   usePendingJoinRequests(gameId, handlePendingEvent, open);
   const approve = async (id: string) => {
+    setIsLoading(true);
     await acceptJoinRequest(id);
+    setIsLoading(false);
   };
   const reject = async (id: string) => {
+    setIsLoading(true);
     await rejectJoinRequest(id);
+    setIsLoading(false);
   };
 
   return (
@@ -73,6 +77,7 @@ export default function JoinRequestsDrawer({ gameId, open, onClose }: Props) {
               <div className="flex items-center gap-3">
                 <button
                   type="button"
+                  disabled={isLoading}
                   aria-label="Toggle accept"
                   // aria-pressed={r.status === JOIN_REQUEST_STATUSES.ACCEPTED}
                   onClick={() =>

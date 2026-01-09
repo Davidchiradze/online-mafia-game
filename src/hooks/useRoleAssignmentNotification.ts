@@ -1,52 +1,80 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { getPlayerRole } from "@/lib/gamePlayerRoles/actions";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { JAPANESE_MAFIA_ROLE_LABEL } from "@/lib/constants/game";
-import { toast } from "react-toastify";
+
+/** Role descriptions for each role type */
+const ROLE_DESCRIPTIONS: Record<string, string> = {
+  DON: "You lead the Mafia. Choose your targets wisely and identify the Detective.",
+  MAFIA: "Eliminate players at night. Work with your team to survive.",
+  MAFIA_RIGHT_HAND: "You are the Don's trusted ally. If the Don falls, you take command.",
+  SHOGUN: "You lead the Yakuza. Coordinate with your team to eliminate threats.",
+  YAKUZA: "Work in the shadows. Eliminate players and protect the Shogun.",
+  DETECTIVE: "Investigate players at night to find the Mafia.",
+  CITIZEN: "Vote wisely during the day to eliminate the Mafia.",
+  DOCTOR: "Protect one player each night from elimination.",
+};
+
+interface UseRoleAssignmentNotificationReturn {
+  /** Whether the role reveal modal should be shown */
+  showRoleModal: boolean;
+  /** The role to display */
+  role: string | null;
+  /** The role description */
+  description: string;
+  /** Callback to close the modal */
+  closeRoleModal: () => void;
+}
 
 /**
- * Hook to listen for role assignment and show notification using react-toastify
- * Uses polling via server action since roles are not exposed via realtime
+ * Hook to detect role assignment and trigger the role reveal modal
+ * 
+ * Uses the viewerRole from context to detect when a role is first assigned.
+ * When viewerRole changes from null to a value, triggers the modal.
  */
-export function useRoleAssignmentNotification(gameId: string, userId: string) {
+export function useRoleAssignmentNotification(
+  viewerRole: string | null
+): UseRoleAssignmentNotificationReturn {
+  const [showRoleModal, setShowRoleModal] = useState(false);
+  const [assignedRole, setAssignedRole] = useState<string | null>(null);
   const previousRoleRef = useRef<string | null>(null);
-  const hasShownNotificationRef = useRef(false);
+  const hasShownModalRef = useRef(false);
 
+  // Detect when role is first assigned
   useEffect(() => {
-    if (!gameId || !userId) return;
+    // Role changed from null/undefined to a value - first assignment
+    if (
+      viewerRole &&
+      !previousRoleRef.current &&
+      !hasShownModalRef.current
+    ) {
+      console.log("🎭 Role assigned:", viewerRole);
+      setAssignedRole(viewerRole);
+      setShowRoleModal(true);
+      hasShownModalRef.current = true;
+    }
 
-    // Poll for role assignment every 2 seconds
-    const interval = setInterval(async () => {
-      // const result = await getPlayerRole(gameId, userId);
-      // if (result.ok) {
-      //   const currentRole = result.role;
-      //   // Show notification if role changed from null/undefined to a value
-      //   if (
-      //     currentRole &&
-      //     currentRole !== previousRoleRef.current &&
-      //     !hasShownNotificationRef.current
-      //   ) {
-      //     const roleLabel =
-      //       JAPANESE_MAFIA_ROLE_LABEL[
-      //         currentRole as keyof typeof JAPANESE_MAFIA_ROLE_LABEL
-      //       ] || currentRole;
-      //     toast.success(`🎭 Your role: ${roleLabel}!`, {
-      //       position: "top-right",
-      //       autoClose: 8000,
-      //       hideProgressBar: false,
-      //       closeOnClick: true,
-      //       pauseOnHover: true,
-      //       draggable: true,
-      //     });
-      //     hasShownNotificationRef.current = true;
-      //   }
-      //   previousRoleRef.current = currentRole;
-      // }
-    }, 2000);
+    previousRoleRef.current = viewerRole;
+  }, [viewerRole]);
 
-    return () => {
-      clearInterval(interval);
-    };
-  }, [gameId, userId]);
+  const closeRoleModal = useCallback(() => {
+    setShowRoleModal(false);
+  }, []);
+
+  // Get role label for display
+  const roleLabel = assignedRole
+    ? JAPANESE_MAFIA_ROLE_LABEL[assignedRole as keyof typeof JAPANESE_MAFIA_ROLE_LABEL] ?? assignedRole
+    : "";
+
+  // Get description for the role
+  const description = assignedRole
+    ? ROLE_DESCRIPTIONS[assignedRole.toUpperCase()] ?? ""
+    : "";
+
+  return {
+    showRoleModal,
+    role: assignedRole,
+    description,
+    closeRoleModal,
+  };
 }

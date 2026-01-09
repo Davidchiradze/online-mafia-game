@@ -13,6 +13,7 @@ import FloatingOptions from "./FloatingOptions";
 import { useRoleAssignmentNotification } from "@/hooks/useRoleAssignmentNotification";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import LoadingSpinner from "../ui/LoadingSpinner";
+import RoleRevealModal from "@/components/modals/RoleRevealModal";
 
 export default function LiveKitTestComponent({
   gameId,
@@ -28,13 +29,14 @@ export default function LiveKitTestComponent({
   userId: string;
   isHost: boolean;
 }) {
-  const { disconnect } = useGameRoom();
+  const { disconnect, viewerRole } = useGameRoom();
   // Connect to room
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
 
-  // Role assignment notification
-  useRoleAssignmentNotification(gameId, userId);
+  // Role assignment notification - triggers modal when role is first assigned
+  const { showRoleModal, role, description, closeRoleModal } =
+    useRoleAssignmentNotification(viewerRole);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -95,6 +97,16 @@ export default function LiveKitTestComponent({
         />
         <RoomAudioRenderer />
         {/* <ControlBar /> */}
+
+        {/* Role Reveal Modal */}
+        {role && (
+          <RoleRevealModal
+            isOpen={showRoleModal}
+            role={role}
+            description={description}
+            onClose={closeRoleModal}
+          />
+        )}
       </div>
     </RoomContext.Provider>
   );

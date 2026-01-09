@@ -432,11 +432,12 @@ export async function transferHost(
   if (!user) return { ok: false, message: "Not authenticated" };
   const { data: gameRow, error: gameErr } = await supabase
     .from("games")
-    .select("host_id")
+    .select("host_id, max_players")
     .eq("id", gameId)
     .single<Tables<"games">>();
   if (gameErr || !gameRow) return { ok: false, message: "Game not found" };
   if (gameRow.host_id !== user.id) return { ok: false, message: "Forbidden" };
+  const hostSeatNumber = (gameRow.max_players ?? 12) + 1;
   // Ensure new host exists in profiles to satisfy FK
   const { data: profile, error: profileErr } = await adminClient
     .from("profiles")
@@ -457,6 +458,58 @@ export async function transferHost(
     .eq("id", gameId);
   if (error) return { ok: false, message: error.message } as const;
 
+  // Swap seat numbers: new host gets host seat, previous host gets new host's original seat
+  const previousHostUserId = gameRow.host_id!;
+
+  // Get the new host's current seat number
+  const { data: newHostPlayer, error: newHostPlayerErr } = await adminClient
+    .from("game_players")
+    .select("id, seat_number")
+    .eq("game_id", gameId)
+    .eq("player_id", newHostUserId)
+    .maybeSingle<{ id: string; seat_number: number | null }>();
+  if (newHostPlayerErr)
+    return { ok: false, message: newHostPlayerErr.message } as const;
+
+  // Get the previous host's game_player record
+  const { data: prevHostPlayer, error: prevHostPlayerErr } = await adminClient
+    .from("game_players")
+    .select("id, seat_number")
+    .eq("game_id", gameId)
+    .eq("player_id", previousHostUserId)
+    .maybeSingle<{ id: string; seat_number: number | null }>();
+  if (prevHostPlayerErr)
+    return { ok: false, message: prevHostPlayerErr.message } as const;
+
+  // Swap seats if both players have game_player records
+  if (newHostPlayer && prevHostPlayer) {
+    const newHostOriginalSeat = newHostPlayer.seat_number;
+
+    // Update new host's seat to host seat (max_players + 1)
+    const { error: updateNewHostSeatErr } = await adminClient
+      .from("game_players")
+      .update({ seat_number: hostSeatNumber })
+      .eq("id", newHostPlayer.id);
+    if (updateNewHostSeatErr)
+      return { ok: false, message: updateNewHostSeatErr.message } as const;
+
+    // Update previous host's seat to new host's original seat
+    const { error: updatePrevHostSeatErr } = await adminClient
+      .from("game_players")
+      .update({ seat_number: newHostOriginalSeat })
+      .eq("id", prevHostPlayer.id);
+    if (updatePrevHostSeatErr)
+      return { ok: false, message: updatePrevHostSeatErr.message } as const;
+  } else if (newHostPlayer) {
+    // Only new host has a game_player record, just set their seat to host seat
+    const { error: updateNewHostSeatErr } = await adminClient
+      .from("game_players")
+      .update({ seat_number: hostSeatNumber })
+      .eq("id", newHostPlayer.id);
+    if (updateNewHostSeatErr)
+      return { ok: false, message: updateNewHostSeatErr.message } as const;
+  }
+
   // Remove any join_requests for the new host (they are now the host and shouldn't have a request)
   const { error: deleteNewHostReqErr } = await adminClient
     .from("join_requests")
@@ -467,8 +520,6 @@ export async function transferHost(
     return { ok: false, message: deleteNewHostReqErr.message } as const;
 
   // Ensure previous host remains a player: create or update an accepted join_request for them
-  const previousHostUserId = gameRow.host_id!;
-
   const { data: oldHostProfile, error: oldHostProfileErr } = await adminClient
     .from("profiles")
     .select("nickname")
