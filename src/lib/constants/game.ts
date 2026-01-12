@@ -80,3 +80,11 @@ export const GAME_PHASES = [
   "repeat",
   "end_game",
 ] as const;
+
+// Day Phase Speaking Constants
+export const DAY_PHASE_SPEAKING = {
+  /** Maximum speaking time per player in milliseconds (60 seconds) */
+  MAX_SPEAKING_TIME_MS: 60 * 1000,
+  /** Maximum speaking time per player in seconds */
+  MAX_SPEAKING_TIME_SECONDS: 60,
+} as const;

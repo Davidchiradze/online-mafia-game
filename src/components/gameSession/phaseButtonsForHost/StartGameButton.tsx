@@ -12,7 +12,8 @@ import { useGameRoom } from "@/lib/context/gameRoomContext";
  */
 const StartGameButton = () => {
   const tracks = useTracks();
-  const { gameId, hostUserId, maxPlayers } = useGameRoom();
+  const maxPlayers = 2;
+  const { gameId, hostUserId } = useGameRoom();
 
   const [isLoading, setIsLoading] = useState(false);
   const { readyCount, totalPlayers, allReady } = useMemo(() => {

@@ -20,14 +20,27 @@ import StartVotingButton from "../gameSession/phaseButtonsForHost/StartVotingBut
 import EndVotingButton from "../gameSession/phaseButtonsForHost/EndVotingButton";
 import ContinueNextRoundButton from "../gameSession/phaseButtonsForHost/ContinueNextRoundButton";
 import EndGameControls from "../gameSession/phaseButtonsForHost/EndGameControls";
+import DayPhaseSpeakingControls from "../gameSession/phaseButtonsForHost/DayPhaseSpeakingControls";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
+
+/**
+ * Speaking state detection:
+ * - current_speaker_index = null → not started
+ * - current_speaker_index = valid seat (1+) → in progress
+ * - current_speaker_index = -1 → completed (marker value)
+ */
+function isSpeakingComplete(
+  currentSpeakerIndex: number | null | undefined
+): boolean {
+  return currentSpeakerIndex === -1;
+}
 
 /**
  * Component that renders appropriate action buttons based on the current game phase
  */
 const GamePhaseControls = () => {
-  const { gameSessionState } = useGameRoom();
-  // If no game session exists, show "Start Game" button
+  const { gameSessionState, gameId } = useGameRoom();
+
   if (!gameSessionState) {
     return (
       <div className="w-full h-full flex items-center justify-center">
@@ -38,7 +51,6 @@ const GamePhaseControls = () => {
 
   const currentPhase = gameSessionState.game_phase;
 
-  // Render buttons based on current phase
   const renderPhaseButton = () => {
     switch (currentPhase) {
       case GAME_PHASES[0]: // "game_session_started"
@@ -67,7 +79,15 @@ const GamePhaseControls = () => {
         return <EndDoctorMeetButton gameSessionState={gameSessionState} />;
 
       case GAME_PHASES[7]: // "introduction_phase"
-        return <StartNightPhaseButton gameSessionState={gameSessionState} />;
+        if (isSpeakingComplete(gameSessionState.current_speaker_index)) {
+          return <StartNightPhaseButton gameSessionState={gameSessionState} />;
+        }
+        return (
+          <DayPhaseSpeakingControls
+            gameId={gameId}
+            gameSessionState={gameSessionState}
+          />
+        );
 
       case GAME_PHASES[8]: // "night_phase"
         return <StartMafiaTargetButton gameSessionState={gameSessionState} />;
@@ -91,7 +111,15 @@ const GamePhaseControls = () => {
         return <EndDoctorHealButton gameSessionState={gameSessionState} />;
 
       case GAME_PHASES[15]: // "day_phase"
-        return <StartVotingButton gameSessionState={gameSessionState} />;
+        if (isSpeakingComplete(gameSessionState.current_speaker_index)) {
+          return <StartVotingButton gameSessionState={gameSessionState} />;
+        }
+        return (
+          <DayPhaseSpeakingControls
+            gameId={gameId}
+            gameSessionState={gameSessionState}
+          />
+        );
 
       case GAME_PHASES[16]: // "voting"
         return <EndVotingButton gameSessionState={gameSessionState} />;

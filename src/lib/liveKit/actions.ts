@@ -182,3 +182,131 @@ export async function muteAllParticipantsExceptHost(
     return { ok: false, message: "Failed to mute participants" };
   }
 }
+
+/**
+ * Set a participant's audio mute state
+ * @param roomId - The LiveKit room ID (same as game ID)
+ * @param participantId - The participant's user ID
+ * @param muted - Whether to mute (true) or unmute (false)
+ */
+export async function setParticipantMuted(
+  roomId: string,
+  participantId: string,
+  muted: boolean
+) {
+  const roomService = new RoomServiceClient(
+    process.env.NEXT_PUBLIC_LIVEKIT_URL!,
+    process.env.LIVEKIT_API_KEY!,
+    process.env.LIVEKIT_API_SECRET!
+  );
+
+  try {
+    const participants = await roomService.listParticipants(roomId);
+    const target = participants.find((p) => p.identity === participantId);
+
+    if (!target) {
+      return { ok: false, message: "Participant not found" };
+    }
+
+    // Find and set mute state for audio tracks
+    for (const track of target.tracks) {
+      if (track.type === TrackType.AUDIO) {
+        await roomService.mutePublishedTrack(
+          roomId,
+          participantId,
+          track.sid,
+          muted
+        );
+      }
+    }
+
+    return { ok: true };
+  } catch (error) {
+    console.error("Failed to set participant mute state:", error);
+    return { ok: false, message: "Failed to set participant mute state" };
+  }
+}
+
+/**
+ * Unmute only the current speaker and mute all other players (except host)
+ * Used during Day Phase speaking to enforce speaking order
+ * @param roomId - The LiveKit room ID (same as game ID)
+ * @param speakerUserId - The user ID of the current speaker to unmute
+ * @param hostId - The host's user ID to always keep unmuted
+ */
+export async function setSpeakerActive(
+  roomId: string,
+  speakerUserId: string,
+  hostId: string
+) {
+  const roomService = new RoomServiceClient(
+    process.env.NEXT_PUBLIC_LIVEKIT_URL!,
+    process.env.LIVEKIT_API_KEY!,
+    process.env.LIVEKIT_API_SECRET!
+  );
+
+  try {
+    const participants = await roomService.listParticipants(roomId);
+
+    for (const participant of participants) {
+      // Host is always unmuted
+      if (participant.identity === hostId) continue;
+
+      // Determine if this participant should be muted
+      const shouldBeMuted = participant.identity !== speakerUserId;
+
+      // Set mute state for all audio tracks
+      for (const track of participant.tracks) {
+        if (track.type === TrackType.AUDIO) {
+          await roomService.mutePublishedTrack(
+            roomId,
+            participant.identity,
+            track.sid,
+            shouldBeMuted
+          );
+        }
+      }
+    }
+
+    return { ok: true };
+  } catch (error) {
+    console.error("Failed to set speaker active:", error);
+    return { ok: false, message: "Failed to set speaker active" };
+  }
+}
+
+/**
+ * Unmute all players (except those who self-muted)
+ * Used when speaking session ends to restore normal audio
+ * @param roomId - The LiveKit room ID (same as game ID)
+ */
+export async function unmuteAllParticipants(roomId: string) {
+  const roomService = new RoomServiceClient(
+    process.env.NEXT_PUBLIC_LIVEKIT_URL!,
+    process.env.LIVEKIT_API_KEY!,
+    process.env.LIVEKIT_API_SECRET!
+  );
+
+  try {
+    const participants = await roomService.listParticipants(roomId);
+
+    for (const participant of participants) {
+      // Unmute all audio tracks
+      for (const track of participant.tracks) {
+        if (track.type === TrackType.AUDIO) {
+          await roomService.mutePublishedTrack(
+            roomId,
+            participant.identity,
+            track.sid,
+            false // muted = false
+          );
+        }
+      }
+    }
+
+    return { ok: true };
+  } catch (error) {
+    console.error("Failed to unmute participants:", error);
+    return { ok: false, message: "Failed to unmute participants" };
+  }
+}

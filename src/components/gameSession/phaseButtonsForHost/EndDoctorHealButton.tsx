@@ -2,8 +2,10 @@
 
 import React, { useState } from "react";
 import { updateGameSession } from "@/lib/gameSession/actions";
+import { resetSpeakingState } from "@/lib/dayPhase/actions";
 import { GameSessionState } from "@/types/game/type";
 import { GAME_PHASES } from "@/lib/constants/game";
+import { useGameRoom } from "@/lib/context/gameRoomContext";
 
 type EndDoctorHealButtonProps = {
   gameSessionState: GameSessionState;
@@ -15,6 +17,7 @@ type EndDoctorHealButtonProps = {
 const EndDoctorHealButton = ({
   gameSessionState,
 }: EndDoctorHealButtonProps) => {
+  const { gameId } = useGameRoom();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleEndDoctorHeal = async () => {
@@ -27,6 +30,9 @@ const EndDoctorHealButton = ({
         ...gameSessionState,
         game_phase: GAME_PHASES[15], // "day_phase"
       });
+
+      // Reset speaking state for new day phase
+      await resetSpeakingState(gameId);
       if (!res?.ok) {
         console.error("Failed to end doctor's heal:", res?.message);
       }

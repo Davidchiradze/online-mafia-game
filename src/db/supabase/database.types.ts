@@ -108,32 +108,44 @@ export type Database = {
         Row: {
           attempt_to_kill_players: number[]
           created_at: string | null
+          current_speaker_index: number | null
+          day_round_opener_index: number | null
           game_id: string
           game_phase: string
           healed_players: number[]
           id: string
           is_finished: boolean
           nominated_players: number[]
+          speaker_started_at: string | null
+          speaking_order: number[]
         }
         Insert: {
           attempt_to_kill_players?: number[]
           created_at?: string | null
+          current_speaker_index?: number | null
+          day_round_opener_index?: number | null
           game_id: string
           game_phase: string
           healed_players?: number[]
           id?: string
           is_finished?: boolean
           nominated_players?: number[]
+          speaker_started_at?: string | null
+          speaking_order?: number[]
         }
         Update: {
           attempt_to_kill_players?: number[]
           created_at?: string | null
+          current_speaker_index?: number | null
+          day_round_opener_index?: number | null
           game_id?: string
           game_phase?: string
           healed_players?: number[]
           id?: string
           is_finished?: boolean
           nominated_players?: number[]
+          speaker_started_at?: string | null
+          speaking_order?: number[]
         }
         Relationships: [
           {

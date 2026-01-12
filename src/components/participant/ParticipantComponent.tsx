@@ -18,6 +18,7 @@ import { useParticipantVisibility } from "@/hooks/useParticipantVisibility";
 import { VisibilityState } from "@/lib/game/visibility";
 import ParticipantCover from "@/components/video/ParticipantCover";
 import { Tables } from "@/db/supabase/database.types";
+import { useSpeakingProgress } from "@/hooks/useSpeakingState";
 
 export default function ParticipantComponent({
   gameId,
@@ -62,6 +63,23 @@ export default function ParticipantComponent({
 
   // Determine visibility based on game phase and roles
   const { visibilityState, coverMessage } = useParticipantVisibility(trackRef);
+
+  // Speaking state - check if this player is the current speaker
+  const isSpeaking = useMemo(() => {
+    if (!gameSessionState) return false;
+    const currentSpeakerSeat = gameSessionState.current_speaker_index;
+    return (
+      currentSpeakerSeat != null && player.seat_number === currentSpeakerSeat
+    );
+  }, [gameSessionState, player.seat_number]);
+
+  // Speaking progress timer
+
+  //useSpeakingProgress
+  const speakingProgress = useSpeakingProgress(
+    gameSessionState?.speaker_started_at,
+    isSpeaking
+  );
 
   const canShowMenu = useMemo(() => {
     // Only show menu when viewer is host, a real participant exists, and it's not the host tile
@@ -207,6 +225,16 @@ export default function ParticipantComponent({
             className={`${
               isMobileReadyVisible ? "flex" : "hidden"
             } md:group-hover:flex flex items-center justify-center`}
+          />
+        </div>
+      )}
+
+      {/* Speaking progress bar underline */}
+      {isSpeaking && (
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-700/50 z-30">
+          <div
+            className="h-full bg-emerald-500 transition-all duration-100 ease-linear"
+            style={{ width: `${100 - speakingProgress}%` }}
           />
         </div>
       )}
