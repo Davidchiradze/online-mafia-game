@@ -13,7 +13,6 @@ import { createClient } from "@/lib/supabase/server";
 import { Tables } from "@/db/supabase/database.types";
 import { adminClient } from "@/lib/supabase/admin";
 import { computeSpeakingOrder, getNextSpeaker } from "@/lib/game/speakingOrder";
-import { setSpeakerActive, unmuteAllParticipants } from "@/lib/liveKit/actions";
 import type { GameSessionState } from "@/types/game/type";
 
 type ActionResult = { ok: true } | { ok: false; message: string };
@@ -45,23 +44,6 @@ async function verifyHost(
   }
 
   return { ok: true, game: gameRow };
-}
-
-/**
- * Gets the player's user ID from their seat number.
- */
-async function getPlayerIdBySeat(
-  gameId: string,
-  seatNumber: number
-): Promise<string | null> {
-  const { data: player } = await adminClient
-    .from("game_players")
-    .select("player_id")
-    .eq("game_id", gameId)
-    .eq("seat_number", seatNumber)
-    .single();
-
-  return player?.player_id ?? null;
 }
 
 /**
@@ -139,12 +121,8 @@ export async function startDayPhaseSpeaking(
     return { ok: false, message: updateErr.message };
   }
 
-  // Unmute first speaker, mute others
-  const firstSpeakerUserId = await getPlayerIdBySeat(gameId, openerIndex);
-  if (firstSpeakerUserId && hostCheck.game.host_id) {
-    await setSpeakerActive(gameId, firstSpeakerUserId, hostCheck.game.host_id);
-  }
-
+  // Players will auto-mute/unmute themselves based on current_speaker_index
+  // via the useSpeakingAutoMute hook on the client
   return { ok: true };
 }
 
@@ -199,7 +177,8 @@ export async function advanceToNextSpeaker(
       return { ok: false, message: updateErr.message };
     }
 
-    // await unmuteAllParticipants(gameId);
+    // Speaking round completed - players will unmute themselves
+    // when they see current_speaker_index = -1
     return { ok: true };
   }
 
@@ -216,12 +195,8 @@ export async function advanceToNextSpeaker(
     return { ok: false, message: updateErr.message };
   }
 
-  // Unmute next speaker
-  const nextSpeakerUserId = await getPlayerIdBySeat(gameId, nextSpeaker);
-  if (nextSpeakerUserId && hostCheck.game.host_id) {
-    await setSpeakerActive(gameId, nextSpeakerUserId, hostCheck.game.host_id);
-  }
-
+  // Players will auto-mute/unmute themselves based on current_speaker_index
+  // via the useSpeakingAutoMute hook on the client
   return { ok: true };
 }
 
