@@ -9,6 +9,7 @@ import { Track } from "livekit-client";
 import { MicOffIcon, MicOnIcon, MoreVerticalIcon } from "@/assets/icons";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { kickPlayer, transferHost } from "@/lib/gameRoom/actions";
+import { useNomination } from "@/hooks/useNomination";
 import { removeParticipantFromRoom } from "@/lib/liveKit/actions";
 import PopupMenu from "@/components/ui/PopupMenu";
 import { useParticipantReady } from "@/hooks/useParticipantReady";
@@ -19,6 +20,7 @@ import { VisibilityState } from "@/lib/game/visibility";
 import ParticipantCover from "@/components/video/ParticipantCover";
 import { Tables } from "@/db/supabase/database.types";
 import { useSpeakingProgress } from "@/hooks/useSpeakingState";
+import NominationButton from "@/components/game/NominationButton";
 
 export default function ParticipantComponent({
   gameId,
@@ -80,6 +82,14 @@ export default function ParticipantComponent({
     gameSessionState?.speaker_started_at,
     isSpeaking
   );
+
+  // Nomination state and effects
+  const { isNominated, showNominationEffect, canShowNominationButton } =
+    useNomination({
+      seatNumber: player.seat_number,
+      isViewerHost,
+      isTargetHost,
+    });
 
   const canShowMenu = useMemo(() => {
     // Only show menu when viewer is host, a real participant exists, and it's not the host tile
@@ -175,7 +185,13 @@ export default function ParticipantComponent({
             )}
           </div>
         ))}
-      <div className="absolute bottom-1 left-1 md:bottom-2 md:left-2 z-10 rounded-full border border-white/10 bg-black/40 backdrop-blur px-2 py-0.5 md:px-3 md:py-1 text-[10px] md:text-xs font-medium text-gray-100">
+      <div
+        className={`absolute bottom-1 left-1 md:bottom-2 md:left-2 z-10 rounded-full border backdrop-blur px-2 py-0.5 md:px-3 md:py-1 text-[10px] md:text-xs font-medium transition-all duration-200 ${
+          showNominationEffect
+            ? "border-red-500 bg-red-500 text-white shadow-lg shadow-red-500/50 nomination-badge"
+            : "border-white/10 bg-black/40 text-gray-100"
+        }`}
+      >
         {gameSessionState
           ? playerIndex === 13
             ? "Host"
@@ -214,6 +230,16 @@ export default function ParticipantComponent({
           ✓
         </div>
       )}
+      {/* Nomination button - visible only to host during day phase */}
+      {canShowNominationButton && player.seat_number != null && (
+        <div className="absolute left-[30px] -translate-x-1/2 top-1 md:top-2 z-20">
+          <NominationButton
+            seatNumber={player.seat_number}
+            isNominated={isNominated}
+          />
+        </div>
+      )}
+
       {/* Local participant hover-ready/unready button (non-host) */}
       {isLocal && !isTargetHost && !gameSessionState && (
         <div className="flex items-center justify-center absolute bottom-10 md:bottom-12 left-1/2 -translate-x-1/2 z-20">

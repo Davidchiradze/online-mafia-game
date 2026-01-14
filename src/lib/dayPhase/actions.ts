@@ -244,3 +244,103 @@ export async function resetSpeakingState(
 
   return { ok: true };
 }
+
+/**
+ * Nominates or un-nominates a player during DAY_PHASE.
+ * Only the host can nominate. Only one nomination is active at a time.
+ * Clicking the same player toggles their nomination off.
+ * Clicking a different player replaces the current nomination.
+ */
+export async function nominatePlayer(
+  gameId: string,
+  seatNumber: number
+): Promise<ActionResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  if (userError || !user) return { ok: false, message: "Not authenticated" };
+
+  const hostCheck = await verifyHost(gameId, user.id);
+  if (!hostCheck.ok) return hostCheck;
+
+  const { data: gameSession, error: sessionErr } = await adminClient
+    .from("game_sessions")
+    .select("*")
+    .eq("game_id", gameId)
+    .single();
+
+  if (sessionErr || !gameSession) {
+    return { ok: false, message: "Game session not found" };
+  }
+
+  const session = gameSession as unknown as GameSessionState;
+
+  // Only allow nominations during DAY_PHASE
+  if (session.game_phase !== "day_phase") {
+    return { ok: false, message: "Nominations only allowed during day phase" };
+  }
+
+  const currentNominations = session.nominated_players ?? [];
+  let newNominations: number[];
+
+  // If clicking the same player, toggle off (undo nomination)
+  if (currentNominations.includes(seatNumber)) {
+    newNominations = [];
+  } else {
+    // Replace with new nomination (only one at a time)
+    newNominations = [seatNumber];
+  }
+
+  const { error: updateErr } = await adminClient
+    .from("game_sessions")
+    .update({
+      nominated_players: newNominations,
+    } as unknown as Record<string, unknown>)
+    .eq("id", session.id);
+
+  if (updateErr) {
+    return { ok: false, message: updateErr.message };
+  }
+
+  return { ok: true };
+}
+
+/**
+ * Clears all nominations. Called when transitioning out of DAY_PHASE.
+ */
+export async function clearNominations(gameId: string): Promise<ActionResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  if (userError || !user) return { ok: false, message: "Not authenticated" };
+
+  const hostCheck = await verifyHost(gameId, user.id);
+  if (!hostCheck.ok) return hostCheck;
+
+  const { data: gameSession, error: sessionErr } = await adminClient
+    .from("game_sessions")
+    .select("id")
+    .eq("game_id", gameId)
+    .single();
+
+  if (sessionErr || !gameSession) {
+    return { ok: false, message: "Game session not found" };
+  }
+
+  const { error: updateErr } = await adminClient
+    .from("game_sessions")
+    .update({
+      nominated_players: [],
+    } as unknown as Record<string, unknown>)
+    .eq("id", gameSession.id);
+
+  if (updateErr) {
+    return { ok: false, message: updateErr.message };
+  }
+
+  return { ok: true };
+}

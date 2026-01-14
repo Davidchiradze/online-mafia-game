@@ -5,7 +5,6 @@ import React from "react";
 import ParticipantComponent from "../participant/ParticipantComponent";
 import { usePlayerSlots } from "../../hooks/usePlayerSlots";
 import GamePhaseControls from "./GamePhaseControls";
-import { useGamePlayers } from "@/hooks/useGamePlayers";
 import { Tables } from "@/db/supabase/database.types";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 
