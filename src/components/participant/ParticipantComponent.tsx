@@ -198,7 +198,7 @@ export default function ParticipantComponent({
             : playerIndex
           : displayName || (playerIndex === 13 ? "Host" : playerIndex)}
       </div>
-      {canShowMenu && (
+      {canShowMenu && !gameSessionState && (
         <div className="absolute right-1 top-1 md:right-2 md:top-2 z-20">
           <button
             type="button"

@@ -71,6 +71,11 @@ export function canSeeParticipant(
     return true;
   }
 
+  // NOMINATED PLAYERS SPEAK: Everyone can see everyone (self-justification phase)
+  if (gamePhase === "nominated_players_speak") {
+    return true;
+  }
+
   // VOTING: Everyone can see everyone
   if (gamePhase === "voting") {
     return true;

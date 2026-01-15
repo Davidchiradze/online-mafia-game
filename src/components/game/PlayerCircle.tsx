@@ -65,7 +65,7 @@ export default function PlayerCircle({
   userId: string;
   maxPlayers?: number;
 }) {
-  const { players, gameSessionState } = useGameRoom();
+  const { players, gameSessionState, isHost } = useGameRoom();
   const slotDescriptors = usePlayerSlots({
     tracks,
     hostUserId,
@@ -119,9 +119,11 @@ export default function PlayerCircle({
         {userId === hostUserId && <GamePhaseControls />}
       </div>
       <div style={{ gridColumn: 3, gridRow: 3 }}>
-        <NominatedPlayersDisplay
-          nominatedPlayers={gameSessionState?.nominated_players ?? []}
-        />
+        {isHost && (
+          <NominatedPlayersDisplay
+            nominatedPlayers={gameSessionState?.nominated_players ?? []}
+          />
+        )}
       </div>
     </div>
   );

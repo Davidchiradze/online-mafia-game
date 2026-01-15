@@ -76,7 +76,7 @@ export const GAME_PHASES = [
   "detective_checks_for_mafia",
   "doctor_heals_player",
   "day_phase",
-  // "nominated_players_speak",
+  "nominated_players_speak",
   "voting",
   "repeat",
   "end_game",
@@ -88,4 +88,12 @@ export const DAY_PHASE_SPEAKING = {
   MAX_SPEAKING_TIME_MS: 60 * 1000,
   /** Maximum speaking time per player in seconds */
   MAX_SPEAKING_TIME_SECONDS: 60,
+} as const;
+
+// Nominated Players Speaking Constants (Self-justification phase)
+export const NOMINATED_PLAYERS_SPEAKING = {
+  /** Maximum speaking time per nominated player in milliseconds (30 seconds) */
+  MAX_SPEAKING_TIME_MS: 30 * 1000,
+  /** Maximum speaking time per nominated player in seconds */
+  MAX_SPEAKING_TIME_SECONDS: 30,
 } as const;

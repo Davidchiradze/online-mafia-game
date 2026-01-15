@@ -344,3 +344,151 @@ export async function clearNominations(gameId: string): Promise<ActionResult> {
 
   return { ok: true };
 }
+
+/**
+ * Starts the nominated players speaking phase.
+ * Transitions from day_phase to nominated_players_speak.
+ * Sets up speaking order based on nominated_players array order.
+ * Each nominated player gets 30 seconds for self-justification.
+ */
+export async function startNominatedPlayersSpeaking(
+  gameId: string
+): Promise<ActionResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  if (userError || !user) return { ok: false, message: "Not authenticated" };
+
+  const hostCheck = await verifyHost(gameId, user.id);
+  if (!hostCheck.ok) return hostCheck;
+
+  const { data: gameSession, error: sessionErr } = await adminClient
+    .from("game_sessions")
+    .select("*")
+    .eq("game_id", gameId)
+    .single();
+
+  if (sessionErr || !gameSession) {
+    return { ok: false, message: "Game session not found" };
+  }
+
+  const session = gameSession as unknown as GameSessionState;
+
+  // Only allow starting from day_phase
+  if (session.game_phase !== "day_phase") {
+    return {
+      ok: false,
+      message: "Can only start nominated players speaking from day phase",
+    };
+  }
+
+  const nominatedPlayers = session.nominated_players ?? [];
+
+  if (nominatedPlayers.length === 0) {
+    return { ok: false, message: "No players nominated" };
+  }
+
+  // Use nominated_players order as speaking order
+  // First nominated player speaks first
+  const firstSpeaker = nominatedPlayers[0];
+
+  const { error: updateErr } = await adminClient
+    .from("game_sessions")
+    .update({
+      game_phase: "nominated_players_speak",
+      speaking_order: nominatedPlayers,
+      current_speaker_index: firstSpeaker,
+      speaker_started_at: new Date().toISOString(),
+    } as unknown as Record<string, unknown>)
+    .eq("id", session.id);
+
+  if (updateErr) {
+    return { ok: false, message: updateErr.message };
+  }
+
+  return { ok: true };
+}
+
+/**
+ * Advances to the next nominated speaker during nominated_players_speak phase.
+ * When all nominated players have spoken, transitions to voting phase.
+ */
+export async function advanceToNextNominatedSpeaker(
+  gameId: string
+): Promise<ActionResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  if (userError || !user) return { ok: false, message: "Not authenticated" };
+
+  const hostCheck = await verifyHost(gameId, user.id);
+  if (!hostCheck.ok) return hostCheck;
+
+  const { data: gameSession, error: sessionErr } = await adminClient
+    .from("game_sessions")
+    .select("*")
+    .eq("game_id", gameId)
+    .single();
+
+  if (sessionErr || !gameSession) {
+    return { ok: false, message: "Game session not found" };
+  }
+
+  const session = gameSession as unknown as GameSessionState;
+
+  // Only allow during nominated_players_speak phase
+  if (session.game_phase !== "nominated_players_speak") {
+    return {
+      ok: false,
+      message: "Not in nominated players speaking phase",
+    };
+  }
+
+  const speakingOrder = session.speaking_order ?? [];
+  const currentSpeaker = session.current_speaker_index ?? null;
+
+  if (currentSpeaker === null || speakingOrder.length === 0) {
+    return { ok: false, message: "No active speaking session" };
+  }
+
+  // Get next speaker
+  const nextSpeaker = getNextSpeaker(currentSpeaker, speakingOrder);
+
+  if (nextSpeaker === null) {
+    // All nominated players have spoken - transition to voting phase
+    const { error: updateErr } = await adminClient
+      .from("game_sessions")
+      .update({
+        game_phase: "voting",
+        current_speaker_index: null,
+        speaker_started_at: null,
+        speaking_order: [],
+      } as unknown as Record<string, unknown>)
+      .eq("id", session.id);
+
+    if (updateErr) {
+      return { ok: false, message: updateErr.message };
+    }
+
+    return { ok: true };
+  }
+
+  // Advance to next nominated speaker
+  const { error: updateErr } = await adminClient
+    .from("game_sessions")
+    .update({
+      current_speaker_index: nextSpeaker,
+      speaker_started_at: new Date().toISOString(),
+    } as unknown as Record<string, unknown>)
+    .eq("id", session.id);
+
+  if (updateErr) {
+    return { ok: false, message: updateErr.message };
+  }
+
+  return { ok: true };
+}

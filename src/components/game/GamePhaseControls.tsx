@@ -16,11 +16,12 @@ import EndRightHandCheckButton from "../gameSession/phaseButtonsForHost/EndRight
 import EndYakuzaTargetButton from "../gameSession/phaseButtonsForHost/EndYakuzaTargetButton";
 import EndDetectiveCheckButton from "../gameSession/phaseButtonsForHost/EndDetectiveCheckButton";
 import EndDoctorHealButton from "../gameSession/phaseButtonsForHost/EndDoctorHealButton";
-import StartVotingButton from "../gameSession/phaseButtonsForHost/StartVotingButton";
 import EndVotingButton from "../gameSession/phaseButtonsForHost/EndVotingButton";
 import ContinueNextRoundButton from "../gameSession/phaseButtonsForHost/ContinueNextRoundButton";
 import EndGameControls from "../gameSession/phaseButtonsForHost/EndGameControls";
 import DayPhaseSpeakingControls from "../gameSession/phaseButtonsForHost/DayPhaseSpeakingControls";
+import StartNominatedPlayersSpeakButton from "../gameSession/phaseButtonsForHost/StartNominatedPlayersSpeakButton";
+import NominatedPlayersSpeakingControls from "../gameSession/phaseButtonsForHost/NominatedPlayersSpeakingControls";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 
 /**
@@ -114,7 +115,9 @@ const GamePhaseControls = () => {
         return (
           <div className="flex flex-col items-center gap-2">
             {isSpeakingComplete(gameSessionState.current_speaker_index) ? (
-              <StartVotingButton gameSessionState={gameSessionState} />
+              <StartNominatedPlayersSpeakButton
+                gameSessionState={gameSessionState}
+              />
             ) : (
               <DayPhaseSpeakingControls
                 gameId={gameId}
@@ -124,17 +127,24 @@ const GamePhaseControls = () => {
           </div>
         );
 
-      case GAME_PHASES[16]: // "voting"
+      case GAME_PHASES[16]: // "nominated_players_speak"
+        return (
+          <NominatedPlayersSpeakingControls
+            gameSessionState={gameSessionState}
+          />
+        );
+
+      case GAME_PHASES[17]: // "voting"
         return (
           <div className="flex flex-col items-center gap-2">
             <EndVotingButton gameSessionState={gameSessionState} />
           </div>
         );
 
-      case GAME_PHASES[17]: // "repeat"
+      case GAME_PHASES[18]: // "repeat"
         return <ContinueNextRoundButton gameSessionState={gameSessionState} />;
 
-      case GAME_PHASES[18]: // "end_game"
+      case GAME_PHASES[19]: // "end_game"
         return <EndGameControls />;
 
       default:

@@ -14,7 +14,8 @@ type Props = {
 
 export default function CreateGameModal({ open, onClose, onCreated }: Props) {
   const [name, setName] = useState("");
-  const [type, setType] = useState<(typeof GAME_TYPES)[number]>("traditional");
+  const [type, setType] =
+    useState<(typeof GAME_TYPES)[number]>("japanese_mafia");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const canCreate = useMemo(() => name.trim().length > 0, [name]);
@@ -88,7 +89,9 @@ export default function CreateGameModal({ open, onClose, onCreated }: Props) {
             }
             className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:bg-gray-800 dark:text-white"
           >
-            {GAME_TYPES.map((gt) => (
+            {GAME_TYPES.filter(
+              (gt) => gt !== "traditional" && gt !== "city_mafia"
+            ).map((gt) => (
               <option key={gt} value={gt}>
                 {GAME_TYPE_LABEL[gt]}
               </option>
