@@ -76,6 +76,7 @@ export const GAME_PHASES = [
   "detective_checks_for_mafia",
   "doctor_heals_player",
   "day_phase",
+  // "nominated_players_speak",
   "voting",
   "repeat",
   "end_game",

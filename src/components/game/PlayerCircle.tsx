@@ -7,6 +7,7 @@ import { usePlayerSlots } from "../../hooks/usePlayerSlots";
 import GamePhaseControls from "./GamePhaseControls";
 import { Tables } from "@/db/supabase/database.types";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
+import NominatedPlayersDisplay from "./NominatedPlayersDisplay";
 
 // 4x5 grid placement for 12 players around a centered host (spanning 2 rows)
 // Player indices are 1..12 (clockwise-ish around the host)
@@ -64,7 +65,7 @@ export default function PlayerCircle({
   userId: string;
   maxPlayers?: number;
 }) {
-  const { players } = useGameRoom();
+  const { players, gameSessionState } = useGameRoom();
   const slotDescriptors = usePlayerSlots({
     tracks,
     hostUserId,
@@ -116,6 +117,11 @@ export default function PlayerCircle({
       })}
       <div style={{ gridColumn: 3, gridRow: 2 }}>
         {userId === hostUserId && <GamePhaseControls />}
+      </div>
+      <div style={{ gridColumn: 3, gridRow: 3 }}>
+        <NominatedPlayersDisplay
+          nominatedPlayers={gameSessionState?.nominated_players ?? []}
+        />
       </div>
     </div>
   );

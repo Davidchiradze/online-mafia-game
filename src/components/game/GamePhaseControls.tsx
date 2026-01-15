@@ -111,18 +111,25 @@ const GamePhaseControls = () => {
         return <EndDoctorHealButton gameSessionState={gameSessionState} />;
 
       case GAME_PHASES[15]: // "day_phase"
-        if (isSpeakingComplete(gameSessionState.current_speaker_index)) {
-          return <StartVotingButton gameSessionState={gameSessionState} />;
-        }
         return (
-          <DayPhaseSpeakingControls
-            gameId={gameId}
-            gameSessionState={gameSessionState}
-          />
+          <div className="flex flex-col items-center gap-2">
+            {isSpeakingComplete(gameSessionState.current_speaker_index) ? (
+              <StartVotingButton gameSessionState={gameSessionState} />
+            ) : (
+              <DayPhaseSpeakingControls
+                gameId={gameId}
+                gameSessionState={gameSessionState}
+              />
+            )}
+          </div>
         );
 
       case GAME_PHASES[16]: // "voting"
-        return <EndVotingButton gameSessionState={gameSessionState} />;
+        return (
+          <div className="flex flex-col items-center gap-2">
+            <EndVotingButton gameSessionState={gameSessionState} />
+          </div>
+        );
 
       case GAME_PHASES[17]: // "repeat"
         return <ContinueNextRoundButton gameSessionState={gameSessionState} />;

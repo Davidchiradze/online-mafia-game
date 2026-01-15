@@ -287,10 +287,10 @@ export async function nominatePlayer(
 
   // If clicking the same player, toggle off (undo nomination)
   if (currentNominations.includes(seatNumber)) {
-    newNominations = [];
+    newNominations = currentNominations.filter((seat) => seat !== seatNumber);
   } else {
-    // Replace with new nomination (only one at a time)
-    newNominations = [seatNumber];
+    // Add to nominations
+    newNominations = [...currentNominations, seatNumber];
   }
 
   const { error: updateErr } = await adminClient
