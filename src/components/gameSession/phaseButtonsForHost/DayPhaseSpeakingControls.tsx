@@ -5,7 +5,9 @@ import { GameSessionState } from "@/types/game/type";
 import {
   startDayPhaseSpeaking,
   advanceToNextSpeaker,
+  finishCurrentSpeaker,
 } from "@/lib/dayPhase/actions";
+import { SPEAKING_STATE } from "@/lib/constants/game";
 
 type Props = {
   gameId: string;
@@ -13,8 +15,10 @@ type Props = {
 };
 
 /**
- * Simple host controls for speaking phase.
- * Shows "Start Speaking" when not started, "Next Speaker" when in progress.
+ * Host controls for speaking phase.
+ * - "Start Speaking Round" when not started or completed
+ * - "Finish Talking" when a speaker is active (mutes them, enters paused state)
+ * - "Next Speaker →" when paused (unmutes next speaker)
  */
 export default function DayPhaseSpeakingControls({
   gameId,
@@ -24,13 +28,27 @@ export default function DayPhaseSpeakingControls({
 
   const speakingOrder = gameSessionState.speaking_order ?? [];
   const currentSpeaker = gameSessionState.current_speaker_index ?? null;
-  const isInProgress = speakingOrder.length > 0 && currentSpeaker != null;
+
+  const isNotStarted = speakingOrder.length === 0 || currentSpeaker === null;
+  const isPaused = SPEAKING_STATE.isPaused(currentSpeaker);
+  const isActive = SPEAKING_STATE.isActive(currentSpeaker);
+  const isCompleted = SPEAKING_STATE.isCompleted(currentSpeaker);
 
   const handleStart = useCallback(async () => {
     if (isLoading) return;
     setIsLoading(true);
     try {
       await startDayPhaseSpeaking(gameId);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [gameId, isLoading]);
+
+  const handleFinish = useCallback(async () => {
+    if (isLoading) return;
+    setIsLoading(true);
+    try {
+      await finishCurrentSpeaker(gameId);
     } finally {
       setIsLoading(false);
     }
@@ -46,7 +64,8 @@ export default function DayPhaseSpeakingControls({
     }
   }, [gameId, isLoading]);
 
-  if (!isInProgress) {
+  // Not started yet or completed
+  if (isNotStarted || isCompleted) {
     return (
       <button
         type="button"
@@ -59,14 +78,29 @@ export default function DayPhaseSpeakingControls({
     );
   }
 
+  // Paused state - only show Next Speaker button
+  if (isPaused) {
+    return (
+      <button
+        type="button"
+        className="rounded-md bg-amber-600 hover:bg-amber-500 text-white font-semibold px-4 py-2 shadow disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed transition-colors"
+        disabled={isLoading}
+        onClick={handleNext}
+      >
+        {isLoading ? "..." : "Next Speaker →"}
+      </button>
+    );
+  }
+
+  // Active speaker - show only Finish Talking button
   return (
     <button
       type="button"
-      className="rounded-md bg-amber-600 hover:bg-amber-500 text-white font-semibold px-4 py-2 shadow disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed transition-colors"
+      className="rounded-md bg-red-600 hover:bg-red-500 text-white font-semibold px-4 py-2 shadow disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed transition-colors"
       disabled={isLoading}
-      onClick={handleNext}
+      onClick={handleFinish}
     >
-      {isLoading ? "..." : "Next Speaker →"}
+      {isLoading ? "..." : "Finish Talking"}
     </button>
   );
 }

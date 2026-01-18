@@ -3,10 +3,11 @@
 /**
  * Day Phase Speaking Server Actions
  *
- * Simple logic:
- * - current_speaker_index = null → not started
- * - current_speaker_index = valid seat (1+) → in progress
- * - current_speaker_index = -1 → completed (marker value)
+ * Speaking state logic (via current_speaker_index):
+ * - null → not started
+ * - positive seat (1-12) → in progress (speaker unmuted)
+ * - negative seat (-1 to -12) → paused, last speaker was abs(value)
+ * - -99 (SPEAKING_STATE.COMPLETED) → speaking round completed
  */
 
 import { createClient } from "@/lib/supabase/server";
@@ -14,7 +15,7 @@ import { Tables } from "@/db/supabase/database.types";
 import { adminClient } from "@/lib/supabase/admin";
 import { computeSpeakingOrder, getNextSpeaker } from "@/lib/game/speakingOrder";
 import type { GameSessionState } from "@/types/game/type";
-import { FOULS } from "@/lib/constants/game";
+import { FOULS, SPEAKING_STATE } from "@/lib/constants/game";
 
 type ActionResult = { ok: true } | { ok: false; message: string };
 
@@ -129,6 +130,7 @@ export async function startDayPhaseSpeaking(
 
 /**
  * Advances to the next speaker, or ends speaking if at last speaker.
+ * Handles both active state (positive seat) and paused state (negative seat).
  */
 export async function advanceToNextSpeaker(
   gameId: string
@@ -161,15 +163,22 @@ export async function advanceToNextSpeaker(
     return { ok: false, message: "No active speaking session" };
   }
 
+  // Determine the actual last speaker
+  // If paused (negative seat number), decode the last speaker
+  // Otherwise use current_speaker_index directly
+  const lastSpeaker = SPEAKING_STATE.isPaused(currentSpeaker)
+    ? SPEAKING_STATE.getLastSpeakerFromPaused(currentSpeaker)
+    : currentSpeaker;
+
   // Get next speaker
-  const nextSpeaker = getNextSpeaker(currentSpeaker, speakingOrder);
+  const nextSpeaker = getNextSpeaker(lastSpeaker, speakingOrder);
 
   if (nextSpeaker === null) {
-    // All done - set current_speaker_index to -1 (marker for "completed")
+    // All done - set current_speaker_index to COMPLETED marker
     const { error: updateErr } = await adminClient
       .from("game_sessions")
       .update({
-        current_speaker_index: -1,
+        current_speaker_index: SPEAKING_STATE.COMPLETED,
         speaker_started_at: null,
       } as unknown as Record<string, unknown>)
       .eq("id", session.id);
@@ -178,8 +187,7 @@ export async function advanceToNextSpeaker(
       return { ok: false, message: updateErr.message };
     }
 
-    // Speaking round completed - players will unmute themselves
-    // when they see current_speaker_index = -1
+    // Speaking round completed
     return { ok: true };
   }
 
@@ -198,6 +206,61 @@ export async function advanceToNextSpeaker(
 
   // Players will auto-mute/unmute themselves based on current_speaker_index
   // via the useSpeakingAutoMute hook on the client
+  return { ok: true };
+}
+
+/**
+ * Finishes the current speaker's turn without advancing to the next.
+ * Sets current_speaker_index to paused state (negative seat number).
+ * Host must then click "Next Speaker" to continue.
+ */
+export async function finishCurrentSpeaker(
+  gameId: string
+): Promise<ActionResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  if (userError || !user) return { ok: false, message: "Not authenticated" };
+
+  const hostCheck = await verifyHost(gameId, user.id);
+  if (!hostCheck.ok) return hostCheck;
+
+  const { data: gameSession, error: sessionErr } = await adminClient
+    .from("game_sessions")
+    .select("*")
+    .eq("game_id", gameId)
+    .single();
+
+  if (sessionErr || !gameSession) {
+    return { ok: false, message: "Game session not found" };
+  }
+
+  const session = gameSession as unknown as GameSessionState;
+  const speakingOrder = session.speaking_order ?? [];
+  const currentSpeaker = session.current_speaker_index ?? null;
+
+  // Can only finish if there's an active speaker (positive seat number)
+  if (!SPEAKING_STATE.isActive(currentSpeaker) || speakingOrder.length === 0) {
+    return { ok: false, message: "No active speaker to finish" };
+  }
+
+  // Set to paused state: negative of the current speaker's seat
+  const pausedValue = SPEAKING_STATE.toPausedValue(currentSpeaker!);
+
+  const { error: updateErr } = await adminClient
+    .from("game_sessions")
+    .update({
+      current_speaker_index: pausedValue,
+      speaker_started_at: null,
+    } as unknown as Record<string, unknown>)
+    .eq("id", session.id);
+
+  if (updateErr) {
+    return { ok: false, message: updateErr.message };
+  }
+
   return { ok: true };
 }
 
@@ -415,6 +478,7 @@ export async function startNominatedPlayersSpeaking(
 /**
  * Advances to the next nominated speaker during nominated_players_speak phase.
  * When all nominated players have spoken, transitions to voting phase.
+ * Handles both active state (positive seat) and paused state (negative seat).
  */
 export async function advanceToNextNominatedSpeaker(
   gameId: string
@@ -456,8 +520,15 @@ export async function advanceToNextNominatedSpeaker(
     return { ok: false, message: "No active speaking session" };
   }
 
+  // Determine the actual last speaker
+  // If paused (negative seat number), decode the last speaker
+  // Otherwise use current_speaker_index directly
+  const lastSpeaker = SPEAKING_STATE.isPaused(currentSpeaker)
+    ? SPEAKING_STATE.getLastSpeakerFromPaused(currentSpeaker)
+    : currentSpeaker;
+
   // Get next speaker
-  const nextSpeaker = getNextSpeaker(currentSpeaker, speakingOrder);
+  const nextSpeaker = getNextSpeaker(lastSpeaker, speakingOrder);
 
   if (nextSpeaker === null) {
     // All nominated players have spoken - transition to voting phase
@@ -484,6 +555,70 @@ export async function advanceToNextNominatedSpeaker(
     .update({
       current_speaker_index: nextSpeaker,
       speaker_started_at: new Date().toISOString(),
+    } as unknown as Record<string, unknown>)
+    .eq("id", session.id);
+
+  if (updateErr) {
+    return { ok: false, message: updateErr.message };
+  }
+
+  return { ok: true };
+}
+
+/**
+ * Finishes the current nominated speaker's turn without advancing to the next.
+ * Sets current_speaker_index to paused state (negative seat number).
+ * Host must then click "Next Speaker" to continue.
+ */
+export async function finishCurrentNominatedSpeaker(
+  gameId: string
+): Promise<ActionResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  if (userError || !user) return { ok: false, message: "Not authenticated" };
+
+  const hostCheck = await verifyHost(gameId, user.id);
+  if (!hostCheck.ok) return hostCheck;
+
+  const { data: gameSession, error: sessionErr } = await adminClient
+    .from("game_sessions")
+    .select("*")
+    .eq("game_id", gameId)
+    .single();
+
+  if (sessionErr || !gameSession) {
+    return { ok: false, message: "Game session not found" };
+  }
+
+  const session = gameSession as unknown as GameSessionState;
+
+  // Only allow during nominated_players_speak phase
+  if (session.game_phase !== "nominated_players_speak") {
+    return {
+      ok: false,
+      message: "Not in nominated players speaking phase",
+    };
+  }
+
+  const speakingOrder = session.speaking_order ?? [];
+  const currentSpeaker = session.current_speaker_index ?? null;
+
+  // Can only finish if there's an active speaker (positive seat number)
+  if (!SPEAKING_STATE.isActive(currentSpeaker) || speakingOrder.length === 0) {
+    return { ok: false, message: "No active speaker to finish" };
+  }
+
+  // Set to paused state: negative of the current speaker's seat
+  const pausedValue = SPEAKING_STATE.toPausedValue(currentSpeaker!);
+
+  const { error: updateErr } = await adminClient
+    .from("game_sessions")
+    .update({
+      current_speaker_index: pausedValue,
+      speaker_started_at: null,
     } as unknown as Record<string, unknown>)
     .eq("id", session.id);
 

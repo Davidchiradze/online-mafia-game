@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { Room as LiveKitRoom } from "livekit-client";
 import type { GameSessionState } from "@/types/game/type";
 import type { Tables } from "@/db/supabase/database.types";
+import { SPEAKING_STATE } from "@/lib/constants/game";
 
 /**
  * Hook that automatically mutes/unmutes the local participant's microphone
@@ -12,11 +13,13 @@ import type { Tables } from "@/db/supabase/database.types";
  * Logic:
  * 1. In lobby (no game session): everyone can talk
  * 2. Game started but no active speaking round:
- *    - If in a free-talk phase (introduction_phase, day_phase) with completed speaking round (-1): can talk
+ *    - If in a free-talk phase (introduction_phase, day_phase) with completed speaking round: can talk
  *    - Otherwise: muted by default
  * 3. Active speaking round (speaking_order.length > 0 && current_speaker_index >= 1):
  *    - If current_speaker_index === mySeatNumber → unmute
  *    - Otherwise → mute
+ * 4. Paused state (current_speaker_index is negative seat number, not COMPLETED):
+ *    - Everyone is muted, waiting for host to click "Next Speaker"
  *
  * This approach is resilient to reconnections since the state comes from the database
  * (via Supabase Realtime) rather than LiveKit metadata.
@@ -64,29 +67,33 @@ export function useSpeakingAutoMute(
       return;
     }
 
-    // Determine if there's an active speaking round
+    // Determine speaking state
     const speakingOrder = gameSessionState.speaking_order ?? [];
     const currentSpeakerIndex = gameSessionState.current_speaker_index ?? null;
-    const currentPhase = gameSessionState.game_phase;
 
     // Speaking round is active when:
     // - speaking_order has items AND
     // - current_speaker_index is a valid seat number (>= 1)
     const isSpeakingRoundActive =
-      speakingOrder.length > 0 &&
-      currentSpeakerIndex !== null &&
-      currentSpeakerIndex >= 1;
+      speakingOrder.length > 0 && SPEAKING_STATE.isActive(currentSpeakerIndex);
 
-    // Speaking round is completed when current_speaker_index is -1
-    const isSpeakingRoundCompleted = currentSpeakerIndex === -1;
+    // Paused state: negative seat number (not COMPLETED)
+    const isPaused = SPEAKING_STATE.isPaused(currentSpeakerIndex);
+
+    // Speaking round is completed when current_speaker_index is COMPLETED (-99)
+    const isSpeakingRoundCompleted =
+      SPEAKING_STATE.isCompleted(currentSpeakerIndex);
 
     let shouldMute: boolean;
 
     if (isSpeakingRoundActive) {
       // During speaking round: only current speaker is unmuted
       shouldMute = currentSpeakerIndex !== mySeatNumber;
+    } else if (isPaused) {
+      // Paused: everyone is muted, waiting for host to click "Next Speaker"
+      shouldMute = true;
     } else {
-      // Game started but not in a speaking turn → muted by default
+      // Game started but not in a speaking turn (completed, not started, etc.) → muted by default
       shouldMute = true;
     }
 

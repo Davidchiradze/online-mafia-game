@@ -90,6 +90,30 @@ export const DAY_PHASE_SPEAKING = {
   MAX_SPEAKING_TIME_SECONDS: 60,
 } as const;
 
+/**
+ * Speaking State Markers for current_speaker_index
+ *
+ * - null → not started
+ * - positive seat (1-12) → in progress (speaker unmuted)
+ * - negative seat (-1 to -12) → paused, last speaker was abs(value)
+ * - COMPLETED (-99) → speaking round completed
+ */
+export const SPEAKING_STATE = {
+  /** Marker value indicating speaking round is completed */
+  COMPLETED: -99,
+  /** Check if a value represents a paused state (negative seat number, not COMPLETED) */
+  isPaused: (value: number | null): boolean =>
+    value !== null && value < 0 && value !== -99,
+  /** Check if a value represents an active speaker */
+  isActive: (value: number | null): boolean => value !== null && value >= 1,
+  /** Check if a value represents completed state */
+  isCompleted: (value: number | null): boolean => value === -99,
+  /** Get the last speaker seat from a paused state value */
+  getLastSpeakerFromPaused: (value: number): number => Math.abs(value),
+  /** Convert a seat number to paused state value */
+  toPausedValue: (seatNumber: number): number => -seatNumber,
+} as const;
+
 // Nominated Players Speaking Constants (Self-justification phase)
 export const NOMINATED_PLAYERS_SPEAKING = {
   /** Maximum speaking time per nominated player in milliseconds (30 seconds) */

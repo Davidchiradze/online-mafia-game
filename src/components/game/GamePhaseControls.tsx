@@ -1,5 +1,5 @@
 import React from "react";
-import { GAME_PHASES } from "@/lib/constants/game";
+import { GAME_PHASES, SPEAKING_STATE } from "@/lib/constants/game";
 import StartGameButton from "../gameSession/phaseButtonsForHost/StartGameButton";
 import StartPickingRolesButton from "../gameSession/phaseButtonsForHost/StartPickingRolesButton";
 import ConfirmRolesButton from "../gameSession/phaseButtonsForHost/ConfirmRolesButton";
@@ -25,15 +25,16 @@ import NominatedPlayersSpeakingControls from "../gameSession/phaseButtonsForHost
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 
 /**
- * Speaking state detection:
- * - current_speaker_index = null → not started
- * - current_speaker_index = valid seat (1+) → in progress
- * - current_speaker_index = -1 → completed (marker value)
+ * Speaking state detection using SPEAKING_STATE constants:
+ * - null → not started
+ * - positive seat (1-12) → in progress
+ * - negative seat (-1 to -12) → paused
+ * - COMPLETED (-99) → speaking round completed
  */
 function isSpeakingComplete(
   currentSpeakerIndex: number | null | undefined
 ): boolean {
-  return currentSpeakerIndex === -1;
+  return SPEAKING_STATE.isCompleted(currentSpeakerIndex ?? null);
 }
 
 /**
