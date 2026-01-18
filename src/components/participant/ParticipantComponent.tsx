@@ -21,6 +21,10 @@ import ParticipantCover from "@/components/video/ParticipantCover";
 import { Tables } from "@/db/supabase/database.types";
 import { useSpeakingProgress } from "@/hooks/useSpeakingState";
 import NominationButton from "@/components/game/NominationButton";
+import FoulButton from "@/components/game/FoulButton";
+import FoulSpeakButton from "@/components/game/FoulSpeakButton";
+import FoulDisplay from "@/components/game/FoulDisplay";
+import { useFoulSpeak } from "@/hooks/useFoulSpeak";
 
 export default function ParticipantComponent({
   gameId,
@@ -37,7 +41,7 @@ export default function ParticipantComponent({
   playerIndex: number;
   player: Tables<"game_players">;
 }) {
-  const { gameSessionState } = useGameRoom();
+  const { gameSessionState, room } = useGameRoom();
 
   const participant = trackRef?.participant;
   const isLocal = Boolean(participant?.isLocal);
@@ -84,12 +88,35 @@ export default function ParticipantComponent({
   );
 
   // Nomination state and effects
-  const { isNominated, showNominationEffect, canShowNominationButton } =
-    useNomination({
-      seatNumber: player.seat_number,
-      isViewerHost,
-      isTargetHost,
-    });
+  const {
+    isNominated,
+    showNominationEffect,
+    canShowNominationButton,
+    isDayPhase,
+  } = useNomination({
+    seatNumber: player.seat_number,
+    isViewerHost,
+    isTargetHost,
+  });
+
+  // Foul-related functionality (speaking, display, button visibility)
+  const {
+    isFoulSpeaking,
+    foulSpeakTimeLeft,
+    startFoulSpeak,
+    canFoulSpeak,
+    canShowFoulSpeakButton,
+    currentFouls,
+    canShowFoulButton,
+  } = useFoulSpeak({
+    room,
+    player,
+    isLocal,
+    isDayPhase,
+    isSpeaking,
+    isTargetHost,
+    isViewerHost,
+  });
 
   const canShowMenu = useMemo(() => {
     // Only show menu when viewer is host, a real participant exists, and it's not the host tile
@@ -138,9 +165,27 @@ export default function ParticipantComponent({
     };
   }, []);
 
+  // Detect if this participant is foul speaking (mic on but not active speaker during day phase)
+  // This is visible to ALL players since LiveKit syncs mic state to everyone
+  const isParticipantFoulSpeaking =
+    isMicEnabled && isDayPhase && !isSpeaking && !isTargetHost;
+
+  // Determine box shadow based on speaking state
+  const boxShadowClass = useMemo(() => {
+    if (isParticipantFoulSpeaking) {
+      // Red glow for foul speaking (visible to everyone)
+      return "shadow-[0_0_20px_4px_rgba(239,68,68,0.7)]";
+    }
+    if (isSpeaking) {
+      // Emerald glow for active speaker
+      return "shadow-[0_0_20px_4px_rgba(16,185,129,0.7)]";
+    }
+    return "";
+  }, [isParticipantFoulSpeaking, isSpeaking]);
+
   return (
     <div
-      className="relative w-full h-full flex flex-col items-stretch justify-stretch text-sm text-gray-200 group"
+      className={`relative w-full h-full flex flex-col items-stretch justify-stretch text-sm text-gray-200 group transition-shadow duration-300 overflow-hidden rounded-xl ${boxShadowClass}`}
       onMouseLeave={() => setMenuOpen(false)}
       onClick={handleTileClick}
     >
@@ -240,6 +285,19 @@ export default function ParticipantComponent({
         </div>
       )}
 
+      {/* Foul button - visible only to host during day phase */}
+      {canShowFoulButton && player.seat_number != null && (
+        <div className="absolute right-[0px] -translate-x-1/2 top-1 md:top-2 z-20">
+          <FoulButton
+            seatNumber={player.seat_number}
+            currentFouls={currentFouls}
+          />
+        </div>
+      )}
+
+      {/* Foul display - visible to everyone */}
+      <FoulDisplay foulCount={currentFouls} />
+
       {/* Local participant hover-ready/unready button (non-host) */}
       {isLocal && !isTargetHost && !gameSessionState && (
         <div className="flex items-center justify-center absolute bottom-10 md:bottom-12 left-1/2 -translate-x-1/2 z-20">
@@ -251,6 +309,18 @@ export default function ParticipantComponent({
             className={`${
               isMobileReadyVisible ? "flex" : "hidden"
             } md:group-hover:flex flex items-center justify-center`}
+          />
+        </div>
+      )}
+
+      {/* Foul speak button - for local player to speak out of turn during day phase */}
+      {canShowFoulSpeakButton && (
+        <div className="absolute right-1 top-1 md:right-2 md:top-2 z-20">
+          <FoulSpeakButton
+            onStartFoulSpeak={startFoulSpeak}
+            isFoulSpeaking={isFoulSpeaking}
+            foulSpeakTimeLeft={foulSpeakTimeLeft}
+            canFoulSpeak={canFoulSpeak}
           />
         </div>
       )}

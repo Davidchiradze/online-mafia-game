@@ -83,7 +83,7 @@ export default function PlayerCircle({
     >
       {slotDescriptors.map(({ key, track }) => {
         const pos = gridPositionForPlayerIndex(key);
-        const isHost = key === maxPlayers + 1;
+        const isHostIndex = key === maxPlayers + 1;
         const player = players.find(
           (p) => p.seat_number === key
         ) as Tables<"game_players">;
@@ -91,10 +91,10 @@ export default function PlayerCircle({
           <div
             key={`seat-${String(key)}`}
             className={
-              "relative rounded-xl overflow-hidden bg-black/40 backdrop-blur-sm border " +
-              (isHost
-                ? "border-amber-400/60 ring-1 ring-amber-400/40"
-                : "border-white/10")
+              "relative rounded-xl bg-black/40 backdrop-blur-sm border " +
+              (isHostIndex
+                ? "border-amber-400/60 ring-1 ring-amber-400/40 transform  translate-y-1/2"
+                : "border-white/10 ")
             }
             style={{ gridColumn: pos.gridColumn, gridRow: pos.gridRow }}
           >
@@ -109,7 +109,7 @@ export default function PlayerCircle({
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-xs text-gray-300/70">
-                {isHost ? "Host" : `${key} Empty`}
+                {isHostIndex ? "Host" : `${key} Empty`}
               </div>
             )}
           </div>

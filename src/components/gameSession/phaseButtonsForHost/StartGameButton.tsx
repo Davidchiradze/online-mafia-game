@@ -11,11 +11,11 @@ import { useGameRoom } from "@/lib/context/gameRoomContext";
  */
 const StartGameButton = () => {
   const tracks = useTracks();
-  const maxPlayers = 2;
-  const { gameId } = useGameRoom();
+  // const maxPlayers = 2;
+  const { gameId, maxPlayers } = useGameRoom();
 
   const [isLoading, setIsLoading] = useState(false);
-  const { readyCount, totalPlayers, allReady } = useMemo(() => {
+  const { readyCount, allReady } = useMemo(() => {
     const nonHostTracks = tracks.filter((t) => !t?.participant?.isLocal);
     const total = nonHostTracks.length;
     const ready = nonHostTracks.filter((t) => {

@@ -14,6 +14,7 @@ import { Tables } from "@/db/supabase/database.types";
 import { adminClient } from "@/lib/supabase/admin";
 import { computeSpeakingOrder, getNextSpeaker } from "@/lib/game/speakingOrder";
 import type { GameSessionState } from "@/types/game/type";
+import { FOULS } from "@/lib/constants/game";
 
 type ActionResult = { ok: true } | { ok: false; message: string };
 
@@ -485,6 +486,76 @@ export async function advanceToNextNominatedSpeaker(
       speaker_started_at: new Date().toISOString(),
     } as unknown as Record<string, unknown>)
     .eq("id", session.id);
+
+  if (updateErr) {
+    return { ok: false, message: updateErr.message };
+  }
+
+  return { ok: true };
+}
+
+/**
+ * Gives a foul to a player during DAY_PHASE.
+ * Only the host can give fouls. Maximum fouls is defined in FOULS.MAX_FOULS.
+ * When a player reaches max fouls, they can be eliminated (handled separately).
+ */
+export async function giveFoul(
+  gameId: string,
+  seatNumber: number
+): Promise<ActionResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  if (userError || !user) return { ok: false, message: "Not authenticated" };
+
+  const hostCheck = await verifyHost(gameId, user.id);
+  if (!hostCheck.ok) return hostCheck;
+
+  const { data: gameSession, error: sessionErr } = await adminClient
+    .from("game_sessions")
+    .select("*")
+    .eq("game_id", gameId)
+    .single();
+
+  if (sessionErr || !gameSession) {
+    return { ok: false, message: "Game session not found" };
+  }
+
+  const session = gameSession as unknown as GameSessionState;
+
+  // Only allow fouls during DAY_PHASE
+  if (session.game_phase !== "day_phase") {
+    return { ok: false, message: "Fouls only allowed during day phase" };
+  }
+
+  // Get the player by seat number
+  const { data: player, error: playerErr } = await adminClient
+    .from("game_players")
+    .select("*")
+    .eq("game_id", gameId)
+    .eq("seat_number", seatNumber)
+    .single();
+
+  if (playerErr || !player) {
+    return { ok: false, message: "Player not found" };
+  }
+
+  const currentFouls = player.fouls ?? 0;
+
+  // Check if player already has max fouls
+  if (currentFouls >= FOULS.MAX_FOULS) {
+    return { ok: false, message: "Player already has maximum fouls" };
+  }
+
+  // Increment foul count
+  const { error: updateErr } = await adminClient
+    .from("game_players")
+    .update({
+      fouls: currentFouls + 1,
+    })
+    .eq("id", player.id);
 
   if (updateErr) {
     return { ok: false, message: updateErr.message };

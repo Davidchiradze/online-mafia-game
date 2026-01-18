@@ -97,3 +97,13 @@ export const NOMINATED_PLAYERS_SPEAKING = {
   /** Maximum speaking time per nominated player in seconds */
   MAX_SPEAKING_TIME_SECONDS: 30,
 } as const;
+
+// Foul Constants
+export const FOULS = {
+  /** Maximum number of fouls a player can receive */
+  MAX_FOULS: 3,
+  /** Duration in milliseconds for foul speaking (5 seconds) */
+  FOUL_SPEAK_DURATION_MS: 5 * 1000,
+  /** Duration in seconds for foul speaking */
+  FOUL_SPEAK_DURATION_SECONDS: 5,
+} as const;
