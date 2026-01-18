@@ -144,6 +144,10 @@ export default function LobbyPage() {
             <GameTable
               data={sessions}
               onRowClick={(s) => handleGameRowClick(s)}
+              userId={user?.id}
+              onRoomDeleted={(gameId) => {
+                setSessions((prev) => prev.filter((s) => s.id !== gameId));
+              }}
             />
           </div>
         </div>

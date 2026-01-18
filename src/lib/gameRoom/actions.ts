@@ -562,3 +562,39 @@ export async function transferHost(
 
   return { ok: true } as const;
 }
+
+export async function deleteGameRoom(
+  gameId: string
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, message: "Not authenticated" };
+
+  // Check if user is the host
+  const { data: gameRow, error: gameErr } = await supabase
+    .from("games")
+    .select("host_id")
+    .eq("id", gameId)
+    .single<Tables<"games">>();
+  if (gameErr || !gameRow) return { ok: false, message: "Game not found" };
+  if (gameRow.host_id !== user.id) return { ok: false, message: "Forbidden" };
+
+  // Delete the game (cascade should handle related records)
+  const { error: deleteErr } = await adminClient
+    .from("games")
+    .delete()
+    .eq("id", gameId);
+  if (deleteErr) return { ok: false, message: deleteErr.message } as const;
+
+  // Also delete the LiveKit room if it exists
+  try {
+    const { deleteLivekitRoom } = await import("../liveKit/actions");
+    await deleteLivekitRoom(gameId);
+  } catch {
+    // Ignore errors if LiveKit room doesn't exist
+  }
+
+  return { ok: true } as const;
+}

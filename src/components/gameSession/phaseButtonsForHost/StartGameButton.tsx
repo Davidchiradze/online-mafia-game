@@ -4,15 +4,19 @@ import React, { useMemo, useState } from "react";
 import { startGame, createGameSession } from "@/lib/gameSession/actions";
 import { useTracks } from "@livekit/components-react";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
+import { Track } from "livekit-client";
 
 /**
  * Button to start the game session
  * Handles game initialization and session creation
  */
 const StartGameButton = () => {
-  const tracks = useTracks();
-  // const maxPlayers = 2;
-  const { gameId, maxPlayers } = useGameRoom();
+  const tracks = useTracks(
+    [{ source: Track.Source.Camera, withPlaceholder: true }],
+    { onlySubscribed: false }
+  );
+  const maxPlayers = 2;
+  const { gameId } = useGameRoom();
 
   const [isLoading, setIsLoading] = useState(false);
   const { readyCount, allReady } = useMemo(() => {

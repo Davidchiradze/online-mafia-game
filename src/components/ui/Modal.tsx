@@ -32,6 +32,7 @@ export default function Modal({
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div
+        onClick={(e) => e.stopPropagation()}
         className={`relative w-full ${sizeClass[size]} rounded-2xl bg-white dark:bg-gray-900 p-6 shadow-2xl border border-gray-200 dark:border-gray-800`}
       >
         <div className="flex items-start justify-between">

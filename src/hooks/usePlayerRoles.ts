@@ -60,7 +60,7 @@ export function usePlayerRoles(
   }, [gameId, userId, enabled]);
 
   // Subscribe to role changes and refetch when they occur
-  usePlayerRolesListener(gameId, fetchRoles, enabled);
+  // usePlayerRolesListener(gameId, fetchRoles, enabled);
 
   // Initial fetch
   useEffect(() => {
