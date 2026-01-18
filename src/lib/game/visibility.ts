@@ -99,9 +99,16 @@ export function canSeeParticipant(
 
   // DON CHOOSES RIGHT HAND: Only Don can see everyone, others see no one (except host)
   if (gamePhase === "don_chooses_right_hand") {
+    const mafiaRoles: Role[] = ["DON", "MAFIA", "MAFIA_RIGHT_HAND"];
+
     if (isViewerHost) return true; // Host sees everyone
-    if (isTargetHost && viewerRole === "DON") return true; // Don sees host
-    if (viewerRole === "DON") return true; // Don sees everyone
+    if (isTargetHost && mafiaRoles.includes(viewerRole)) return true; // Mafia see host
+
+    // Mafia members see each other
+    if (mafiaRoles.includes(viewerRole) && mafiaRoles.includes(targetRole)) {
+      return true;
+    }
+
     return false;
   }
 
@@ -210,6 +217,7 @@ function getAwakeRoles(gamePhase: GamePhase): Role[] {
       return ["DON", "MAFIA", "MAFIA_RIGHT_HAND"];
 
     case "don_chooses_right_hand":
+      return ["DON", "MAFIA", "MAFIA_RIGHT_HAND"];
     case "don_checks_for_detective":
       return ["DON"];
 
