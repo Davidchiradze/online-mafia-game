@@ -28,6 +28,7 @@ import {
   useFoulSpeak,
   useSpeakingProgress,
   useMafiaTargetSelection,
+  useYakuzaTargetSelection,
 } from "@/hooks/game";
 
 // Components
@@ -39,9 +40,11 @@ import FoulButton from "@/components/game/FoulButton";
 import FoulSpeakButton from "@/components/game/FoulSpeakButton";
 import FoulDisplay from "@/components/game/FoulDisplay";
 import MafiaKillButton from "@/components/game/MafiaKillButton";
+import YakuzaKillButton from "@/components/game/YakuzaKillButton";
 import ParticipantMenuButton from "./ParticipantMenuButton";
 import KillConfirmModal from "./KillConfirmModal";
 import MafiaTargetIndicator from "./MafiaTargetIndicator";
+import YakuzaTargetIndicator from "./YakuzaTargetIndicator";
 import SpeakingProgressBar from "./SpeakingProgressBar";
 
 export default function ParticipantComponent({
@@ -169,6 +172,19 @@ export default function ParticipantComponent({
     shouldShowMafiaTargetIndicator,
     canShowMafiaKillButton,
   } = useMafiaTargetSelection(
+    gameSessionState,
+    player.seat_number,
+    isViewerHost,
+    isTargetHost,
+    player.is_alive !== false
+  );
+
+  // Yakuza target selection
+  const {
+    isYakuzaTargetSelected,
+    shouldShowYakuzaTargetIndicator,
+    canShowYakuzaKillButton,
+  } = useYakuzaTargetSelection(
     gameSessionState,
     player.seat_number,
     isViewerHost,
@@ -341,6 +357,23 @@ export default function ParticipantComponent({
       {shouldShowMafiaTargetIndicator &&
         !canShowMafiaKillButton &&
         player.seat_number != null && <MafiaTargetIndicator />}
+
+      {/* Yakuza kill button */}
+      {canShowYakuzaKillButton && player.seat_number != null && (
+        <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+          <div className="pointer-events-auto">
+            <YakuzaKillButton
+              seatNumber={player.seat_number}
+              isSelected={isYakuzaTargetSelected}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Yakuza target indicator for host */}
+      {shouldShowYakuzaTargetIndicator &&
+        !canShowYakuzaKillButton &&
+        player.seat_number != null && <YakuzaTargetIndicator />}
 
       {/* Ready button */}
       {isLocal && !isTargetHost && !gameSessionState && (
