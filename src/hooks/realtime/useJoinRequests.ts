@@ -98,3 +98,4 @@ export function usePendingJoinRequests(
     };
   }, [gameId, onEvent, enabled]);
 }
+

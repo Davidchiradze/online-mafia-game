@@ -15,17 +15,11 @@ import type {
   GameSessionState,
   JoinRequest,
 } from "@/types/game/type";
-import { useLivekitRoom } from "@/hooks/useLivekitRoom";
-import { useGameSession } from "@/hooks/useGameSession";
-import { useMyJoinRequestStatus } from "@/hooks/useJoinRequests";
-import { useGameHostSubscription } from "@/hooks/useGameHostSubscription";
+import { useLivekitRoom, useLivekitConnect, useEnsurePlayerSeat, useJoinPermissionListener } from "@/hooks/livekit";
+import { useGameSession, useGamePlayers, usePlayerRoles } from "@/hooks/game";
+import { useMyJoinRequestStatus, useGameHostSubscription } from "@/hooks/realtime";
 import { JOIN_REQUEST_STATUSES } from "@/lib/constants/game";
 import { leaveGamePlayer } from "@/lib/gamePlayers/actions";
-import { useJoinPermissionListener } from "@/hooks/useJoinPermissionListener";
-import { useEnsurePlayerSeat } from "@/hooks/useEnsurePlayerSeat";
-import { useLivekitConnect } from "@/hooks/useLivekitConnect";
-import { useGamePlayers } from "@/hooks/useGamePlayers";
-import { usePlayerRoles } from "@/hooks/usePlayerRoles";
 import { Tables } from "@/db/supabase/database.types";
 import type { PlayerRolesMap } from "@/types/game/type";
 

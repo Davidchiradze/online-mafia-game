@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { DAY_PHASE_SPEAKING } from "@/lib/constants/game";
 import { calculateRemainingTime } from "@/lib/game/speakingOrder";
-import type { GameSessionState } from "@/types/game/type";
 
 /**
  * Hook to track speaking timer progress.
@@ -38,3 +37,4 @@ export function useSpeakingProgress(
 
   return progress;
 }
+

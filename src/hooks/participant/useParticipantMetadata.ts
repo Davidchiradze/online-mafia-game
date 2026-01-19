@@ -50,3 +50,4 @@ export function useParticipantMetadata(
 
   return metadata;
 }
+

@@ -144,3 +144,4 @@ export function useParticipantVisibility(
     isViewerDead: !viewerIsAlive,
   };
 }
+

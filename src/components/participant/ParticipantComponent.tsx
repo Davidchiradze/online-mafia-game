@@ -14,17 +14,21 @@ import { Tables } from "@/db/supabase/database.types";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 
 // Hooks
-import { useParticipantReady } from "@/hooks/useParticipantReady";
-import { useParticipantVisibility } from "@/hooks/useParticipantVisibility";
-import { useNomination } from "@/hooks/useNomination";
-import { useFoulSpeak } from "@/hooks/useFoulSpeak";
-import { useSpeakingProgress } from "@/hooks/useSpeakingState";
-import { useParticipantState } from "@/hooks/useParticipantState";
-import { useParticipantMenuActions } from "@/hooks/useParticipantMenuActions";
-import { useParticipantKill } from "@/hooks/useParticipantKill";
-import { useMobileReady } from "@/hooks/useMobileReady";
-import { useParticipantSpeaking } from "@/hooks/useParticipantSpeaking";
-import { useMafiaTargetSelection } from "@/hooks/useMafiaTargetSelection";
+import {
+  useParticipantReady,
+  useParticipantVisibility,
+  useParticipantState,
+  useParticipantMenuActions,
+  useParticipantKill,
+  useMobileReady,
+  useParticipantSpeaking,
+} from "@/hooks/participant";
+import {
+  useNomination,
+  useFoulSpeak,
+  useSpeakingProgress,
+  useMafiaTargetSelection,
+} from "@/hooks/game";
 
 // Components
 import { VisibilityState } from "@/lib/game/visibility";

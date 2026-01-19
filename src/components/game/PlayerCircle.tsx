@@ -3,7 +3,7 @@
 import { TrackReferenceOrPlaceholder } from "@livekit/components-react";
 import React from "react";
 import ParticipantComponent from "../participant/ParticipantComponent";
-import { usePlayerSlots } from "../../hooks/usePlayerSlots";
+import { usePlayerSlots } from "@/hooks/game";
 import GamePhaseControls from "./GamePhaseControls";
 import { Tables } from "@/db/supabase/database.types";
 import { useGameRoom } from "@/lib/context/gameRoomContext";

@@ -41,3 +41,4 @@ export function useGameSessionListener(
     };
   }, [enabled, gameId, setGameSessionState]);
 }
+

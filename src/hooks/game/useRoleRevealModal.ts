@@ -73,4 +73,3 @@ export function useRoleRevealModal(): UseRoleRevealModalReturn {
     closeRoleModal,
   };
 }
-

@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import type { PlayerRolesMap } from "@/types/game/type";
 
 /**
  * Hook to subscribe to game_player_roles table changes (INSERT/UPDATE)
@@ -40,3 +39,4 @@ export function usePlayerRolesListener(
     };
   }, [enabled, gameId, refetchRoles]);
 }
+

@@ -7,8 +7,7 @@ import {
   getGameSession,
   startGame as startGameAction,
 } from "@/lib/gameSession/actions";
-import { useGameSessionListener } from "./useGameSessionListener";
-// import { useGamePlayerListener } from "./useGamePlayerListener";
+import { useGameSessionListener } from "../realtime/useGameSessionListener";
 
 export function useGameSession(
   gameId: string,
@@ -21,9 +20,6 @@ export function useGameSession(
 
   // Subscribe to game_sessions table updates
   useGameSessionListener(gameId, setGameSessionState, enabled);
-
-  // Subscribe to game_players table updates for current user
-  // useGamePlayerListener(gameId, userId, setGameSessionState, enabled);
 
   useEffect(() => {
     if (!gameId || !enabled) return;
@@ -43,7 +39,7 @@ export function useGameSession(
     const res2 = await createGameSession(gameId);
     if (!res2?.ok) return { ok: false as const, message: res2?.message };
     return { ok: true as const, gameSessionState };
-  }, [gameId, gameSessionState]);
+  }, [gameId, gameSessionState, enabled]);
 
   return {
     gameSessionState,

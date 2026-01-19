@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { FormProvider } from "react-hook-form";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { useAuthForm } from "@/hooks/useAuthForm";
+import { useAuthForm } from "@/hooks/auth";
 import Link from "next/link";
 
 export default function SignInForm() {
@@ -105,7 +105,7 @@ export default function SignInForm() {
 
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Dont have an account?{" "}
+            Dont have an account?{" "}
             <Link
               href="/auth/signup"
               className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"

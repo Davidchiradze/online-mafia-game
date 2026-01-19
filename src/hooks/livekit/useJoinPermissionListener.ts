@@ -40,3 +40,4 @@ export function useJoinPermissionListener({
     };
   }, [gameId, room, hasPlayerRecord, setJoinStatus]);
 }
+

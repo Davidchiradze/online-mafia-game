@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { getFilteredPlayerRoles } from "@/lib/gamePlayerRoles/actions";
-import { usePlayerRolesListener } from "./usePlayerRolesListener";
 import type { PlayerRolesMap } from "@/types/game/type";
 
 /**
@@ -59,9 +58,6 @@ export function usePlayerRoles(
     }
   }, [gameId, userId, enabled]);
 
-  // Subscribe to role changes and refetch when they occur
-  // usePlayerRolesListener(gameId, fetchRoles, enabled);
-
   // Initial fetch
   useEffect(() => {
     fetchRoles();
@@ -91,3 +87,4 @@ export function usePlayerRoles(
     refetch: fetchRoles,
   };
 }
+

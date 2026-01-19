@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { GameSessionState } from "@/types/game/type";
-import { useMafiaKillAuthority } from "@/hooks/useMafiaKillAuthority";
+import { useMafiaKillAuthority } from "./useMafiaKillAuthority";
 
 export interface MafiaTargetSelectionResult {
   hasMafiaKillAuthority: boolean;
@@ -62,3 +62,4 @@ export function useMafiaTargetSelection(
     canShowMafiaKillButton,
   };
 }
+

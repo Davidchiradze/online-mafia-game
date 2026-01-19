@@ -32,3 +32,4 @@ export function useGameHostSubscription(
     };
   }, [gameId, onChange, enabled]);
 }
+
