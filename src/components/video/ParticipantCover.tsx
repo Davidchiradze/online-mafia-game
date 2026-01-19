@@ -3,7 +3,7 @@
  *
  * This component is displayed instead of the participant's video during phases where
  * they should be hidden (e.g., night phase, role selection, etc.)
- * Also handles disconnected state with network issues UI.
+ * Also handles disconnected state with network issues UI and dead player state.
  */
 
 import LoadingSpinner from "../ui/LoadingSpinner";
@@ -15,13 +15,39 @@ interface ParticipantCoverProps {
   className?: string;
   /** Whether the participant is disconnected (shows network issues UI) */
   isDisconnected?: boolean;
+  /** Whether the participant is dead (shows permanent dead overlay) */
+  isDead?: boolean;
 }
 
 export default function ParticipantCover({
   message = "",
   className = "",
   isDisconnected = false,
+  isDead = false,
 }: ParticipantCoverProps) {
+  // Dead state takes priority - show permanent dead overlay
+  if (isDead) {
+    return (
+      <div
+        className={`absolute inset-0 z-10 flex flex-col items-center justify-center bg-gradient-to-br from-gray-800 via-gray-900 to-black pointer-events-none ${className}`}
+      >
+        <div className="flex flex-col items-center justify-center gap-2">
+          {/* Skull icon */}
+          <div className="text-5xl md:text-7xl grayscale opacity-80">💀</div>
+          <div className="text-sm md:text-base text-gray-400 font-semibold uppercase tracking-wider">
+            Dead
+          </div>
+        </div>
+
+        {/* Grayscale vignette overlay */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_transparent_0%,_rgba(0,0,0,0.6)_100%)] pointer-events-none" />
+
+        {/* Subtle cross pattern for visual interest */}
+        <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(255,255,255,0.1)_10px,rgba(255,255,255,0.1)_20px)]" />
+      </div>
+    );
+  }
+
   if (isDisconnected) {
     return (
       <div

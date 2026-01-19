@@ -12,6 +12,7 @@ import { useEffect, useRef, useState } from "react";
 import FloatingOptions from "./FloatingOptions";
 import { useRoleAssignmentNotification } from "@/hooks/useRoleAssignmentNotification";
 import { useSpeakingAutoMute } from "@/hooks/useSpeakingAutoMute";
+import { useDeadPlayerMute } from "@/hooks/useDeadPlayerMute";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import RoleRevealModal from "@/components/modals/RoleRevealModal";
@@ -42,6 +43,10 @@ export default function LiveKitTestComponent({
   // Auto mute/unmute based on speaking round state
   // Players listen to current_speaker_index and mute/unmute themselves
   useSpeakingAutoMute(room, gameSessionState, players, userId, isHost);
+
+  // Disable microphone and camera for dead players
+  // Dead players cannot speak or show video for the rest of the game
+  useDeadPlayerMute(room, players, userId);
 
   useEffect(() => {
     const handleFullscreenChange = () => {

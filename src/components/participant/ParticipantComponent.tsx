@@ -6,25 +6,39 @@ import {
   TrackToggle,
 } from "@livekit/components-react";
 import { Track } from "livekit-client";
-import { MicOffIcon, MicOnIcon, MoreVerticalIcon } from "@/assets/icons";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { kickPlayer, transferHost } from "@/lib/gameRoom/actions";
-import { useNomination } from "@/hooks/useNomination";
-import { removeParticipantFromRoom } from "@/lib/liveKit/actions";
-import PopupMenu from "@/components/ui/PopupMenu";
-import { useParticipantReady } from "@/hooks/useParticipantReady";
-import ReadyButton from "@/components/ui/ReadyButton";
+import { MicOffIcon, MicOnIcon } from "@/assets/icons";
+import { useCallback } from "react";
+import { Tables } from "@/db/supabase/database.types";
+
+// Context
 import { useGameRoom } from "@/lib/context/gameRoomContext";
+
+// Hooks
+import { useParticipantReady } from "@/hooks/useParticipantReady";
 import { useParticipantVisibility } from "@/hooks/useParticipantVisibility";
+import { useNomination } from "@/hooks/useNomination";
+import { useFoulSpeak } from "@/hooks/useFoulSpeak";
+import { useSpeakingProgress } from "@/hooks/useSpeakingState";
+import { useParticipantState } from "@/hooks/useParticipantState";
+import { useParticipantMenuActions } from "@/hooks/useParticipantMenuActions";
+import { useParticipantKill } from "@/hooks/useParticipantKill";
+import { useMobileReady } from "@/hooks/useMobileReady";
+import { useParticipantSpeaking } from "@/hooks/useParticipantSpeaking";
+import { useMafiaTargetSelection } from "@/hooks/useMafiaTargetSelection";
+
+// Components
 import { VisibilityState } from "@/lib/game/visibility";
 import ParticipantCover from "@/components/video/ParticipantCover";
-import { Tables } from "@/db/supabase/database.types";
-import { useSpeakingProgress } from "@/hooks/useSpeakingState";
+import ReadyButton from "@/components/ui/ReadyButton";
 import NominationButton from "@/components/game/NominationButton";
 import FoulButton from "@/components/game/FoulButton";
 import FoulSpeakButton from "@/components/game/FoulSpeakButton";
 import FoulDisplay from "@/components/game/FoulDisplay";
-import { useFoulSpeak } from "@/hooks/useFoulSpeak";
+import MafiaKillButton from "@/components/game/MafiaKillButton";
+import ParticipantMenuButton from "./ParticipantMenuButton";
+import KillConfirmModal from "./KillConfirmModal";
+import MafiaTargetIndicator from "./MafiaTargetIndicator";
+import SpeakingProgressBar from "./SpeakingProgressBar";
 
 export default function ParticipantComponent({
   gameId,
@@ -43,18 +57,18 @@ export default function ParticipantComponent({
 }) {
   const { gameSessionState, room } = useGameRoom();
 
-  const participant = trackRef?.participant;
-  const isLocal = Boolean(participant?.isLocal);
-  const isMicEnabled = Boolean(participant?.isMicrophoneEnabled);
-  const displayName: string | undefined =
-    participant?.name || participant?.identity;
-  const participantId: string | undefined = participant?.identity;
-  const isViewerHost = currentUserId === hostUserId;
-  const isTargetHost = participantId === hostUserId;
-  const [menuOpen, setMenuOpen] = useState<boolean>(false);
-  const [isMobileReadyVisible, setIsMobileReadyVisible] =
-    useState<boolean>(false);
-  const mobileReadyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // Basic participant state
+  const {
+    isLocal,
+    isMicEnabled,
+    displayName,
+    participantId,
+    isViewerHost,
+    isTargetHost,
+    isDisconnected,
+  } = useParticipantState(trackRef, player, currentUserId, hostUserId);
+
+  // Ready state
   const {
     isReady,
     markReady,
@@ -62,32 +76,43 @@ export default function ParticipantComponent({
     isLoading: isLoadingReady,
   } = useParticipantReady(gameId, participantId, trackRef);
 
-  // Check if participant is disconnected
-  const isDisconnected = useMemo(() => {
-    return player?.state === "disconnected";
-  }, [player]);
+  // Visibility state
+  const { visibilityState, coverMessage, isTargetDead } =
+    useParticipantVisibility(trackRef, player);
 
-  // Determine visibility based on game phase and roles
-  const { visibilityState, coverMessage } = useParticipantVisibility(trackRef);
-
-  // Speaking state - check if this player is the current speaker
-  const isSpeaking = useMemo(() => {
-    if (!gameSessionState) return false;
-    const currentSpeakerSeat = gameSessionState.current_speaker_index;
-    return (
-      currentSpeakerSeat != null && player.seat_number === currentSpeakerSeat
-    );
-  }, [gameSessionState, player.seat_number]);
-
-  // Speaking progress timer
-
-  //useSpeakingProgress
-  const speakingProgress = useSpeakingProgress(
-    gameSessionState?.speaker_started_at,
-    isSpeaking
+  // Menu actions (kick, make host)
+  const {
+    menuOpen,
+    setMenuOpen,
+    canShowLobbyMenu,
+    canShowGameMenu,
+    onKick,
+    onMakeHost,
+  } = useParticipantMenuActions(
+    gameId,
+    participantId,
+    hostUserId,
+    isViewerHost,
+    gameSessionState,
+    player.is_alive !== false
   );
 
-  // Nomination state and effects
+  // Kill actions
+  const {
+    killModalOpen,
+    setKillModalOpen,
+    isKilling,
+    onKillClick,
+    onConfirmKill,
+  } = useParticipantKill(gameId, participantId, setMenuOpen);
+
+  // Mobile ready visibility
+  const { isMobileReadyVisible, handleTileClick } = useMobileReady(
+    isLocal,
+    isTargetHost
+  );
+
+  // Nomination state
   const {
     isNominated,
     showNominationEffect,
@@ -99,7 +124,23 @@ export default function ParticipantComponent({
     isTargetHost,
   });
 
-  // Foul-related functionality (speaking, display, button visibility)
+  // Speaking state
+  const { isSpeaking, boxShadowClass } = useParticipantSpeaking(
+    gameSessionState,
+    player.seat_number,
+    isMicEnabled,
+    isDayPhase,
+    isTargetHost,
+    isTargetDead
+  );
+
+  // Speaking progress
+  const speakingProgress = useSpeakingProgress(
+    gameSessionState?.speaker_started_at,
+    isSpeaking
+  );
+
+  // Foul-related functionality
   const {
     isFoulSpeaking,
     foulSpeakTimeLeft,
@@ -118,26 +159,20 @@ export default function ParticipantComponent({
     isViewerHost,
   });
 
-  const canShowMenu = useMemo(() => {
-    // Only show menu when viewer is host, a real participant exists, and it's not the host tile
-    return Boolean(
-      isViewerHost && participantId && participantId !== hostUserId
-    );
-  }, [isViewerHost, participantId, hostUserId]);
+  // Mafia target selection
+  const {
+    isMafiaTargetSelected,
+    shouldShowMafiaTargetIndicator,
+    canShowMafiaKillButton,
+  } = useMafiaTargetSelection(
+    gameSessionState,
+    player.seat_number,
+    isViewerHost,
+    isTargetHost,
+    player.is_alive !== false
+  );
 
-  const onKick = useCallback(async () => {
-    if (!participantId) return;
-    await kickPlayer(gameId, participantId);
-    await removeParticipantFromRoom(gameId, participantId);
-    setMenuOpen(false);
-  }, [gameId, participantId]);
-
-  const onMakeHost = useCallback(async () => {
-    if (!participantId) return;
-    await transferHost(gameId, participantId);
-    setMenuOpen(false);
-  }, [gameId, participantId]);
-
+  // Ready button handlers
   const onReady = useCallback(async () => {
     await markReady();
   }, [markReady]);
@@ -146,51 +181,16 @@ export default function ParticipantComponent({
     await markUnready();
   }, [markUnready]);
 
-  const handleTileClick = useCallback(() => {
-    // Only applicable for the local participant who isn't the host
-    if (!isLocal || isTargetHost) return;
-    // Show Ready button briefly on mobile/tap interactions
-    setIsMobileReadyVisible(true);
-    if (mobileReadyTimeoutRef.current)
-      clearTimeout(mobileReadyTimeoutRef.current);
-    mobileReadyTimeoutRef.current = setTimeout(() => {
-      setIsMobileReadyVisible(false);
-    }, 3000);
-  }, [isLocal, isTargetHost]);
-
-  useEffect(() => {
-    return () => {
-      if (mobileReadyTimeoutRef.current)
-        clearTimeout(mobileReadyTimeoutRef.current);
-    };
-  }, []);
-
-  // Detect if this participant is foul speaking (mic on but not active speaker during day phase)
-  // This is visible to ALL players since LiveKit syncs mic state to everyone
-  const isParticipantFoulSpeaking =
-    isMicEnabled && isDayPhase && !isSpeaking && !isTargetHost;
-
-  // Determine box shadow based on speaking state
-  const boxShadowClass = useMemo(() => {
-    if (isParticipantFoulSpeaking) {
-      // Red glow for foul speaking (visible to everyone)
-      return "shadow-[0_0_20px_4px_rgba(239,68,68,0.7)]";
-    }
-    if (isSpeaking) {
-      // Emerald glow for active speaker
-      return "shadow-[0_0_20px_4px_rgba(16,185,129,0.7)]";
-    }
-    return "";
-  }, [isParticipantFoulSpeaking, isSpeaking]);
-
   return (
     <div
       className={`relative w-full h-full flex flex-col items-stretch justify-stretch text-sm text-gray-200 group transition-shadow duration-300 overflow-hidden rounded-xl ${boxShadowClass}`}
       onMouseLeave={() => setMenuOpen(false)}
       onClick={handleTileClick}
     >
-      {/* Show network issues UI when disconnected, otherwise show cover or video based on visibility */}
-      {isDisconnected ? (
+      {/* Video / Cover layer */}
+      {visibilityState === VisibilityState.DEAD ? (
+        <ParticipantCover isDead={true} />
+      ) : isDisconnected ? (
         <ParticipantCover isDisconnected={true} />
       ) : visibilityState === VisibilityState.COVERED || !trackRef ? (
         <ParticipantCover message={coverMessage} />
@@ -201,12 +201,9 @@ export default function ParticipantComponent({
             trackRef={trackRef}
             style={{ height: "100%" }}
           />
-          {/* Dimmed overlay for sleeping players (host view) */}
           {visibilityState === VisibilityState.DIMMED && (
             <div className="absolute inset-0 z-[5] pointer-events-none">
-              {/* Blur + darken overlay */}
               <div className="absolute inset-0 backdrop-blur-sm bg-slate-900/50" />
-              {/* Sleeping indicator */}
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-4xl md:text-5xl opacity-80 animate-pulse">
                   💤
@@ -216,6 +213,8 @@ export default function ParticipantComponent({
           )}
         </div>
       )}
+
+      {/* Microphone indicator */}
       {(!gameSessionState || (isLocal && isTargetHost)) &&
         (isLocal ? (
           <div className="absolute left-1 top-1 md:left-2 md:top-2 z-10 scale-90 md:scale-100">
@@ -230,6 +229,8 @@ export default function ParticipantComponent({
             )}
           </div>
         ))}
+
+      {/* Seat number / Display name badge */}
       <div
         className={`absolute bottom-1 left-1 md:bottom-2 md:left-2 z-10 rounded-full border backdrop-blur px-2 py-0.5 md:px-3 md:py-1 text-[10px] md:text-xs font-medium transition-all duration-200 ${
           showNominationEffect
@@ -243,50 +244,72 @@ export default function ParticipantComponent({
             : playerIndex
           : displayName || (playerIndex === 13 ? "Host" : playerIndex)}
       </div>
-      {canShowMenu && !gameSessionState && (
-        <div className="absolute right-1 top-1 md:right-2 md:top-2 z-20">
-          <button
-            type="button"
-            aria-label="Participant settings"
-            onClick={() => setMenuOpen((p) => !p)}
-            className="rounded-md border border-white/10 bg-black/40 backdrop-blur p-1 md:p-1.5 text-white opacity-0 group-hover:opacity-100 transition"
-          >
-            <MoreVerticalIcon width={16} height={16} />
-          </button>
 
-          <PopupMenu
-            open={menuOpen}
-            onClose={() => setMenuOpen(false)}
-            items={[
-              {
-                label: "Kick player",
-                onClick: onKick,
-                className: "text-red-600 dark:text-red-400",
-              },
-              { label: "Make host", onClick: onMakeHost },
-            ]}
-            className="absolute right-0 mt-2 w-44"
-          />
-        </div>
+      {/* Lobby menu - kick/make host */}
+      {canShowLobbyMenu && (
+        <ParticipantMenuButton
+          menuOpen={menuOpen}
+          onToggleMenu={() => setMenuOpen((p) => !p)}
+          onCloseMenu={() => setMenuOpen(false)}
+          items={[
+            {
+              label: "Kick player",
+              onClick: onKick,
+              className: "text-red-600 dark:text-red-400",
+            },
+            { label: "Make host", onClick: onMakeHost },
+          ]}
+          ariaLabel="Participant settings"
+        />
       )}
-      {/* Ready indicator (top-right) - only show before game starts */}
+
+      {/* Game menu - kill action */}
+      {canShowGameMenu && (
+        <ParticipantMenuButton
+          menuOpen={menuOpen}
+          onToggleMenu={() => setMenuOpen((p) => !p)}
+          onCloseMenu={() => setMenuOpen(false)}
+          items={[
+            {
+              label: "Kill",
+              onClick: onKillClick,
+              className: "text-red-600 dark:text-red-400",
+            },
+          ]}
+          ariaLabel="Player actions"
+        />
+      )}
+
+      {/* Kill confirmation modal */}
+      <KillConfirmModal
+        open={killModalOpen}
+        onClose={() => setKillModalOpen(false)}
+        onConfirm={onConfirmKill}
+        isKilling={isKilling}
+        seatNumber={player.seat_number}
+      />
+
+      {/* Ready indicator */}
       {!gameSessionState && isReady && (
         <div className="absolute right-1 top-[34px] md:right-2 md:top-2 z-20 w-5 h-5 md:w-6 md:h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px] md:text-xs font-bold shadow">
           ✓
         </div>
       )}
-      {/* Nomination button - visible only to host during day phase */}
-      {canShowNominationButton && player.seat_number != null && (
-        <div className="absolute left-[30px] -translate-x-1/2 top-1 md:top-2 z-20">
-          <NominationButton
-            seatNumber={player.seat_number}
-            isNominated={isNominated}
-          />
-        </div>
-      )}
 
-      {/* Foul button - visible only to host during day phase */}
-      {canShowFoulButton && player.seat_number != null && (
+      {/* Nomination button */}
+      {canShowNominationButton &&
+        player.seat_number != null &&
+        !isTargetDead && (
+          <div className="absolute left-[30px] -translate-x-1/2 top-1 md:top-2 z-20">
+            <NominationButton
+              seatNumber={player.seat_number}
+              isNominated={isNominated}
+            />
+          </div>
+        )}
+
+      {/* Foul button */}
+      {canShowFoulButton && player.seat_number != null && !isTargetDead && (
         <div className="absolute right-[0px] -translate-x-1/2 top-1 md:top-2 z-20">
           <FoulButton
             seatNumber={player.seat_number}
@@ -295,10 +318,27 @@ export default function ParticipantComponent({
         </div>
       )}
 
-      {/* Foul display - visible to everyone */}
-      <FoulDisplay foulCount={currentFouls} />
+      {/* Foul display */}
+      {!isTargetDead && <FoulDisplay foulCount={currentFouls} />}
 
-      {/* Local participant hover-ready/unready button (non-host) */}
+      {/* Mafia kill button */}
+      {canShowMafiaKillButton && player.seat_number != null && (
+        <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+          <div className="pointer-events-auto">
+            <MafiaKillButton
+              seatNumber={player.seat_number}
+              isSelected={isMafiaTargetSelected}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Mafia target indicator for host */}
+      {shouldShowMafiaTargetIndicator &&
+        !canShowMafiaKillButton &&
+        player.seat_number != null && <MafiaTargetIndicator />}
+
+      {/* Ready button */}
       {isLocal && !isTargetHost && !gameSessionState && (
         <div className="flex items-center justify-center absolute bottom-10 md:bottom-12 left-1/2 -translate-x-1/2 z-20">
           <ReadyButton
@@ -313,8 +353,8 @@ export default function ParticipantComponent({
         </div>
       )}
 
-      {/* Foul speak button - for local player to speak out of turn during day phase */}
-      {canShowFoulSpeakButton && (
+      {/* Foul speak button */}
+      {canShowFoulSpeakButton && !isTargetDead && (
         <div className="absolute right-1 top-1 md:right-2 md:top-2 z-20">
           <FoulSpeakButton
             onStartFoulSpeak={startFoulSpeak}
@@ -325,14 +365,9 @@ export default function ParticipantComponent({
         </div>
       )}
 
-      {/* Speaking progress bar underline */}
-      {isSpeaking && (
-        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-700/50 z-30">
-          <div
-            className="h-full bg-emerald-500 transition-all duration-100 ease-linear"
-            style={{ width: `${100 - speakingProgress}%` }}
-          />
-        </div>
+      {/* Speaking progress bar */}
+      {isSpeaking && !isTargetDead && (
+        <SpeakingProgressBar progress={speakingProgress} />
       )}
     </div>
   );
