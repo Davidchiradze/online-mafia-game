@@ -447,3 +447,242 @@ export async function clearYakuzaTarget(gameId: string): Promise<ActionResult> {
 
   return { ok: true };
 }
+
+// ============================================================================
+// DOCTOR HEAL ACTIONS
+// ============================================================================
+
+/**
+ * Get the Doctor who has heal authority
+ *
+ * @param gameId - The game ID
+ * @returns The player_id of the Doctor if alive, or null
+ */
+async function getDoctorHealAuthority(
+  gameId: string
+): Promise<{ playerId: string; role: string } | null> {
+  // Get all game players with their roles
+  const { data: players, error: playersErr } = await adminClient
+    .from("game_players")
+    .select("player_id, is_alive")
+    .eq("game_id", gameId);
+
+  if (playersErr || !players) return null;
+
+  // Get roles for all players
+  const { data: roles, error: rolesErr } = await adminClient
+    .from("game_player_roles")
+    .select("player_id, role")
+    .eq("game_id", gameId);
+
+  if (rolesErr || !roles) return null;
+
+  // Create a map of player_id to role
+  const roleMap = new Map<string, string>();
+  for (const r of roles) {
+    roleMap.set(r.player_id, r.role);
+  }
+
+  // Find alive Doctor
+  for (const p of players) {
+    if (p.is_alive && p.player_id) {
+      const role = roleMap.get(p.player_id);
+      if (role === "DOCTOR") {
+        return { playerId: p.player_id, role };
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Check if the current user has Doctor heal authority
+ * Also returns which players have already been healed (cannot heal again)
+ */
+export async function checkDoctorHealAuthority(gameId: string): Promise<
+  | {
+      ok: true;
+      hasAuthority: boolean;
+      role: string | null;
+      healedPlayers: number[];
+    }
+  | { ok: false; message: string }
+> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  if (userError || !user) return { ok: false, message: "Not authenticated" };
+
+  const authority = await getDoctorHealAuthority(gameId);
+
+  // Get healed players list
+  const { data: gameSession, error: sessionErr } = await adminClient
+    .from("game_sessions")
+    .select("healed_players")
+    .eq("game_id", gameId)
+    .single();
+
+  const healedPlayers = gameSession?.healed_players || [];
+
+  if (!authority) {
+    return { ok: true, hasAuthority: false, role: null, healedPlayers };
+  }
+
+  return {
+    ok: true,
+    hasAuthority: authority.playerId === user.id,
+    role: authority.role,
+    healedPlayers,
+  };
+}
+
+/**
+ * Doctor heals a player during doctor_heals_player phase.
+ * - Doctor can only heal each player ONCE per game
+ * - Healed player is added to healed_players array
+ * - If healed player was in attempt_to_kill_players, they are removed from it
+ *
+ * @param gameId - The game ID
+ * @param targetSeatNumber - The seat number of the target player to heal
+ */
+export async function healPlayer(
+  gameId: string,
+  targetSeatNumber: number
+): Promise<ActionResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  if (userError || !user) return { ok: false, message: "Not authenticated" };
+
+  // Verify the current user has heal authority
+  const authority = await getDoctorHealAuthority(gameId);
+  if (!authority || authority.playerId !== user.id) {
+    return {
+      ok: false,
+      message: "You don't have authority to heal",
+    };
+  }
+
+  // Verify the game is in doctor_heals_player phase
+  const { data: gameSession, error: sessionErr } = await adminClient
+    .from("game_sessions")
+    .select("id, game_phase, attempt_to_kill_players, healed_players")
+    .eq("game_id", gameId)
+    .single();
+
+  if (sessionErr || !gameSession) {
+    return { ok: false, message: "Game session not found" };
+  }
+
+  if (gameSession.game_phase !== "doctor_heals_player") {
+    return { ok: false, message: "Not in doctor heal phase" };
+  }
+
+  // Verify target player exists and is alive
+  const { data: targetPlayer, error: targetErr } = await adminClient
+    .from("game_players")
+    .select("id, seat_number, is_alive, player_id")
+    .eq("game_id", gameId)
+    .eq("seat_number", targetSeatNumber)
+    .single();
+
+  if (targetErr || !targetPlayer) {
+    return { ok: false, message: "Target player not found" };
+  }
+
+  if (targetPlayer.is_alive === false) {
+    return { ok: false, message: "Cannot heal a dead player" };
+  }
+
+  // Check if this player has already been healed (can only heal each player once)
+  const healedPlayers = gameSession.healed_players || [];
+  if (healedPlayers.includes(targetSeatNumber)) {
+    return {
+      ok: false,
+      message: "This player has already been healed once this game",
+    };
+  }
+
+  // Add to healed_players
+  const updatedHealedPlayers = [...healedPlayers, targetSeatNumber];
+
+  // Remove from attempt_to_kill_players if present
+  const currentKillTargets = gameSession.attempt_to_kill_players || [];
+  const updatedKillTargets = currentKillTargets.map((target) =>
+    target === targetSeatNumber ? 0 : target
+  );
+
+  // Update game session
+  const { error: updateErr } = await adminClient
+    .from("game_sessions")
+    .update({
+      healed_players: updatedHealedPlayers,
+      attempt_to_kill_players: updatedKillTargets,
+    })
+    .eq("id", gameSession.id);
+
+  if (updateErr) {
+    return { ok: false, message: updateErr.message };
+  }
+
+  return { ok: true };
+}
+
+/**
+ * Clear Doctor's heal selection for current night (if they want to change their mind)
+ * Note: This only works for the current night's selection, not past heals
+ */
+export async function clearDoctorHeal(
+  gameId: string,
+  targetSeatNumber: number
+): Promise<ActionResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  if (userError || !user) return { ok: false, message: "Not authenticated" };
+
+  // Verify the current user has heal authority
+  const authority = await getDoctorHealAuthority(gameId);
+  if (!authority || authority.playerId !== user.id) {
+    return { ok: false, message: "You don't have authority to clear heal" };
+  }
+
+  // Get current game session
+  const { data: gameSession, error: sessionErr } = await adminClient
+    .from("game_sessions")
+    .select("id, game_phase, healed_players")
+    .eq("game_id", gameId)
+    .single();
+
+  if (sessionErr || !gameSession) {
+    return { ok: false, message: "Game session not found" };
+  }
+
+  if (gameSession.game_phase !== "doctor_heals_player") {
+    return { ok: false, message: "Not in doctor heal phase" };
+  }
+
+  // Remove the target from healed_players (only if healing was done this phase)
+  const healedPlayers = gameSession.healed_players || [];
+  const updatedHealedPlayers = healedPlayers.filter(
+    (seat) => seat !== targetSeatNumber
+  );
+
+  const { error: updateErr } = await adminClient
+    .from("game_sessions")
+    .update({ healed_players: updatedHealedPlayers })
+    .eq("id", gameSession.id);
+
+  if (updateErr) {
+    return { ok: false, message: updateErr.message };
+  }
+
+  return { ok: true };
+}

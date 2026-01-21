@@ -19,5 +19,10 @@ export { useYakuzaKillAuthority } from "./useYakuzaKillAuthority";
 export { useYakuzaTargetSelection } from "./useYakuzaTargetSelection";
 export type { YakuzaTargetSelectionResult } from "./useYakuzaTargetSelection";
 
+// Doctor heal
+export { useDoctorHealAuthority } from "./useDoctorHealAuthority";
+export { useDoctorHealSelection } from "./useDoctorHealSelection";
+export type { DoctorHealSelectionResult } from "./useDoctorHealSelection";
+
 export { useRoleAssignmentNotification } from "./useRoleAssignmentNotification";
 export { useRoleRevealModal } from "./useRoleRevealModal";

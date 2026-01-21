@@ -29,6 +29,7 @@ import {
   useSpeakingProgress,
   useMafiaTargetSelection,
   useYakuzaTargetSelection,
+  useDoctorHealSelection,
 } from "@/hooks/game";
 
 // Components
@@ -41,6 +42,7 @@ import FoulSpeakButton from "@/components/game/FoulSpeakButton";
 import FoulDisplay from "@/components/game/FoulDisplay";
 import MafiaKillButton from "@/components/game/MafiaKillButton";
 import YakuzaKillButton from "@/components/game/YakuzaKillButton";
+import DoctorHealButton from "@/components/game/DoctorHealButton";
 import ParticipantMenuButton from "./ParticipantMenuButton";
 import KillConfirmModal from "./KillConfirmModal";
 import MafiaTargetIndicator from "./MafiaTargetIndicator";
@@ -185,6 +187,15 @@ export default function ParticipantComponent({
     shouldShowYakuzaTargetIndicator,
     canShowYakuzaKillButton,
   } = useYakuzaTargetSelection(
+    gameSessionState,
+    player.seat_number,
+    isViewerHost,
+    isTargetHost,
+    player.is_alive !== false
+  );
+
+  // Doctor heal selection
+  const { canShowDoctorHealButton, isAlreadyHealed } = useDoctorHealSelection(
     gameSessionState,
     player.seat_number,
     isViewerHost,
@@ -374,6 +385,18 @@ export default function ParticipantComponent({
       {shouldShowYakuzaTargetIndicator &&
         !canShowYakuzaKillButton &&
         player.seat_number != null && <YakuzaTargetIndicator />}
+
+      {/* Doctor heal button */}
+      {canShowDoctorHealButton && player.seat_number != null && (
+        <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+          <div className="pointer-events-auto">
+            <DoctorHealButton
+              seatNumber={player.seat_number}
+              isAlreadyHealed={isAlreadyHealed}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Ready button */}
       {isLocal && !isTargetHost && !gameSessionState && (
