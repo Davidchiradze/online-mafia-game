@@ -105,10 +105,7 @@ export async function updateGameSession(
   return { ok: true };
 }
 
-export async function getGameSession(
-  gameId: string,
-  userId: string
-): Promise<
+export async function getGameSession(gameId: string): Promise<
   | {
       ok: true;
       gameSessionState: GameSessionState;

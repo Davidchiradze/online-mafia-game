@@ -69,12 +69,7 @@ export function GameRoomProvider({
   game: GameRoom;
   userId: string;
 }>) {
-  const {
-    id: gameId,
-    host_id,
-    max_players: maxPlayers,
-    game_status: gameStatus,
-  } = game;
+  const { id: gameId, host_id, max_players: maxPlayers } = game;
 
   const [currentHostId, setCurrentHostId] = useState<string | null>(host_id);
   const isHost = currentHostId === userId;

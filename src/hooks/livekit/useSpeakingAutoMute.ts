@@ -81,8 +81,8 @@ export function useSpeakingAutoMute(
     const isPaused = SPEAKING_STATE.isPaused(currentSpeakerIndex);
 
     // Speaking round is completed when current_speaker_index is COMPLETED (-99)
-    const isSpeakingRoundCompleted =
-      SPEAKING_STATE.isCompleted(currentSpeakerIndex);
+    // const isSpeakingRoundCompleted =
+    //   SPEAKING_STATE.isCompleted(currentSpeakerIndex);
 
     let shouldMute: boolean;
 

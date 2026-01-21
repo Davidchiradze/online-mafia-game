@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
     // Always return success to acknowledge webhook receipt
     // Even if processing fails, we don't want LiveKit to retry indefinitely
     return NextResponse.json({ received: true });
-  } catch (error) {
+  } catch {
     // Return success to prevent retries for malformed requests
     // But log the error for debugging
     return NextResponse.json(

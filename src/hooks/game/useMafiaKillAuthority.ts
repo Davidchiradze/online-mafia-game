@@ -14,7 +14,7 @@ import { GAME_PHASES } from "@/lib/constants/game";
  * 3. Authority goes to highest-ranking alive mafia member (DON > RIGHT_HAND > MAFIA)
  */
 export function useMafiaKillAuthority() {
-  const { gameId, userId, gameSessionState, isHost, players } = useGameRoom();
+  const { gameId, gameSessionState, isHost, players } = useGameRoom();
   const [hasAuthority, setHasAuthority] = useState(false);
   const [authorityRole, setAuthorityRole] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);

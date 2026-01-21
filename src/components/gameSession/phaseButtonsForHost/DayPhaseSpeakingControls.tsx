@@ -31,7 +31,6 @@ export default function DayPhaseSpeakingControls({
 
   const isNotStarted = speakingOrder.length === 0 || currentSpeaker === null;
   const isPaused = SPEAKING_STATE.isPaused(currentSpeaker);
-  const isActive = SPEAKING_STATE.isActive(currentSpeaker);
   const isCompleted = SPEAKING_STATE.isCompleted(currentSpeaker);
 
   const handleStart = useCallback(async () => {

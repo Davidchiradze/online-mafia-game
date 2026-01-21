@@ -5,7 +5,6 @@ import {
   Room,
   RoomServiceClient,
 } from "livekit-server-sdk";
-import { TrackType } from "@livekit/protocol";
 import { createClient } from "@/lib/supabase/server";
 
 export async function generateLivekitAccessToken(

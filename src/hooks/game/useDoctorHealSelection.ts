@@ -92,7 +92,6 @@ export function useDoctorHealSelection(
     hasDoctorHealAuthority,
     isTargetHost,
     isPlayerAlive,
-    isAlreadyHealed,
     isHealSelectedThisNight,
   ]);
 

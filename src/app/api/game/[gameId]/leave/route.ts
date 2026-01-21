@@ -1,10 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
-import { leaveGamePlayer } from "@/lib/gamePlayers/actions";
+import { NextResponse } from "next/server";
+// import { leaveGamePlayer } from "@/lib/gamePlayers/actions";
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ gameId: string }> }
-) {
+export async function POST() {
   //   try {
   //     const { gameId } = await params;
   //     const result = await leaveGamePlayer(gameId);

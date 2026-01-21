@@ -51,11 +51,11 @@ export default function GameTableRowActions({
     }
   }, [menuOpen]);
 
-  const handleEdit = () => {
-    setMenuOpen(false);
-    // TODO: Implement edit functionality
-    console.log("Edit room:", session.id);
-  };
+  // const handleEdit = () => {
+  //   setMenuOpen(false);
+  //   // TODO: Implement edit functionality
+  //   console.log("Edit room:", session.id);
+  // };
 
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation();

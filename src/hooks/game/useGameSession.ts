@@ -11,7 +11,7 @@ import { useGameSessionListener } from "../realtime/useGameSessionListener";
 
 export function useGameSession(
   gameId: string,
-  userId: string,
+  _userId: string,
   options?: { enabled?: boolean }
 ) {
   const enabled = options?.enabled ?? true;
@@ -24,12 +24,12 @@ export function useGameSession(
   useEffect(() => {
     if (!gameId || !enabled) return;
     const getGameSessionFunc = async () => {
-      const res = await getGameSession(gameId, userId);
+      const res = await getGameSession(gameId);
       if (!res?.ok) return;
       setGameSessionState(res.gameSessionState);
     };
     getGameSessionFunc();
-  }, [enabled, gameId, userId, gameSessionState?.game_phase]);
+  }, [enabled, gameId, gameSessionState?.game_phase]);
 
   const startGame = useCallback(async () => {
     if (!enabled || !gameId)

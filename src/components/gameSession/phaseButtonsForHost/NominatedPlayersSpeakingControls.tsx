@@ -31,7 +31,6 @@ export default function NominatedPlayersSpeakingControls({
   const nominatedPlayers = gameSessionState.nominated_players ?? [];
 
   const isPaused = SPEAKING_STATE.isPaused(currentSpeaker);
-  const isActive = SPEAKING_STATE.isActive(currentSpeaker);
 
   // Get the actual speaker seat (decode from paused state if needed)
   const actualSpeakerSeat = isPaused
@@ -93,7 +92,6 @@ export default function NominatedPlayersSpeakingControls({
           const speakerPosition = speakingOrder.indexOf(seat);
           const hasSpoken = speakerPosition < currentPosition - 1;
           const isCurrent = seat === actualSpeakerSeat;
-          const isPending = speakerPosition >= currentPosition;
 
           return (
             <div
