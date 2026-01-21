@@ -17,7 +17,8 @@ import type {
 } from "@/types/game/type";
 import { useLivekitRoom, useLivekitConnect, useEnsurePlayerSeat, useJoinPermissionListener } from "@/hooks/livekit";
 import { useGameSession, useGamePlayers, usePlayerRoles } from "@/hooks/game";
-import { useMyJoinRequestStatus, useGameHostSubscription } from "@/hooks/realtime";
+import { useMyJoinRequestStatus, useGameHostSubscription, useNightPhaseSessionListener } from "@/hooks/realtime";
+import type { NightPhaseSession } from "@/hooks/realtime";
 import { JOIN_REQUEST_STATUSES } from "@/lib/constants/game";
 import { leaveGamePlayer } from "@/lib/gamePlayers/actions";
 import { Tables } from "@/db/supabase/database.types";
@@ -45,6 +46,8 @@ type GameRoomContextValue = {
   playerRolesMap: PlayerRolesMap;
   /** Get role for a specific player (returns null if not visible to current user) */
   getRoleForUser: (targetUserId: string) => string | null;
+  /** Night phase session data - only available to host via RLS */
+  nightPhaseSession: NightPhaseSession | null;
 };
 
 const GameRoomContext = createContext<GameRoomContextValue | null>(null);
@@ -100,6 +103,13 @@ export function GameRoomProvider({
 
   // Game players subscription
   const players = useGamePlayers(gameId, hasPlayerRecord);
+
+  // Night phase session subscription (host only - RLS enforced)
+  // Only subscribe when game is in progress and user is host
+  const { currentNightSession: nightPhaseSession } = useNightPhaseSessionListener(
+    gameId,
+    isHost && hasPlayerRecord && !!gameSessionState
+  );
 
   // Player roles (fetched once, filtered by team visibility)
   const {
@@ -222,6 +232,7 @@ export function GameRoomProvider({
       viewerRole,
       playerRolesMap,
       getRoleForUser,
+      nightPhaseSession,
     }),
     [
       gameId,
@@ -242,6 +253,7 @@ export function GameRoomProvider({
       viewerRole,
       playerRolesMap,
       getRoleForUser,
+      nightPhaseSession,
     ]
   );
 

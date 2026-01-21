@@ -12,7 +12,11 @@ import { checkDoctorHealAuthority } from "@/lib/nightPhase/actions";
  * 2. User must be DOCTOR
  * 3. DOCTOR must be alive
  *
- * Also tracks which players have already been healed (cannot heal same player twice).
+ * Also tracks which players have already been healed across ALL nights
+ * (cannot heal same player twice per game).
+ * 
+ * Note: healedPlayers is fetched from the server via checkDoctorHealAuthority,
+ * which queries all night_phase_sessions for this game.
  */
 export function useDoctorHealAuthority() {
   const { gameId, gameSessionState, isHost, players } = useGameRoom();
@@ -63,11 +67,6 @@ export function useDoctorHealAuthority() {
     void refetch();
   }, [refetch, players]);
 
-  // Also track healed players from game session state for real-time updates
-  const healedPlayersFromState = useMemo(() => {
-    return gameSessionState?.healed_players || [];
-  }, [gameSessionState?.healed_players]);
-
   return {
     /** Whether the current user has authority to heal */
     hasAuthority,
@@ -78,10 +77,7 @@ export function useDoctorHealAuthority() {
     /** Whether the authority check is loading */
     isLoading,
     /** Players who have already been healed (seat numbers) - cannot heal again */
-    healedPlayers:
-      healedPlayersFromState.length > 0
-        ? healedPlayersFromState
-        : healedPlayers,
+    healedPlayers,
     /** Manually refetch authority */
     refetch,
   };

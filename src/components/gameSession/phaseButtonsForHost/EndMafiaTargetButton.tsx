@@ -24,7 +24,6 @@ const EndMafiaTargetButton = ({
       // TODO: Store selected target in attempt_to_kill_players array
       // Update game session to don_checks_for_detective phase
       const res = await updateGameSession(gameSessionState.id, {
-        ...gameSessionState,
         game_phase: GAME_PHASES[10], // "don_checks_for_detective"
       });
       if (!res?.ok) {

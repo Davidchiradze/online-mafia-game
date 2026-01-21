@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { startNominatedPlayersSpeaking } from "@/lib/dayPhase/actions";
 import { updateGameSession } from "@/lib/gameSession/actions";
+import { startNight } from "@/lib/nightPhase/actions";
 import { GameSessionState } from "@/types/game/type";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { GAME_PHASES } from "@/lib/constants/game";
@@ -14,7 +15,7 @@ type Props = {
 /**
  * Button to start the nominated players speaking phase.
  * If there are nominated players: starts self-justification phase.
- * If no players nominated: skips directly to night phase.
+ * If no players nominated: skips directly to night phase (starts new night).
  */
 const StartNominatedPlayersSpeakButton = ({ gameSessionState }: Props) => {
   const { gameId } = useGameRoom();
@@ -43,9 +44,15 @@ const StartNominatedPlayersSpeakButton = ({ gameSessionState }: Props) => {
     if (isLoading) return;
     setIsLoading(true);
     try {
-      // No nominations - skip directly to night phase
+      // Start a new night (increments night number, creates night_phase_sessions row)
+      const nightRes = await startNight(gameId);
+      if (!nightRes.ok) {
+        console.error("Failed to start night:", nightRes.message);
+        return;
+      }
+
+      // No nominations - skip directly to night phase (startNight already set current_night_number)
       const res = await updateGameSession(gameSessionState.id, {
-        ...gameSessionState,
         game_phase: GAME_PHASES[8], // "night_phase"
         // Reset speaking state
         current_speaker_index: null,

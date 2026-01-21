@@ -8,13 +8,107 @@
  * - Yakuza selecting target to kill
  * - Doctor healing
  * - Detective checking
+ *
+ * All night actions are stored in night_phase_sessions table (one row per night).
+ * This prevents players from seeing sensitive data through real-time subscriptions.
+ * Only the host can read night_phase_sessions due to RLS policy.
  */
 
 import { createClient } from "@/lib/supabase/server";
-import { Tables } from "@/db/supabase/database.types";
 import { adminClient } from "@/lib/supabase/admin";
 
 type ActionResult = { ok: true } | { ok: false; message: string };
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Get the current night number from game_sessions
+ */
+async function getCurrentNightNumber(gameId: string): Promise<number | null> {
+  const { data, error } = await adminClient
+    .from("game_sessions")
+    .select("current_night_number")
+    .eq("game_id", gameId)
+    .single();
+
+  if (error || !data) return null;
+  return data.current_night_number;
+}
+
+/**
+ * Get or create the night_phase_sessions row for the current night.
+ * Creates a new row if one doesn't exist for the current night.
+ */
+async function getOrCreateNightPhaseSession(
+  gameId: string,
+  nightNumber: number
+): Promise<{ id: string } | null> {
+  // Try to get existing row
+  const { data: existing } = await adminClient
+    .from("night_phase_sessions")
+    .select("id")
+    .eq("game_id", gameId)
+    .eq("night_number", nightNumber)
+    .single();
+
+  if (existing) return existing;
+
+  // Create new row
+  const { data: created, error } = await adminClient
+    .from("night_phase_sessions")
+    .insert({
+      game_id: gameId,
+      night_number: nightNumber,
+    })
+    .select("id")
+    .single();
+
+  if (error) {
+    console.error("Failed to create night phase session:", error);
+    return null;
+  }
+
+  return created;
+}
+
+/**
+ * Get the current night phase session (latest night)
+ */
+async function getCurrentNightPhaseSession(gameId: string) {
+  const nightNumber = await getCurrentNightNumber(gameId);
+  if (nightNumber === null || nightNumber === 0) return null;
+
+  const { data } = await adminClient
+    .from("night_phase_sessions")
+    .select("*")
+    .eq("game_id", gameId)
+    .eq("night_number", nightNumber)
+    .single();
+
+  return data;
+}
+
+/**
+ * Get all healed players across all nights for this game (for "heal once per game" rule)
+ */
+async function getAllHealedPlayers(gameId: string): Promise<number[]> {
+  const { data } = await adminClient
+    .from("night_phase_sessions")
+    .select("healed_player")
+    .eq("game_id", gameId);
+
+  if (!data) return [];
+
+  return data
+    .map((row) => row.healed_player)
+    .filter((p): p is number => p !== null);
+}
+
+// ============================================================================
+// MAFIA KILL ACTIONS
+// ============================================================================
 
 /**
  * Get the mafia member who has kill authority
@@ -103,7 +197,7 @@ export async function checkMafiaKillAuthority(
 /**
  * Mafia selects a target to kill during mafia_chooses_target phase.
  * Only the mafia member with kill authority can select a target.
- * The target is added to attempt_to_kill_players array.
+ * The target is stored in night_phase_sessions.mafia_target.
  *
  * @param gameId - The game ID
  * @param targetSeatNumber - The seat number of the target player
@@ -131,7 +225,7 @@ export async function selectMafiaTarget(
   // Verify the game is in mafia_chooses_target phase
   const { data: gameSession, error: sessionErr } = await adminClient
     .from("game_sessions")
-    .select("id, game_phase, attempt_to_kill_players")
+    .select("id, game_phase, current_night_number")
     .eq("game_id", gameId)
     .single();
 
@@ -141,6 +235,11 @@ export async function selectMafiaTarget(
 
   if (gameSession.game_phase !== "mafia_chooses_target") {
     return { ok: false, message: "Not in mafia target selection phase" };
+  }
+
+  const nightNumber = gameSession.current_night_number;
+  if (!nightNumber || nightNumber === 0) {
+    return { ok: false, message: "No active night" };
   }
 
   // Verify target player exists and is alive
@@ -159,28 +258,17 @@ export async function selectMafiaTarget(
     return { ok: false, message: "Cannot target a dead player" };
   }
 
-  // Check if target is a mafia member (can't kill own team)
-  if (targetPlayer.player_id) {
-    const { data: targetRole, error: roleErr } = await adminClient
-      .from("game_player_roles")
-      .select("role")
-      .eq("game_id", gameId)
-      .eq("player_id", targetPlayer.player_id)
-      .single();
+  // Get or create night phase session for current night
+  const nightSession = await getOrCreateNightPhaseSession(gameId, nightNumber);
+  if (!nightSession) {
+    return { ok: false, message: "Failed to get/create night phase session" };
   }
 
-  // Add target to attempt_to_kill_players array (replace any existing mafia selection)
-  // We store seat numbers, not player IDs
-  const currentTargets = gameSession.attempt_to_kill_players || [];
-
-  // For mafia, we'll use a convention: first slot is mafia target
-  // Remove any existing mafia target and add new one
-  const updatedTargets = [targetSeatNumber, ...currentTargets.slice(1)];
-
+  // Update mafia_target in night_phase_sessions
   const { error: updateErr } = await adminClient
-    .from("game_sessions")
-    .update({ attempt_to_kill_players: updatedTargets })
-    .eq("id", gameSession.id);
+    .from("night_phase_sessions")
+    .update({ mafia_target: targetSeatNumber, updated_at: new Date().toISOString() })
+    .eq("id", nightSession.id);
 
   if (updateErr) {
     return { ok: false, message: updateErr.message };
@@ -209,7 +297,7 @@ export async function clearMafiaTarget(gameId: string): Promise<ActionResult> {
   // Get current game session
   const { data: gameSession, error: sessionErr } = await adminClient
     .from("game_sessions")
-    .select("id, game_phase, attempt_to_kill_players")
+    .select("id, game_phase, current_night_number")
     .eq("game_id", gameId)
     .single();
 
@@ -221,14 +309,17 @@ export async function clearMafiaTarget(gameId: string): Promise<ActionResult> {
     return { ok: false, message: "Not in mafia target selection phase" };
   }
 
-  // Clear mafia target (first slot)
-  const currentTargets = gameSession.attempt_to_kill_players || [];
-  const updatedTargets = currentTargets.slice(1); // Remove first element (mafia target)
+  const nightNumber = gameSession.current_night_number;
+  if (!nightNumber || nightNumber === 0) {
+    return { ok: false, message: "No active night" };
+  }
 
+  // Update night_phase_sessions to clear mafia_target
   const { error: updateErr } = await adminClient
-    .from("game_sessions")
-    .update({ attempt_to_kill_players: updatedTargets })
-    .eq("id", gameSession.id);
+    .from("night_phase_sessions")
+    .update({ mafia_target: null, updated_at: new Date().toISOString() })
+    .eq("game_id", gameId)
+    .eq("night_number", nightNumber);
 
   if (updateErr) {
     return { ok: false, message: updateErr.message };
@@ -317,7 +408,7 @@ export async function checkYakuzaKillAuthority(
 /**
  * Yakuza selects a target to kill during yakuza_and_shogun_chooses_target phase.
  * Only YAKUZA can select a target (SHOGUN cannot kill).
- * The target is added to attempt_to_kill_players array (second slot).
+ * The target is stored in night_phase_sessions.yakuza_target.
  *
  * @param gameId - The game ID
  * @param targetSeatNumber - The seat number of the target player
@@ -345,7 +436,7 @@ export async function selectYakuzaTarget(
   // Verify the game is in yakuza_and_shogun_chooses_target phase
   const { data: gameSession, error: sessionErr } = await adminClient
     .from("game_sessions")
-    .select("id, game_phase, attempt_to_kill_players")
+    .select("id, game_phase, current_night_number")
     .eq("game_id", gameId)
     .single();
 
@@ -355,6 +446,11 @@ export async function selectYakuzaTarget(
 
   if (gameSession.game_phase !== "yakuza_and_shogun_chooses_target") {
     return { ok: false, message: "Not in Yakuza target selection phase" };
+  }
+
+  const nightNumber = gameSession.current_night_number;
+  if (!nightNumber || nightNumber === 0) {
+    return { ok: false, message: "No active night" };
   }
 
   // Verify target player exists and is alive
@@ -373,22 +469,17 @@ export async function selectYakuzaTarget(
     return { ok: false, message: "Cannot target a dead player" };
   }
 
-  // Add target to attempt_to_kill_players array (second slot for Yakuza)
-  // Convention: [0] = mafia target, [1] = yakuza target
-  // Using 0 as placeholder for empty slots (valid seats are 1-12)
-  const currentTargets = gameSession.attempt_to_kill_players || [];
-
-  // Ensure array has at least 2 slots (use 0 as placeholder for empty)
-  const updatedTargets = [...currentTargets];
-  while (updatedTargets.length < 2) {
-    updatedTargets.push(0);
+  // Get or create night phase session for current night
+  const nightSession = await getOrCreateNightPhaseSession(gameId, nightNumber);
+  if (!nightSession) {
+    return { ok: false, message: "Failed to get/create night phase session" };
   }
-  updatedTargets[1] = targetSeatNumber;
 
+  // Update yakuza_target in night_phase_sessions
   const { error: updateErr } = await adminClient
-    .from("game_sessions")
-    .update({ attempt_to_kill_players: updatedTargets })
-    .eq("id", gameSession.id);
+    .from("night_phase_sessions")
+    .update({ yakuza_target: targetSeatNumber, updated_at: new Date().toISOString() })
+    .eq("id", nightSession.id);
 
   if (updateErr) {
     return { ok: false, message: updateErr.message };
@@ -417,7 +508,7 @@ export async function clearYakuzaTarget(gameId: string): Promise<ActionResult> {
   // Get current game session
   const { data: gameSession, error: sessionErr } = await adminClient
     .from("game_sessions")
-    .select("id, game_phase, attempt_to_kill_players")
+    .select("id, game_phase, current_night_number")
     .eq("game_id", gameId)
     .single();
 
@@ -429,17 +520,17 @@ export async function clearYakuzaTarget(gameId: string): Promise<ActionResult> {
     return { ok: false, message: "Not in Yakuza target selection phase" };
   }
 
-  // Clear Yakuza target (second slot) - use 0 as "empty" placeholder
-  const currentTargets = gameSession.attempt_to_kill_players || [];
-  const updatedTargets = [...currentTargets];
-  if (updatedTargets.length >= 2) {
-    updatedTargets[1] = 0;
+  const nightNumber = gameSession.current_night_number;
+  if (!nightNumber || nightNumber === 0) {
+    return { ok: false, message: "No active night" };
   }
 
+  // Update night_phase_sessions to clear yakuza_target
   const { error: updateErr } = await adminClient
-    .from("game_sessions")
-    .update({ attempt_to_kill_players: updatedTargets })
-    .eq("id", gameSession.id);
+    .from("night_phase_sessions")
+    .update({ yakuza_target: null, updated_at: new Date().toISOString() })
+    .eq("game_id", gameId)
+    .eq("night_number", nightNumber);
 
   if (updateErr) {
     return { ok: false, message: updateErr.message };
@@ -518,14 +609,8 @@ export async function checkDoctorHealAuthority(gameId: string): Promise<
 
   const authority = await getDoctorHealAuthority(gameId);
 
-  // Get healed players list
-  const { data: gameSession, error: sessionErr } = await adminClient
-    .from("game_sessions")
-    .select("healed_players")
-    .eq("game_id", gameId)
-    .single();
-
-  const healedPlayers = gameSession?.healed_players || [];
+  // Get all healed players from all nights (for "heal once per game" rule)
+  const healedPlayers = await getAllHealedPlayers(gameId);
 
   if (!authority) {
     return { ok: true, hasAuthority: false, role: null, healedPlayers };
@@ -542,8 +627,7 @@ export async function checkDoctorHealAuthority(gameId: string): Promise<
 /**
  * Doctor heals a player during doctor_heals_player phase.
  * - Doctor can only heal each player ONCE per game
- * - Healed player is added to healed_players array
- * - If healed player was in attempt_to_kill_players, they are removed from it
+ * - Healed player is stored in night_phase_sessions.healed_player
  *
  * @param gameId - The game ID
  * @param targetSeatNumber - The seat number of the target player to heal
@@ -571,7 +655,7 @@ export async function healPlayer(
   // Verify the game is in doctor_heals_player phase
   const { data: gameSession, error: sessionErr } = await adminClient
     .from("game_sessions")
-    .select("id, game_phase, attempt_to_kill_players, healed_players")
+    .select("id, game_phase, current_night_number")
     .eq("game_id", gameId)
     .single();
 
@@ -581,6 +665,11 @@ export async function healPlayer(
 
   if (gameSession.game_phase !== "doctor_heals_player") {
     return { ok: false, message: "Not in doctor heal phase" };
+  }
+
+  const nightNumber = gameSession.current_night_number;
+  if (!nightNumber || nightNumber === 0) {
+    return { ok: false, message: "No active night" };
   }
 
   // Verify target player exists and is alive
@@ -599,8 +688,8 @@ export async function healPlayer(
     return { ok: false, message: "Cannot heal a dead player" };
   }
 
-  // Check if this player has already been healed (can only heal each player once)
-  const healedPlayers = gameSession.healed_players || [];
+  // Check if this player has already been healed (can only heal each player once per game)
+  const healedPlayers = await getAllHealedPlayers(gameId);
   if (healedPlayers.includes(targetSeatNumber)) {
     return {
       ok: false,
@@ -608,23 +697,17 @@ export async function healPlayer(
     };
   }
 
-  // Add to healed_players
-  const updatedHealedPlayers = [...healedPlayers, targetSeatNumber];
+  // Get or create night phase session for current night
+  const nightSession = await getOrCreateNightPhaseSession(gameId, nightNumber);
+  if (!nightSession) {
+    return { ok: false, message: "Failed to get/create night phase session" };
+  }
 
-  // Remove from attempt_to_kill_players if present
-  const currentKillTargets = gameSession.attempt_to_kill_players || [];
-  const updatedKillTargets = currentKillTargets.map((target) =>
-    target === targetSeatNumber ? 0 : target
-  );
-
-  // Update game session
+  // Update healed_player in night_phase_sessions
   const { error: updateErr } = await adminClient
-    .from("game_sessions")
-    .update({
-      healed_players: updatedHealedPlayers,
-      attempt_to_kill_players: updatedKillTargets,
-    })
-    .eq("id", gameSession.id);
+    .from("night_phase_sessions")
+    .update({ healed_player: targetSeatNumber, updated_at: new Date().toISOString() })
+    .eq("id", nightSession.id);
 
   if (updateErr) {
     return { ok: false, message: updateErr.message };
@@ -657,7 +740,7 @@ export async function clearDoctorHeal(
   // Get current game session
   const { data: gameSession, error: sessionErr } = await adminClient
     .from("game_sessions")
-    .select("id, game_phase, healed_players")
+    .select("id, game_phase, current_night_number")
     .eq("game_id", gameId)
     .single();
 
@@ -669,20 +752,124 @@ export async function clearDoctorHeal(
     return { ok: false, message: "Not in doctor heal phase" };
   }
 
-  // Remove the target from healed_players (only if healing was done this phase)
-  const healedPlayers = gameSession.healed_players || [];
-  const updatedHealedPlayers = healedPlayers.filter(
-    (seat) => seat !== targetSeatNumber
-  );
+  const nightNumber = gameSession.current_night_number;
+  if (!nightNumber || nightNumber === 0) {
+    return { ok: false, message: "No active night" };
+  }
 
+  // Get current night session to verify we're clearing the right heal
+  const currentNightSession = await getCurrentNightPhaseSession(gameId);
+  if (!currentNightSession || currentNightSession.healed_player !== targetSeatNumber) {
+    return { ok: false, message: "Cannot clear this heal" };
+  }
+
+  // Update night_phase_sessions to clear healed_player
   const { error: updateErr } = await adminClient
-    .from("game_sessions")
-    .update({ healed_players: updatedHealedPlayers })
-    .eq("id", gameSession.id);
+    .from("night_phase_sessions")
+    .update({ healed_player: null, updated_at: new Date().toISOString() })
+    .eq("game_id", gameId)
+    .eq("night_number", nightNumber);
 
   if (updateErr) {
     return { ok: false, message: updateErr.message };
   }
 
   return { ok: true };
+}
+
+// ============================================================================
+// NIGHT PHASE MANAGEMENT
+// ============================================================================
+
+/**
+ * Start a new night - increments night number and creates night_phase_sessions row.
+ * Called when transitioning to night phase.
+ */
+export async function startNight(gameId: string): Promise<ActionResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  if (userError || !user) return { ok: false, message: "Not authenticated" };
+
+  // Verify user is the host
+  const { data: game } = await adminClient
+    .from("games")
+    .select("host_id")
+    .eq("id", gameId)
+    .single();
+
+  if (!game || game.host_id !== user.id) {
+    return { ok: false, message: "Only the host can start a night" };
+  }
+
+  // Get current night number
+  const { data: gameSession, error: sessionErr } = await adminClient
+    .from("game_sessions")
+    .select("id, current_night_number")
+    .eq("game_id", gameId)
+    .single();
+
+  if (sessionErr || !gameSession) {
+    return { ok: false, message: "Game session not found" };
+  }
+
+  const newNightNumber = (gameSession.current_night_number || 0) + 1;
+
+  // Update game_sessions with new night number
+  const { error: updateSessionErr } = await adminClient
+    .from("game_sessions")
+    .update({ current_night_number: newNightNumber })
+    .eq("id", gameSession.id);
+
+  if (updateSessionErr) {
+    return { ok: false, message: updateSessionErr.message };
+  }
+
+  // Create new night_phase_sessions row
+  const nightSession = await getOrCreateNightPhaseSession(gameId, newNightNumber);
+  if (!nightSession) {
+    return { ok: false, message: "Failed to create night phase session" };
+  }
+
+  return { ok: true };
+}
+
+/**
+ * Get the current night phase session data (for host only - RLS enforced)
+ */
+export async function getNightPhaseSession(gameId: string): Promise<
+  | {
+      ok: true;
+      data: {
+        nightNumber: number;
+        mafiaTarget: number | null;
+        yakuzaTarget: number | null;
+        healedPlayer: number | null;
+      } | null;
+    }
+  | { ok: false; message: string }
+> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  if (userError || !user) return { ok: false, message: "Not authenticated" };
+
+  const nightSession = await getCurrentNightPhaseSession(gameId);
+  if (!nightSession) {
+    return { ok: true, data: null };
+  }
+
+  return {
+    ok: true,
+    data: {
+      nightNumber: nightSession.night_number,
+      mafiaTarget: nightSession.mafia_target,
+      yakuzaTarget: nightSession.yakuza_target,
+      healedPlayer: nightSession.healed_player,
+    },
+  };
 }

@@ -9,6 +9,8 @@ interface YakuzaKillButtonProps {
   seatNumber: number;
   /** Whether this target is already selected */
   isSelected: boolean;
+  /** Callback when target is successfully selected (for local state update) */
+  onSuccess?: (seatNumber: number) => void;
 }
 
 /**
@@ -21,6 +23,7 @@ interface YakuzaKillButtonProps {
 export default function YakuzaKillButton({
   seatNumber,
   isSelected,
+  onSuccess,
 }: YakuzaKillButtonProps) {
   const { gameId } = useGameRoom();
   const [isLoading, setIsLoading] = useState(false);
@@ -31,7 +34,10 @@ export default function YakuzaKillButton({
     setIsLoading(true);
     try {
       const result = await selectYakuzaTarget(gameId, seatNumber);
-      if (!result.ok) {
+      if (result.ok) {
+        // Update local state so the Yakuza player sees their selection immediately
+        onSuccess?.(seatNumber);
+      } else {
         console.error("Failed to select target:", result.message);
       }
     } catch (error) {
@@ -39,7 +45,7 @@ export default function YakuzaKillButton({
     } finally {
       setIsLoading(false);
     }
-  }, [gameId, seatNumber, isLoading, isSelected]);
+  }, [gameId, seatNumber, isLoading, isSelected, onSuccess]);
 
   return (
     <button

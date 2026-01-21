@@ -95,11 +95,11 @@ export async function createGameSession(
 
 export async function updateGameSession(
   gameSessionId: string,
-  gameSessionState: GameSessionState
+  updates: Partial<GameSessionState>
 ): Promise<{ ok: true } | { ok: false; message: string }> {
   const { error: updateErr } = await adminClient
     .from("game_sessions")
-    .update(gameSessionState)
+    .update(updates)
     .eq("id", gameSessionId);
   if (updateErr) return { ok: false, message: updateErr.message };
   return { ok: true };

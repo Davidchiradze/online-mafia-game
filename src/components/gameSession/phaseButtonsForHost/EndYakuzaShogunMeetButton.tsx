@@ -23,7 +23,6 @@ const EndYakuzaShogunMeetButton = ({
     try {
       // Update game session to detective_meet phase
       const res = await updateGameSession(gameSessionState.id, {
-        ...gameSessionState,
         game_phase: GAME_PHASES[5], // "detective_meet"
       });
       if (!res?.ok) {

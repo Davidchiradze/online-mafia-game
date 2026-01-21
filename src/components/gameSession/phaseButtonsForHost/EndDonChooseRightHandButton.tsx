@@ -23,7 +23,6 @@ const EndDonChooseRightHandButton = ({
     try {
       // Update game session to yakuda_shogun_meet phase
       const res = await updateGameSession(gameSessionState.id, {
-        ...gameSessionState,
         game_phase: GAME_PHASES[4], // "yakuda_shogun_meet"
       });
       if (!res?.ok) {

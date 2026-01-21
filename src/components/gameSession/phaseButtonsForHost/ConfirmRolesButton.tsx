@@ -22,7 +22,6 @@ const ConfirmRolesButton = ({ gameSessionState }: ConfirmRolesButtonProps) => {
       // TODO: Validate that all roles are assigned
       // Update game session to mafia_meet phase
       const res = await updateGameSession(gameSessionState.id, {
-        ...gameSessionState,
         game_phase: GAME_PHASES[2], // "mafia_meet"
       });
       if (!res?.ok) {

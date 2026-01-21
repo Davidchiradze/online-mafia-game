@@ -26,7 +26,6 @@ const EndDoctorMeetButton = ({
     try {
       // Update game session to introduction_phase
       const res = await updateGameSession(gameSessionState.id, {
-        ...gameSessionState,
         game_phase: GAME_PHASES[7], // "introduction_phase"
       });
 

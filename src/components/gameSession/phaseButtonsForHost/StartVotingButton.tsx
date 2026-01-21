@@ -21,7 +21,6 @@ const StartVotingButton = ({ gameSessionState }: StartVotingButtonProps) => {
     try {
       // Update game session to voting phase
       const res = await updateGameSession(gameSessionState.id, {
-        ...gameSessionState,
         game_phase: GAME_PHASES[16], // "voting"
       });
       if (!res?.ok) {

@@ -21,7 +21,6 @@ const EndDonCheckButton = ({ gameSessionState }: EndDonCheckButtonProps) => {
     try {
       // Update game session to right_hand_checks_for_yakuza phase
       const res = await updateGameSession(gameSessionState.id, {
-        ...gameSessionState,
         game_phase: GAME_PHASES[11], // "right_hand_checks_for_yakuza"
       });
       if (!res?.ok) {

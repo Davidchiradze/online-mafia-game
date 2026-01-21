@@ -27,7 +27,6 @@ const EndDoctorHealButton = ({
       // TODO: Store healed player in healed_players array
       // Update game session to day_phase
       const res = await updateGameSession(gameSessionState.id, {
-        ...gameSessionState,
         game_phase: GAME_PHASES[15], // "day_phase"
       });
 

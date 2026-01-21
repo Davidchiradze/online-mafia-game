@@ -106,13 +106,12 @@ export type Database = {
       }
       game_sessions: {
         Row: {
-          attempt_to_kill_players: number[]
           created_at: string | null
+          current_night_number: number
           current_speaker_index: number | null
           day_round_opener_index: number | null
           game_id: string
           game_phase: string
-          healed_players: number[]
           id: string
           is_finished: boolean
           nominated_players: number[]
@@ -120,13 +119,12 @@ export type Database = {
           speaking_order: number[]
         }
         Insert: {
-          attempt_to_kill_players?: number[]
           created_at?: string | null
+          current_night_number?: number
           current_speaker_index?: number | null
           day_round_opener_index?: number | null
           game_id: string
           game_phase: string
-          healed_players?: number[]
           id?: string
           is_finished?: boolean
           nominated_players?: number[]
@@ -134,13 +132,12 @@ export type Database = {
           speaking_order?: number[]
         }
         Update: {
-          attempt_to_kill_players?: number[]
           created_at?: string | null
+          current_night_number?: number
           current_speaker_index?: number | null
           day_round_opener_index?: number | null
           game_id?: string
           game_phase?: string
-          healed_players?: number[]
           id?: string
           is_finished?: boolean
           nominated_players?: number[]
@@ -152,6 +149,47 @@ export type Database = {
             foreignKeyName: "game_sessions_game_id_fkey"
             columns: ["game_id"]
             isOneToOne: true
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      night_phase_sessions: {
+        Row: {
+          created_at: string | null
+          game_id: string
+          healed_player: number | null
+          id: string
+          mafia_target: number | null
+          night_number: number
+          updated_at: string | null
+          yakuza_target: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          game_id: string
+          healed_player?: number | null
+          id?: string
+          mafia_target?: number | null
+          night_number: number
+          updated_at?: string | null
+          yakuza_target?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          game_id?: string
+          healed_player?: number | null
+          id?: string
+          mafia_target?: number | null
+          night_number?: number
+          updated_at?: string | null
+          yakuza_target?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "night_phase_sessions_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
             referencedRelation: "games"
             referencedColumns: ["id"]
           },

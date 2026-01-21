@@ -31,15 +31,27 @@ CREATE TABLE public.game_sessions (
   game_phase text NOT NULL,
   is_finished boolean NOT NULL DEFAULT false,
   nominated_players ARRAY NOT NULL DEFAULT '{}'::integer[],
-  attempt_to_kill_players ARRAY NOT NULL DEFAULT '{}'::integer[],
-  healed_players ARRAY NOT NULL DEFAULT '{}'::integer[],
   created_at timestamp with time zone DEFAULT now(),
   day_round_opener_index integer,
   current_speaker_index integer,
   speaker_started_at timestamp with time zone,
   speaking_order ARRAY NOT NULL DEFAULT '{}'::integer[],
+  current_night_number integer NOT NULL DEFAULT 0,
   CONSTRAINT game_sessions_pkey PRIMARY KEY (id),
   CONSTRAINT game_sessions_game_id_fkey FOREIGN KEY (game_id) REFERENCES public.games(id)
+);
+CREATE TABLE public.night_phase_sessions (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  game_id uuid NOT NULL,
+  night_number integer NOT NULL,
+  mafia_target integer,
+  yakuza_target integer,
+  healed_player integer,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT night_phase_sessions_pkey PRIMARY KEY (id),
+  CONSTRAINT night_phase_sessions_game_id_fkey FOREIGN KEY (game_id) REFERENCES public.games(id) ON DELETE CASCADE,
+  CONSTRAINT night_phase_sessions_unique_night UNIQUE (game_id, night_number)
 );
 CREATE TABLE public.games (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),

@@ -173,6 +173,7 @@ export default function ParticipantComponent({
     isMafiaTargetSelected,
     shouldShowMafiaTargetIndicator,
     canShowMafiaKillButton,
+    setLocalMafiaTarget,
   } = useMafiaTargetSelection(
     gameSessionState,
     player.seat_number,
@@ -186,6 +187,7 @@ export default function ParticipantComponent({
     isYakuzaTargetSelected,
     shouldShowYakuzaTargetIndicator,
     canShowYakuzaKillButton,
+    setLocalYakuzaTarget,
   } = useYakuzaTargetSelection(
     gameSessionState,
     player.seat_number,
@@ -359,6 +361,7 @@ export default function ParticipantComponent({
             <MafiaKillButton
               seatNumber={player.seat_number}
               isSelected={isMafiaTargetSelected}
+              onSuccess={setLocalMafiaTarget}
             />
           </div>
         </div>
@@ -376,6 +379,7 @@ export default function ParticipantComponent({
             <YakuzaKillButton
               seatNumber={player.seat_number}
               isSelected={isYakuzaTargetSelected}
+              onSuccess={setLocalYakuzaTarget}
             />
           </div>
         </div>
