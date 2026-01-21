@@ -399,7 +399,12 @@ export function getVisibilityStateWithDeath(
   }
 
   // If viewer is dead (not host) and it's a night phase, show Zzz for everyone
-  if (!viewerIsAlive && !isViewerHost && gamePhase && isNightActivityPhase(gamePhase)) {
+  if (
+    !viewerIsAlive &&
+    !isViewerHost &&
+    gamePhase &&
+    isNightActivityPhase(gamePhase)
+  ) {
     return VisibilityState.COVERED;
   }
 

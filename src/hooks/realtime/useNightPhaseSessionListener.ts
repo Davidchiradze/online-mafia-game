@@ -3,42 +3,35 @@
 import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Tables } from "@/db/supabase/database.types";
+import { fetchCurrentNightSession } from "@/lib/nightPhase/actions";
 
 export type NightPhaseSession = Tables<"night_phase_sessions">;
 
 /**
- * Hook for HOST ONLY to subscribe to night phase session changes.
- * Regular players cannot read this table due to RLS policy.
- * 
+ * Hook to subscribe to night phase session changes.
+ * NOTE: RLS removed temporarily - all players can read this table.
+ *
  * This provides real-time updates about:
- * - Mafia target selection
- * - Yakuza target selection  
- * - Doctor heal selection
+ * - Mafia target selection (visible to mafia team)
+ * - Yakuza target selection (visible to yakuza team)
+ * - Doctor heal selection (visible to host only)
  */
 export function useNightPhaseSessionListener(
   gameId: string,
   enabled: boolean = true
 ) {
-  const [currentNightSession, setCurrentNightSession] = 
+  const [currentNightSession, setCurrentNightSession] =
     useState<NightPhaseSession | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const fetchCurrentSession = useCallback(async () => {
+  const fetchSession = useCallback(async () => {
     if (!gameId) return;
-    
+
     setIsLoading(true);
     try {
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from("night_phase_sessions")
-        .select("*")
-        .eq("game_id", gameId)
-        .order("night_number", { ascending: false })
-        .limit(1)
-        .single();
-      
-      if (!error && data) {
-        setCurrentNightSession(data);
+      const result = await fetchCurrentNightSession(gameId);
+      if (result.ok && result.data) {
+        setCurrentNightSession(result.data);
       }
     } catch {
       // Host might not have a night session yet
@@ -51,7 +44,7 @@ export function useNightPhaseSessionListener(
     if (!gameId || !enabled) return;
 
     // Initial fetch
-    void fetchCurrentSession();
+    void fetchSession();
 
     // Subscribe to changes
     const supabase = createClient();
@@ -66,7 +59,10 @@ export function useNightPhaseSessionListener(
           filter: `game_id=eq.${gameId}`,
         },
         (payload) => {
-          if (payload.eventType === "INSERT" || payload.eventType === "UPDATE") {
+          if (
+            payload.eventType === "INSERT" ||
+            payload.eventType === "UPDATE"
+          ) {
             const next = payload.new as NightPhaseSession;
             if (next) {
               setCurrentNightSession((prev) => {
@@ -85,12 +81,11 @@ export function useNightPhaseSessionListener(
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [gameId, enabled, fetchCurrentSession]);
+  }, [gameId, enabled, fetchSession]);
 
-  return { 
+  return {
     currentNightSession,
     isLoading,
-    refetch: fetchCurrentSession,
+    refetch: fetchSession,
   };
 }
-

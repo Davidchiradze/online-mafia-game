@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
+import { useMemo } from "react";
 import { GameSessionState } from "@/types/game/type";
 import { useMafiaKillAuthority } from "./useMafiaKillAuthority";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
+import { MAFIA_TEAM_ROLES } from "@/lib/constants/game";
 
 export interface MafiaTargetSelectionResult {
   hasMafiaKillAuthority: boolean;
@@ -11,20 +12,16 @@ export interface MafiaTargetSelectionResult {
   isMafiaTargetSelected: boolean;
   shouldShowMafiaTargetIndicator: boolean;
   canShowMafiaKillButton: boolean;
-  /** Set local mafia target (for mafia player to track their own selection) */
-  setLocalMafiaTarget: (seatNumber: number | null) => void;
-  /** Local mafia target (only visible to the mafia player who selected) */
-  localMafiaTarget: number | null;
 }
 
 /**
  * Hook to determine mafia target selection state and visibility.
- * 
+ *
  * Security model:
- * - Mafia player with authority: sees their own selection via localMafiaTarget
- * - Host: sees target via nightPhaseSession from context (RLS protected)
+ * - Host: sees target via nightPhaseSession from context
+ * - Mafia team members: see target via nightPhaseSession (temporary - RLS removed)
  * - Other players: cannot see targets
- * 
+ *
  * @param gameSessionState - Current game session state
  * @param seatNumber - Seat number of the target player being rendered
  * @param isViewerHost - Whether the viewer is the host
@@ -38,37 +35,32 @@ export function useMafiaTargetSelection(
   isTargetHost: boolean,
   isPlayerAlive: boolean
 ): MafiaTargetSelectionResult {
-  // Get night phase session from context (host only via RLS)
-  const { nightPhaseSession } = useGameRoom();
+  // Get night phase session and viewer role from context
+  const { nightPhaseSession, viewerRole } = useGameRoom();
 
-  // Local state for mafia player to track their own selection
-  const [localMafiaTarget, setLocalMafiaTarget] = useState<number | null>(null);
+  // Check if viewer is on mafia team
+  const isViewerOnMafiaTeam = useMemo(() => {
+    if (!viewerRole) return false;
+    return MAFIA_TEAM_ROLES.includes(
+      viewerRole as (typeof MAFIA_TEAM_ROLES)[number]
+    );
+  }, [viewerRole]);
 
   // Mafia kill authority - for mafia_chooses_target phase
   const { hasAuthority: hasMafiaKillAuthority, isMafiaPhase } =
     useMafiaKillAuthority();
 
-  // Setter for local target with callback stability
-  const setLocalTarget = useCallback((target: number | null) => {
-    setLocalMafiaTarget(target);
-  }, []);
-
   // Check if this target is selected for mafia kill
-  // For host: check nightPhaseSession.mafia_target
-  // For mafia with authority: check localMafiaTarget
+  // For host or mafia team members: check nightPhaseSession.mafia_target
   const isMafiaTargetSelected = useMemo(() => {
     if (!gameSessionState || seatNumber === null) return false;
-    const isInMafiaPhase = gameSessionState.game_phase === "mafia_chooses_target";
+    const isInMafiaPhase =
+      gameSessionState.game_phase === "mafia_chooses_target";
     if (!isInMafiaPhase) return false;
 
-    // Host sees from night phase session
-    if (isViewerHost && nightPhaseSession) {
+    // Host or mafia team members can see from night phase session
+    if ((isViewerHost || isViewerOnMafiaTeam) && nightPhaseSession) {
       return nightPhaseSession.mafia_target === seatNumber;
-    }
-
-    // Mafia with authority sees their own local selection
-    if (hasMafiaKillAuthority) {
-      return localMafiaTarget === seatNumber;
     }
 
     return false;
@@ -76,26 +68,37 @@ export function useMafiaTargetSelection(
     gameSessionState,
     seatNumber,
     isViewerHost,
+    isViewerOnMafiaTeam,
     nightPhaseSession,
-    hasMafiaKillAuthority,
-    localMafiaTarget,
   ]);
 
-  // Should show the selected target indicator (skull) - visible to host and mafia with authority
+  // Should show the selected target indicator (skull) - visible to host and all mafia team members
   const shouldShowMafiaTargetIndicator = useMemo(() => {
     if (!isMafiaTargetSelected) return false;
-    // Show to host or mafia with kill authority
-    return isViewerHost || hasMafiaKillAuthority;
-  }, [isMafiaTargetSelected, isViewerHost, hasMafiaKillAuthority]);
+    // Show to host or any mafia team member
+    return isViewerHost || isViewerOnMafiaTeam;
+  }, [isMafiaTargetSelected, isViewerHost, isViewerOnMafiaTeam]);
 
   // Can show mafia kill button: during mafia phase, viewer has authority, target is alive and not host
+  // Hide buttons once a target has been selected (no changing target)
   const canShowMafiaKillButton = useMemo(() => {
     if (!isMafiaPhase || !hasMafiaKillAuthority) return false;
     if (isTargetHost) return false; // Can't target host
     if (isPlayerAlive === false) return false; // Can't target dead players
-    // Don't show on own tile or other mafia tiles (handled by server, but UI hint)
+    // Hide if a target has already been selected (cannot change decision)
+    if (
+      nightPhaseSession?.mafia_target !== null &&
+      nightPhaseSession?.mafia_target !== undefined
+    )
+      return false;
     return true;
-  }, [isMafiaPhase, hasMafiaKillAuthority, isTargetHost, isPlayerAlive]);
+  }, [
+    isMafiaPhase,
+    hasMafiaKillAuthority,
+    isTargetHost,
+    isPlayerAlive,
+    nightPhaseSession?.mafia_target,
+  ]);
 
   return {
     hasMafiaKillAuthority,
@@ -103,7 +106,5 @@ export function useMafiaTargetSelection(
     isMafiaTargetSelected,
     shouldShowMafiaTargetIndicator,
     canShowMafiaKillButton,
-    setLocalMafiaTarget: setLocalTarget,
-    localMafiaTarget,
   };
 }

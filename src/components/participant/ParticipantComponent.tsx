@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  ParticipantTile,
-  TrackReferenceOrPlaceholder,
-  TrackToggle,
-} from "@livekit/components-react";
-import { Track } from "livekit-client";
-import { MicOffIcon, MicOnIcon } from "@/assets/icons";
+import { TrackReferenceOrPlaceholder } from "@livekit/components-react";
 import { useCallback } from "react";
 import { Tables } from "@/db/supabase/database.types";
 
@@ -33,21 +27,14 @@ import {
 } from "@/hooks/game";
 
 // Components
-import { VisibilityState } from "@/lib/game/visibility";
-import ParticipantCover from "@/components/video/ParticipantCover";
 import ReadyButton from "@/components/ui/ReadyButton";
-import NominationButton from "@/components/game/NominationButton";
-import FoulButton from "@/components/game/FoulButton";
-import FoulSpeakButton from "@/components/game/FoulSpeakButton";
-import FoulDisplay from "@/components/game/FoulDisplay";
-import MafiaKillButton from "@/components/game/MafiaKillButton";
-import YakuzaKillButton from "@/components/game/YakuzaKillButton";
-import DoctorHealButton from "@/components/game/DoctorHealButton";
 import ParticipantMenuButton from "./ParticipantMenuButton";
 import KillConfirmModal from "./KillConfirmModal";
-import MafiaTargetIndicator from "./MafiaTargetIndicator";
-import YakuzaTargetIndicator from "./YakuzaTargetIndicator";
 import SpeakingProgressBar from "./SpeakingProgressBar";
+import ParticipantOverlay from "./ParticipantOverlay";
+import ParticipantBadges from "./ParticipantBadges";
+import NominationFoulSection from "./NominationFoulSection";
+import NightActionButtons from "./NightActionButtons";
 
 export default function ParticipantComponent({
   gameId,
@@ -173,7 +160,6 @@ export default function ParticipantComponent({
     isMafiaTargetSelected,
     shouldShowMafiaTargetIndicator,
     canShowMafiaKillButton,
-    setLocalMafiaTarget,
   } = useMafiaTargetSelection(
     gameSessionState,
     player.seat_number,
@@ -187,7 +173,6 @@ export default function ParticipantComponent({
     isYakuzaTargetSelected,
     shouldShowYakuzaTargetIndicator,
     canShowYakuzaKillButton,
-    setLocalYakuzaTarget,
   } = useYakuzaTargetSelection(
     gameSessionState,
     player.seat_number,
@@ -197,7 +182,12 @@ export default function ParticipantComponent({
   );
 
   // Doctor heal selection
-  const { canShowDoctorHealButton, isAlreadyHealed } = useDoctorHealSelection(
+  const {
+    canShowDoctorHealButton,
+    isAlreadyHealed,
+    isDoctorHealSelected,
+    shouldShowDoctorHealIndicator,
+  } = useDoctorHealSelection(
     gameSessionState,
     player.seat_number,
     isViewerHost,
@@ -214,6 +204,9 @@ export default function ParticipantComponent({
     await markUnready();
   }, [markUnready]);
 
+  // Suppress unused variable warning - used for future features
+  void isDoctorHealSelected;
+
   return (
     <div
       className={`relative w-full h-full flex flex-col items-stretch justify-stretch text-sm text-gray-200 group transition-shadow duration-300 overflow-hidden rounded-xl ${boxShadowClass}`}
@@ -221,62 +214,23 @@ export default function ParticipantComponent({
       onClick={handleTileClick}
     >
       {/* Video / Cover layer */}
-      {visibilityState === VisibilityState.DEAD ? (
-        <ParticipantCover isDead={true} />
-      ) : isDisconnected ? (
-        <ParticipantCover isDisconnected={true} />
-      ) : visibilityState === VisibilityState.COVERED || !trackRef ? (
-        <ParticipantCover message={coverMessage} />
-      ) : (
-        <div className="relative w-full h-full">
-          <ParticipantTile
-            className="lk-hide-metadata"
-            trackRef={trackRef}
-            style={{ height: "100%" }}
-          />
-          {visibilityState === VisibilityState.DIMMED && (
-            <div className="absolute inset-0 z-[5] pointer-events-none">
-              <div className="absolute inset-0 backdrop-blur-sm bg-slate-900/50" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-4xl md:text-5xl opacity-80 animate-pulse">
-                  💤
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+      <ParticipantOverlay
+        visibilityState={visibilityState}
+        isDisconnected={isDisconnected}
+        coverMessage={coverMessage}
+        trackRef={trackRef}
+      />
 
-      {/* Microphone indicator */}
-      {(!gameSessionState || (isLocal && isTargetHost)) &&
-        (isLocal ? (
-          <div className="absolute left-1 top-1 md:left-2 md:top-2 z-10 scale-90 md:scale-100">
-            <TrackToggle source={Track.Source.Microphone} showIcon={true} />
-          </div>
-        ) : (
-          <div className="absolute left-1 top-1 md:left-2 md:top-2 z-10 rounded-full border border-white/10 bg-black/40 backdrop-blur px-1.5 py-0.5 md:px-2 md:py-1 text-white text-[10px] md:text-[12px]">
-            {isMicEnabled ? (
-              <MicOnIcon width={14} height={14} />
-            ) : (
-              <MicOffIcon width={14} height={14} />
-            )}
-          </div>
-        ))}
-
-      {/* Seat number / Display name badge */}
-      <div
-        className={`absolute bottom-1 left-1 md:bottom-2 md:left-2 z-10 rounded-full border backdrop-blur px-2 py-0.5 md:px-3 md:py-1 text-[10px] md:text-xs font-medium transition-all duration-200 ${
-          showNominationEffect
-            ? "border-red-500 bg-red-500 text-white shadow-lg shadow-red-500/50 nomination-badge"
-            : "border-white/10 bg-black/40 text-gray-100"
-        }`}
-      >
-        {gameSessionState
-          ? playerIndex === 13
-            ? "Host"
-            : playerIndex
-          : displayName || (playerIndex === 13 ? "Host" : playerIndex)}
-      </div>
+      {/* Microphone indicator and seat badge */}
+      <ParticipantBadges
+        gameSessionState={gameSessionState}
+        isLocal={isLocal}
+        isTargetHost={isTargetHost}
+        isMicEnabled={isMicEnabled}
+        playerIndex={playerIndex}
+        displayName={displayName}
+        showNominationEffect={showNominationEffect}
+      />
 
       {/* Lobby menu - kick/make host */}
       {canShowLobbyMenu && (
@@ -329,78 +283,34 @@ export default function ParticipantComponent({
         </div>
       )}
 
-      {/* Nomination button */}
-      {canShowNominationButton &&
-        player.seat_number != null &&
-        !isTargetDead && (
-          <div className="absolute left-[30px] -translate-x-1/2 top-1 md:top-2 z-20">
-            <NominationButton
-              seatNumber={player.seat_number}
-              isNominated={isNominated}
-            />
-          </div>
-        )}
+      {/* Nomination and foul section */}
+      <NominationFoulSection
+        seatNumber={player.seat_number}
+        isTargetDead={isTargetDead}
+        canShowNominationButton={canShowNominationButton}
+        isNominated={isNominated}
+        canShowFoulButton={canShowFoulButton}
+        currentFouls={currentFouls}
+        canShowFoulSpeakButton={canShowFoulSpeakButton}
+        isFoulSpeaking={isFoulSpeaking}
+        foulSpeakTimeLeft={foulSpeakTimeLeft}
+        canFoulSpeak={canFoulSpeak}
+        startFoulSpeak={startFoulSpeak}
+      />
 
-      {/* Foul button */}
-      {canShowFoulButton && player.seat_number != null && !isTargetDead && (
-        <div className="absolute right-[0px] -translate-x-1/2 top-1 md:top-2 z-20">
-          <FoulButton
-            seatNumber={player.seat_number}
-            currentFouls={currentFouls}
-          />
-        </div>
-      )}
-
-      {/* Foul display */}
-      {!isTargetDead && <FoulDisplay foulCount={currentFouls} />}
-
-      {/* Mafia kill button */}
-      {canShowMafiaKillButton && player.seat_number != null && (
-        <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
-          <div className="pointer-events-auto">
-            <MafiaKillButton
-              seatNumber={player.seat_number}
-              isSelected={isMafiaTargetSelected}
-              onSuccess={setLocalMafiaTarget}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Mafia target indicator for host */}
-      {shouldShowMafiaTargetIndicator &&
-        !canShowMafiaKillButton &&
-        player.seat_number != null && <MafiaTargetIndicator />}
-
-      {/* Yakuza kill button */}
-      {canShowYakuzaKillButton && player.seat_number != null && (
-        <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
-          <div className="pointer-events-auto">
-            <YakuzaKillButton
-              seatNumber={player.seat_number}
-              isSelected={isYakuzaTargetSelected}
-              onSuccess={setLocalYakuzaTarget}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Yakuza target indicator for host */}
-      {shouldShowYakuzaTargetIndicator &&
-        !canShowYakuzaKillButton &&
-        player.seat_number != null && <YakuzaTargetIndicator />}
-
-      {/* Doctor heal button */}
-      {canShowDoctorHealButton && player.seat_number != null && (
-        <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
-          <div className="pointer-events-auto">
-            <DoctorHealButton
-              seatNumber={player.seat_number}
-              isAlreadyHealed={isAlreadyHealed}
-            />
-          </div>
-        </div>
-      )}
+      {/* Night action buttons (Mafia kill, Yakuza kill, Doctor heal) */}
+      <NightActionButtons
+        seatNumber={player.seat_number}
+        canShowMafiaKillButton={canShowMafiaKillButton}
+        isMafiaTargetSelected={isMafiaTargetSelected}
+        shouldShowMafiaTargetIndicator={shouldShowMafiaTargetIndicator}
+        canShowYakuzaKillButton={canShowYakuzaKillButton}
+        isYakuzaTargetSelected={isYakuzaTargetSelected}
+        shouldShowYakuzaTargetIndicator={shouldShowYakuzaTargetIndicator}
+        canShowDoctorHealButton={canShowDoctorHealButton}
+        isAlreadyHealed={isAlreadyHealed}
+        shouldShowDoctorHealIndicator={shouldShowDoctorHealIndicator}
+      />
 
       {/* Ready button */}
       {isLocal && !isTargetHost && !gameSessionState && (
@@ -413,18 +323,6 @@ export default function ParticipantComponent({
             className={`${
               isMobileReadyVisible ? "flex" : "hidden"
             } md:group-hover:flex flex items-center justify-center`}
-          />
-        </div>
-      )}
-
-      {/* Foul speak button */}
-      {canShowFoulSpeakButton && !isTargetDead && (
-        <div className="absolute right-1 top-1 md:right-2 md:top-2 z-20">
-          <FoulSpeakButton
-            onStartFoulSpeak={startFoulSpeak}
-            isFoulSpeaking={isFoulSpeaking}
-            foulSpeakTimeLeft={foulSpeakTimeLeft}
-            canFoulSpeak={canFoulSpeak}
           />
         </div>
       )}

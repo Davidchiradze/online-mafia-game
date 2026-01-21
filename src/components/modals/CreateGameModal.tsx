@@ -34,7 +34,7 @@ export default function CreateGameModal({ open, onClose, onCreated }: Props) {
     }
     onCreated?.(res.data);
     setName("");
-    setType("traditional");
+    setType("japanese_mafia");
     setLoading(false);
     onClose();
   };

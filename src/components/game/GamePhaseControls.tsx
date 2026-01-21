@@ -22,6 +22,7 @@ import EndGameControls from "../gameSession/phaseButtonsForHost/EndGameControls"
 import DayPhaseSpeakingControls from "../gameSession/phaseButtonsForHost/DayPhaseSpeakingControls";
 import StartNominatedPlayersSpeakButton from "../gameSession/phaseButtonsForHost/StartNominatedPlayersSpeakButton";
 import NominatedPlayersSpeakingControls from "../gameSession/phaseButtonsForHost/NominatedPlayersSpeakingControls";
+import NightActionsDisplay from "./NightActionsDisplay";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 
 /**
@@ -158,7 +159,8 @@ const GamePhaseControls = () => {
   };
 
   return (
-    <div className="w-full h-full flex items-end justify-center">
+    <div className="w-full h-full flex flex-col items-center justify-end gap-2">
+      <NightActionsDisplay />
       {renderPhaseButton()}
     </div>
   );

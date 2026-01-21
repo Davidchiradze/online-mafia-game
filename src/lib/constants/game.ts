@@ -45,6 +45,12 @@ export const JAPANESE_MAFIA_ROLES = [
   "DOCTOR",
 ] as const;
 
+/** Mafia team roles - can see mafia target selection */
+export const MAFIA_TEAM_ROLES = ["DON", "MAFIA_RIGHT_HAND", "MAFIA"] as const;
+
+/** Yakuza team roles - can see yakuza target selection */
+export const YAKUZA_TEAM_ROLES = ["YAKUZA", "SHOGUN"] as const;
+
 export const JAPANESE_MAFIA_ROLE_LABEL: Record<
   (typeof JAPANESE_MAFIA_ROLES)[number],
   string

@@ -9,8 +9,6 @@ interface MafiaKillButtonProps {
   seatNumber: number;
   /** Whether this target is already selected */
   isSelected: boolean;
-  /** Callback when target is successfully selected (for local state update) */
-  onSuccess?: (seatNumber: number) => void;
 }
 
 /**
@@ -22,7 +20,6 @@ interface MafiaKillButtonProps {
 export default function MafiaKillButton({
   seatNumber,
   isSelected,
-  onSuccess,
 }: MafiaKillButtonProps) {
   const { gameId } = useGameRoom();
   const [isLoading, setIsLoading] = useState(false);
@@ -35,7 +32,6 @@ export default function MafiaKillButton({
       const result = await selectMafiaTarget(gameId, seatNumber);
       if (result.ok) {
         // Update local state so the mafia player sees their selection immediately
-        onSuccess?.(seatNumber);
       } else {
         console.error("Failed to select target:", result.message);
       }
@@ -44,7 +40,7 @@ export default function MafiaKillButton({
     } finally {
       setIsLoading(false);
     }
-  }, [gameId, seatNumber, isLoading, isSelected, onSuccess]);
+  }, [gameId, seatNumber, isLoading, isSelected]);
 
   return (
     <button

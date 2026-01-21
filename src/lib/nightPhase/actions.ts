@@ -264,10 +264,22 @@ export async function selectMafiaTarget(
     return { ok: false, message: "Failed to get/create night phase session" };
   }
 
+  // Check if a target has already been selected (cannot change decision)
+  const existingSession = await getCurrentNightPhaseSession(gameId);
+  if (existingSession?.mafia_target !== null) {
+    return {
+      ok: false,
+      message: "Target already selected - cannot change decision",
+    };
+  }
+
   // Update mafia_target in night_phase_sessions
   const { error: updateErr } = await adminClient
     .from("night_phase_sessions")
-    .update({ mafia_target: targetSeatNumber, updated_at: new Date().toISOString() })
+    .update({
+      mafia_target: targetSeatNumber,
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", nightSession.id);
 
   if (updateErr) {
@@ -278,54 +290,13 @@ export async function selectMafiaTarget(
 }
 
 /**
- * Clear mafia target selection (if they want to change their mind)
+ * Clear mafia target selection - DISABLED (cannot change decision once made)
+ * @deprecated Target selection cannot be changed once made
  */
 export async function clearMafiaTarget(gameId: string): Promise<ActionResult> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-  if (userError || !user) return { ok: false, message: "Not authenticated" };
-
-  // Verify the current user has kill authority
-  const authority = await getMafiaKillAuthority(gameId);
-  if (!authority || authority.playerId !== user.id) {
-    return { ok: false, message: "You don't have authority to clear target" };
-  }
-
-  // Get current game session
-  const { data: gameSession, error: sessionErr } = await adminClient
-    .from("game_sessions")
-    .select("id, game_phase, current_night_number")
-    .eq("game_id", gameId)
-    .single();
-
-  if (sessionErr || !gameSession) {
-    return { ok: false, message: "Game session not found" };
-  }
-
-  if (gameSession.game_phase !== "mafia_chooses_target") {
-    return { ok: false, message: "Not in mafia target selection phase" };
-  }
-
-  const nightNumber = gameSession.current_night_number;
-  if (!nightNumber || nightNumber === 0) {
-    return { ok: false, message: "No active night" };
-  }
-
-  // Update night_phase_sessions to clear mafia_target
-  const { error: updateErr } = await adminClient
-    .from("night_phase_sessions")
-    .update({ mafia_target: null, updated_at: new Date().toISOString() })
-    .eq("game_id", gameId)
-    .eq("night_number", nightNumber);
-
-  if (updateErr) {
-    return { ok: false, message: updateErr.message };
-  }
-
-  return { ok: true };
+  // Disable clearing - decisions are final
+  void gameId; // suppress unused variable warning
+  return { ok: false, message: "Cannot change target once selected" };
 }
 
 // ============================================================================
@@ -475,10 +446,22 @@ export async function selectYakuzaTarget(
     return { ok: false, message: "Failed to get/create night phase session" };
   }
 
+  // Check if a target has already been selected (cannot change decision)
+  const existingSession = await getCurrentNightPhaseSession(gameId);
+  if (existingSession?.yakuza_target !== null) {
+    return {
+      ok: false,
+      message: "Target already selected - cannot change decision",
+    };
+  }
+
   // Update yakuza_target in night_phase_sessions
   const { error: updateErr } = await adminClient
     .from("night_phase_sessions")
-    .update({ yakuza_target: targetSeatNumber, updated_at: new Date().toISOString() })
+    .update({
+      yakuza_target: targetSeatNumber,
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", nightSession.id);
 
   if (updateErr) {
@@ -489,54 +472,13 @@ export async function selectYakuzaTarget(
 }
 
 /**
- * Clear Yakuza target selection (if they want to change their mind)
+ * Clear Yakuza target selection - DISABLED (cannot change decision once made)
+ * @deprecated Target selection cannot be changed once made
  */
 export async function clearYakuzaTarget(gameId: string): Promise<ActionResult> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-  if (userError || !user) return { ok: false, message: "Not authenticated" };
-
-  // Verify the current user has kill authority
-  const authority = await getYakuzaKillAuthority(gameId);
-  if (!authority || authority.playerId !== user.id) {
-    return { ok: false, message: "You don't have authority to clear target" };
-  }
-
-  // Get current game session
-  const { data: gameSession, error: sessionErr } = await adminClient
-    .from("game_sessions")
-    .select("id, game_phase, current_night_number")
-    .eq("game_id", gameId)
-    .single();
-
-  if (sessionErr || !gameSession) {
-    return { ok: false, message: "Game session not found" };
-  }
-
-  if (gameSession.game_phase !== "yakuza_and_shogun_chooses_target") {
-    return { ok: false, message: "Not in Yakuza target selection phase" };
-  }
-
-  const nightNumber = gameSession.current_night_number;
-  if (!nightNumber || nightNumber === 0) {
-    return { ok: false, message: "No active night" };
-  }
-
-  // Update night_phase_sessions to clear yakuza_target
-  const { error: updateErr } = await adminClient
-    .from("night_phase_sessions")
-    .update({ yakuza_target: null, updated_at: new Date().toISOString() })
-    .eq("game_id", gameId)
-    .eq("night_number", nightNumber);
-
-  if (updateErr) {
-    return { ok: false, message: updateErr.message };
-  }
-
-  return { ok: true };
+  // Disable clearing - decisions are final
+  void gameId; // suppress unused variable warning
+  return { ok: false, message: "Cannot change target once selected" };
 }
 
 // ============================================================================
@@ -703,10 +645,22 @@ export async function healPlayer(
     return { ok: false, message: "Failed to get/create night phase session" };
   }
 
+  // Check if a heal has already been selected this night (cannot change decision)
+  const existingSession = await getCurrentNightPhaseSession(gameId);
+  if (existingSession?.healed_player !== null) {
+    return {
+      ok: false,
+      message: "Heal already selected - cannot change decision",
+    };
+  }
+
   // Update healed_player in night_phase_sessions
   const { error: updateErr } = await adminClient
     .from("night_phase_sessions")
-    .update({ healed_player: targetSeatNumber, updated_at: new Date().toISOString() })
+    .update({
+      healed_player: targetSeatNumber,
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", nightSession.id);
 
   if (updateErr) {
@@ -717,64 +671,17 @@ export async function healPlayer(
 }
 
 /**
- * Clear Doctor's heal selection for current night (if they want to change their mind)
- * Note: This only works for the current night's selection, not past heals
+ * Clear Doctor's heal selection - DISABLED (cannot change decision once made)
+ * @deprecated Heal selection cannot be changed once made
  */
 export async function clearDoctorHeal(
   gameId: string,
   targetSeatNumber: number
 ): Promise<ActionResult> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-  if (userError || !user) return { ok: false, message: "Not authenticated" };
-
-  // Verify the current user has heal authority
-  const authority = await getDoctorHealAuthority(gameId);
-  if (!authority || authority.playerId !== user.id) {
-    return { ok: false, message: "You don't have authority to clear heal" };
-  }
-
-  // Get current game session
-  const { data: gameSession, error: sessionErr } = await adminClient
-    .from("game_sessions")
-    .select("id, game_phase, current_night_number")
-    .eq("game_id", gameId)
-    .single();
-
-  if (sessionErr || !gameSession) {
-    return { ok: false, message: "Game session not found" };
-  }
-
-  if (gameSession.game_phase !== "doctor_heals_player") {
-    return { ok: false, message: "Not in doctor heal phase" };
-  }
-
-  const nightNumber = gameSession.current_night_number;
-  if (!nightNumber || nightNumber === 0) {
-    return { ok: false, message: "No active night" };
-  }
-
-  // Get current night session to verify we're clearing the right heal
-  const currentNightSession = await getCurrentNightPhaseSession(gameId);
-  if (!currentNightSession || currentNightSession.healed_player !== targetSeatNumber) {
-    return { ok: false, message: "Cannot clear this heal" };
-  }
-
-  // Update night_phase_sessions to clear healed_player
-  const { error: updateErr } = await adminClient
-    .from("night_phase_sessions")
-    .update({ healed_player: null, updated_at: new Date().toISOString() })
-    .eq("game_id", gameId)
-    .eq("night_number", nightNumber);
-
-  if (updateErr) {
-    return { ok: false, message: updateErr.message };
-  }
-
-  return { ok: true };
+  // Disable clearing - decisions are final
+  void gameId; // suppress unused variable warning
+  void targetSeatNumber; // suppress unused variable warning
+  return { ok: false, message: "Cannot change heal once selected" };
 }
 
 // ============================================================================
@@ -828,7 +735,10 @@ export async function startNight(gameId: string): Promise<ActionResult> {
   }
 
   // Create new night_phase_sessions row
-  const nightSession = await getOrCreateNightPhaseSession(gameId, newNightNumber);
+  const nightSession = await getOrCreateNightPhaseSession(
+    gameId,
+    newNightNumber
+  );
   if (!nightSession) {
     return { ok: false, message: "Failed to create night phase session" };
   }
@@ -872,4 +782,28 @@ export async function getNightPhaseSession(gameId: string): Promise<
       healedPlayer: nightSession.healed_player,
     },
   };
+}
+
+/**
+ * Fetch the current (latest) night phase session for a game.
+ * Returns the full session row for the host's real-time UI updates.
+ *
+ * @param gameId - The game ID
+ * @returns The latest night phase session or null if none exists
+ */
+export async function fetchCurrentNightSession(
+  gameId: string
+): Promise<
+  | { ok: true; data: Awaited<ReturnType<typeof getCurrentNightPhaseSession>> }
+  | { ok: false; message: string }
+> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  if (userError || !user) return { ok: false, message: "Not authenticated" };
+
+  const data = await getCurrentNightPhaseSession(gameId);
+  return { ok: true, data };
 }

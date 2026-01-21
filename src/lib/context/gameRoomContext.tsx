@@ -15,9 +15,18 @@ import type {
   GameSessionState,
   JoinRequest,
 } from "@/types/game/type";
-import { useLivekitRoom, useLivekitConnect, useEnsurePlayerSeat, useJoinPermissionListener } from "@/hooks/livekit";
+import {
+  useLivekitRoom,
+  useLivekitConnect,
+  useEnsurePlayerSeat,
+  useJoinPermissionListener,
+} from "@/hooks/livekit";
 import { useGameSession, useGamePlayers, usePlayerRoles } from "@/hooks/game";
-import { useMyJoinRequestStatus, useGameHostSubscription, useNightPhaseSessionListener } from "@/hooks/realtime";
+import {
+  useMyJoinRequestStatus,
+  useGameHostSubscription,
+  useNightPhaseSessionListener,
+} from "@/hooks/realtime";
 import type { NightPhaseSession } from "@/hooks/realtime";
 import { JOIN_REQUEST_STATUSES } from "@/lib/constants/game";
 import { leaveGamePlayer } from "@/lib/gamePlayers/actions";
@@ -46,7 +55,7 @@ type GameRoomContextValue = {
   playerRolesMap: PlayerRolesMap;
   /** Get role for a specific player (returns null if not visible to current user) */
   getRoleForUser: (targetUserId: string) => string | null;
-  /** Night phase session data - only available to host via RLS */
+  /** Night phase session data - available to host and team members (RLS removed temporarily) */
   nightPhaseSession: NightPhaseSession | null;
 };
 
@@ -104,12 +113,10 @@ export function GameRoomProvider({
   // Game players subscription
   const players = useGamePlayers(gameId, hasPlayerRecord);
 
-  // Night phase session subscription (host only - RLS enforced)
-  // Only subscribe when game is in progress and user is host
-  const { currentNightSession: nightPhaseSession } = useNightPhaseSessionListener(
-    gameId,
-    isHost && hasPlayerRecord && !!gameSessionState
-  );
+  // Night phase session subscription (RLS removed temporarily - all players can see)
+  // Subscribe when game is in progress
+  const { currentNightSession: nightPhaseSession } =
+    useNightPhaseSessionListener(gameId, hasPlayerRecord && !!gameSessionState);
 
   // Player roles (fetched once, filtered by team visibility)
   const {
