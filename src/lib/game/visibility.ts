@@ -205,6 +205,11 @@ export function canSeeParticipant(
     return false;
   }
 
+  // FAREWELL SPEECH: Everyone can see everyone (dying player says goodbye publicly)
+  if (gamePhase === "farewell_speech") {
+    return true;
+  }
+
   // Default: everyone can see everyone (for phases like game_session_started, repeat, end_game)
   return true;
 }

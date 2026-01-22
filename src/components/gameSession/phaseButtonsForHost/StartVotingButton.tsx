@@ -21,7 +21,7 @@ const StartVotingButton = ({ gameSessionState }: StartVotingButtonProps) => {
     try {
       // Update game session to voting phase
       const res = await updateGameSession(gameSessionState.id, {
-        game_phase: GAME_PHASES[16], // "nominated_players_speak"
+        game_phase: GAME_PHASES[18], // "voting"
       });
       if (!res?.ok) {
         console.error("Failed to start voting:", res?.message);

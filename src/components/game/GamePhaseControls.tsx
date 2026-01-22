@@ -16,6 +16,7 @@ import EndRightHandCheckButton from "../gameSession/phaseButtonsForHost/EndRight
 import EndYakuzaTargetButton from "../gameSession/phaseButtonsForHost/EndYakuzaTargetButton";
 import EndDetectiveCheckButton from "../gameSession/phaseButtonsForHost/EndDetectiveCheckButton";
 import EndDoctorHealButton from "../gameSession/phaseButtonsForHost/EndDoctorHealButton";
+import FarewellSpeechControls from "../gameSession/phaseButtonsForHost/FarewellSpeechControls";
 import EndVotingButton from "../gameSession/phaseButtonsForHost/EndVotingButton";
 import ContinueNextRoundButton from "../gameSession/phaseButtonsForHost/ContinueNextRoundButton";
 import EndGameControls from "../gameSession/phaseButtonsForHost/EndGameControls";
@@ -113,7 +114,10 @@ const GamePhaseControls = () => {
       case GAME_PHASES[14]: // "doctor_heals_player"
         return <EndDoctorHealButton gameSessionState={gameSessionState} />;
 
-      case GAME_PHASES[15]: // "day_phase"
+      case GAME_PHASES[15]: // "farewell_speech"
+        return <FarewellSpeechControls gameSessionState={gameSessionState} />;
+
+      case GAME_PHASES[16]: // "day_phase"
         return (
           <div className="flex flex-col items-center gap-2">
             {isSpeakingComplete(gameSessionState.current_speaker_index) ? (
@@ -129,24 +133,24 @@ const GamePhaseControls = () => {
           </div>
         );
 
-      case GAME_PHASES[16]: // "nominated_players_speak"
+      case GAME_PHASES[17]: // "nominated_players_speak"
         return (
           <NominatedPlayersSpeakingControls
             gameSessionState={gameSessionState}
           />
         );
 
-      case GAME_PHASES[17]: // "voting"
+      case GAME_PHASES[18]: // "voting"
         return (
           <div className="flex flex-col items-center gap-2">
             <EndVotingButton gameSessionState={gameSessionState} />
           </div>
         );
 
-      case GAME_PHASES[18]: // "repeat"
+      case GAME_PHASES[19]: // "repeat"
         return <ContinueNextRoundButton gameSessionState={gameSessionState} />;
 
-      case GAME_PHASES[19]: // "end_game"
+      case GAME_PHASES[20]: // "end_game"
         return <EndGameControls />;
 
       default:
