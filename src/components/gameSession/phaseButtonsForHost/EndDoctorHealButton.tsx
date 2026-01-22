@@ -1,18 +1,22 @@
 "use client";
 
 import React, { useState } from "react";
-import { updateGameSession } from "@/lib/gameSession/actions";
-import { resetSpeakingState } from "@/lib/dayPhase/actions";
 import { GameSessionState } from "@/types/game/type";
-import { GAME_PHASES } from "@/lib/constants/game";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
+import { startFarewellSpeech } from "@/lib/farewellSpeech/actions";
 
 type EndDoctorHealButtonProps = {
   gameSessionState: GameSessionState;
 };
 
 /**
- * Button to end doctor's heal action
+ * Button to end doctor's heal action and transition to farewell speech phase.
+ *
+ * Flow:
+ * - Calls startFarewellSpeech which:
+ *   - Determines who was killed (mafia_target, yakuza_target) minus healed player
+ *   - If no one dies, skips directly to day_phase
+ *   - Otherwise, transitions to farewell_speech with randomized speaker order
  */
 const EndDoctorHealButton = ({
   gameSessionState,
@@ -24,16 +28,12 @@ const EndDoctorHealButton = ({
     if (isLoading) return;
     setIsLoading(true);
     try {
-      // TODO: Store healed player in healed_players array
-      // Update game session to day_phase
-      const res = await updateGameSession(gameSessionState.id, {
-        game_phase: GAME_PHASES[15], // "day_phase"
-      });
+      // Start farewell speech phase
+      // This will automatically skip to day_phase if no one dies
+      const result = await startFarewellSpeech(gameId);
 
-      // Reset speaking state for new day phase
-      await resetSpeakingState(gameId);
-      if (!res?.ok) {
-        console.error("Failed to end doctor's heal:", res?.message);
+      if (!result.ok) {
+        console.error("Failed to start farewell speech:", result.message);
       }
     } finally {
       setIsLoading(false);

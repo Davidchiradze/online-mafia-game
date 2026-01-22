@@ -54,4 +54,3 @@ export function useDeadPlayerMute(
     // they would need to manually enable their devices
   }, [room, players, userId, enabled]);
 }
-
