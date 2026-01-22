@@ -314,7 +314,7 @@ export default function ParticipantComponent({
 
       {/* Ready button */}
       {isLocal && !isTargetHost && !gameSessionState && (
-        <div className="flex items-center justify-center absolute bottom-10 md:bottom-12 left-1/2 -translate-x-1/2 z-20">
+        <div className="flex items-center justify-center absolute bottom-2 md:bottom-4 left-1/2 -translate-x-1/2 z-20">
           <ReadyButton
             isReady={isReady}
             onReady={onReady}

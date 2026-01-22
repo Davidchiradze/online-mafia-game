@@ -91,10 +91,8 @@ export default function PlayerCircle({
           <div
             key={`seat-${String(key)}`}
             className={
-              "relative rounded-xl bg-black/40 backdrop-blur-sm border " +
-              (isHostIndex
-                ? "border-amber-400/60 ring-1 ring-amber-400/40 transform  translate-y-1/2"
-                : "border-white/10 ")
+              "relative rounded-xl bg-black/40 backdrop-blur-sm border border-white/10 " +
+              (isHostIndex ? "transform translate-y-1/2" : "")
             }
             style={{ gridColumn: pos.gridColumn, gridRow: pos.gridRow }}
           >
