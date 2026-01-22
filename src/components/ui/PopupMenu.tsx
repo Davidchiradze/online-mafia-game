@@ -4,7 +4,7 @@ import React, { useEffect, useRef } from "react";
 
 type MenuItem = {
   label: string;
-  onClick: () => void | Promise<void>;
+  onClick: (e: React.MouseEvent) => void | Promise<void>;
   className?: string;
 };
 

@@ -23,7 +23,6 @@ const EndDetectiveMeetButton = ({
     try {
       // Update game session to doctor_meet phase
       const res = await updateGameSession(gameSessionState.id, {
-        ...gameSessionState,
         game_phase: GAME_PHASES[6], // "doctor_meet"
       });
       if (!res?.ok) {

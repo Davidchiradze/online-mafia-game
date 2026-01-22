@@ -21,10 +21,10 @@ const EndVotingButton = ({ gameSessionState }: EndVotingButtonProps) => {
     try {
       // TODO: Process voting results and eliminate player
       // TODO: Check win conditions
-      // Update game session to repeat or end_game phase
+      // Update game session to repeat or end_game phase and clear nominations
       const res = await updateGameSession(gameSessionState.id, {
-        ...gameSessionState,
-        game_phase: GAME_PHASES[17], // "repeat"
+        game_phase: GAME_PHASES[18], // "repeat"
+        nominated_players: [], // Clear nominations after voting phase ends
       });
       if (!res?.ok) {
         console.error("Failed to end voting:", res?.message);

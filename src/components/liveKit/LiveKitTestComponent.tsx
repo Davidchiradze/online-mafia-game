@@ -10,7 +10,8 @@ import "@livekit/components-styles";
 import PlayerCircle from "@/components/game/PlayerCircle";
 import { useEffect, useRef, useState } from "react";
 import FloatingOptions from "./FloatingOptions";
-import { useRoleAssignmentNotification } from "@/hooks/useRoleAssignmentNotification";
+import { useRoleAssignmentNotification } from "@/hooks/game";
+import { useSpeakingAutoMute, useDeadPlayerMute } from "@/hooks/livekit";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import RoleRevealModal from "@/components/modals/RoleRevealModal";
@@ -29,7 +30,7 @@ export default function LiveKitTestComponent({
   userId: string;
   isHost: boolean;
 }) {
-  const { disconnect, viewerRole } = useGameRoom();
+  const { disconnect, viewerRole, gameSessionState, players } = useGameRoom();
   // Connect to room
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
@@ -37,6 +38,14 @@ export default function LiveKitTestComponent({
   // Role assignment notification - triggers modal when role is first assigned
   const { showRoleModal, role, description, closeRoleModal } =
     useRoleAssignmentNotification(viewerRole);
+
+  // Auto mute/unmute based on speaking round state
+  // Players listen to current_speaker_index and mute/unmute themselves
+  useSpeakingAutoMute(room, gameSessionState, players, userId, isHost);
+
+  // Disable microphone and camera for dead players
+  // Dead players cannot speak or show video for the rest of the game
+  useDeadPlayerMute(room, players, userId);
 
   useEffect(() => {
     const handleFullscreenChange = () => {

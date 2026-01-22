@@ -23,7 +23,6 @@ const EndDetectiveCheckButton = ({
     try {
       // Update game session to doctor_heals_player phase
       const res = await updateGameSession(gameSessionState.id, {
-        ...gameSessionState,
         game_phase: GAME_PHASES[14], // "doctor_heals_player"
       });
       if (!res?.ok) {

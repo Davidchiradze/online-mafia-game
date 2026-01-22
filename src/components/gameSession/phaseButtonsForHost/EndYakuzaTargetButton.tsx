@@ -24,7 +24,6 @@ const EndYakuzaTargetButton = ({
       // TODO: Store yakuza target in attempt_to_kill_players array
       // Update game session to detective_checks_for_mafia phase
       const res = await updateGameSession(gameSessionState.id, {
-        ...gameSessionState,
         game_phase: GAME_PHASES[13], // "detective_checks_for_mafia"
       });
       if (!res?.ok) {

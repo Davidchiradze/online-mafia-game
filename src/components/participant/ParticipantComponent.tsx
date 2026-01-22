@@ -1,23 +1,40 @@
 "use client";
 
-import {
-  ParticipantTile,
-  TrackReferenceOrPlaceholder,
-  TrackToggle,
-} from "@livekit/components-react";
-import { Track } from "livekit-client";
-import { MicOffIcon, MicOnIcon, MoreVerticalIcon } from "@/assets/icons";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { kickPlayer, transferHost } from "@/lib/gameRoom/actions";
-import { removeParticipantFromRoom } from "@/lib/liveKit/actions";
-import PopupMenu from "@/components/ui/PopupMenu";
-import { useParticipantReady } from "@/hooks/useParticipantReady";
-import ReadyButton from "@/components/ui/ReadyButton";
-import { useGameRoom } from "@/lib/context/gameRoomContext";
-import { useParticipantVisibility } from "@/hooks/useParticipantVisibility";
-import { VisibilityState } from "@/lib/game/visibility";
-import ParticipantCover from "@/components/video/ParticipantCover";
+import { TrackReferenceOrPlaceholder } from "@livekit/components-react";
+import { useCallback } from "react";
 import { Tables } from "@/db/supabase/database.types";
+
+// Context
+import { useGameRoom } from "@/lib/context/gameRoomContext";
+
+// Hooks
+import {
+  useParticipantReady,
+  useParticipantVisibility,
+  useParticipantState,
+  useParticipantMenuActions,
+  useParticipantKill,
+  useMobileReady,
+  useParticipantSpeaking,
+} from "@/hooks/participant";
+import {
+  useNomination,
+  useFoulSpeak,
+  useSpeakingProgress,
+  useMafiaTargetSelection,
+  useYakuzaTargetSelection,
+  useDoctorHealSelection,
+} from "@/hooks/game";
+
+// Components
+import ReadyButton from "@/components/ui/ReadyButton";
+import ParticipantMenuButton from "./ParticipantMenuButton";
+import KillConfirmModal from "./KillConfirmModal";
+import SpeakingProgressBar from "./SpeakingProgressBar";
+import ParticipantOverlay from "./ParticipantOverlay";
+import ParticipantBadges from "./ParticipantBadges";
+import NominationFoulSection from "./NominationFoulSection";
+import NightActionButtons from "./NightActionButtons";
 
 export default function ParticipantComponent({
   gameId,
@@ -34,20 +51,20 @@ export default function ParticipantComponent({
   playerIndex: number;
   player: Tables<"game_players">;
 }) {
-  const { gameSessionState } = useGameRoom();
+  const { gameSessionState, room } = useGameRoom();
 
-  const participant = trackRef?.participant;
-  const isLocal = Boolean(participant?.isLocal);
-  const isMicEnabled = Boolean(participant?.isMicrophoneEnabled);
-  const displayName: string | undefined =
-    participant?.name || participant?.identity;
-  const participantId: string | undefined = participant?.identity;
-  const isViewerHost = currentUserId === hostUserId;
-  const isTargetHost = participantId === hostUserId;
-  const [menuOpen, setMenuOpen] = useState<boolean>(false);
-  const [isMobileReadyVisible, setIsMobileReadyVisible] =
-    useState<boolean>(false);
-  const mobileReadyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // Basic participant state
+  const {
+    isLocal,
+    isMicEnabled,
+    displayName,
+    participantId,
+    isViewerHost,
+    isTargetHost,
+    isDisconnected,
+  } = useParticipantState(trackRef, player, currentUserId, hostUserId);
+
+  // Ready state
   const {
     isReady,
     markReady,
@@ -55,34 +72,130 @@ export default function ParticipantComponent({
     isLoading: isLoadingReady,
   } = useParticipantReady(gameId, participantId, trackRef);
 
-  // Check if participant is disconnected
-  const isDisconnected = useMemo(() => {
-    return player?.state === "disconnected";
-  }, [player]);
+  // Visibility state
+  const { visibilityState, coverMessage, isTargetDead } =
+    useParticipantVisibility(trackRef, player);
 
-  // Determine visibility based on game phase and roles
-  const { visibilityState, coverMessage } = useParticipantVisibility(trackRef);
+  // Menu actions (kick, make host)
+  const {
+    menuOpen,
+    setMenuOpen,
+    canShowLobbyMenu,
+    canShowGameMenu,
+    onKick,
+    onMakeHost,
+  } = useParticipantMenuActions(
+    gameId,
+    participantId,
+    hostUserId,
+    isViewerHost,
+    gameSessionState,
+    player.is_alive !== false
+  );
 
-  const canShowMenu = useMemo(() => {
-    // Only show menu when viewer is host, a real participant exists, and it's not the host tile
-    return Boolean(
-      isViewerHost && participantId && participantId !== hostUserId
-    );
-  }, [isViewerHost, participantId, hostUserId]);
+  // Kill actions
+  const {
+    killModalOpen,
+    setKillModalOpen,
+    isKilling,
+    onKillClick,
+    onConfirmKill,
+  } = useParticipantKill(gameId, participantId, setMenuOpen);
 
-  const onKick = useCallback(async () => {
-    if (!participantId) return;
-    await kickPlayer(gameId, participantId);
-    await removeParticipantFromRoom(gameId, participantId);
-    setMenuOpen(false);
-  }, [gameId, participantId]);
+  // Mobile ready visibility
+  const { isMobileReadyVisible, handleTileClick } = useMobileReady(
+    isLocal,
+    isTargetHost
+  );
 
-  const onMakeHost = useCallback(async () => {
-    if (!participantId) return;
-    await transferHost(gameId, participantId);
-    setMenuOpen(false);
-  }, [gameId, participantId]);
+  // Nomination state
+  const {
+    isNominated,
+    showNominationEffect,
+    canShowNominationButton,
+    isDayPhase,
+  } = useNomination({
+    seatNumber: player.seat_number,
+    isViewerHost,
+    isTargetHost,
+  });
 
+  // Speaking state
+  const { isSpeaking, boxShadowClass } = useParticipantSpeaking(
+    gameSessionState,
+    player.seat_number,
+    isMicEnabled,
+    isDayPhase,
+    isTargetHost,
+    isTargetDead
+  );
+
+  // Speaking progress
+  const speakingProgress = useSpeakingProgress(
+    gameSessionState?.speaker_started_at,
+    isSpeaking
+  );
+
+  // Foul-related functionality
+  const {
+    isFoulSpeaking,
+    foulSpeakTimeLeft,
+    startFoulSpeak,
+    canFoulSpeak,
+    canShowFoulSpeakButton,
+    currentFouls,
+    canShowFoulButton,
+  } = useFoulSpeak({
+    room,
+    player,
+    isLocal,
+    isDayPhase,
+    isSpeaking,
+    isTargetHost,
+    isViewerHost,
+  });
+
+  // Mafia target selection
+  const {
+    isMafiaTargetSelected,
+    shouldShowMafiaTargetIndicator,
+    canShowMafiaKillButton,
+  } = useMafiaTargetSelection(
+    gameSessionState,
+    player.seat_number,
+    isViewerHost,
+    isTargetHost,
+    player.is_alive !== false
+  );
+
+  // Yakuza target selection
+  const {
+    isYakuzaTargetSelected,
+    shouldShowYakuzaTargetIndicator,
+    canShowYakuzaKillButton,
+  } = useYakuzaTargetSelection(
+    gameSessionState,
+    player.seat_number,
+    isViewerHost,
+    isTargetHost,
+    player.is_alive !== false
+  );
+
+  // Doctor heal selection
+  const {
+    canShowDoctorHealButton,
+    isAlreadyHealed,
+    isDoctorHealSelected,
+    shouldShowDoctorHealIndicator,
+  } = useDoctorHealSelection(
+    gameSessionState,
+    player.seat_number,
+    isViewerHost,
+    isTargetHost,
+    player.is_alive !== false
+  );
+
+  // Ready button handlers
   const onReady = useCallback(async () => {
     await markReady();
   }, [markReady]);
@@ -91,112 +204,115 @@ export default function ParticipantComponent({
     await markUnready();
   }, [markUnready]);
 
-  const handleTileClick = useCallback(() => {
-    // Only applicable for the local participant who isn't the host
-    if (!isLocal || isTargetHost) return;
-    // Show Ready button briefly on mobile/tap interactions
-    setIsMobileReadyVisible(true);
-    if (mobileReadyTimeoutRef.current)
-      clearTimeout(mobileReadyTimeoutRef.current);
-    mobileReadyTimeoutRef.current = setTimeout(() => {
-      setIsMobileReadyVisible(false);
-    }, 3000);
-  }, [isLocal, isTargetHost]);
-
-  useEffect(() => {
-    return () => {
-      if (mobileReadyTimeoutRef.current)
-        clearTimeout(mobileReadyTimeoutRef.current);
-    };
-  }, []);
+  // Suppress unused variable warning - used for future features
+  void isDoctorHealSelected;
 
   return (
     <div
-      className="relative w-full h-full flex flex-col items-stretch justify-stretch text-sm text-gray-200 group"
+      className={`relative w-full h-full flex flex-col items-stretch justify-stretch text-sm text-gray-200 group transition-shadow duration-300 overflow-hidden rounded-xl ${boxShadowClass}`}
       onMouseLeave={() => setMenuOpen(false)}
       onClick={handleTileClick}
     >
-      {/* Show network issues UI when disconnected, otherwise show cover or video based on visibility */}
-      {isDisconnected ? (
-        <ParticipantCover isDisconnected={true} />
-      ) : visibilityState === VisibilityState.COVERED || !trackRef ? (
-        <ParticipantCover message={coverMessage} />
-      ) : (
-        <div className="relative w-full h-full">
-          <ParticipantTile
-            className="lk-hide-metadata"
-            trackRef={trackRef}
-            style={{ height: "100%" }}
-          />
-          {/* Dimmed overlay for sleeping players (host view) */}
-          {visibilityState === VisibilityState.DIMMED && (
-            <div className="absolute inset-0 z-[5] pointer-events-none">
-              {/* Blur + darken overlay */}
-              <div className="absolute inset-0 backdrop-blur-sm bg-slate-900/50" />
-              {/* Sleeping indicator */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-4xl md:text-5xl opacity-80 animate-pulse">
-                  💤
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-      {(!gameSessionState || (isLocal && isTargetHost)) &&
-        (isLocal ? (
-          <div className="absolute left-1 top-1 md:left-2 md:top-2 z-10 scale-90 md:scale-100">
-            <TrackToggle source={Track.Source.Microphone} showIcon={true} />
-          </div>
-        ) : (
-          <div className="absolute left-1 top-1 md:left-2 md:top-2 z-10 rounded-full border border-white/10 bg-black/40 backdrop-blur px-1.5 py-0.5 md:px-2 md:py-1 text-white text-[10px] md:text-[12px]">
-            {isMicEnabled ? (
-              <MicOnIcon width={14} height={14} />
-            ) : (
-              <MicOffIcon width={14} height={14} />
-            )}
-          </div>
-        ))}
-      <div className="absolute bottom-1 left-1 md:bottom-2 md:left-2 z-10 rounded-full border border-white/10 bg-black/40 backdrop-blur px-2 py-0.5 md:px-3 md:py-1 text-[10px] md:text-xs font-medium text-gray-100">
-        {gameSessionState
-          ? playerIndex === 13
-            ? "Host"
-            : playerIndex
-          : displayName || (playerIndex === 13 ? "Host" : playerIndex)}
-      </div>
-      {canShowMenu && (
-        <div className="absolute right-1 top-1 md:right-2 md:top-2 z-20">
-          <button
-            type="button"
-            aria-label="Participant settings"
-            onClick={() => setMenuOpen((p) => !p)}
-            className="rounded-md border border-white/10 bg-black/40 backdrop-blur p-1 md:p-1.5 text-white opacity-0 group-hover:opacity-100 transition"
-          >
-            <MoreVerticalIcon width={16} height={16} />
-          </button>
+      {/* Video / Cover layer */}
+      <ParticipantOverlay
+        visibilityState={visibilityState}
+        isDisconnected={isDisconnected}
+        coverMessage={coverMessage}
+        trackRef={trackRef}
+      />
 
-          <PopupMenu
-            open={menuOpen}
-            onClose={() => setMenuOpen(false)}
-            items={[
-              {
-                label: "Kick player",
-                onClick: onKick,
-                className: "text-red-600 dark:text-red-400",
-              },
-              { label: "Make host", onClick: onMakeHost },
-            ]}
-            className="absolute right-0 mt-2 w-44"
-          />
-        </div>
+      {/* Microphone indicator and seat badge */}
+      <ParticipantBadges
+        gameSessionState={gameSessionState}
+        isLocal={isLocal}
+        isTargetHost={isTargetHost}
+        isMicEnabled={isMicEnabled}
+        playerIndex={playerIndex}
+        displayName={displayName}
+        showNominationEffect={showNominationEffect}
+      />
+
+      {/* Lobby menu - kick/make host */}
+      {canShowLobbyMenu && (
+        <ParticipantMenuButton
+          menuOpen={menuOpen}
+          onToggleMenu={() => setMenuOpen((p) => !p)}
+          onCloseMenu={() => setMenuOpen(false)}
+          items={[
+            {
+              label: "Kick player",
+              onClick: onKick,
+              className: "text-red-600 dark:text-red-400",
+            },
+            { label: "Make host", onClick: onMakeHost },
+          ]}
+          ariaLabel="Participant settings"
+        />
       )}
-      {/* Ready indicator (top-right) - only show before game starts */}
+
+      {/* Game menu - kill action */}
+      {canShowGameMenu && (
+        <ParticipantMenuButton
+          menuOpen={menuOpen}
+          onToggleMenu={() => setMenuOpen((p) => !p)}
+          onCloseMenu={() => setMenuOpen(false)}
+          items={[
+            {
+              label: "Kill",
+              onClick: onKillClick,
+              className: "text-red-600 dark:text-red-400",
+            },
+          ]}
+          ariaLabel="Player actions"
+        />
+      )}
+
+      {/* Kill confirmation modal */}
+      <KillConfirmModal
+        open={killModalOpen}
+        onClose={() => setKillModalOpen(false)}
+        onConfirm={onConfirmKill}
+        isKilling={isKilling}
+        seatNumber={player.seat_number}
+      />
+
+      {/* Ready indicator */}
       {!gameSessionState && isReady && (
         <div className="absolute right-1 top-[34px] md:right-2 md:top-2 z-20 w-5 h-5 md:w-6 md:h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px] md:text-xs font-bold shadow">
           ✓
         </div>
       )}
-      {/* Local participant hover-ready/unready button (non-host) */}
+
+      {/* Nomination and foul section */}
+      <NominationFoulSection
+        seatNumber={player.seat_number}
+        isTargetDead={isTargetDead}
+        canShowNominationButton={canShowNominationButton}
+        isNominated={isNominated}
+        canShowFoulButton={canShowFoulButton}
+        currentFouls={currentFouls}
+        canShowFoulSpeakButton={canShowFoulSpeakButton}
+        isFoulSpeaking={isFoulSpeaking}
+        foulSpeakTimeLeft={foulSpeakTimeLeft}
+        canFoulSpeak={canFoulSpeak}
+        startFoulSpeak={startFoulSpeak}
+      />
+
+      {/* Night action buttons (Mafia kill, Yakuza kill, Doctor heal) */}
+      <NightActionButtons
+        seatNumber={player.seat_number}
+        canShowMafiaKillButton={canShowMafiaKillButton}
+        isMafiaTargetSelected={isMafiaTargetSelected}
+        shouldShowMafiaTargetIndicator={shouldShowMafiaTargetIndicator}
+        canShowYakuzaKillButton={canShowYakuzaKillButton}
+        isYakuzaTargetSelected={isYakuzaTargetSelected}
+        shouldShowYakuzaTargetIndicator={shouldShowYakuzaTargetIndicator}
+        canShowDoctorHealButton={canShowDoctorHealButton}
+        isAlreadyHealed={isAlreadyHealed}
+        shouldShowDoctorHealIndicator={shouldShowDoctorHealIndicator}
+      />
+
+      {/* Ready button */}
       {isLocal && !isTargetHost && !gameSessionState && (
         <div className="flex items-center justify-center absolute bottom-10 md:bottom-12 left-1/2 -translate-x-1/2 z-20">
           <ReadyButton
@@ -209,6 +325,11 @@ export default function ParticipantComponent({
             } md:group-hover:flex flex items-center justify-center`}
           />
         </div>
+      )}
+
+      {/* Speaking progress bar */}
+      {isSpeaking && !isTargetDead && (
+        <SpeakingProgressBar progress={speakingProgress} />
       )}
     </div>
   );

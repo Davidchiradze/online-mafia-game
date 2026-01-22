@@ -5,7 +5,6 @@ import {
   Room,
   RoomServiceClient,
 } from "livekit-server-sdk";
-import { TrackType } from "@livekit/protocol";
 import { createClient } from "@/lib/supabase/server";
 
 export async function generateLivekitAccessToken(
@@ -139,46 +138,4 @@ export async function setParticipantReady(
   await roomService.updateParticipant(roomId, participantId, {
     metadata: JSON.stringify({ ...existingMeta, ready }),
   });
-}
-
-/**
- * Mute all participants except the host
- * @param roomId - The LiveKit room ID (same as game ID)
- * @param hostId - The host's user ID to exclude from muting
- */
-export async function muteAllParticipantsExceptHost(
-  roomId: string,
-  hostId: string
-) {
-  const roomService = new RoomServiceClient(
-    process.env.NEXT_PUBLIC_LIVEKIT_URL!,
-    process.env.LIVEKIT_API_KEY!,
-    process.env.LIVEKIT_API_SECRET!
-  );
-
-  try {
-    const participants = await roomService.listParticipants(roomId);
-
-    // Mute audio tracks for all participants except the host
-    for (const participant of participants) {
-      if (participant.identity === hostId) continue;
-
-      // Find and mute audio tracks only (TrackType.AUDIO = 0, TrackType.VIDEO = 1)
-      for (const track of participant.tracks) {
-        if (track.type === TrackType.AUDIO) {
-          await roomService.mutePublishedTrack(
-            roomId,
-            participant.identity,
-            track.sid,
-            true // muted = true
-          );
-        }
-      }
-    }
-
-    return { ok: true };
-  } catch (error) {
-    console.error("Failed to mute participants:", error);
-    return { ok: false, message: "Failed to mute participants" };
-  }
 }

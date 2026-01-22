@@ -202,3 +202,68 @@ export async function leaveGamePlayerAdmin(
 ): Promise<LeaveResult> {
   return leaveGamePlayerByUserId(gameId, userId);
 }
+
+type KillResult = { ok: true } | { ok: false; message: string };
+
+/**
+ * Kill a player in the game (host-only action).
+ * Sets is_alive to false for the target player.
+ * Death is permanent and persists across reconnects.
+ *
+ * @param gameId - The game ID
+ * @param targetPlayerId - The player ID of the player to kill
+ */
+export async function killPlayer(
+  gameId: string,
+  targetPlayerId: string
+): Promise<KillResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  if (userError || !user) return { ok: false, message: "Not authenticated" };
+
+  // Verify caller is the host
+  const { data: gameRow, error: gameErr } = await adminClient
+    .from("games")
+    .select("host_id")
+    .eq("id", gameId)
+    .single<Pick<Tables<"games">, "host_id">>();
+
+  if (gameErr || !gameRow) {
+    return { ok: false, message: gameErr?.message || "Game not found" };
+  }
+
+  if (gameRow.host_id !== user.id) {
+    return { ok: false, message: "Forbidden: Only host can kill players" };
+  }
+
+  // Verify target player exists and is alive
+  const { data: targetPlayer, error: targetErr } = await adminClient
+    .from("game_players")
+    .select("id, is_alive")
+    .eq("game_id", gameId)
+    .eq("player_id", targetPlayerId)
+    .single<Pick<Tables<"game_players">, "id" | "is_alive">>();
+
+  if (targetErr || !targetPlayer) {
+    return { ok: false, message: "Player not found in this game" };
+  }
+
+  if (targetPlayer.is_alive === false) {
+    return { ok: false, message: "Player is already dead" };
+  }
+
+  // Update player to dead
+  const { error: updateErr } = await adminClient
+    .from("game_players")
+    .update({ is_alive: false })
+    .eq("id", targetPlayer.id);
+
+  if (updateErr) {
+    return { ok: false, message: updateErr.message };
+  }
+
+  return { ok: true };
+}

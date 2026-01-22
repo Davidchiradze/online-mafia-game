@@ -15,11 +15,13 @@ export type Role = (typeof JAPANESE_MAFIA_ROLES)[number] | null;
  * - VISIBLE: Full visibility (video shown normally)
  * - DIMMED: Visible but blurred/dimmed (for host seeing sleeping players)
  * - COVERED: Completely hidden behind a cover
+ * - DEAD: Player is dead (permanent state, shown with dead overlay)
  */
 export enum VisibilityState {
   VISIBLE = "visible",
   DIMMED = "dimmed",
   COVERED = "covered",
+  DEAD = "dead",
 }
 
 /**
@@ -71,6 +73,11 @@ export function canSeeParticipant(
     return true;
   }
 
+  // NOMINATED PLAYERS SPEAK: Everyone can see everyone (self-justification phase)
+  if (gamePhase === "nominated_players_speak") {
+    return true;
+  }
+
   // VOTING: Everyone can see everyone
   if (gamePhase === "voting") {
     return true;
@@ -94,9 +101,16 @@ export function canSeeParticipant(
 
   // DON CHOOSES RIGHT HAND: Only Don can see everyone, others see no one (except host)
   if (gamePhase === "don_chooses_right_hand") {
+    const mafiaRoles: Role[] = ["DON", "MAFIA", "MAFIA_RIGHT_HAND"];
+
     if (isViewerHost) return true; // Host sees everyone
-    if (isTargetHost && viewerRole === "DON") return true; // Don sees host
-    if (viewerRole === "DON") return true; // Don sees everyone
+    if (isTargetHost && mafiaRoles.includes(viewerRole)) return true; // Mafia see host
+
+    // Mafia members see each other
+    if (mafiaRoles.includes(viewerRole) && mafiaRoles.includes(targetRole)) {
+      return true;
+    }
+
     return false;
   }
 
@@ -205,6 +219,7 @@ function getAwakeRoles(gamePhase: GamePhase): Role[] {
       return ["DON", "MAFIA", "MAFIA_RIGHT_HAND"];
 
     case "don_chooses_right_hand":
+      return ["DON", "MAFIA", "MAFIA_RIGHT_HAND"];
     case "don_checks_for_detective":
       return ["DON"];
 
@@ -231,7 +246,7 @@ function getAwakeRoles(gamePhase: GamePhase): Role[] {
 /**
  * Checks if a phase is a "night" phase where some players are asleep
  */
-function isNightActivityPhase(gamePhase: GamePhase): boolean {
+export function isNightActivityPhase(gamePhase: GamePhase): boolean {
   const nightPhases: GamePhase[] = [
     "picking_roles",
     "night_phase",
@@ -350,4 +365,55 @@ export function getCoverMessage(gamePhase: GamePhase | null): string {
   }
 
   return "";
+}
+
+/**
+ * Determines the visibility state for a participant, accounting for dead players.
+ *
+ * Dead player rules:
+ * - If target is dead: always show DEAD state (regardless of phase)
+ * - If viewer is dead during night phases: show COVERED (Zzz) for all targets
+ * - Host always sees everything (dead overlay for dead, dimmed for sleeping)
+ *
+ * @param viewerRole - The role of the person viewing
+ * @param targetRole - The role of the person being viewed (or null if host)
+ * @param gamePhase - Current phase of the game
+ * @param isViewerHost - Whether the viewer is the host
+ * @param isTargetHost - Whether the target is the host
+ * @param viewerIsAlive - Whether the viewer is alive
+ * @param targetIsAlive - Whether the target is alive
+ * @returns VisibilityState indicating how the participant should be displayed
+ */
+export function getVisibilityStateWithDeath(
+  viewerRole: Role,
+  targetRole: Role,
+  gamePhase: GamePhase | null,
+  isViewerHost: boolean,
+  isTargetHost: boolean,
+  viewerIsAlive: boolean,
+  targetIsAlive: boolean
+): VisibilityState {
+  // If target is dead, always show dead overlay (except for host tile)
+  if (!targetIsAlive && !isTargetHost) {
+    return VisibilityState.DEAD;
+  }
+
+  // If viewer is dead (not host) and it's a night phase, show Zzz for everyone
+  if (
+    !viewerIsAlive &&
+    !isViewerHost &&
+    gamePhase &&
+    isNightActivityPhase(gamePhase)
+  ) {
+    return VisibilityState.COVERED;
+  }
+
+  // Otherwise, use the standard visibility logic
+  return getVisibilityState(
+    viewerRole,
+    targetRole,
+    gamePhase,
+    isViewerHost,
+    isTargetHost
+  );
 }

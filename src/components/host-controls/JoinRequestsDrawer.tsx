@@ -6,7 +6,7 @@ import {
   fetchPendingJoinRequests,
   rejectJoinRequest,
 } from "@/lib/gameRoom/actions";
-import { usePendingJoinRequests } from "@/hooks/useJoinRequests";
+import { usePendingJoinRequests } from "@/hooks/realtime";
 import { JoinRequest } from "@/types/game/type";
 import { JOIN_REQUEST_STATUSES } from "@/lib/constants/game";
 type Props = {

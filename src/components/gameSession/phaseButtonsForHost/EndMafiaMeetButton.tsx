@@ -21,7 +21,6 @@ const EndMafiaMeetButton = ({ gameSessionState }: EndMafiaMeetButtonProps) => {
     try {
       // Update game session to don_chooses_right_hand phase
       const res = await updateGameSession(gameSessionState.id, {
-        ...gameSessionState,
         game_phase: GAME_PHASES[3], // "don_chooses_right_hand"
       });
       if (!res?.ok) {

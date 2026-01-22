@@ -7,9 +7,16 @@ import GameCard from "./GameCard";
 type Props = {
   data: GameRoom[];
   onRowClick?: (session: GameRoom) => void;
+  userId?: string;
+  onRoomDeleted?: (gameId: string) => void;
 };
 
-export default function GameTable({ data, onRowClick }: Props) {
+export default function GameTable({
+  data,
+  onRowClick,
+  userId,
+  onRoomDeleted,
+}: Props) {
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm bg-white dark:bg-gray-900">
       {/* Mobile: grid of cards */}
@@ -55,13 +62,16 @@ export default function GameTable({ data, onRowClick }: Props) {
               <th className="text-left px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                 Spectators
               </th>
+              <th className="text-left px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
             {data.length === 0 ? (
               <tr>
                 <td
-                  colSpan={5}
+                  colSpan={6}
                   className="px-6 py-10 text-center text-gray-500 dark:text-gray-400"
                 >
                   No games yet
@@ -76,6 +86,8 @@ export default function GameTable({ data, onRowClick }: Props) {
                     onRowClick={onRowClick}
                     participantCount={session.current_players}
                     participantNames={session?.participant_names || []}
+                    userId={userId}
+                    onRoomDeleted={onRoomDeleted}
                   />
                 );
               })

@@ -2,8 +2,10 @@
 
 import React, { useState } from "react";
 import { updateGameSession } from "@/lib/gameSession/actions";
+import { resetSpeakingState } from "@/lib/dayPhase/actions";
 import { GameSessionState } from "@/types/game/type";
 import { GAME_PHASES } from "@/lib/constants/game";
+import { useGameRoom } from "@/lib/context/gameRoomContext";
 
 type EndDoctorMeetButtonProps = {
   gameSessionState: GameSessionState;
@@ -15,6 +17,7 @@ type EndDoctorMeetButtonProps = {
 const EndDoctorMeetButton = ({
   gameSessionState,
 }: EndDoctorMeetButtonProps) => {
+  const { gameId } = useGameRoom();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleEndDoctorMeet = async () => {
@@ -23,9 +26,11 @@ const EndDoctorMeetButton = ({
     try {
       // Update game session to introduction_phase
       const res = await updateGameSession(gameSessionState.id, {
-        ...gameSessionState,
         game_phase: GAME_PHASES[7], // "introduction_phase"
       });
+
+      // Reset speaking state for new introduction phase
+      await resetSpeakingState(gameId);
       if (!res?.ok) {
         console.error("Failed to end doctor meeting:", res?.message);
       }

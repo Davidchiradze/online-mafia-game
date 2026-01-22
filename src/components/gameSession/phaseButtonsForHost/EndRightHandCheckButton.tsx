@@ -23,7 +23,6 @@ const EndRightHandCheckButton = ({
     try {
       // Update game session to yakuza_and_shogun_chooses_target phase
       const res = await updateGameSession(gameSessionState.id, {
-        ...gameSessionState,
         game_phase: GAME_PHASES[12], // "yakuza_and_shogun_chooses_target"
       });
       if (!res?.ok) {

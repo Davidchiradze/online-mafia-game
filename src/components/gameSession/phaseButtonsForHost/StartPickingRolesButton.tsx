@@ -34,7 +34,6 @@ const StartPickingRolesButton = ({
 
       // Update game session to picking_roles phase
       const res = await updateGameSession(gameSessionState.id, {
-        ...gameSessionState,
         game_phase: GAME_PHASES[1], // "picking_roles"
       });
       if (!res?.ok) {

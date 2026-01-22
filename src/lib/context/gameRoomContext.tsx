@@ -4,6 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -14,17 +15,21 @@ import type {
   GameSessionState,
   JoinRequest,
 } from "@/types/game/type";
-import { useLivekitRoom } from "@/hooks/useLivekitRoom";
-import { useGameSession } from "@/hooks/useGameSession";
-import { useMyJoinRequestStatus } from "@/hooks/useJoinRequests";
-import { useGameHostSubscription } from "@/hooks/useGameHostSubscription";
+import {
+  useLivekitRoom,
+  useLivekitConnect,
+  useEnsurePlayerSeat,
+  useJoinPermissionListener,
+} from "@/hooks/livekit";
+import { useGameSession, useGamePlayers, usePlayerRoles } from "@/hooks/game";
+import {
+  useMyJoinRequestStatus,
+  useGameHostSubscription,
+  useNightPhaseSessionListener,
+} from "@/hooks/realtime";
+import type { NightPhaseSession } from "@/hooks/realtime";
 import { JOIN_REQUEST_STATUSES } from "@/lib/constants/game";
 import { leaveGamePlayer } from "@/lib/gamePlayers/actions";
-import { useJoinPermissionListener } from "@/hooks/useJoinPermissionListener";
-import { useEnsurePlayerSeat } from "@/hooks/useEnsurePlayerSeat";
-import { useLivekitConnect } from "@/hooks/useLivekitConnect";
-import { useGamePlayers } from "@/hooks/useGamePlayers";
-import { usePlayerRoles } from "@/hooks/usePlayerRoles";
 import { Tables } from "@/db/supabase/database.types";
 import type { PlayerRolesMap } from "@/types/game/type";
 
@@ -50,6 +55,8 @@ type GameRoomContextValue = {
   playerRolesMap: PlayerRolesMap;
   /** Get role for a specific player (returns null if not visible to current user) */
   getRoleForUser: (targetUserId: string) => string | null;
+  /** Night phase session data - available to host and team members (RLS removed temporarily) */
+  nightPhaseSession: NightPhaseSession | null;
 };
 
 const GameRoomContext = createContext<GameRoomContextValue | null>(null);
@@ -62,12 +69,7 @@ export function GameRoomProvider({
   game: GameRoom;
   userId: string;
 }>) {
-  const {
-    id: gameId,
-    host_id,
-    max_players: maxPlayers,
-    game_status: gameStatus,
-  } = game;
+  const { id: gameId, host_id, max_players: maxPlayers } = game;
 
   const [currentHostId, setCurrentHostId] = useState<string | null>(host_id);
   const isHost = currentHostId === userId;
@@ -106,12 +108,44 @@ export function GameRoomProvider({
   // Game players subscription
   const players = useGamePlayers(gameId, hasPlayerRecord);
 
+  // Night phase session subscription (RLS removed temporarily - all players can see)
+  // Subscribe when game is in progress
+  const { currentNightSession: nightPhaseSession } =
+    useNightPhaseSessionListener(gameId, hasPlayerRecord && !!gameSessionState);
+
   // Player roles (fetched once, filtered by team visibility)
-  const { viewerRole, playerRolesMap, getRoleForUser } = usePlayerRoles(
-    gameId,
-    userId,
-    { enabled: hasPlayerRecord && !!gameSessionState }
-  );
+  const {
+    viewerRole,
+    playerRolesMap,
+    getRoleForUser,
+    refetch: refetchRoles,
+  } = usePlayerRoles(gameId, userId, {
+    enabled: hasPlayerRecord && !!gameSessionState,
+  });
+
+  // Refetch roles when phase changes to phases that require roles (e.g., mafia_meet)
+  // This ensures roles are loaded when transitioning from picking_roles to mafia_meet
+
+  // TODO: Refactor this to use a more efficient approach
+  useEffect(() => {
+    if (!gameSessionState?.game_phase) return;
+    const phasesRequiringRoles = [
+      "mafia_meet",
+      "don_chooses_right_hand",
+      "yakuda_shogun_meet",
+      "detective_meet",
+      "doctor_meet",
+      "mafia_chooses_target",
+      "don_checks_for_detective",
+      "right_hand_checks_for_yakuza",
+      "yakuza_and_shogun_chooses_target",
+      "detective_checks_for_mafia",
+      "doctor_heals_player",
+    ];
+    if (phasesRequiringRoles.includes(gameSessionState.game_phase)) {
+      void refetchRoles();
+    }
+  }, [gameSessionState?.game_phase, refetchRoles]);
 
   // Redirect back to lobby on disconnect by default
   useLivekitRoom(
@@ -200,6 +234,7 @@ export function GameRoomProvider({
       viewerRole,
       playerRolesMap,
       getRoleForUser,
+      nightPhaseSession,
     }),
     [
       gameId,
@@ -220,6 +255,7 @@ export function GameRoomProvider({
       viewerRole,
       playerRolesMap,
       getRoleForUser,
+      nightPhaseSession,
     ]
   );
 

@@ -95,20 +95,17 @@ export async function createGameSession(
 
 export async function updateGameSession(
   gameSessionId: string,
-  gameSessionState: GameSessionState
+  updates: Partial<GameSessionState>
 ): Promise<{ ok: true } | { ok: false; message: string }> {
   const { error: updateErr } = await adminClient
     .from("game_sessions")
-    .update(gameSessionState)
+    .update(updates)
     .eq("id", gameSessionId);
   if (updateErr) return { ok: false, message: updateErr.message };
   return { ok: true };
 }
 
-export async function getGameSession(
-  gameId: string,
-  userId: string
-): Promise<
+export async function getGameSession(gameId: string): Promise<
   | {
       ok: true;
       gameSessionState: GameSessionState;
@@ -204,12 +201,12 @@ export async function assignRandomRoles(
     (p) => p.seat_number !== null && p.seat_number !== hostSeatNumber
   );
 
-  if (playersWithSeats.length !== shuffledRoles.length) {
-    return {
-      ok: false,
-      message: `Expected ${shuffledRoles.length} players with seats, but found ${playersWithSeats.length}`,
-    };
-  }
+  // if (playersWithSeats.length !== shuffledRoles.length) {
+  //   return {
+  //     ok: false,
+  //     message: `Expected ${shuffledRoles.length} players with seats, but found ${playersWithSeats.length}`,
+  //   };
+  // }
 
   // Assign roles to players in the secure game_player_roles table
   for (let i = 0; i < playersWithSeats.length; i++) {

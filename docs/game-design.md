@@ -43,9 +43,10 @@ The game follows this phase sequence:
 14. **detective_checks_for_mafia** - Detective checks if a player is Mafia
 15. **doctor_heals_player** - Doctor selects a player to heal
 16. **day_phase** - Day discussion phase, everyone can see everyone
-17. **voting** - Players vote to eliminate someone
-18. **repeat** - Cycle back to night_phase (if game continues)
-19. **end_game** - Game ends, win condition met
+17. **nominated_players_speak** - Nominated players give 30-second self-justification in nomination order
+18. **voting** - Players vote to eliminate someone
+19. **repeat** - Cycle back to night_phase (if game continues)
+20. **end_game** - Game ends, win condition met
 
 ## Role-Based Visibility
 

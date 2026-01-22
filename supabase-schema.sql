@@ -1,22 +1,6 @@
 -- WARNING: This schema is for context only and is not meant to be run.
 -- Table order and constraints may not be valid for execution.
 
-CREATE TABLE public.game_players (
-  id uuid NOT NULL DEFAULT uuid_generate_v4(),
-  game_id uuid,
-  player_id uuid,
-  is_alive boolean DEFAULT true,
-  joined_at timestamp with time zone DEFAULT now(),
-  seat_number numeric,
-  state text,
-  fouls numeric,
-  CONSTRAINT game_players_pkey PRIMARY KEY (id),
-  CONSTRAINT game_players_game_id_fkey FOREIGN KEY (game_id) REFERENCES public.games(id),
-  CONSTRAINT game_players_player_id_fkey FOREIGN KEY (player_id) REFERENCES public.profiles(id)
-);
-
--- Roles are stored separately for security (role-based visibility)
--- Only teammates and host can see each other's roles
 CREATE TABLE public.game_player_roles (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
   game_id uuid NOT NULL,
@@ -25,23 +9,50 @@ CREATE TABLE public.game_player_roles (
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   CONSTRAINT game_player_roles_pkey PRIMARY KEY (id),
-  CONSTRAINT game_player_roles_game_id_player_id_key UNIQUE (game_id, player_id),
   CONSTRAINT game_player_roles_game_id_fkey FOREIGN KEY (game_id) REFERENCES public.games(id),
   CONSTRAINT game_player_roles_player_id_fkey FOREIGN KEY (player_id) REFERENCES public.profiles(id)
 );
+CREATE TABLE public.game_players (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  game_id uuid,
+  player_id uuid,
+  is_alive boolean DEFAULT true,
+  joined_at timestamp with time zone DEFAULT now(),
+  seat_number numeric,
+  fouls numeric,
+  state text,
+  CONSTRAINT game_players_pkey PRIMARY KEY (id),
+  CONSTRAINT game_players_game_id_fkey FOREIGN KEY (game_id) REFERENCES public.games(id),
+  CONSTRAINT game_players_player_id_fkey FOREIGN KEY (player_id) REFERENCES public.profiles(id)
+);
 CREATE TABLE public.game_sessions (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
-  game_id uuid NOT NULL,
+  game_id uuid NOT NULL UNIQUE,
   game_phase text NOT NULL,
   is_finished boolean NOT NULL DEFAULT false,
-  nominated_players integer[] NOT NULL DEFAULT '{}',
-  attempt_to_kill_players integer[] NOT NULL DEFAULT '{}',
-  healed_players integer[] NOT NULL DEFAULT '{}',
+  nominated_players ARRAY NOT NULL DEFAULT '{}'::integer[],
   created_at timestamp with time zone DEFAULT now(),
+  day_round_opener_index integer,
+  current_speaker_index integer,
+  speaker_started_at timestamp with time zone,
+  speaking_order ARRAY NOT NULL DEFAULT '{}'::integer[],
+  current_night_number integer NOT NULL DEFAULT 0,
   CONSTRAINT game_sessions_pkey PRIMARY KEY (id),
   CONSTRAINT game_sessions_game_id_fkey FOREIGN KEY (game_id) REFERENCES public.games(id)
 );
-
+CREATE TABLE public.night_phase_sessions (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  game_id uuid NOT NULL,
+  night_number integer NOT NULL,
+  mafia_target integer,
+  yakuza_target integer,
+  healed_player integer,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT night_phase_sessions_pkey PRIMARY KEY (id),
+  CONSTRAINT night_phase_sessions_game_id_fkey FOREIGN KEY (game_id) REFERENCES public.games(id) ON DELETE CASCADE,
+  CONSTRAINT night_phase_sessions_unique_night UNIQUE (game_id, night_number)
+);
 CREATE TABLE public.games (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
   code text NOT NULL UNIQUE,
@@ -52,11 +63,10 @@ CREATE TABLE public.games (
   updated_at timestamp with time zone DEFAULT now(),
   game_status USER-DEFINED NOT NULL DEFAULT 'not_started'::"game-status",
   game_type USER-DEFINED NOT NULL DEFAULT 'traditional'::game_type,
-  max_players USER-DEFINED NOT NULL DEFAULT '10'::max_player_number,
+  max_players integer DEFAULT 12,
   CONSTRAINT games_pkey PRIMARY KEY (id),
   CONSTRAINT games_host_id_fkey FOREIGN KEY (host_id) REFERENCES public.profiles(id)
 );
-
 CREATE TABLE public.join_requests (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
   game_id uuid NOT NULL,
@@ -69,7 +79,6 @@ CREATE TABLE public.join_requests (
   CONSTRAINT join_requests_game_id_fkey FOREIGN KEY (game_id) REFERENCES public.games(id),
   CONSTRAINT join_requests_requester_id_fkey FOREIGN KEY (requester_id) REFERENCES public.profiles(id)
 );
-
 CREATE TABLE public.profiles (
   id uuid NOT NULL,
   email text NOT NULL UNIQUE,
