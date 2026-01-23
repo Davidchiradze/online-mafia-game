@@ -8,6 +8,7 @@ import GamePhaseControls from "./GamePhaseControls";
 import { Tables } from "@/db/supabase/database.types";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import NominatedPlayersDisplay from "./NominatedPlayersDisplay";
+import VotingDisplay from "./VotingDisplay";
 
 // 4x5 grid placement for 12 players around a centered host (spanning 2 rows)
 // Player indices are 1..12 (clockwise-ish around the host)
@@ -117,11 +118,13 @@ export default function PlayerCircle({
         {userId === hostUserId && <GamePhaseControls />}
       </div>
       <div style={{ gridColumn: 3, gridRow: 3 }}>
-        {isHost && (
+        {isHost ? (
           <NominatedPlayersDisplay
             nominatedPlayers={gameSessionState?.nominated_players ?? []}
           />
-        )}
+        ) : gameSessionState?.game_phase === "voting" ? (
+          <VotingDisplay />
+        ) : null}
       </div>
     </div>
   );

@@ -1,0 +1,90 @@
+"use client";
+
+import { useState, useCallback, useEffect, useRef } from "react";
+import { castVote } from "@/lib/voting/actions";
+import { VOTING } from "@/lib/constants/game";
+import type { VotingSession } from "@/hooks/realtime";
+
+type UseVotingButtonOptions = {
+  votingSession: VotingSession | null;
+  playerSeatNumber: number | null;
+  gameId: string;
+};
+
+/**
+ * Hook to manage voting button state.
+ * Returns whether button is enabled, time remaining, and submit handler.
+ */
+export function useVotingButton({
+  votingSession,
+  playerSeatNumber,
+  gameId,
+}: UseVotingButtonOptions) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [timeLeft, setTimeLeft] = useState<number>(VOTING.VOTE_WINDOW_SECONDS);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Check if player has already voted
+  const hasVoted = (() => {
+    if (!votingSession || playerSeatNumber === null) return false;
+    const playersWhoVoted = votingSession.players_who_voted ?? [];
+    return playersWhoVoted.includes(playerSeatNumber);
+  })();
+
+  // Check if voting is active
+  const isVotingActive = votingSession?.voting_active ?? false;
+
+  // Timer countdown
+  useEffect(() => {
+    if (!votingSession?.voting_started_at || !isVotingActive) {
+      setTimeLeft(VOTING.VOTE_WINDOW_SECONDS);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      return;
+    }
+
+    const startTime = new Date(votingSession.voting_started_at).getTime();
+
+    const tick = () => {
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      setTimeLeft(Math.max(0, VOTING.VOTE_WINDOW_SECONDS - elapsed));
+    };
+
+    tick();
+    intervalRef.current = setInterval(tick, 100);
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [votingSession?.voting_started_at, isVotingActive]);
+
+  // Button enabled when voting is active and player hasn't voted
+  const isEnabled =
+    isVotingActive && !hasVoted && !isSubmitting && playerSeatNumber !== null;
+
+  const submitVote = useCallback(async () => {
+    if (!isEnabled) return;
+    setIsSubmitting(true);
+    try {
+      await castVote(gameId);
+    } catch (e) {
+      console.error("Vote failed:", e);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [gameId, isEnabled]);
+
+  return {
+    isEnabled,
+    hasVoted,
+    isSubmitting,
+    timeLeft,
+    isVotingActive,
+    submitVote,
+  };
+}
