@@ -17,7 +17,7 @@ import EndYakuzaTargetButton from "../gameSession/phaseButtonsForHost/EndYakuzaT
 import EndDetectiveCheckButton from "../gameSession/phaseButtonsForHost/EndDetectiveCheckButton";
 import EndDoctorHealButton from "../gameSession/phaseButtonsForHost/EndDoctorHealButton";
 import FarewellSpeechControls from "../gameSession/phaseButtonsForHost/FarewellSpeechControls";
-import VotingPhaseControls from "../gameSession/phaseButtonsForHost/VotingPhaseControls";
+import VotingPhaseControls from "../gameSession/vote/VotingPhaseControls";
 import ContinueNextRoundButton from "../gameSession/phaseButtonsForHost/ContinueNextRoundButton";
 import EndGameControls from "../gameSession/phaseButtonsForHost/EndGameControls";
 import DayPhaseSpeakingControls from "../gameSession/phaseButtonsForHost/DayPhaseSpeakingControls";
@@ -159,7 +159,7 @@ const GamePhaseControls = () => {
   };
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-end gap-2">
+    <div className="w-full flex flex-col items-center gap-2">
       <NightActionsDisplay />
       {renderPhaseButton()}
     </div>

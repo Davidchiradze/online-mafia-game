@@ -114,18 +114,21 @@ export default function PlayerCircle({
           </div>
         );
       })}
-      <div style={{ gridColumn: 3, gridRow: 2 }}>
-        {userId === hostUserId && <GamePhaseControls />}
+      <div style={{ gridColumn: 3, gridRow: 2, position: "relative" }}>
+        <div className="absolute top-0 left-0 w-full h-[200%] flex flex-col items-center justify-center gap-2">
+          <div className="w-full h-[50%] flex flex-col items-center justify-center gap-2">
+            {isHost && <GamePhaseControls />}
+            {isHost ? (
+              <NominatedPlayersDisplay
+                nominatedPlayers={gameSessionState?.nominated_players ?? []}
+              />
+            ) : gameSessionState?.game_phase === "voting" ? (
+              <VotingDisplay />
+            ) : null}
+          </div>
+        </div>
       </div>
-      <div style={{ gridColumn: 3, gridRow: 3 }}>
-        {isHost ? (
-          <NominatedPlayersDisplay
-            nominatedPlayers={gameSessionState?.nominated_players ?? []}
-          />
-        ) : gameSessionState?.game_phase === "voting" ? (
-          <VotingDisplay />
-        ) : null}
-      </div>
+      <div style={{ gridColumn: 3, gridRow: 3 }}></div>
     </div>
   );
 }

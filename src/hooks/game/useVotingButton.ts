@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { castVote } from "@/lib/voting/actions";
+import { castVote, castBothLeaveVote } from "@/lib/voting/actions";
 import { VOTING } from "@/lib/constants/game";
 import type { VotingSession } from "@/hooks/realtime";
 
@@ -24,9 +24,16 @@ export function useVotingButton({
   const [timeLeft, setTimeLeft] = useState<number>(VOTING.VOTE_WINDOW_SECONDS);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Check if this is "both leave" vote mode
+  const isBothLeaveMode = votingSession?.both_leave_vote_active ?? false;
+
   // Check if player has already voted
   const hasVoted = (() => {
     if (!votingSession || playerSeatNumber === null) return false;
+    if (isBothLeaveMode) {
+      const bothLeaveVotes = votingSession.both_leave_votes ?? [];
+      return bothLeaveVotes.includes(playerSeatNumber);
+    }
     const playersWhoVoted = votingSession.players_who_voted ?? [];
     return playersWhoVoted.includes(playerSeatNumber);
   })();
@@ -71,13 +78,17 @@ export function useVotingButton({
     if (!isEnabled) return;
     setIsSubmitting(true);
     try {
-      await castVote(gameId);
+      if (isBothLeaveMode) {
+        await castBothLeaveVote(gameId);
+      } else {
+        await castVote(gameId);
+      }
     } catch (e) {
       console.error("Vote failed:", e);
     } finally {
       setIsSubmitting(false);
     }
-  }, [gameId, isEnabled]);
+  }, [gameId, isEnabled, isBothLeaveMode]);
 
   return {
     isEnabled,
@@ -85,6 +96,7 @@ export function useVotingButton({
     isSubmitting,
     timeLeft,
     isVotingActive,
+    isBothLeaveMode,
     submitVote,
   };
 }

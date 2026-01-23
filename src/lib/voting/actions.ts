@@ -17,6 +17,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import type { Tables, Json } from "@/db/supabase/database.types";
+import { VOTING } from "@/lib/constants/game";
 
 type ActionResult = { ok: true } | { ok: false; message: string };
 
@@ -656,6 +657,419 @@ export async function processVotingResults(
     // Tie between multiple candidates
     return { ok: true, result: "tie", tiedCandidates: topCandidates };
   }
+}
+
+// ============================================================================
+// TASK 4: Tie-break Actions
+// ============================================================================
+
+/**
+ * Start tie-break when voting results in a tie.
+ * If same candidates tie twice, triggers "both leave" vote instead.
+ *
+ * Flow:
+ * - First tie: Set up re-vote with tied candidates, go to nominated_players_speak for 30s justifications
+ * - Same candidates tie again: Trigger "both leave" vote
+ *
+ * Host only.
+ */
+export async function startTieBreak(
+  gameId: string,
+  tiedCandidates: number[]
+): Promise<ActionResult & { bothLeaveVote?: boolean }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  if (userError || !user) return { ok: false, message: "Not authenticated" };
+
+  const hostCheck = await verifyHost(gameId, user.id);
+  if (!hostCheck.ok) return hostCheck;
+
+  // Get current voting session
+  const { data: votingSession, error: sessionErr } = await adminClient
+    .from("voting_sessions")
+    .select("*")
+    .eq("game_id", gameId)
+    .single();
+
+  if (sessionErr || !votingSession) {
+    return { ok: false, message: "Voting session not found" };
+  }
+
+  const previousTied = votingSession.previous_tied_candidates ?? [];
+  const currentTieBreakRound = votingSession.tie_break_round ?? 0;
+
+  // Check if same candidates tied again (after at least one tie-break round)
+  const sameCandidates =
+    currentTieBreakRound > 0 &&
+    previousTied.length === tiedCandidates.length &&
+    previousTied.every((c) => tiedCandidates.includes(c));
+
+  if (sameCandidates) {
+    // Same players tied twice - trigger "both leave" vote
+    const { error: updateErr } = await adminClient
+      .from("voting_sessions")
+      .update({
+        both_leave_vote_active: true,
+        both_leave_votes: [],
+        voting_active: false,
+        voting_started_at: null,
+      })
+      .eq("game_id", gameId);
+
+    if (updateErr) {
+      return { ok: false, message: updateErr.message };
+    }
+
+    return { ok: true, bothLeaveVote: true };
+  }
+
+  // Normal tie-break: update voting session for re-vote
+  const { error: updateVotingErr } = await adminClient
+    .from("voting_sessions")
+    .update({
+      is_tie_break: true,
+      tie_break_round: currentTieBreakRound + 1,
+      candidates: tiedCandidates,
+      previous_tied_candidates: tiedCandidates,
+      votes: {},
+      players_who_voted: [],
+      current_candidate_index: 0,
+      voting_active: false,
+      voting_started_at: null,
+    })
+    .eq("game_id", gameId);
+
+  if (updateVotingErr) {
+    return { ok: false, message: updateVotingErr.message };
+  }
+
+  // Update game session for tie-break justification (30s each)
+  const { error: updateGameErr } = await adminClient
+    .from("game_sessions")
+    .update({
+      game_phase: "nominated_players_speak",
+      speaking_order: tiedCandidates,
+      current_speaker_index: tiedCandidates[0],
+      speaker_started_at: new Date().toISOString(),
+    })
+    .eq("game_id", gameId);
+
+  if (updateGameErr) {
+    return { ok: false, message: updateGameErr.message };
+  }
+
+  return { ok: true, bothLeaveVote: false };
+}
+
+/**
+ * Start the "both leave" voting window.
+ * Enables voting for whether all tied candidates should leave.
+ * Host only.
+ */
+export async function startBothLeaveVote(
+  gameId: string
+): Promise<ActionResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  if (userError || !user) return { ok: false, message: "Not authenticated" };
+
+  const hostCheck = await verifyHost(gameId, user.id);
+  if (!hostCheck.ok) return hostCheck;
+
+  const { error: updateErr } = await adminClient
+    .from("voting_sessions")
+    .update({
+      voting_active: true,
+      voting_started_at: new Date().toISOString(),
+    })
+    .eq("game_id", gameId);
+
+  if (updateErr) {
+    return { ok: false, message: updateErr.message };
+  }
+
+  return { ok: true };
+}
+
+/**
+ * End the "both leave" voting window.
+ * Host only.
+ */
+export async function endBothLeaveVote(gameId: string): Promise<ActionResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  if (userError || !user) return { ok: false, message: "Not authenticated" };
+
+  const hostCheck = await verifyHost(gameId, user.id);
+  if (!hostCheck.ok) return hostCheck;
+
+  const { error: updateErr } = await adminClient
+    .from("voting_sessions")
+    .update({
+      voting_active: false,
+      // voting_started_at: null,
+    })
+    .eq("game_id", gameId);
+
+  if (updateErr) {
+    return { ok: false, message: updateErr.message };
+  }
+
+  return { ok: true };
+}
+
+/**
+ * Cast a vote in the "both leave" vote.
+ * Player votes for all tied candidates to leave.
+ */
+export async function castBothLeaveVote(gameId: string): Promise<ActionResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  if (userError || !user) return { ok: false, message: "Not authenticated" };
+
+  // Get player's seat number
+  const { data: player, error: playerErr } = await adminClient
+    .from("game_players")
+    .select("seat_number, is_alive")
+    .eq("game_id", gameId)
+    .eq("player_id", user.id)
+    .single();
+
+  if (playerErr || !player) {
+    return { ok: false, message: "Player not found" };
+  }
+
+  if (!player.is_alive) {
+    return { ok: false, message: "Dead players cannot vote" };
+  }
+
+  const seatNumber = player.seat_number;
+  if (seatNumber === null) {
+    return { ok: false, message: "Player has no seat" };
+  }
+
+  // Get voting session
+  const { data: votingSession, error: sessionErr } = await adminClient
+    .from("voting_sessions")
+    .select("*")
+    .eq("game_id", gameId)
+    .single();
+
+  if (sessionErr || !votingSession) {
+    return { ok: false, message: "Voting session not found" };
+  }
+
+  if (!votingSession.both_leave_vote_active) {
+    return { ok: false, message: "Both leave vote is not active" };
+  }
+
+  if (!votingSession.voting_active) {
+    return { ok: false, message: "Voting window is not open" };
+  }
+
+  // Check if already voted
+  const currentVotes = votingSession.both_leave_votes ?? [];
+  if (currentVotes.includes(seatNumber)) {
+    return { ok: false, message: "Already voted" };
+  }
+
+  // Add vote
+  const { error: updateErr } = await adminClient
+    .from("voting_sessions")
+    .update({
+      both_leave_votes: [...currentVotes, seatNumber],
+    })
+    .eq("game_id", gameId);
+
+  if (updateErr) {
+    return { ok: false, message: updateErr.message };
+  }
+
+  return { ok: true };
+}
+
+/**
+ * Process the "both leave" vote result.
+ * Returns whether all tied candidates should leave (>50% voted yes).
+ * Host only.
+ */
+export async function processBothLeaveResult(gameId: string): Promise<
+  | {
+      ok: true;
+      allLeave: boolean;
+      candidates: number[];
+      voteCount: number;
+      totalVoters: number;
+    }
+  | { ok: false; message: string }
+> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  if (userError || !user) return { ok: false, message: "Not authenticated" };
+
+  const hostCheck = await verifyHost(gameId, user.id);
+  if (!hostCheck.ok) return hostCheck;
+
+  // Get voting session
+  const { data: votingSession, error: sessionErr } = await adminClient
+    .from("voting_sessions")
+    .select("*")
+    .eq("game_id", gameId)
+    .single();
+
+  if (sessionErr || !votingSession) {
+    return { ok: false, message: "Voting session not found" };
+  }
+
+  // Get game host_id
+  const { data: game } = await adminClient
+    .from("games")
+    .select("host_id")
+    .eq("id", gameId)
+    .single();
+
+  // Get total alive players (excluding host)
+  const { data: alivePlayers } = await adminClient
+    .from("game_players")
+    .select("seat_number, player_id")
+    .eq("game_id", gameId)
+    .eq("is_alive", true);
+
+  const totalVoters = (alivePlayers ?? []).filter(
+    (p) => p.player_id !== game?.host_id
+  ).length;
+
+  const voteCount = (votingSession.both_leave_votes ?? []).length;
+  const candidates = votingSession.candidates ?? [];
+
+  // Check if >50% voted yes
+  const threshold = VOTING.BOTH_LEAVE_THRESHOLD;
+  const allLeave = totalVoters > 0 && voteCount / totalVoters > threshold;
+
+  return { ok: true, allLeave, candidates, voteCount, totalVoters };
+}
+
+/**
+ * Start farewell speech for multiple candidates (both/all leave scenario).
+ * All tied candidates get farewell speeches.
+ * Host only.
+ */
+export async function startBothLeaveFarewell(
+  gameId: string,
+  candidates: number[]
+): Promise<ActionResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  if (userError || !user) return { ok: false, message: "Not authenticated" };
+
+  const hostCheck = await verifyHost(gameId, user.id);
+  if (!hostCheck.ok) return hostCheck;
+
+  // Delete voting session - voting has ended
+  await adminClient.from("voting_sessions").delete().eq("game_id", gameId);
+
+  // Update game session to farewell_speech with all candidates as speakers
+  const { error: updateErr } = await adminClient
+    .from("game_sessions")
+    .update({
+      game_phase: "farewell_speech",
+      speaking_order: candidates,
+      current_speaker_index: null,
+      speaker_started_at: null,
+    })
+    .eq("game_id", gameId);
+
+  if (updateErr) {
+    return { ok: false, message: updateErr.message };
+  }
+
+  return { ok: true };
+}
+
+/**
+ * Skip to night phase when "both leave" vote fails (no one leaves).
+ * Host only.
+ */
+export async function skipToNightAfterTie(
+  gameId: string
+): Promise<ActionResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  if (userError || !user) return { ok: false, message: "Not authenticated" };
+
+  const hostCheck = await verifyHost(gameId, user.id);
+  if (!hostCheck.ok) return hostCheck;
+
+  // Delete voting session
+  await adminClient.from("voting_sessions").delete().eq("game_id", gameId);
+
+  // Get current game session
+  const { data: gameSession, error: sessionErr } = await adminClient
+    .from("game_sessions")
+    .select("id, current_night_number")
+    .eq("game_id", gameId)
+    .single();
+
+  if (sessionErr || !gameSession) {
+    return { ok: false, message: "Game session not found" };
+  }
+
+  const newNightNumber = (gameSession.current_night_number || 0) + 1;
+
+  // Update game session to night phase
+  const { error: updateErr } = await adminClient
+    .from("game_sessions")
+    .update({
+      game_phase: "night_phase",
+      current_night_number: newNightNumber,
+      speaking_order: [],
+      current_speaker_index: null,
+      speaker_started_at: null,
+      nominated_players: [],
+    })
+    .eq("id", gameSession.id);
+
+  if (updateErr) {
+    return { ok: false, message: updateErr.message };
+  }
+
+  // Create night_phase_sessions row for the new night
+  const { data: existingNight } = await adminClient
+    .from("night_phase_sessions")
+    .select("id")
+    .eq("game_id", gameId)
+    .eq("night_number", newNightNumber)
+    .maybeSingle();
+
+  if (!existingNight) {
+    await adminClient.from("night_phase_sessions").insert({
+      game_id: gameId,
+      night_number: newNightNumber,
+    });
+  }
+
+  return { ok: true };
 }
 
 /**

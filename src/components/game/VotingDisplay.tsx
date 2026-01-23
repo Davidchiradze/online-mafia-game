@@ -27,6 +27,7 @@ export default function VotingDisplay() {
     isSubmitting,
     timeLeft,
     isVotingActive,
+    isBothLeaveMode,
     submitVote,
   } = useVotingButton({
     votingSession,
@@ -48,6 +49,43 @@ export default function VotingDisplay() {
   const currentIdx = votingSession.current_candidate_index ?? 0;
   const currentCandidate = candidates[currentIdx];
   const isLastCandidate = currentIdx === candidates.length - 1;
+
+  // "Both leave" vote mode
+  if (isBothLeaveMode) {
+    return (
+      <div className="flex flex-col items-center gap-2 p-2 bg-gray-800/80 rounded-lg">
+        <div className="text-center">
+          <div className="text-[10px] text-red-400 uppercase">All leave?</div>
+          <div className="text-lg font-bold text-white">
+            #{candidates.join(", #")}
+          </div>
+        </div>
+
+        {hasVoted ? (
+          <div className="px-3 py-1.5 bg-green-600/30 border border-green-500/50 rounded text-green-400 text-xs">
+            ✓ Voted Yes
+          </div>
+        ) : isVotingActive ? (
+          <button
+            type="button"
+            onClick={submitVote}
+            disabled={!isEnabled || isSubmitting}
+            className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
+              isEnabled
+                ? "bg-red-500 hover:bg-red-400 text-white animate-pulse"
+                : "bg-gray-600 text-gray-400 cursor-not-allowed"
+            }`}
+          >
+            {isSubmitting ? "..." : `👍 Yes (${timeLeft}s)`}
+          </button>
+        ) : (
+          <div className="px-3 py-1.5 bg-gray-700 rounded text-gray-400 text-xs">
+            Wait for host...
+          </div>
+        )}
+      </div>
+    );
+  }
 
   // All candidates voted
   if (currentIdx >= candidates.length) {
