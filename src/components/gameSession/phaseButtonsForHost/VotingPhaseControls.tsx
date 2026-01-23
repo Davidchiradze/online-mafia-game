@@ -10,6 +10,7 @@ import {
   endVoteWindow,
   advanceToNextCandidate,
   processVotingResults,
+  startVotingFarewell,
 } from "@/lib/voting/actions";
 
 type Props = {
@@ -30,7 +31,7 @@ type VotesMap = Record<string, number[]>;
  * 5. Show "Tally Results" button
  */
 export default function VotingPhaseControls({ gameSessionState }: Props) {
-  const { gameId, votingSession } = useGameRoom();
+  const { gameId, votingSession, setVotingSession } = useGameRoom();
   const [isLoading, setIsLoading] = useState(false);
   const [resultMessage, setResultMessage] = useState<string | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -39,9 +40,15 @@ export default function VotingPhaseControls({ gameSessionState }: Props) {
   // Initialize voting session on mount
   useEffect(() => {
     if (!votingSession) {
-      void initializeVoting(gameId);
+      const init = async () => {
+        const result = await initializeVoting(gameId);
+        if (result.ok) {
+          setVotingSession(result.session);
+        }
+      };
+      void init();
     }
-  }, [gameId, votingSession]);
+  }, [gameId, votingSession, setVotingSession]);
 
   // Timer for voting window - auto ends and advances when time is up
   useEffect(() => {
@@ -110,8 +117,11 @@ export default function VotingPhaseControls({ gameSessionState }: Props) {
     const result = await processVotingResults(gameId);
     if (result.ok) {
       if (result.result === "winner") {
-        setResultMessage(`#${result.winner} eliminated`);
+        // Start farewell speech for winner - will transition to night phase after
+        await startVotingFarewell(gameId, result.winner);
+        setResultMessage(`#${result.winner} farewell...`);
       } else {
+        // Tie - TODO: handle tie-break (Task 4)
         setResultMessage(`Tie: ${result.tiedCandidates.join(", ")}`);
       }
     }

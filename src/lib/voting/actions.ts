@@ -71,10 +71,14 @@ async function getPlayerSeat(
  * Initialize voting phase.
  * Creates a voting_sessions row with candidates from game_sessions.nominated_players.
  * Called when transitioning from nominated_players_speak to voting phase.
+ * Returns the created/existing session for immediate state update.
  */
 export async function initializeVoting(
   gameId: string
-): Promise<ActionResult & { alreadyExists?: boolean }> {
+): Promise<
+  | { ok: true; session: Tables<"voting_sessions">; alreadyExists?: boolean }
+  | { ok: false; message: string }
+> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -88,12 +92,12 @@ export async function initializeVoting(
   // Check if voting session already exists
   const { data: existing } = await adminClient
     .from("voting_sessions")
-    .select("id")
+    .select("*")
     .eq("game_id", gameId)
     .maybeSingle();
 
   if (existing) {
-    return { ok: true, alreadyExists: true };
+    return { ok: true, session: existing, alreadyExists: true };
   }
 
   // Get nominated players from game session
@@ -117,8 +121,8 @@ export async function initializeVoting(
     return { ok: false, message: "No candidates to vote on" };
   }
 
-  // Create voting session
-  const { error: insertErr } = await adminClient
+  // Create voting session and return it
+  const { data: newSession, error: insertErr } = await adminClient
     .from("voting_sessions")
     .insert({
       game_id: gameId,
@@ -132,13 +136,18 @@ export async function initializeVoting(
       tie_break_round: 0,
       both_leave_vote_active: false,
       both_leave_votes: [],
-    });
+    })
+    .select()
+    .single();
 
-  if (insertErr) {
-    return { ok: false, message: insertErr.message };
+  if (insertErr || !newSession) {
+    return {
+      ok: false,
+      message: insertErr?.message ?? "Failed to create session",
+    };
   }
 
-  return { ok: true };
+  return { ok: true, session: newSession };
 }
 
 /**
@@ -647,6 +656,48 @@ export async function processVotingResults(
     // Tie between multiple candidates
     return { ok: true, result: "tie", tiedCandidates: topCandidates };
   }
+}
+
+/**
+ * Start farewell speech for the voting winner.
+ * Sets up the farewell speech phase with the winner as the only speaker.
+ * After farewell ends, markDeadAndAdvance will detect the voting session
+ * and transition to night phase instead of day phase.
+ * Host only.
+ */
+export async function startVotingFarewell(
+  gameId: string,
+  winnerSeatNumber: number
+): Promise<ActionResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  if (userError || !user) return { ok: false, message: "Not authenticated" };
+
+  const hostCheck = await verifyHost(gameId, user.id);
+  if (!hostCheck.ok) return hostCheck;
+
+  // Delete voting session - voting has ended
+  await adminClient.from("voting_sessions").delete().eq("game_id", gameId);
+
+  // Update game session to farewell_speech with winner as speaker
+  const { error: updateErr } = await adminClient
+    .from("game_sessions")
+    .update({
+      game_phase: "farewell_speech",
+      speaking_order: [winnerSeatNumber],
+      current_speaker_index: null,
+      speaker_started_at: null,
+    })
+    .eq("game_id", gameId);
+
+  if (updateErr) {
+    return { ok: false, message: updateErr.message };
+  }
+
+  return { ok: true };
 }
 
 /**

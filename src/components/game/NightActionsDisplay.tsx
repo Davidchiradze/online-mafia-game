@@ -10,10 +10,6 @@ import { GAME_PHASES } from "@/lib/constants/game";
  */
 export default function NightActionsDisplay() {
   const { nightPhaseSession, gameSessionState, isHost } = useGameRoom();
-  console.log(
-    "🚀 ~ NightActionsDisplay ~ nightPhaseSession:",
-    nightPhaseSession
-  );
 
   // Only show for host during night phases
   if (!isHost || !gameSessionState) return null;

@@ -45,23 +45,44 @@ export function useVotingSessionListener(
 
     void fetchInitial();
 
-    // Subscribe to changes
+    // Subscribe to changes - use separate .on() calls for each event type
+    // (event: "*" with filter doesn't properly handle DELETE events)
     const channel = supabase
       .channel(`voting_session_${gameId}`)
       .on(
         "postgres_changes",
         {
-          event: "*",
+          event: "INSERT",
           schema: "public",
           table: "voting_sessions",
           filter: `game_id=eq.${gameId}`,
         },
         (payload) => {
-          if (payload.eventType === "INSERT" || payload.eventType === "UPDATE") {
-            setVotingSession(payload.new as VotingSession);
-          } else if (payload.eventType === "DELETE") {
-            setVotingSession(null);
-          }
+          setVotingSession(payload.new as VotingSession);
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "voting_sessions",
+          filter: `game_id=eq.${gameId}`,
+        },
+        (payload) => {
+          setVotingSession(payload.new as VotingSession);
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "DELETE",
+          schema: "public",
+          table: "voting_sessions",
+          filter: `game_id=eq.${gameId}`,
+        },
+        (payload) => {
+          setVotingSession(null);
         }
       )
       .subscribe();
@@ -73,4 +94,3 @@ export function useVotingSessionListener(
 
   return { votingSession, setVotingSession };
 }
-

@@ -287,16 +287,19 @@ export async function grantFarewellTime(gameId: string): Promise<ActionResult> {
 }
 
 /**
- * Mark the current speaker as dead and prepare for next speaker or day_phase.
+ * Mark the current speaker as dead and prepare for next speaker or transition.
  * Sets is_alive=false for the current speaker and resets current_speaker_index.
  *
  * After calling this:
  * - If more speakers remain, host calls grantFarewellTime again
- * - If no more speakers, automatically transitions to day_phase
+ * - If voting session exists, transitions to night_phase (voting elimination)
+ * - Otherwise transitions to day_phase (night kills)
  */
 export async function markDeadAndAdvance(
   gameId: string
-): Promise<ActionResult & { transitionedToDay?: boolean }> {
+): Promise<
+  ActionResult & { transitionedToDay?: boolean; transitionedToNight?: boolean }
+> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -361,7 +364,50 @@ export async function markDeadAndAdvance(
     return { ok: true, transitionedToDay: false };
   }
 
-  // All farewell speeches done, transition to day_phase
+  // All farewell speeches done - check if this was from voting
+  // If nominated_players has values, it's voting farewell (go to night)
+  // If empty, it's night kills farewell (go to day)
+  const nominatedPlayers = gameSession.nominated_players ?? [];
+
+  if (nominatedPlayers.length > 0) {
+    // Voting farewell - transition to night phase
+    const newNightNumber = (gameSession.current_night_number || 0) + 1;
+
+    const { error: updateErr } = await adminClient
+      .from("game_sessions")
+      .update({
+        game_phase: "night_phase",
+        current_night_number: newNightNumber,
+        speaking_order: [],
+        current_speaker_index: null,
+        speaker_started_at: null,
+        nominated_players: [],
+      })
+      .eq("id", gameSession.id);
+
+    if (updateErr) {
+      return { ok: false, message: updateErr.message };
+    }
+
+    // Create night_phase_sessions row for the new night
+    const { data: existingNight } = await adminClient
+      .from("night_phase_sessions")
+      .select("id")
+      .eq("game_id", gameId)
+      .eq("night_number", newNightNumber)
+      .maybeSingle();
+
+    if (!existingNight) {
+      await adminClient.from("night_phase_sessions").insert({
+        game_id: gameId,
+        night_number: newNightNumber,
+      });
+    }
+
+    return { ok: true, transitionedToNight: true };
+  }
+
+  // Night farewell - transition to day_phase
   const { error: updateErr } = await adminClient
     .from("game_sessions")
     .update({

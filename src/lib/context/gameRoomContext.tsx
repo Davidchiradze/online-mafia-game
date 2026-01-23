@@ -60,6 +60,8 @@ type GameRoomContextValue = {
   nightPhaseSession: NightPhaseSession | null;
   /** Voting session data - available during voting phase */
   votingSession: VotingSession | null;
+  /** Set voting session state directly (for immediate updates after creation) */
+  setVotingSession: (session: VotingSession | null) => void;
 };
 
 const GameRoomContext = createContext<GameRoomContextValue | null>(null);
@@ -118,7 +120,7 @@ export function GameRoomProvider({
 
   // Voting session subscription - only during voting phase
   const isVotingPhase = gameSessionState?.game_phase === "voting";
-  const { votingSession } = useVotingSessionListener(
+  const { votingSession, setVotingSession } = useVotingSessionListener(
     gameId,
     hasPlayerRecord && isVotingPhase
   );
@@ -246,6 +248,7 @@ export function GameRoomProvider({
       getRoleForUser,
       nightPhaseSession,
       votingSession,
+      setVotingSession,
     }),
     [
       gameId,
@@ -268,6 +271,7 @@ export function GameRoomProvider({
       getRoleForUser,
       nightPhaseSession,
       votingSession,
+      setVotingSession,
     ]
   );
 
