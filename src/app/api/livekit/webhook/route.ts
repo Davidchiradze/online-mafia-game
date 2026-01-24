@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { WebhookReceiver } from "livekit-server-sdk";
-import { leaveGamePlayerAdmin } from "@/lib/gamePlayers/actions";
+import {
+  joinGamePlayer,
+  leaveGamePlayerAdmin,
+} from "@/lib/gamePlayers/actions";
 
 /**
  * LiveKit Webhook Endpoint
@@ -50,6 +53,17 @@ export async function POST(request: NextRequest) {
     // Note: receive validates the webhook signature and returns the event
     const event = await receiver.receive(body, authHeader);
     if (event.event === "participant_joined") {
+      const room = event.room;
+      const participant = event.participant;
+
+      if (!room?.name || !participant?.identity) {
+        return NextResponse.json({ received: true });
+      }
+
+      const gameId = room.name;
+      // const userId = participant.identity;
+
+      await joinGamePlayer(gameId);
     }
     // Handle participant disconnection events
     // Note: According to LiveKit docs, the event is "participant_left" (not "participant_disconnected")

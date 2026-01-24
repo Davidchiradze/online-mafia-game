@@ -1,8 +1,9 @@
 "use client";
 
 import { TrackReferenceOrPlaceholder } from "@livekit/components-react";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { Tables } from "@/db/supabase/database.types";
+import { FOULS } from "@/lib/constants/game";
 
 // Context
 import { useGameRoom } from "@/lib/context/gameRoomContext";
@@ -13,7 +14,6 @@ import {
   useParticipantVisibility,
   useParticipantState,
   useParticipantMenuActions,
-  useParticipantKill,
   useMobileReady,
   useParticipantSpeaking,
 } from "@/hooks/participant";
@@ -94,15 +94,6 @@ export default function ParticipantComponent({
     player.is_alive !== false
   );
 
-  // Kill actions
-  const {
-    killModalOpen,
-    setKillModalOpen,
-    isKilling,
-    onKillClick,
-    onConfirmKill,
-  } = useParticipantKill(gameId, participantId, setMenuOpen);
-
   // Mobile ready visibility
   const { isMobileReadyVisible, handleTileClick } = useMobileReady(
     isLocal,
@@ -137,6 +128,13 @@ export default function ParticipantComponent({
     isSpeaking
   );
 
+  // Check if current phase allows fouls
+  const isFoulAllowedPhase = useMemo(() => {
+    const currentPhase = gameSessionState?.game_phase;
+    if (!currentPhase) return false;
+    return (FOULS.ALLOWED_PHASES as readonly string[]).includes(currentPhase);
+  }, [gameSessionState?.game_phase]);
+
   // Foul-related functionality
   const {
     isFoulSpeaking,
@@ -150,7 +148,7 @@ export default function ParticipantComponent({
     room,
     player,
     isLocal,
-    isDayPhase,
+    isFoulAllowedPhase,
     isSpeaking,
     isTargetHost,
     isViewerHost,
@@ -258,32 +256,6 @@ export default function ParticipantComponent({
           ariaLabel="Participant settings"
         />
       )}
-
-      {/* Game menu - kill action */}
-      {canShowGameMenu && (
-        <ParticipantMenuButton
-          menuOpen={menuOpen}
-          onToggleMenu={() => setMenuOpen((p) => !p)}
-          onCloseMenu={() => setMenuOpen(false)}
-          items={[
-            {
-              label: "Kill",
-              onClick: onKillClick,
-              className: "text-red-600 dark:text-red-400",
-            },
-          ]}
-          ariaLabel="Player actions"
-        />
-      )}
-
-      {/* Kill confirmation modal */}
-      {/* <KillConfirmModal
-        open={killModalOpen}
-        onClose={() => setKillModalOpen(false)}
-        onConfirm={onConfirmKill}
-        isKilling={isKilling}
-        seatNumber={player.seat_number}
-      /> */}
 
       {/* Ready indicator */}
       {!gameSessionState && isReady && (

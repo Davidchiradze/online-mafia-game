@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { TrackReferenceOrPlaceholder } from "@livekit/components-react";
 import { Tables } from "@/db/supabase/database.types";
+import { revalidatePath } from "next/cache";
 
 export interface ParticipantStateResult {
   participant: TrackReferenceOrPlaceholder["participant"] | undefined;
@@ -33,8 +34,12 @@ export function useParticipantState(
   const isTargetHost = participantId === hostUserId;
 
   const isDisconnected = useMemo(() => {
+    //temporary fix to reload the page if the player is disconnected
+    if (isLocal && player?.state === "disconnected")
+      void window.location.reload();
+
     return player?.state === "disconnected";
-  }, [player]);
+  }, [player, isLocal]);
 
   return {
     participant,
@@ -47,4 +52,3 @@ export function useParticipantState(
     isDisconnected,
   };
 }
-

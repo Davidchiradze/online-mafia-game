@@ -137,6 +137,14 @@ export const FOULS = {
   FOUL_SPEAK_DURATION_MS: 5 * 1000,
   /** Duration in seconds for foul speaking */
   FOUL_SPEAK_DURATION_SECONDS: 5,
+  /** Phases where fouls can be given and foul speaking is allowed */
+  ALLOWED_PHASES: [
+    "introduction_phase",
+    "farewell_speech",
+    "day_phase",
+    "nominated_players_speak",
+    "voting",
+  ] as const,
 } as const;
 
 // Farewell Speech Constants (for players killed at night)
