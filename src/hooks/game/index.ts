@@ -26,3 +26,7 @@ export type { DoctorHealSelectionResult } from "./useDoctorHealSelection";
 
 export { useRoleAssignmentNotification } from "./useRoleAssignmentNotification";
 export { useRoleRevealModal } from "./useRoleRevealModal";
+
+// Voting
+export { useVotingButton } from "./useVotingButton";
+export { useVoteIndicator } from "./useVoteIndicator";

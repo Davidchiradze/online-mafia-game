@@ -53,7 +53,8 @@ const StartMafiaTargetButton = ({
   return (
     <button
       type="button"
-      className="rounded-md bg-slate-700 hover:bg-slate-600 text-white font-semibold px-4 py-2 shadow disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed transition-colors"
+      className="rounded-md bg-slate-700 hover:bg-slate-600 text-white font-semibold px-4 py-2 shadow disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed transition-colors font-size-xs
+"
       disabled={isLoading}
       onClick={handleStartMafiaTarget}
     >

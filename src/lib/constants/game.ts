@@ -146,3 +146,17 @@ export const FAREWELL_SPEECH = {
   /** Maximum speaking time in seconds */
   MAX_SPEAKING_TIME_SECONDS: 60,
 } as const;
+
+// Voting Phase Constants
+export const VOTING = {
+  /** Duration of voting window in milliseconds (5 seconds) */
+  VOTE_WINDOW_MS: 5 * 1000,
+  /** Duration of voting window in seconds */
+  VOTE_WINDOW_SECONDS: 5,
+  /** Tie-break self-justification time in milliseconds (30 seconds) */
+  TIE_BREAK_SPEAKING_TIME_MS: 30 * 1000,
+  /** Tie-break self-justification time in seconds */
+  TIE_BREAK_SPEAKING_TIME_SECONDS: 30,
+  /** Minimum percentage for "both leave" vote to pass (>50%) */
+  BOTH_LEAVE_THRESHOLD: 0.5,
+} as const;
