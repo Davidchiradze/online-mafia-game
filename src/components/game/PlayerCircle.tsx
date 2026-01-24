@@ -8,6 +8,7 @@ import GamePhaseControls from "./GamePhaseControls";
 import { Tables } from "@/db/supabase/database.types";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import NominatedPlayersDisplay from "./NominatedPlayersDisplay";
+import VotingDisplay from "./VotingDisplay";
 
 // 4x5 grid placement for 12 players around a centered host (spanning 2 rows)
 // Player indices are 1..12 (clockwise-ish around the host)
@@ -91,10 +92,8 @@ export default function PlayerCircle({
           <div
             key={`seat-${String(key)}`}
             className={
-              "relative rounded-xl bg-black/40 backdrop-blur-sm border " +
-              (isHostIndex
-                ? "border-amber-400/60 ring-1 ring-amber-400/40 transform  translate-y-1/2"
-                : "border-white/10 ")
+              "relative rounded-xl bg-black/40 backdrop-blur-sm border border-white/10 " +
+              (isHostIndex ? "transform translate-y-1/2" : "")
             }
             style={{ gridColumn: pos.gridColumn, gridRow: pos.gridRow }}
           >
@@ -115,16 +114,21 @@ export default function PlayerCircle({
           </div>
         );
       })}
-      <div style={{ gridColumn: 3, gridRow: 2 }}>
-        {userId === hostUserId && <GamePhaseControls />}
+      <div style={{ gridColumn: 3, gridRow: 2, position: "relative" }}>
+        <div className="absolute top-0 left-0 w-full h-[200%] flex flex-col items-center justify-center gap-2">
+          <div className="w-full h-[50%] flex flex-col items-center justify-center gap-2">
+            {isHost && <GamePhaseControls />}
+            {isHost ? (
+              <NominatedPlayersDisplay
+                nominatedPlayers={gameSessionState?.nominated_players ?? []}
+              />
+            ) : gameSessionState?.game_phase === "voting" ? (
+              <VotingDisplay />
+            ) : null}
+          </div>
+        </div>
       </div>
-      <div style={{ gridColumn: 3, gridRow: 3 }}>
-        {isHost && (
-          <NominatedPlayersDisplay
-            nominatedPlayers={gameSessionState?.nominated_players ?? []}
-          />
-        )}
-      </div>
+      <div style={{ gridColumn: 3, gridRow: 3 }}></div>
     </div>
   );
 }

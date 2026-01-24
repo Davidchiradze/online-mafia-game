@@ -67,12 +67,14 @@ export default function FlipCard({
         width,
         height,
         perspective: "1000px",
+        WebkitPerspective: "1000px",
       }}
     >
       <div
         className="relative w-full h-full transition-transform ease-out"
         style={{
           transformStyle: "preserve-3d",
+          WebkitTransformStyle: "preserve-3d",
           transitionDuration: `${flipDuration}ms`,
           transform: showFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
         }}
@@ -87,6 +89,9 @@ export default function FlipCard({
           style={{
             backfaceVisibility: "hidden",
             WebkitBackfaceVisibility: "hidden",
+            transformStyle: "preserve-3d",
+            WebkitTransformStyle: "preserve-3d",
+            transform: "translateZ(1px)",
           }}
         >
           {front}
@@ -102,7 +107,9 @@ export default function FlipCard({
           style={{
             backfaceVisibility: "hidden",
             WebkitBackfaceVisibility: "hidden",
-            transform: "rotateY(180deg)",
+            transformStyle: "preserve-3d",
+            WebkitTransformStyle: "preserve-3d",
+            transform: "rotateY(180deg) translateZ(0px)",
           }}
         >
           {back}

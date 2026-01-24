@@ -15,7 +15,7 @@ const StartGameButton = () => {
     [{ source: Track.Source.Camera, withPlaceholder: true }],
     { onlySubscribed: false }
   );
-  const maxPlayers = 2;
+  const maxPlayers = 3;
   const { gameId } = useGameRoom();
 
   const [isLoading, setIsLoading] = useState(false);

@@ -52,6 +52,20 @@
   display: none !important;
 }
 
+/* Remove LiveKit active speaker blue border/ring completely */
+.lk-participant-tile {
+  --lk-speaking-indicator-width: 0px !important;
+}
+.lk-participant-tile::after {
+  display: none !important;
+  border: none !important;
+}
+.lk-participant-tile[data-lk-speaking="true"]::after {
+  display: none !important;
+  border: none !important;
+  border-width: 0 !important;
+}
+
 :root {
   --radius: 0.625rem;
   --card: oklch(1 0 0);
@@ -142,4 +156,18 @@
 
 .nomination-badge {
   animation: nomination-badge-pulse 0.5s ease-in-out infinite;
+}
+
+
+.font-size-xs {
+  font-size: 0.625rem;
+}
+.font-size-sm {
+  font-size: 0.75rem;
+}
+.font-size-md {
+  font-size: 0.875rem;
+}
+.font-size-lg {
+  font-size: 1rem;
 }

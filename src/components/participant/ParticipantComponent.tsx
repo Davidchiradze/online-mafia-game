@@ -24,6 +24,7 @@ import {
   useMafiaTargetSelection,
   useYakuzaTargetSelection,
   useDoctorHealSelection,
+  useVoteIndicator,
 } from "@/hooks/game";
 
 // Components
@@ -35,6 +36,7 @@ import ParticipantOverlay from "./ParticipantOverlay";
 import ParticipantBadges from "./ParticipantBadges";
 import NominationFoulSection from "./NominationFoulSection";
 import NightActionButtons from "./NightActionButtons";
+import VoteIndicator from "./VoteIndicator";
 
 export default function ParticipantComponent({
   gameId,
@@ -195,6 +197,9 @@ export default function ParticipantComponent({
     player.is_alive !== false
   );
 
+  // Vote indicator (voting phase)
+  const { showVoteIndicator } = useVoteIndicator(player.seat_number);
+
   // Ready button handlers
   const onReady = useCallback(async () => {
     await markReady();
@@ -220,6 +225,9 @@ export default function ParticipantComponent({
         coverMessage={coverMessage}
         trackRef={trackRef}
       />
+
+      {/* Vote indicator (thumbs up during voting phase) */}
+      {showVoteIndicator && <VoteIndicator />}
 
       {/* Microphone indicator and seat badge */}
       <ParticipantBadges
@@ -314,7 +322,7 @@ export default function ParticipantComponent({
 
       {/* Ready button */}
       {isLocal && !isTargetHost && !gameSessionState && (
-        <div className="flex items-center justify-center absolute bottom-10 md:bottom-12 left-1/2 -translate-x-1/2 z-20">
+        <div className="flex items-center justify-center absolute bottom-2 md:bottom-4 left-1/2 -translate-x-1/2 z-20">
           <ReadyButton
             isReady={isReady}
             onReady={onReady}

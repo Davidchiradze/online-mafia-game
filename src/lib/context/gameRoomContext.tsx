@@ -26,8 +26,9 @@ import {
   useMyJoinRequestStatus,
   useGameHostSubscription,
   useNightPhaseSessionListener,
+  useVotingSessionListener,
 } from "@/hooks/realtime";
-import type { NightPhaseSession } from "@/hooks/realtime";
+import type { NightPhaseSession, VotingSession } from "@/hooks/realtime";
 import { JOIN_REQUEST_STATUSES } from "@/lib/constants/game";
 import { leaveGamePlayer } from "@/lib/gamePlayers/actions";
 import { Tables } from "@/db/supabase/database.types";
@@ -57,6 +58,10 @@ type GameRoomContextValue = {
   getRoleForUser: (targetUserId: string) => string | null;
   /** Night phase session data - available to host and team members (RLS removed temporarily) */
   nightPhaseSession: NightPhaseSession | null;
+  /** Voting session data - available during voting phase */
+  votingSession: VotingSession | null;
+  /** Set voting session state directly (for immediate updates after creation) */
+  setVotingSession: (session: VotingSession | null) => void;
 };
 
 const GameRoomContext = createContext<GameRoomContextValue | null>(null);
@@ -112,6 +117,13 @@ export function GameRoomProvider({
   // Subscribe when game is in progress
   const { currentNightSession: nightPhaseSession } =
     useNightPhaseSessionListener(gameId, hasPlayerRecord && !!gameSessionState);
+
+  // Voting session subscription - only during voting phase
+  const isVotingPhase = gameSessionState?.game_phase === "voting";
+  const { votingSession, setVotingSession } = useVotingSessionListener(
+    gameId,
+    hasPlayerRecord && isVotingPhase
+  );
 
   // Player roles (fetched once, filtered by team visibility)
   const {
@@ -235,6 +247,8 @@ export function GameRoomProvider({
       playerRolesMap,
       getRoleForUser,
       nightPhaseSession,
+      votingSession,
+      setVotingSession,
     }),
     [
       gameId,
@@ -256,6 +270,8 @@ export function GameRoomProvider({
       playerRolesMap,
       getRoleForUser,
       nightPhaseSession,
+      votingSession,
+      setVotingSession,
     ]
   );
 
