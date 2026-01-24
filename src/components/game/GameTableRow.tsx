@@ -55,12 +55,12 @@ export default function GameTableRow({
               }
             >
               <span className="">
-                {participantCount}/{playersLabel}
+                {participantCount}/{playersLabel + 1}
               </span>
             </Tooltip>
           ) : (
             <span>
-              {participantCount}/{playersLabel}
+              {participantCount}/{playersLabel + 1}
             </span>
           )}
         </td>

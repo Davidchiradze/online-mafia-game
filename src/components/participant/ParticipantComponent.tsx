@@ -30,7 +30,6 @@ import {
 // Components
 import ReadyButton from "@/components/ui/ReadyButton";
 import ParticipantMenuButton from "./ParticipantMenuButton";
-import KillConfirmModal from "./KillConfirmModal";
 import SpeakingProgressBar from "./SpeakingProgressBar";
 import ParticipantOverlay from "./ParticipantOverlay";
 import ParticipantBadges from "./ParticipantBadges";
@@ -278,13 +277,13 @@ export default function ParticipantComponent({
       )}
 
       {/* Kill confirmation modal */}
-      <KillConfirmModal
+      {/* <KillConfirmModal
         open={killModalOpen}
         onClose={() => setKillModalOpen(false)}
         onConfirm={onConfirmKill}
         isKilling={isKilling}
         seatNumber={player.seat_number}
-      />
+      /> */}
 
       {/* Ready indicator */}
       {!gameSessionState && isReady && (

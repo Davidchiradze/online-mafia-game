@@ -81,10 +81,13 @@ export function useMafiaTargetSelection(
 
   // Can show mafia kill button: during mafia phase, viewer has authority, target is alive and not host
   // Hide buttons once a target has been selected (no changing target)
+  // Note: Mafia cannot kill on the first night - only Yakuza can
   const canShowMafiaKillButton = useMemo(() => {
     if (!isMafiaPhase || !hasMafiaKillAuthority) return false;
     if (isTargetHost) return false; // Can't target host
     if (isPlayerAlive === false) return false; // Can't target dead players
+    // Mafia cannot kill on the first night (only Yakuza can kill on night 1)
+    if (nightPhaseSession?.night_number === 1) return false;
     // Hide if a target has already been selected (cannot change decision)
     if (
       nightPhaseSession?.mafia_target !== null &&
@@ -97,6 +100,7 @@ export function useMafiaTargetSelection(
     hasMafiaKillAuthority,
     isTargetHost,
     isPlayerAlive,
+    nightPhaseSession?.night_number,
     nightPhaseSession?.mafia_target,
   ]);
 
