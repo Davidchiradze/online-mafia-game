@@ -15,8 +15,8 @@ const StartGameButton = () => {
     [{ source: Track.Source.Camera, withPlaceholder: true }],
     { onlySubscribed: false }
   );
-  const maxPlayers = 3;
-  const { gameId } = useGameRoom();
+  // const maxPlayers = 2;
+  const { gameId, maxPlayers } = useGameRoom();
 
   const [isLoading, setIsLoading] = useState(false);
   const { readyCount, allReady } = useMemo(() => {
