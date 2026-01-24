@@ -78,21 +78,14 @@ export default function ParticipantComponent({
     useParticipantVisibility(trackRef, player);
 
   // Menu actions (kick, make host)
-  const {
-    menuOpen,
-    setMenuOpen,
-    canShowLobbyMenu,
-    canShowGameMenu,
-    onKick,
-    onMakeHost,
-  } = useParticipantMenuActions(
-    gameId,
-    participantId,
-    hostUserId,
-    isViewerHost,
-    gameSessionState,
-    player.is_alive !== false
-  );
+  const { menuOpen, setMenuOpen, canShowLobbyMenu, onKick, onMakeHost } =
+    useParticipantMenuActions(
+      gameId,
+      participantId,
+      hostUserId,
+      isViewerHost,
+      gameSessionState
+    );
 
   // Mobile ready visibility
   const { isMobileReadyVisible, handleTileClick } = useMobileReady(

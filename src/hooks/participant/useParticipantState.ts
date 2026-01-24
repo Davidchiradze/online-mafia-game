@@ -35,8 +35,8 @@ export function useParticipantState(
 
   const isDisconnected = useMemo(() => {
     //temporary fix to reload the page if the player is disconnected
-    if (isLocal && player?.state === "disconnected")
-      void window.location.reload();
+    // if (isLocal && player?.state === "disconnected")
+    //   void window.location.reload();
 
     return player?.state === "disconnected";
   }, [player, isLocal]);

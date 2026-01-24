@@ -382,6 +382,7 @@ export async function markDeadAndAdvance(
         current_speaker_index: null,
         speaker_started_at: null,
         nominated_players: [],
+        foul_elimination_occurred: false, // Reset foul elimination flag for new round
       })
       .eq("id", gameSession.id);
 

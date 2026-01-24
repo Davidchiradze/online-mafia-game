@@ -66,15 +66,21 @@ export function useNomination({
   // Check if we're in day phase (nominations allowed)
   const isDayPhase = gameSessionState?.game_phase === "day_phase";
 
-  // Show nomination button only for host during day phase and not on host's own tile
+  // Check if a player was eliminated by fouls this round (blocks nominations)
+  // Type assertion needed until database types are regenerated
+  const foulEliminationOccurred = (gameSessionState as unknown as { foul_elimination_occurred?: boolean } | null)?.foul_elimination_occurred ?? false;
+
+  // Show nomination button only for host during day phase, not on host's own tile,
+  // and not if a player was eliminated by fouls this round
   const canShowNominationButton =
-    isViewerHost && isDayPhase && !isTargetHost && seatNumber != null;
+    isViewerHost && isDayPhase && !isTargetHost && seatNumber != null && !foulEliminationOccurred;
 
   return {
     isNominated,
     showNominationEffect,
     canShowNominationButton,
     isDayPhase,
+    foulEliminationOccurred,
   };
 }
 

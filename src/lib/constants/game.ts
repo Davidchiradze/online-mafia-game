@@ -131,8 +131,10 @@ export const NOMINATED_PLAYERS_SPEAKING = {
 
 // Foul Constants
 export const FOULS = {
-  /** Maximum number of fouls a player can receive */
+  /** Maximum fouls before warning (3 fouls shows warning, 4th eliminates) */
   MAX_FOULS: 3,
+  /** Foul count that triggers elimination (4th foul eliminates player) */
+  ELIMINATION_THRESHOLD: 4,
   /** Duration in milliseconds for foul speaking (5 seconds) */
   FOUL_SPEAK_DURATION_MS: 5 * 1000,
   /** Duration in seconds for foul speaking */
