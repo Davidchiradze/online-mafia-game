@@ -31,7 +31,11 @@ export function useParticipantSpeaking(
   // This is visible to ALL players since LiveKit syncs mic state to everyone
   // Dead players cannot foul speak
   const isParticipantFoulSpeaking =
-    isMicEnabled && isDayPhase && !isSpeaking && !isTargetHost && !isTargetDead;
+    isMicEnabled &&
+    !isSpeaking &&
+    !isTargetHost &&
+    !isTargetDead &&
+    !!gameSessionState;
 
   // Determine box shadow based on speaking state (not for dead players)
   const boxShadowClass = useMemo(() => {
@@ -55,4 +59,3 @@ export function useParticipantSpeaking(
     boxShadowClass,
   };
 }
-

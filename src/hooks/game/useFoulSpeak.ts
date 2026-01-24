@@ -9,7 +9,7 @@ type UseFoulSpeakOptions = {
   room: LiveKitRoom | null | undefined;
   player: Tables<"game_players">;
   isLocal: boolean;
-  isDayPhase: boolean;
+  isFoulAllowedPhase: boolean;
   isSpeaking: boolean;
   isTargetHost: boolean;
   isViewerHost: boolean;
@@ -45,20 +45,24 @@ export function useFoulSpeak({
   room,
   player,
   isLocal,
-  isDayPhase,
+  isFoulAllowedPhase,
   isSpeaking,
   isTargetHost,
   isViewerHost,
 }: UseFoulSpeakOptions): UseFoulSpeakReturn {
   const currentFouls = player.fouls ?? 0;
 
-  // Show foul button to host during day phase (not on host tile)
+  // Show foul button to host during foul-allowed phases (not on host tile)
   const canShowFoulButton =
-    isViewerHost && isDayPhase && !isTargetHost && player.seat_number != null;
+    isViewerHost &&
+    isFoulAllowedPhase &&
+    !isTargetHost &&
+    player.seat_number != null;
 
-  // Foul speak - for non-speakers to speak for 5 seconds during day phase
+  // Foul speak - for non-speakers to speak for 5 seconds during foul-allowed phases
   // Only enabled for local player who is NOT the current speaker and NOT the host
-  const canUseFoulSpeak = isLocal && isDayPhase && !isSpeaking && !isTargetHost;
+  const canUseFoulSpeak =
+    isLocal && isFoulAllowedPhase && !isSpeaking && !isTargetHost;
   const [isFoulSpeaking, setIsFoulSpeaking] = useState(false);
   const [foulSpeakTimeLeft, setFoulSpeakTimeLeft] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -138,4 +142,3 @@ export function useFoulSpeak({
     canShowFoulButton,
   };
 }
-

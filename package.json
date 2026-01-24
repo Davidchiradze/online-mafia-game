@@ -30,6 +30,7 @@
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-hook-form": "^7.62.0",
+    "react-modal": "^3.16.3",
     "react-toastify": "^11.0.5",
     "tailwind-merge": "^3.4.0",
     "zod": "^4.0.17"
@@ -40,6 +41,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/react-modal": "^3.16.3",
     "eslint": "^9",
     "eslint-config-next": "15.4.6",
     "supabase": "^2.54.11",

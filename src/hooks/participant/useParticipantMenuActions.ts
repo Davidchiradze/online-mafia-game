@@ -9,7 +9,6 @@ export interface ParticipantMenuActionsResult {
   menuOpen: boolean;
   setMenuOpen: React.Dispatch<React.SetStateAction<boolean>>;
   canShowLobbyMenu: boolean;
-  canShowGameMenu: boolean;
   onKick: () => Promise<void>;
   onMakeHost: () => Promise<void>;
 }
@@ -22,8 +21,7 @@ export function useParticipantMenuActions(
   participantId: string | undefined,
   hostUserId: string | null,
   isViewerHost: boolean,
-  gameSessionState: GameSessionState | null,
-  isPlayerAlive: boolean
+  gameSessionState: GameSessionState | null
 ): ParticipantMenuActionsResult {
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
 
@@ -36,17 +34,6 @@ export function useParticipantMenuActions(
         !gameSessionState
     );
   }, [isViewerHost, participantId, hostUserId, gameSessionState]);
-
-  // Show menu during game (for kill action) - only for alive players
-  const canShowGameMenu = useMemo(() => {
-    return Boolean(
-      isViewerHost &&
-        participantId &&
-        participantId !== hostUserId &&
-        gameSessionState &&
-        isPlayerAlive !== false
-    );
-  }, [isViewerHost, participantId, hostUserId, gameSessionState, isPlayerAlive]);
 
   const onKick = useCallback(async () => {
     if (!participantId) return;
@@ -65,9 +52,7 @@ export function useParticipantMenuActions(
     menuOpen,
     setMenuOpen,
     canShowLobbyMenu,
-    canShowGameMenu,
     onKick,
     onMakeHost,
   };
 }
-

@@ -311,9 +311,10 @@ export async function resetSpeakingState(
 
 /**
  * Nominates or un-nominates a player during DAY_PHASE.
- * Only the host can nominate. Only one nomination is active at a time.
+ * Only the host can nominate.
  * Clicking the same player toggles their nomination off.
- * Clicking a different player replaces the current nomination.
+ * Clicking a different player adds to nominations.
+ * Blocked if a player was eliminated by fouls this round.
  */
 export async function nominatePlayer(
   gameId: string,
@@ -344,6 +345,18 @@ export async function nominatePlayer(
   // Only allow nominations during DAY_PHASE
   if (session.game_phase !== "day_phase") {
     return { ok: false, message: "Nominations only allowed during day phase" };
+  }
+
+  // Block nominations if a player was eliminated by fouls this round
+  // Type assertion needed until database types are regenerated
+  const foulEliminationOccurred = (
+    session as unknown as { foul_elimination_occurred?: boolean }
+  ).foul_elimination_occurred;
+  if (foulEliminationOccurred) {
+    return {
+      ok: false,
+      message: "Nominations blocked - player eliminated by fouls this round",
+    };
   }
 
   const currentNominations = session.nominated_players ?? [];
@@ -513,6 +526,50 @@ export async function advanceToNextNominatedSpeaker(
     };
   }
 
+  // Check if foul elimination occurred - if so, skip all remaining speakers and go to night phase
+  const foulEliminationOccurred = (
+    session as unknown as { foul_elimination_occurred?: boolean }
+  ).foul_elimination_occurred;
+
+  if (foulEliminationOccurred) {
+    // Skip all remaining speakers - transition directly to night phase
+    const newNightNumber = (session.current_night_number || 0) + 1;
+
+    const { error: updateErr } = await adminClient
+      .from("game_sessions")
+      .update({
+        game_phase: "night_phase",
+        current_night_number: newNightNumber,
+        current_speaker_index: null,
+        speaker_started_at: null,
+        speaking_order: [],
+        nominated_players: [],
+        foul_elimination_occurred: false, // Reset flag for new round
+      } as unknown as Record<string, unknown>)
+      .eq("id", session.id);
+
+    if (updateErr) {
+      return { ok: false, message: updateErr.message };
+    }
+
+    // Create night_phase_sessions row for the new night
+    const { data: existingNight } = await adminClient
+      .from("night_phase_sessions")
+      .select("id")
+      .eq("game_id", gameId)
+      .eq("night_number", newNightNumber)
+      .maybeSingle();
+
+    if (!existingNight) {
+      await adminClient.from("night_phase_sessions").insert({
+        game_id: gameId,
+        night_number: newNightNumber,
+      });
+    }
+
+    return { ok: true };
+  }
+
   const speakingOrder = session.speaking_order ?? [];
   const currentSpeaker = session.current_speaker_index ?? null;
 
@@ -630,14 +687,17 @@ export async function finishCurrentNominatedSpeaker(
 }
 
 /**
- * Gives a foul to a player during DAY_PHASE.
- * Only the host can give fouls. Maximum fouls is defined in FOULS.MAX_FOULS.
- * When a player reaches max fouls, they can be eliminated (handled separately).
+ * Gives a foul to a player during allowed phases.
+ * Only the host can give fouls.
+ *
+ * - Fouls 1-3: Normal fouls, just increment counter
+ * - Foul 4 (ELIMINATION_THRESHOLD): Eliminates player immediately without farewell speech,
+ *   clears nominations, sets foul_elimination_occurred flag, deletes any voting session
  */
 export async function giveFoul(
   gameId: string,
   seatNumber: number
-): Promise<ActionResult> {
+): Promise<ActionResult & { playerEliminated?: boolean }> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -660,9 +720,10 @@ export async function giveFoul(
 
   const session = gameSession as unknown as GameSessionState;
 
-  // Only allow fouls during DAY_PHASE
-  if (session.game_phase !== "day_phase") {
-    return { ok: false, message: "Fouls only allowed during day phase" };
+  // Only allow fouls during specific phases
+  const allowedPhases = FOULS.ALLOWED_PHASES as readonly string[];
+  if (!allowedPhases.includes(session.game_phase)) {
+    return { ok: false, message: "Fouls not allowed during this phase" };
   }
 
   // Get the player by seat number
@@ -677,23 +738,59 @@ export async function giveFoul(
     return { ok: false, message: "Player not found" };
   }
 
-  const currentFouls = player.fouls ?? 0;
-
-  // Check if player already has max fouls
-  if (currentFouls >= FOULS.MAX_FOULS) {
-    return { ok: false, message: "Player already has maximum fouls" };
+  // Player must be alive
+  if (player.is_alive === false) {
+    return { ok: false, message: "Cannot foul a dead player" };
   }
 
-  // Increment foul count
-  const { error: updateErr } = await adminClient
+  const currentFouls = player.fouls ?? 0;
+  const newFoulCount = currentFouls + 1;
+
+  // Check if player is already at or beyond elimination threshold
+  if (currentFouls >= FOULS.ELIMINATION_THRESHOLD) {
+    return { ok: false, message: "Player already eliminated by fouls" };
+  }
+
+  // Update foul count
+  const { error: updateFoulErr } = await adminClient
     .from("game_players")
     .update({
-      fouls: currentFouls + 1,
+      fouls: newFoulCount,
     })
     .eq("id", player.id);
 
-  if (updateErr) {
-    return { ok: false, message: updateErr.message };
+  if (updateFoulErr) {
+    return { ok: false, message: updateFoulErr.message };
+  }
+
+  // If this is the 4th foul (elimination threshold), eliminate the player
+  if (newFoulCount === FOULS.ELIMINATION_THRESHOLD) {
+    // Eliminate player (no farewell speech)
+    const { error: eliminateErr } = await adminClient
+      .from("game_players")
+      .update({ is_alive: false })
+      .eq("id", player.id);
+
+    if (eliminateErr) {
+      return { ok: false, message: eliminateErr.message };
+    }
+
+    // Set foul elimination flag (nominations preserved but voting will be skipped)
+    const { error: sessionUpdateErr } = await adminClient
+      .from("game_sessions")
+      .update({
+        foul_elimination_occurred: true,
+      } as unknown as Record<string, unknown>)
+      .eq("id", session.id);
+
+    if (sessionUpdateErr) {
+      return { ok: false, message: sessionUpdateErr.message };
+    }
+
+    // Delete any active voting session
+    await adminClient.from("voting_sessions").delete().eq("game_id", gameId);
+
+    return { ok: true, playerEliminated: true };
   }
 
   return { ok: true };

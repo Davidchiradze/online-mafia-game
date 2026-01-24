@@ -125,11 +125,9 @@ export default function VotingDisplay() {
     <div className="flex flex-col items-center gap-2 p-2 bg-gray-800/80 rounded-lg">
       {/* Candidate */}
       <div className="text-center">
-        <div className="text-[10px] text-amber-400 uppercase">Vote</div>
+        <div className="text-[10px] text-amber-400 uppercase">Vote against</div>
         <div className="text-xl font-bold text-white">#{currentCandidate}</div>
-        <div className="text-[10px] text-gray-400">
-          {currentIdx + 1}/{candidates.length}
-        </div>
+
       </div>
 
       {/* Vote button or status */}
@@ -151,7 +149,7 @@ export default function VotingDisplay() {
           {isSubmitting ? "..." : `👍 Vote (${timeLeft}s)`}
         </button>
       ) : (
-        <div className="px-3 py-1.5 bg-gray-700 rounded text-gray-400 text-xs">
+        <div className="px-3 py-1.5 bg-gray-700 rounded text-gray-400 text-xs cursor-pointer">
           Wait for host...
         </div>
       )}

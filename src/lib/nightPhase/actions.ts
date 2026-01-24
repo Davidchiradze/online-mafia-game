@@ -727,7 +727,14 @@ export async function startNight(gameId: string): Promise<ActionResult> {
   // Update game_sessions with new night number
   const { error: updateSessionErr } = await adminClient
     .from("game_sessions")
-    .update({ current_night_number: newNightNumber })
+    .update({
+      nominated_players: [],
+      speaking_order: [],
+      current_speaker_index: null,
+      speaker_started_at: null,
+      current_night_number: newNightNumber,
+      foul_elimination_occurred: false,
+    })
     .eq("id", gameSession.id);
 
   if (updateSessionErr) {
