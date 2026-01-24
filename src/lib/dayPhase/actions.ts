@@ -526,6 +526,50 @@ export async function advanceToNextNominatedSpeaker(
     };
   }
 
+  // Check if foul elimination occurred - if so, skip all remaining speakers and go to night phase
+  const foulEliminationOccurred = (
+    session as unknown as { foul_elimination_occurred?: boolean }
+  ).foul_elimination_occurred;
+
+  if (foulEliminationOccurred) {
+    // Skip all remaining speakers - transition directly to night phase
+    const newNightNumber = (session.current_night_number || 0) + 1;
+
+    const { error: updateErr } = await adminClient
+      .from("game_sessions")
+      .update({
+        game_phase: "night_phase",
+        current_night_number: newNightNumber,
+        current_speaker_index: null,
+        speaker_started_at: null,
+        speaking_order: [],
+        nominated_players: [],
+        foul_elimination_occurred: false, // Reset flag for new round
+      } as unknown as Record<string, unknown>)
+      .eq("id", session.id);
+
+    if (updateErr) {
+      return { ok: false, message: updateErr.message };
+    }
+
+    // Create night_phase_sessions row for the new night
+    const { data: existingNight } = await adminClient
+      .from("night_phase_sessions")
+      .select("id")
+      .eq("game_id", gameId)
+      .eq("night_number", newNightNumber)
+      .maybeSingle();
+
+    if (!existingNight) {
+      await adminClient.from("night_phase_sessions").insert({
+        game_id: gameId,
+        night_number: newNightNumber,
+      });
+    }
+
+    return { ok: true };
+  }
+
   const speakingOrder = session.speaking_order ?? [];
   const currentSpeaker = session.current_speaker_index ?? null;
 
@@ -544,52 +588,7 @@ export async function advanceToNextNominatedSpeaker(
   const nextSpeaker = getNextSpeaker(lastSpeaker, speakingOrder);
 
   if (nextSpeaker === null) {
-    // All nominated players have spoken
-    // Check if foul elimination occurred - if so, skip voting and go to night phase
-    const foulEliminationOccurred = (
-      session as unknown as { foul_elimination_occurred?: boolean }
-    ).foul_elimination_occurred;
-
-    if (foulEliminationOccurred) {
-      // Skip voting - transition directly to night phase
-      const newNightNumber = (session.current_night_number || 0) + 1;
-
-      const { error: updateErr } = await adminClient
-        .from("game_sessions")
-        .update({
-          game_phase: "night_phase",
-          current_night_number: newNightNumber,
-          current_speaker_index: null,
-          speaker_started_at: null,
-          speaking_order: [],
-          nominated_players: [],
-          foul_elimination_occurred: false, // Reset flag for new round
-        } as unknown as Record<string, unknown>)
-        .eq("id", session.id);
-
-      if (updateErr) {
-        return { ok: false, message: updateErr.message };
-      }
-
-      // Create night_phase_sessions row for the new night
-      const { data: existingNight } = await adminClient
-        .from("night_phase_sessions")
-        .select("id")
-        .eq("game_id", gameId)
-        .eq("night_number", newNightNumber)
-        .maybeSingle();
-
-      if (!existingNight) {
-        await adminClient.from("night_phase_sessions").insert({
-          game_id: gameId,
-          night_number: newNightNumber,
-        });
-      }
-
-      return { ok: true };
-    }
-
-    // Normal flow - transition to voting phase
+    // All nominated players have spoken - transition to voting phase
     const { error: updateErr } = await adminClient
       .from("game_sessions")
       .update({

@@ -19,6 +19,7 @@ type Props = {
  * Each nominated player gets 30 seconds for self-justification.
  * - "Finish Talking" when a speaker is active (mutes them, enters paused state)
  * - "Next Speaker →" when paused (unmutes next speaker)
+ * - If foul elimination occurred, shows "Continue to Night Phase" after last speaker
  */
 export default function NominatedPlayersSpeakingControls({
   gameSessionState,
@@ -29,6 +30,12 @@ export default function NominatedPlayersSpeakingControls({
   const speakingOrder = gameSessionState.speaking_order ?? [];
   const currentSpeaker = gameSessionState.current_speaker_index ?? null;
   const nominatedPlayers = gameSessionState.nominated_players ?? [];
+
+  // Check if foul elimination occurred this round
+  // Type assertion needed until database types are regenerated
+  const foulEliminationOccurred = (
+    gameSessionState as unknown as { foul_elimination_occurred?: boolean }
+  ).foul_elimination_occurred ?? false;
 
   const isPaused = SPEAKING_STATE.isPaused(currentSpeaker);
 
@@ -59,6 +66,8 @@ export default function NominatedPlayersSpeakingControls({
     if (isLoading) return;
     setIsLoading(true);
     try {
+      // advanceToNextNominatedSpeaker will automatically transition to night phase
+      // if foul_elimination_occurred is true
       await advanceToNextNominatedSpeaker(gameId);
     } finally {
       setIsLoading(false);
@@ -73,6 +82,20 @@ export default function NominatedPlayersSpeakingControls({
 
   return (
     <div className="flex flex-col items-center gap-3">
+      {/* Foul elimination warning */}
+      {foulEliminationOccurred && (
+        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 text-center w-full">
+          <p className="text-amber-800 dark:text-amber-200 text-sm font-medium">
+            Player eliminated by fouls
+          </p>
+          <p className="text-amber-700 dark:text-amber-300 text-xs mt-1">
+            {isPaused
+              ? "Continue to night phase - no more speakers will talk"
+              : "Current speaker can finish, then continue to night phase - no more speakers will talk"}
+          </p>
+        </div>
+      )}
+
       {/* Current speaker info */}
       <div className="flex items-center gap-2 px-3 py-1.5 bg-orange-500/20 border border-orange-500/50 rounded-lg">
         <span className="text-xs text-orange-300">
@@ -122,34 +145,60 @@ export default function NominatedPlayersSpeakingControls({
       </div>
 
       {/* Control buttons */}
-      {isPaused ? (
-        // Paused state - show Next Speaker button
-        <button
-          type="button"
-          className={`rounded-md font-semibold px-4 py-2 shadow disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed transition-colors ${
-            isLastSpeaker
-              ? "bg-green-600 hover:bg-green-500 text-white"
-              : "bg-amber-600 hover:bg-amber-500 text-white"
-          }`}
-          disabled={isLoading}
-          onClick={handleNext}
-        >
-          {isLoading
-            ? "..."
-            : isLastSpeaker
-            ? "Finish & Start Voting →"
-            : "Next Speaker →"}
-        </button>
+      {foulEliminationOccurred ? (
+        // Foul elimination occurred - skip remaining speakers, go directly to night phase
+        isPaused ? (
+          // Paused state - show Continue to Night Phase button
+          <button
+            type="button"
+            className="rounded-md bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-4 py-2 shadow disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed transition-colors"
+            disabled={isLoading}
+            onClick={handleNext}
+          >
+            {isLoading ? "..." : "Continue to Night Phase →"}
+          </button>
+        ) : (
+          // Active speaker - let them finish first
+          <button
+            type="button"
+            className="rounded-md bg-red-600 hover:bg-red-500 text-white font-semibold px-4 py-2 shadow disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed transition-colors"
+            disabled={isLoading}
+            onClick={handleFinish}
+          >
+            {isLoading ? "..." : "Finish Talking"}
+          </button>
+        )
       ) : (
-        // Active speaker - show only Finish Talking button
-        <button
-          type="button"
-          className="rounded-md bg-red-600 hover:bg-red-500 text-white font-semibold px-4 py-2 shadow disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed transition-colors"
-          disabled={isLoading}
-          onClick={handleFinish}
-        >
-          {isLoading ? "..." : "Finish Talking"}
-        </button>
+        // Normal flow - no foul elimination
+        isPaused ? (
+          // Paused state - show Next Speaker button or Finish & Start Voting
+          <button
+            type="button"
+            className={`rounded-md font-semibold px-4 py-2 shadow disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed transition-colors ${
+              isLastSpeaker
+                ? "bg-green-600 hover:bg-green-500 text-white"
+                : "bg-amber-600 hover:bg-amber-500 text-white"
+            }`}
+            disabled={isLoading}
+            onClick={handleNext}
+          >
+            {isLoading
+              ? "..."
+              : isLastSpeaker
+              ? "Finish & Start Voting →"
+              : "Next Speaker →"}
+          </button>
+        ) : (
+          // Active speaker - show Finish Talking button
+          <button
+            type="button"
+            className="rounded-md bg-red-600 hover:bg-red-500 text-white font-semibold px-4 py-2 shadow disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed transition-colors"
+            disabled={isLoading}
+            onClick={handleFinish}
+          >
+            {isLoading ? "..." : "Finish Talking"}
+          </button>
+        )
       )}
     </div>
   );
