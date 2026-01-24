@@ -238,6 +238,8 @@ export default function ParticipantComponent({
         playerIndex={playerIndex}
         displayName={displayName}
         showNominationEffect={showNominationEffect}
+        playerId={player.player_id || ""}
+        isViewerHost={isViewerHost}
       />
 
       {/* Lobby menu - kick/make host */}

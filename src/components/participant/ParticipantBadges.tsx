@@ -4,6 +4,7 @@ import { Track } from "livekit-client";
 import { TrackToggle } from "@livekit/components-react";
 import { MicOffIcon, MicOnIcon } from "@/assets/icons";
 import { Tables } from "@/db/supabase/database.types";
+import { useGameRoom } from "@/lib/context/gameRoomContext";
 
 interface ParticipantBadgesProps {
   gameSessionState: Tables<"game_sessions"> | null;
@@ -13,6 +14,8 @@ interface ParticipantBadgesProps {
   playerIndex: number;
   displayName?: string;
   showNominationEffect: boolean;
+  playerId: string;
+  isViewerHost: boolean;
 }
 
 /**
@@ -26,7 +29,23 @@ export default function ParticipantBadges({
   playerIndex,
   displayName,
   showNominationEffect,
+  playerId,
+  isViewerHost,
 }: ParticipantBadgesProps) {
+  const { getRoleForUser, playerRolesMap } = useGameRoom();
+
+  // Get role for this player - only show to host
+  const playerRole =
+    isViewerHost && playerRolesMap.size > 0 ? getRoleForUser(playerId) : null;
+
+  // Format role for display (capitalize first letter, replace underscores)
+  const formatRole = (role: string) => {
+    return role
+      .split("_")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  };
+
   return (
     <>
       {/* Microphone indicator */}
@@ -53,11 +72,20 @@ export default function ParticipantBadges({
             : "border-white/10 bg-black/40 text-gray-100"
         }`}
       >
-        {gameSessionState
-          ? playerIndex === 13
-            ? "Host"
-            : playerIndex
-          : displayName || (playerIndex === 13 ? "Host" : playerIndex)}
+        <span className="flex items-center gap-1">
+          <span>
+            {gameSessionState
+              ? playerIndex === 13
+                ? "Host"
+                : playerIndex
+              : displayName || (playerIndex === 13 ? "Host" : playerIndex)}
+          </span>
+          {playerRole && playerIndex !== 13 && (
+            <span className="text-[7px] lg:text-[9px] opacity-70 font-normal">
+              {formatRole(playerRole)}
+            </span>
+          )}
+        </span>
       </div>
     </>
   );
