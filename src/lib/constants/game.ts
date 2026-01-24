@@ -160,9 +160,9 @@ export const FAREWELL_SPEECH = {
 // Voting Phase Constants
 export const VOTING = {
   /** Duration of voting window in milliseconds (5 seconds) */
-  VOTE_WINDOW_MS: 5 * 1000,
+  VOTE_WINDOW_MS: 3 * 1000,
   /** Duration of voting window in seconds */
-  VOTE_WINDOW_SECONDS: 5,
+  VOTE_WINDOW_SECONDS: 3,
   /** Tie-break self-justification time in milliseconds (30 seconds) */
   TIE_BREAK_SPEAKING_TIME_MS: 30 * 1000,
   /** Tie-break self-justification time in seconds */

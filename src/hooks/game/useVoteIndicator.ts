@@ -23,9 +23,9 @@ export function useVoteIndicator(seatNumber: number | null) {
     }
 
     // Don't show while voting is active - only after vote ends
-    if (votingSession.voting_active) {
-      return { showVoteIndicator: false };
-    }
+    // if (votingSession.voting_active) {
+    //   return { showVoteIndicator: false };
+    // }
 
     // "Both leave" vote mode - check both_leave_votes
     if (votingSession.both_leave_vote_active) {
