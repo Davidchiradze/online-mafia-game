@@ -36,7 +36,7 @@ export default function ParticipantBadges({
 
   // Get role for this player - only show to host
   const playerRole =
-    isViewerHost && playerRolesMap.size > 0 ? getRoleForUser(playerId) : null;
+     playerRolesMap.size > 0 ? getRoleForUser(playerId) : null;
 
   // Format role for display (capitalize first letter, replace underscores)
   const formatRole = (role: string) => {
@@ -80,7 +80,7 @@ export default function ParticipantBadges({
                 : playerIndex
               : displayName || (playerIndex === 13 ? "Host" : playerIndex)}
           </span>
-          {playerRole && playerIndex !== 13 && (
+          {playerRole  && (
             <span className="text-[7px] lg:text-[9px] opacity-70 font-normal">
               {formatRole(playerRole)}
             </span>

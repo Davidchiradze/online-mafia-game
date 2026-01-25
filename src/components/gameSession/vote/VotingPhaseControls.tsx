@@ -46,6 +46,7 @@ export default function VotingPhaseControls({ gameSessionState }: Props) {
   // Initialize voting session on mount
   useEffect(() => {
     if (!votingSession) {
+      console.log("🚀 ~ VotingPhaseControls ~ votingSession:", votingSession)
       const init = async () => {
         const result = await initializeVoting(gameId);
         if (result.ok) {
@@ -168,7 +169,6 @@ export default function VotingPhaseControls({ gameSessionState }: Props) {
     if (isLoading) return;
     setIsLoading(true);
     const result = await processBothLeaveResult(gameId);
-    console.log("🚀 ~ VotingPhaseControls ~ result:", result);
     if (result.ok) {
       if (result.allLeave) {
         // All leave - start farewell for all tied candidates
@@ -194,9 +194,7 @@ export default function VotingPhaseControls({ gameSessionState }: Props) {
   const bothLeaveVotes = votingSession.both_leave_votes ?? [];
   const bothLeaveVoteEnded =
     isBothLeaveMode && !isVoting && votingSession.voting_started_at !== null;
-  console.log("🚀 ~ VotingPhaseControls ~ votingSession:", votingSession);
-  console.log("🚀 ~ VotingPhaseControls ~ isVoting:", isVoting);
-  console.log("🚀 ~ VotingPhaseControls ~ isBothLeaveMode:", isBothLeaveMode);
+
 
   // "Both leave" vote UI
   if (isBothLeaveMode) {

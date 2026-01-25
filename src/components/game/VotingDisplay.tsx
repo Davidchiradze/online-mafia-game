@@ -142,7 +142,7 @@ export default function VotingDisplay() {
           disabled={!isEnabled || isSubmitting}
           className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
             isEnabled
-              ? "bg-amber-500 hover:bg-amber-400 text-white animate-pulse"
+              ? "bg-green-600 hover:bg-green-500 text-white"
               : "bg-gray-600 text-gray-400 cursor-not-allowed"
           }`}
         >
