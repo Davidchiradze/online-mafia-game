@@ -47,8 +47,8 @@ export function useLivekitConnect({
 
       setLivekitToken(token ?? null);
       await room.connect(process.env.NEXT_PUBLIC_LIVEKIT_URL!, token || "");
-      await room.localParticipant.setCameraEnabled(true);
-      await room.localParticipant.setMicrophoneEnabled(false);
+      room.localParticipant.setMicrophoneEnabled(false);
+      room.localParticipant.setCameraEnabled(true);
     }
 
     void connectIfNeeded();

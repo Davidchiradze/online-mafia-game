@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Room as LiveKitRoom } from "livekit-client";
+import { ConnectionState, Room as LiveKitRoom, Room } from "livekit-client";
 import type { GameSessionState } from "@/types/game/type";
 import type { Tables } from "@/db/supabase/database.types";
 import { SPEAKING_STATE } from "@/lib/constants/game";
+import { useConnectionState } from "@livekit/components-react";
 
 /**
  * Hook that automatically mutes/unmutes the local participant's microphone
@@ -39,11 +40,13 @@ export function useSpeakingAutoMute(
   isHost: boolean,
   enabled: boolean = true
 ) {
+  const connectionState = useConnectionState(room ?? undefined);
+  const isConnected = connectionState === ConnectionState.Connected;
   // Track previous mute state to avoid redundant updates
   const prevShouldMuteRef = useRef<boolean | null>(null);
 
   useEffect(() => {
-    if (!room || !enabled || isHost) return;
+    if (!room || !enabled || isHost || !isConnected) return;
 
     // Find current user's seat number
     const myPlayer = players.find((p) => p.player_id === userId);
@@ -103,5 +106,5 @@ export function useSpeakingAutoMute(
 
     // Set microphone state
     void room.localParticipant.setMicrophoneEnabled(!shouldMute);
-  }, [room, gameSessionState, players, userId, isHost, enabled]);
+  }, [room, gameSessionState, players, userId, isHost, enabled, isConnected]);
 }
