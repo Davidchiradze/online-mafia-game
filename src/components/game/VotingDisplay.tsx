@@ -10,7 +10,7 @@ import { useVotingButton } from "@/hooks/game/useVotingButton";
  * Dead players see nothing.
  */
 export default function VotingDisplay() {
-  const { votingSession, gameSessionState, players, userId, gameId } =
+  const { votingSession, gameSessionState, players, userId, gameId, voteData } =
     useGameRoom();
 
   // Get current player info
@@ -33,6 +33,7 @@ export default function VotingDisplay() {
     votingSession,
     playerSeatNumber,
     gameId,
+    voteData,
   });
 
   // Don't render if not in voting phase

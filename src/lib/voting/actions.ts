@@ -6,23 +6,82 @@
  * Core voting flow:
  * 1. initializeVoting - Create voting session with candidates from nominated_players
  * 2. startVoteWindow - Enable voting for 5 seconds
- * 3. castVote - Player casts vote for current candidate
+ * 3. castVote - Player casts vote for current candidate (atomic INSERT)
  * 4. endVoteWindow - Close voting window
  * 5. advanceToNextCandidate - Move to next candidate
  *
  * Players CAN vote for themselves.
  * Players who don't vote get auto-assigned to last candidate (handled in Task 3).
+ *
+ * RACE CONDITION FIX: Votes are now stored in a separate `vote` table with atomic INSERTs
+ * instead of read-modify-write on JSONB columns.
  */
 
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
-import type { Tables, Json } from "@/db/supabase/database.types";
+import type { Tables } from "@/db/supabase/database.types";
 import { VOTING } from "@/lib/constants/game";
 
 type ActionResult = { ok: true } | { ok: false; message: string };
 
-/** Votes map: { "seatNumber": [voterSeatNumbers] } */
-type VotesMap = Record<string, number[]>;
+/** Vote record from the vote table */
+type VoteRecord = {
+  id: string;
+  voting_session_id: string;
+  voter_seat: number;
+  seat_number: number | null;
+  is_both_leave: boolean;
+  is_auto_vote: boolean;
+  created_at: string;
+};
+
+/**
+ * Helper to get all votes for a voting session.
+ */
+async function getVotesForSession(
+  votingSessionId: string
+): Promise<VoteRecord[]> {
+  const { data } = await adminClient
+    .from("votes")
+    .select("*")
+    .eq("voting_session_id", votingSessionId);
+
+  return (data as VoteRecord[]) ?? [];
+}
+
+/**
+ * Helper to build a votes map from vote records.
+ * Returns: { "seatNumber": [voterSeatNumbers] }
+ */
+function buildVotesMap(votes: VoteRecord[]): Record<string, number[]> {
+  const votesMap: Record<string, number[]> = {};
+  for (const vote of votes) {
+    if (vote.seat_number !== null && !vote.is_both_leave) {
+      const key = String(vote.seat_number);
+      if (!votesMap[key]) votesMap[key] = [];
+      votesMap[key].push(vote.voter_seat);
+    }
+  }
+  return votesMap;
+}
+
+/**
+ * Helper to get list of players who voted (for regular votes, not both-leave).
+ */
+function getPlayersWhoVoted(votes: VoteRecord[]): number[] {
+  return votes
+    .filter((v) => !v.is_both_leave)
+    .map((v) => v.voter_seat);
+}
+
+/**
+ * Helper to get list of players who voted for "both leave".
+ */
+function getBothLeaveVoters(votes: VoteRecord[]): number[] {
+  return votes
+    .filter((v) => v.is_both_leave)
+    .map((v) => v.voter_seat);
+}
 
 /**
  * Internal helper to create voting session without auth check.
@@ -48,7 +107,7 @@ export async function createVotingSessionInternal(
     return null;
   }
 
-  // Create voting session
+  // Create voting session (votes are in separate table now)
   const { data: newSession, error: insertErr } = await adminClient
     .from("voting_sessions")
     .insert({
@@ -57,12 +116,11 @@ export async function createVotingSessionInternal(
       round_number: 1,
       current_candidate_index: 0,
       voting_active: false,
-      votes: {},
-      players_who_voted: [],
+      votes: {}, // Legacy - kept for compatibility
+      players_who_voted: [], // Legacy - kept for compatibility
       is_tie_break: false,
       tie_break_round: 0,
       both_leave_vote_active: false,
-      both_leave_votes: [],
     })
     .select()
     .single();
@@ -182,12 +240,11 @@ export async function initializeVoting(
       round_number: 1,
       current_candidate_index: 0,
       voting_active: false,
-      votes: {},
-      players_who_voted: [],
+      votes: {}, // Legacy
+      players_who_voted: [], // Legacy
       is_tie_break: false,
       tie_break_round: 0,
       both_leave_vote_active: false,
-      both_leave_votes: [],
     })
     .select()
     .single();
@@ -300,6 +357,9 @@ export async function endVoteWindow(gameId: string): Promise<ActionResult> {
  * Called by players during the voting window.
  * Players CAN vote for themselves.
  * Each player can only vote once per voting round.
+ *
+ * ATOMIC: Uses INSERT into vote table with unique constraint.
+ * No race condition possible - duplicate votes rejected by DB.
  */
 export async function castVote(gameId: string): Promise<ActionResult> {
   const supabase = await createClient();
@@ -331,12 +391,6 @@ export async function castVote(gameId: string): Promise<ActionResult> {
     return { ok: false, message: "Voting is not currently active" };
   }
 
-  // Check if player already voted this round
-  const playersWhoVoted = votingSession.players_who_voted ?? [];
-  if (playersWhoVoted.includes(voterSeat)) {
-    return { ok: false, message: "You have already voted this round" };
-  }
-
   // Check if player is alive
   const { data: player } = await adminClient
     .from("game_players")
@@ -360,30 +414,21 @@ export async function castVote(gameId: string): Promise<ActionResult> {
 
   // Note: Players CAN vote for themselves (removed restriction)
 
-  // Update votes
-  const votes = (votingSession.votes as VotesMap) ?? {};
-  const candidateKey = String(currentCandidate);
-  const candidateVotes = votes[candidateKey] ?? [];
+  // ATOMIC INSERT - unique constraint prevents duplicate votes
+  const { error: insertErr } = await adminClient.from("votes").insert({
+    voting_session_id: votingSession.id,
+    voter_seat: voterSeat,
+    seat_number: currentCandidate,
+    is_both_leave: false,
+    is_auto_vote: false,
+  });
 
-  // Add voter to the candidate's votes
-  const updatedVotes: VotesMap = {
-    ...votes,
-    [candidateKey]: [...candidateVotes, voterSeat],
-  };
-
-  // Add voter to players_who_voted
-  const updatedPlayersWhoVoted = [...playersWhoVoted, voterSeat];
-
-  const { error: updateErr } = await adminClient
-    .from("voting_sessions")
-    .update({
-      votes: updatedVotes as unknown as Json,
-      players_who_voted: updatedPlayersWhoVoted,
-    })
-    .eq("id", votingSession.id);
-
-  if (updateErr) {
-    return { ok: false, message: updateErr.message };
+  if (insertErr) {
+    // Check if it's a unique constraint violation (already voted)
+    if (insertErr.code === "23505") {
+      return { ok: false, message: "You have already voted this round" };
+    }
+    return { ok: false, message: insertErr.message };
   }
 
   return { ok: true };
@@ -391,7 +436,6 @@ export async function castVote(gameId: string): Promise<ActionResult> {
 
 /**
  * Advance to the next candidate in the voting sequence.
- * Clears players_who_voted for the new candidate.
  * Host only.
  *
  * Returns allDone=true when all candidates have been voted on.
@@ -460,6 +504,8 @@ export async function advanceToNextCandidate(
 /**
  * Internal helper to apply auto-votes without auth check.
  * Used when advancing to last candidate.
+ *
+ * ATOMIC: Batch INSERT with is_auto_vote=true, conflict ignored.
  */
 async function applyAutoVotesInternal(gameId: string): Promise<void> {
   // Get voting session
@@ -493,7 +539,10 @@ async function applyAutoVotesInternal(gameId: string): Promise<void> {
     .map((p) => p.seat_number)
     .filter((s): s is number => s !== null);
 
-  const playersWhoVoted = votingSession.players_who_voted ?? [];
+  // Get existing votes to find who already voted
+  const existingVotes = await getVotesForSession(votingSession.id);
+  const playersWhoVoted = getPlayersWhoVoted(existingVotes);
+
   const candidates = votingSession.candidates ?? [];
 
   // Find players who didn't vote
@@ -507,26 +556,19 @@ async function applyAutoVotesInternal(gameId: string): Promise<void> {
   const lastCandidate = candidates[candidates.length - 1];
   if (lastCandidate === undefined) return;
 
-  // Add auto-votes to the last candidate
-  const votes = (votingSession.votes as VotesMap) ?? {};
-  const lastCandidateKey = String(lastCandidate);
-  const lastCandidateVotes = votes[lastCandidateKey] ?? [];
+  // Batch INSERT auto-votes (use upsert to ignore conflicts)
+  const autoVotes = playersWhoDidntVote.map((voterSeat) => ({
+    voting_session_id: votingSession.id,
+    voter_seat: voterSeat,
+    seat_number: lastCandidate,
+    is_both_leave: false,
+    is_auto_vote: true,
+  }));
 
-  const updatedVotes: VotesMap = {
-    ...votes,
-    [lastCandidateKey]: [...lastCandidateVotes, ...playersWhoDidntVote],
-  };
-
-  // Update players_who_voted to include auto-voters
-  const updatedPlayersWhoVoted = [...playersWhoVoted, ...playersWhoDidntVote];
-
+  // Insert with onConflict ignore to handle any race conditions
   await adminClient
-    .from("voting_sessions")
-    .update({
-      votes: updatedVotes as unknown as Json,
-      players_who_voted: updatedPlayersWhoVoted,
-    })
-    .eq("id", votingSession.id);
+    .from("votes")
+    .upsert(autoVotes, { onConflict: "voting_session_id,voter_seat", ignoreDuplicates: true });
 }
 
 /**
@@ -592,7 +634,10 @@ export async function applyAutoVotes(gameId: string): Promise<ActionResult> {
     .map((p) => p.seat_number)
     .filter((s): s is number => s !== null);
 
-  const playersWhoVoted = votingSession.players_who_voted ?? [];
+  // Get existing votes
+  const existingVotes = await getVotesForSession(votingSession.id);
+  const playersWhoVoted = getPlayersWhoVoted(existingVotes);
+
   const candidates = votingSession.candidates ?? [];
 
   // Find players who didn't vote
@@ -611,29 +656,21 @@ export async function applyAutoVotes(gameId: string): Promise<ActionResult> {
     return { ok: false, message: "No candidates found" };
   }
 
-  // Add auto-votes to the last candidate
-  const votes = (votingSession.votes as VotesMap) ?? {};
-  const lastCandidateKey = String(lastCandidate);
-  const lastCandidateVotes = votes[lastCandidateKey] ?? [];
+  // Batch INSERT auto-votes
+  const autoVotes = playersWhoDidntVote.map((voterSeat) => ({
+    voting_session_id: votingSession.id,
+    voter_seat: voterSeat,
+    seat_number: lastCandidate,
+    is_both_leave: false,
+    is_auto_vote: true,
+  }));
 
-  const updatedVotes: VotesMap = {
-    ...votes,
-    [lastCandidateKey]: [...lastCandidateVotes, ...playersWhoDidntVote],
-  };
+  const { error: insertErr } = await adminClient
+    .from("votes")
+    .upsert(autoVotes, { onConflict: "voting_session_id,voter_seat", ignoreDuplicates: true });
 
-  // Update players_who_voted to include auto-voters
-  const updatedPlayersWhoVoted = [...playersWhoVoted, ...playersWhoDidntVote];
-
-  const { error: updateErr } = await adminClient
-    .from("voting_sessions")
-    .update({
-      votes: updatedVotes as unknown as Json,
-      players_who_voted: updatedPlayersWhoVoted,
-    })
-    .eq("id", votingSession.id);
-
-  if (updateErr) {
-    return { ok: false, message: updateErr.message };
+  if (insertErr) {
+    return { ok: false, message: insertErr.message };
   }
 
   return { ok: true };
@@ -680,13 +717,16 @@ export async function processVotingResults(
   }
 
   const candidates = votingSession.candidates ?? [];
-  const votes = (votingSession.votes as VotesMap) ?? {};
+
+  // Get all votes from vote table
+  const allVotes = await getVotesForSession(votingSession.id);
+  const votesMap = buildVotesMap(allVotes);
 
   // Count votes for each candidate
   const voteCounts: { seat: number; count: number }[] = candidates.map(
     (seat) => ({
       seat,
-      count: (votes[String(seat)] ?? []).length,
+      count: (votesMap[String(seat)] ?? []).length,
     })
   );
 
@@ -760,11 +800,16 @@ export async function startTieBreak(
 
   if (sameCandidates) {
     // Same players tied twice - trigger "both leave" vote
+    // Delete all existing votes for this session before both-leave vote
+    await adminClient
+      .from("votes")
+      .delete()
+      .eq("voting_session_id", votingSession.id);
+
     const { error: updateErr } = await adminClient
       .from("voting_sessions")
       .update({
         both_leave_vote_active: true,
-        both_leave_votes: [],
         voting_active: false,
         voting_started_at: null,
       })
@@ -777,7 +822,12 @@ export async function startTieBreak(
     return { ok: true, bothLeaveVote: true };
   }
 
-  // Normal tie-break: update voting session for re-vote
+  // Normal tie-break: delete votes and reset for re-vote
+  await adminClient
+    .from("votes")
+    .delete()
+    .eq("voting_session_id", votingSession.id);
+
   const { error: updateVotingErr } = await adminClient
     .from("voting_sessions")
     .update({
@@ -785,8 +835,8 @@ export async function startTieBreak(
       tie_break_round: currentTieBreakRound + 1,
       candidates: tiedCandidates,
       previous_tied_candidates: tiedCandidates,
-      votes: {},
-      players_who_voted: [],
+      votes: {}, // Legacy
+      players_who_voted: [], // Legacy
       current_candidate_index: 0,
       voting_active: false,
       voting_started_at: null,
@@ -867,7 +917,6 @@ export async function endBothLeaveVote(gameId: string): Promise<ActionResult> {
     .from("voting_sessions")
     .update({
       voting_active: false,
-      // voting_started_at: null,
     })
     .eq("game_id", gameId);
 
@@ -881,6 +930,8 @@ export async function endBothLeaveVote(gameId: string): Promise<ActionResult> {
 /**
  * Cast a vote in the "both leave" vote.
  * Player votes for all tied candidates to leave.
+ *
+ * ATOMIC: Uses INSERT into vote table with unique constraint.
  */
 export async function castBothLeaveVote(gameId: string): Promise<ActionResult> {
   const supabase = await createClient();
@@ -930,22 +981,21 @@ export async function castBothLeaveVote(gameId: string): Promise<ActionResult> {
     return { ok: false, message: "Voting window is not open" };
   }
 
-  // Check if already voted
-  const currentVotes = votingSession.both_leave_votes ?? [];
-  if (currentVotes.includes(seatNumber)) {
-    return { ok: false, message: "Already voted" };
-  }
+  // ATOMIC INSERT - unique constraint prevents duplicate votes
+  const { error: insertErr } = await adminClient.from("votes").insert({
+    voting_session_id: votingSession.id,
+    voter_seat: seatNumber,
+    seat_number: null, // No specific candidate for both-leave vote
+    is_both_leave: true,
+    is_auto_vote: false,
+  });
 
-  // Add vote
-  const { error: updateErr } = await adminClient
-    .from("voting_sessions")
-    .update({
-      both_leave_votes: [...currentVotes, seatNumber],
-    })
-    .eq("game_id", gameId);
-
-  if (updateErr) {
-    return { ok: false, message: updateErr.message };
+  if (insertErr) {
+    // Check if it's a unique constraint violation (already voted)
+    if (insertErr.code === "23505") {
+      return { ok: false, message: "Already voted" };
+    }
+    return { ok: false, message: insertErr.message };
   }
 
   return { ok: true };
@@ -1005,7 +1055,11 @@ export async function processBothLeaveResult(gameId: string): Promise<
     (p) => p.player_id !== game?.host_id
   ).length;
 
-  const voteCount = (votingSession.both_leave_votes ?? []).length;
+  // Get votes from vote table
+  const allVotes = await getVotesForSession(votingSession.id);
+  const bothLeaveVoters = getBothLeaveVoters(allVotes);
+  const voteCount = bothLeaveVoters.length;
+
   const candidates = votingSession.candidates ?? [];
 
   // Check if >50% voted yes
@@ -1034,7 +1088,7 @@ export async function startBothLeaveFarewell(
   const hostCheck = await verifyHost(gameId, user.id);
   if (!hostCheck.ok) return hostCheck;
 
-  // Delete voting session - voting has ended
+  // Delete voting session - voting has ended (votes cascade delete)
   await adminClient.from("voting_sessions").delete().eq("game_id", gameId);
 
   // Update game session to farewell_speech with all candidates as speakers
@@ -1072,7 +1126,7 @@ export async function skipToNightAfterTie(
   const hostCheck = await verifyHost(gameId, user.id);
   if (!hostCheck.ok) return hostCheck;
 
-  // Delete voting session
+  // Delete voting session (votes cascade delete)
   await adminClient.from("voting_sessions").delete().eq("game_id", gameId);
 
   // Get current game session
@@ -1145,7 +1199,7 @@ export async function startVotingFarewell(
   const hostCheck = await verifyHost(gameId, user.id);
   if (!hostCheck.ok) return hostCheck;
 
-  // Delete voting session - voting has ended
+  // Delete voting session - voting has ended (votes cascade delete)
   await adminClient.from("voting_sessions").delete().eq("game_id", gameId);
 
   // Update game session to farewell_speech with winner as speaker
@@ -1185,7 +1239,7 @@ export async function transitionToNightPhase(
   const hostCheck = await verifyHost(gameId, user.id);
   if (!hostCheck.ok) return hostCheck;
 
-  // Delete voting session
+  // Delete voting session (votes cascade delete)
   await adminClient.from("voting_sessions").delete().eq("game_id", gameId);
 
   // Get current game session

@@ -56,7 +56,7 @@ export function useSpeakingAutoMute(
     if (!gameSessionState) {
       if (prevShouldMuteRef.current !== false) {
         prevShouldMuteRef.current = false;
-        void room.localParticipant.setMicrophoneEnabled(true);
+        void room.localParticipant.setMicrophoneEnabled(false);
       }
       return;
     }

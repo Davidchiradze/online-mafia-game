@@ -28,7 +28,7 @@ import {
   useNightPhaseSessionListener,
   useVotingSessionListener,
 } from "@/hooks/realtime";
-import type { NightPhaseSession, VotingSession } from "@/hooks/realtime";
+import type { NightPhaseSession, VotingSession, VoteData } from "@/hooks/realtime";
 import { JOIN_REQUEST_STATUSES } from "@/lib/constants/game";
 import { leaveGamePlayer } from "@/lib/gamePlayers/actions";
 import { Tables } from "@/db/supabase/database.types";
@@ -62,6 +62,8 @@ type GameRoomContextValue = {
   votingSession: VotingSession | null;
   /** Set voting session state directly (for immediate updates after creation) */
   setVotingSession: (session: VotingSession | null) => void;
+  /** Vote data aggregated from vote table - real-time vote counts */
+  voteData: VoteData;
 };
 
 const GameRoomContext = createContext<GameRoomContextValue | null>(null);
@@ -120,7 +122,7 @@ export function GameRoomProvider({
 
   // Voting session subscription - only during voting phase
   const isVotingPhase = gameSessionState?.game_phase === "voting";
-  const { votingSession, setVotingSession } = useVotingSessionListener(
+  const { votingSession, setVotingSession, voteData } = useVotingSessionListener(
     gameId,
     hasPlayerRecord && isVotingPhase
   );
@@ -249,6 +251,7 @@ export function GameRoomProvider({
       nightPhaseSession,
       votingSession,
       setVotingSession,
+      voteData,
     }),
     [
       gameId,
@@ -272,6 +275,7 @@ export function GameRoomProvider({
       nightPhaseSession,
       votingSession,
       setVotingSession,
+      voteData,
     ]
   );
 

@@ -22,8 +22,6 @@ type Props = {
   gameSessionState: GameSessionState;
 };
 
-type VotesMap = Record<string, number[]>;
-
 /**
  * Compact host controls for voting phase.
  * Mobile-friendly with minimal UI.
@@ -36,7 +34,7 @@ type VotesMap = Record<string, number[]>;
  * 5. Show "Tally Results" button
  */
 export default function VotingPhaseControls({ gameSessionState }: Props) {
-  const { gameId, votingSession, setVotingSession } = useGameRoom();
+  const { gameId, votingSession, setVotingSession, voteData } = useGameRoom();
   const [isLoading, setIsLoading] = useState(false);
   const [resultMessage, setResultMessage] = useState<string | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -94,13 +92,13 @@ export default function VotingPhaseControls({ gameSessionState }: Props) {
   const candidates = votingSession?.candidates ?? [];
   const currentIdx = votingSession?.current_candidate_index ?? 0;
   const currentCandidate = candidates[currentIdx];
-  const votes = (votingSession?.votes as VotesMap) ?? {};
   const isVoting = votingSession?.voting_active ?? false;
   const allDone = currentIdx >= candidates.length;
   const isLastCandidate = currentIdx === candidates.length - 1 && !allDone;
 
+  // Get vote counts from voteData (from vote table)
   const currentVotes = currentCandidate
-    ? (votes[String(currentCandidate)] ?? []).length
+    ? (voteData.votes[String(currentCandidate)] ?? []).length
     : 0;
 
   const handleVoteNow = useCallback(async () => {
@@ -180,7 +178,7 @@ export default function VotingPhaseControls({ gameSessionState }: Props) {
 
   // Check for "both leave" vote mode
   const isBothLeaveMode = votingSession.both_leave_vote_active;
-  const bothLeaveVotes = votingSession.both_leave_votes ?? [];
+  const bothLeaveVotes = voteData.bothLeaveVoters;
   const bothLeaveVoteEnded =
     isBothLeaveMode && !isVoting && votingSession.voting_started_at !== null;
 
@@ -315,7 +313,7 @@ export default function VotingPhaseControls({ gameSessionState }: Props) {
             className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${getDotStyle(
               idx
             )}`}
-            title={`#${seat}: ${(votes[String(seat)] ?? []).length} votes`}
+            title={`#${seat}: ${(voteData.votes[String(seat)] ?? []).length} votes`}
           >
             {seat}
           </div>

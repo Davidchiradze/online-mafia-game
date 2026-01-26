@@ -3,12 +3,13 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { castVote, castBothLeaveVote } from "@/lib/voting/actions";
 import { VOTING } from "@/lib/constants/game";
-import type { VotingSession } from "@/hooks/realtime";
+import type { VotingSession, VoteData } from "@/hooks/realtime";
 
 type UseVotingButtonOptions = {
   votingSession: VotingSession | null;
   playerSeatNumber: number | null;
   gameId: string;
+  voteData: VoteData;
 };
 
 /**
@@ -19,6 +20,7 @@ export function useVotingButton({
   votingSession,
   playerSeatNumber,
   gameId,
+  voteData,
 }: UseVotingButtonOptions) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number>(VOTING.VOTE_WINDOW_SECONDS);
@@ -27,15 +29,13 @@ export function useVotingButton({
   // Check if this is "both leave" vote mode
   const isBothLeaveMode = votingSession?.both_leave_vote_active ?? false;
 
-  // Check if player has already voted
+  // Check if player has already voted - using voteData from vote table
   const hasVoted = (() => {
     if (!votingSession || playerSeatNumber === null) return false;
     if (isBothLeaveMode) {
-      const bothLeaveVotes = votingSession.both_leave_votes ?? [];
-      return bothLeaveVotes.includes(playerSeatNumber);
+      return voteData.bothLeaveVoters.includes(playerSeatNumber);
     }
-    const playersWhoVoted = votingSession.players_who_voted ?? [];
-    return playersWhoVoted.includes(playerSeatNumber);
+    return voteData.playersWhoVoted.includes(playerSeatNumber);
   })();
 
   // Check if voting is active
