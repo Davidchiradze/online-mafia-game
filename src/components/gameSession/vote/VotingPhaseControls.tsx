@@ -39,6 +39,7 @@ export default function VotingPhaseControls({ gameSessionState }: Props) {
   const [resultMessage, setResultMessage] = useState<string | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const [timeLeft, setTimeLeft] = useState<number>(VOTING.VOTE_WINDOW_SECONDS);
+  const prevIsVotingRef = useRef<boolean>(false);
 
   // Note: Voting session is initialized server-side during phase transition
   // (in advanceToNextNominatedSpeaker) to prevent race conditions.
@@ -89,10 +90,20 @@ export default function VotingPhaseControls({ gameSessionState }: Props) {
     gameId,
   ]);
 
+  // Clear isLoading when voting state changes (realtime update received)
+  // This prevents the button flash between server response and realtime update
+  const isVotingNow = votingSession?.voting_active ?? false;
+  useEffect(() => {
+    if (isVotingNow !== prevIsVotingRef.current) {
+      prevIsVotingRef.current = isVotingNow;
+      setIsLoading(false);
+    }
+  }, [isVotingNow]);
+
   const candidates = votingSession?.candidates ?? [];
   const currentIdx = votingSession?.current_candidate_index ?? 0;
   const currentCandidate = candidates[currentIdx];
-  const isVoting = votingSession?.voting_active ?? false;
+  const isVoting = isVotingNow;
   const allDone = currentIdx >= candidates.length;
   const isLastCandidate = currentIdx === candidates.length - 1 && !allDone;
 
@@ -106,7 +117,7 @@ export default function VotingPhaseControls({ gameSessionState }: Props) {
     setIsLoading(true);
     setResultMessage(null);
     await startVoteWindow(gameId);
-    setIsLoading(false);
+    // Don't setIsLoading(false) here - useEffect clears it when isVoting changes
   }, [gameId, isLoading, isVoting]);
 
   const handleNextCandidate = useCallback(async () => {
@@ -148,7 +159,7 @@ export default function VotingPhaseControls({ gameSessionState }: Props) {
     setIsLoading(true);
     setResultMessage(null);
     await startBothLeaveVote(gameId);
-    setIsLoading(false);
+    // Don't setIsLoading(false) here - useEffect clears it when isVoting changes
   }, [gameId, isLoading, isVoting]);
 
   // Handler to process "both leave" result
@@ -228,29 +239,28 @@ export default function VotingPhaseControls({ gameSessionState }: Props) {
         )}
 
         {/* Action buttons */}
-        {isVoting && (
+        {isLoading ? (
+          <div className="flex items-center gap-2 text-xs text-gray-400">
+            <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+            Processing...
+          </div>
+        ) : isVoting ? (
           <div className="text-xs text-gray-500">Voting in progress...</div>
-        )}
-
-        {bothLeaveVoteEnded && (
+        ) : bothLeaveVoteEnded ? (
           <button
             type="button"
             onClick={handleBothLeaveResult}
-            disabled={isLoading}
-            className="px-4 py-1.5 text-sm bg-green-600 hover:bg-green-500 text-white rounded-md disabled:opacity-50"
+            className="px-4 py-1.5 text-sm bg-green-600 hover:bg-green-500 text-white rounded-md"
           >
-            {isLoading ? "..." : "See Result"}
+            See Result
           </button>
-        )}
-
-        {!isVoting && !bothLeaveVoteEnded && (
+        ) : (
           <button
             type="button"
             onClick={handleBothLeaveVoteNow}
-            disabled={isLoading}
-            className="px-4 py-1.5 text-sm bg-red-600 hover:bg-red-500 text-white rounded-md disabled:opacity-50"
+            className="px-4 py-1.5 text-sm bg-red-600 hover:bg-red-500 text-white rounded-md"
           >
-            {isLoading ? "..." : "Vote Now"}
+            Vote Now
           </button>
         )}
       </div>
@@ -340,42 +350,38 @@ export default function VotingPhaseControls({ gameSessionState }: Props) {
       )}
 
       {/* Action buttons */}
-      {isVoting && (
+      {isLoading ? (
+        <div className="flex items-center gap-2 text-xs text-gray-400">
+          <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+          Processing...
+        </div>
+      ) : isVoting ? (
         <div className="text-xs text-gray-500">Voting in progress...</div>
-      )}
-
-      {showTallyButton && (
+      ) : showTallyButton ? (
         <button
           type="button"
           onClick={handleTally}
-          disabled={isLoading}
-          className="px-4 py-1.5 text-sm bg-green-600 hover:bg-green-500 text-white rounded-md disabled:opacity-50"
+          className="px-4 py-1.5 text-sm bg-green-600 hover:bg-green-500 text-white rounded-md"
         >
-          {isLoading ? "..." : "Tally Results"}
+          Tally Results
         </button>
-      )}
-
-      {showNextCandidateButton && (
+      ) : showNextCandidateButton ? (
         <button
           type="button"
           onClick={handleNextCandidate}
-          disabled={isLoading}
-          className="px-4 py-1.5 text-sm bg-blue-600 hover:bg-blue-500 text-white rounded-md disabled:opacity-50"
+          className="px-4 py-1.5 text-sm bg-blue-600 hover:bg-blue-500 text-white rounded-md"
         >
-          {isLoading ? "..." : "Next Candidate →"}
+          Next Candidate →
         </button>
-      )}
-
-      {showVoteNowButton && (
+      ) : showVoteNowButton ? (
         <button
           type="button"
           onClick={handleVoteNow}
-          disabled={isLoading}
-          className="px-4 py-1.5 text-sm bg-amber-600 hover:bg-amber-500 text-white rounded-md disabled:opacity-50"
+          className="px-4 py-1.5 text-sm bg-amber-600 hover:bg-amber-500 text-white rounded-md"
         >
-          {isLoading ? "..." : "Vote Now"}
+          Vote Now
         </button>
-      )}
+      ) : null}
     </div>
   );
 }
