@@ -5,7 +5,6 @@ import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { GameSessionState } from "@/types/game/type";
 import { VOTING } from "@/lib/constants/game";
 import {
-  initializeVoting,
   startVoteWindow,
   endVoteWindow,
   advanceToNextCandidate,
@@ -43,19 +42,9 @@ export default function VotingPhaseControls({ gameSessionState }: Props) {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const [timeLeft, setTimeLeft] = useState<number>(VOTING.VOTE_WINDOW_SECONDS);
 
-  // Initialize voting session on mount
-  useEffect(() => {
-    if (!votingSession) {
-      console.log("🚀 ~ VotingPhaseControls ~ votingSession:", votingSession)
-      const init = async () => {
-        const result = await initializeVoting(gameId);
-        if (result.ok) {
-          setVotingSession(result.session);
-        }
-      };
-      void init();
-    }
-  }, [gameId, votingSession, setVotingSession]);
+  // Note: Voting session is initialized server-side during phase transition
+  // (in advanceToNextNominatedSpeaker) to prevent race conditions.
+  // Players receive it via useVotingSessionListener realtime subscription.
 
   // Timer for voting window - auto ends when time is up
   useEffect(() => {

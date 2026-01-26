@@ -16,6 +16,7 @@ import { adminClient } from "@/lib/supabase/admin";
 import { computeSpeakingOrder, getNextSpeaker } from "@/lib/game/speakingOrder";
 import type { GameSessionState } from "@/types/game/type";
 import { FOULS, SPEAKING_STATE } from "@/lib/constants/game";
+import { createVotingSessionInternal } from "@/lib/voting/actions";
 
 type ActionResult = { ok: true } | { ok: false; message: string };
 
@@ -589,6 +590,13 @@ export async function advanceToNextNominatedSpeaker(
 
   if (nextSpeaker === null) {
     // All nominated players have spoken - transition to voting phase
+    const nominatedPlayers = session.nominated_players ?? [];
+
+    // Create voting session FIRST, before updating the phase
+    // This prevents race condition where players fetch voting session before it exists
+    await createVotingSessionInternal(gameId, nominatedPlayers);
+
+    // Now update the phase - clients will see the change and voting session already exists
     const { error: updateErr } = await adminClient
       .from("game_sessions")
       .update({

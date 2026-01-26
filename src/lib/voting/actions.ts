@@ -25,6 +25,57 @@ type ActionResult = { ok: true } | { ok: false; message: string };
 type VotesMap = Record<string, number[]>;
 
 /**
+ * Internal helper to create voting session without auth check.
+ * Used during phase transition where auth is already verified.
+ * Returns the created session or null if it already exists or fails.
+ */
+export async function createVotingSessionInternal(
+  gameId: string,
+  candidates: number[]
+): Promise<Tables<"voting_sessions"> | null> {
+  // Check if voting session already exists
+  const { data: existing } = await adminClient
+    .from("voting_sessions")
+    .select("*")
+    .eq("game_id", gameId)
+    .maybeSingle();
+
+  if (existing) {
+    return existing;
+  }
+
+  if (candidates.length === 0) {
+    return null;
+  }
+
+  // Create voting session
+  const { data: newSession, error: insertErr } = await adminClient
+    .from("voting_sessions")
+    .insert({
+      game_id: gameId,
+      candidates,
+      round_number: 1,
+      current_candidate_index: 0,
+      voting_active: false,
+      votes: {},
+      players_who_voted: [],
+      is_tie_break: false,
+      tie_break_round: 0,
+      both_leave_vote_active: false,
+      both_leave_votes: [],
+    })
+    .select()
+    .single();
+
+  if (insertErr || !newSession) {
+    console.error("Failed to create voting session:", insertErr);
+    return null;
+  }
+
+  return newSession;
+}
+
+/**
  * Verify the caller is the host of the game.
  */
 async function verifyHost(
