@@ -21,8 +21,10 @@ export default async function GamePage({ params }: PageProps) {
   const userId = userData.user?.id || null;
 
   const sessionRes = await fetchGameRoomById(id);
+  if (!sessionRes.ok) {
+    redirect("/lobby");
+  }
   if (
-    sessionRes.ok &&
     Number(sessionRes.data.max_players) +
       1 -
       Number(sessionRes.data.current_players) ===
@@ -36,7 +38,7 @@ export default async function GamePage({ params }: PageProps) {
       </div>
     );
   }
-  const game = sessionRes.ok ? sessionRes.data : null;
+  const game = sessionRes.data;
 
   return (
     <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-black h-[100vh]">

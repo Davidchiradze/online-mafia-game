@@ -110,6 +110,7 @@ export type Database = {
           current_night_number: number
           current_speaker_index: number | null
           day_round_opener_index: number | null
+          foul_elimination_occurred: boolean | null
           game_id: string
           game_phase: string
           id: string
@@ -123,6 +124,7 @@ export type Database = {
           current_night_number?: number
           current_speaker_index?: number | null
           day_round_opener_index?: number | null
+          foul_elimination_occurred?: boolean | null
           game_id: string
           game_phase: string
           id?: string
@@ -136,6 +138,7 @@ export type Database = {
           current_night_number?: number
           current_speaker_index?: number | null
           day_round_opener_index?: number | null
+          foul_elimination_occurred?: boolean | null
           game_id?: string
           game_phase?: string
           id?: string
@@ -311,10 +314,47 @@ export type Database = {
         }
         Relationships: []
       }
+      votes: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_auto_vote: boolean
+          is_both_leave: boolean
+          seat_number: number | null
+          voter_seat: number
+          voting_session_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_auto_vote?: boolean
+          is_both_leave?: boolean
+          seat_number?: number | null
+          voter_seat: number
+          voting_session_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_auto_vote?: boolean
+          is_both_leave?: boolean
+          seat_number?: number | null
+          voter_seat?: number
+          voting_session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "votes_voting_session_id_fkey"
+            columns: ["voting_session_id"]
+            isOneToOne: false
+            referencedRelation: "voting_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       voting_sessions: {
         Row: {
           both_leave_vote_active: boolean | null
-          both_leave_votes: number[] | null
           candidates: number[]
           created_at: string | null
           current_candidate_index: number | null
@@ -331,7 +371,6 @@ export type Database = {
         }
         Insert: {
           both_leave_vote_active?: boolean | null
-          both_leave_votes?: number[] | null
           candidates: number[]
           created_at?: string | null
           current_candidate_index?: number | null
@@ -348,7 +387,6 @@ export type Database = {
         }
         Update: {
           both_leave_vote_active?: boolean | null
-          both_leave_votes?: number[] | null
           candidates?: number[]
           created_at?: string | null
           current_candidate_index?: number | null

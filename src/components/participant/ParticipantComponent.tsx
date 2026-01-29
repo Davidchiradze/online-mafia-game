@@ -115,10 +115,11 @@ export default function ParticipantComponent({
     isTargetDead
   );
 
-  // Speaking progress
+  // Speaking progress (uses different durations based on phase)
   const speakingProgress = useSpeakingProgress(
     gameSessionState?.speaker_started_at,
-    isSpeaking
+    isSpeaking,
+    gameSessionState?.game_phase
   );
 
   // Check if current phase allows fouls
