@@ -34,7 +34,7 @@ type Props = {
  * 5. Show "Tally Results" button
  */
 export default function VotingPhaseControls({ gameSessionState }: Props) {
-  const { gameId, votingSession, setVotingSession, voteData } = useGameRoom();
+  const { gameId, votingSession, voteData } = useGameRoom();
   const [isLoading, setIsLoading] = useState(false);
   const [resultMessage, setResultMessage] = useState<string | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -43,7 +43,7 @@ export default function VotingPhaseControls({ gameSessionState }: Props) {
 
   // Note: Voting session is initialized server-side during phase transition
   // (in advanceToNextNominatedSpeaker) to prevent race conditions.
-  // Players receive it via useVotingSessionListener realtime subscription.
+  // Players receive updates via LiveKit Data Channels (useLiveKitVotingListener).
 
   // Timer for voting window - auto ends when time is up
   useEffect(() => {

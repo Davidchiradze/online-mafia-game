@@ -36,22 +36,10 @@ CREATE TABLE public.game_sessions (
   current_speaker_index integer,
   speaker_started_at timestamp with time zone,
   speaking_order ARRAY NOT NULL DEFAULT '{}'::integer[],
-  current_night_number integer NOT NULL DEFAULT 0,
+  current_night_number numeric NOT NULL DEFAULT '0'::numeric,
+  foul_elimination_occurred boolean DEFAULT false,
   CONSTRAINT game_sessions_pkey PRIMARY KEY (id),
   CONSTRAINT game_sessions_game_id_fkey FOREIGN KEY (game_id) REFERENCES public.games(id)
-);
-CREATE TABLE public.night_phase_sessions (
-  id uuid NOT NULL DEFAULT uuid_generate_v4(),
-  game_id uuid NOT NULL,
-  night_number integer NOT NULL,
-  mafia_target integer,
-  yakuza_target integer,
-  healed_player integer,
-  created_at timestamp with time zone DEFAULT now(),
-  updated_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT night_phase_sessions_pkey PRIMARY KEY (id),
-  CONSTRAINT night_phase_sessions_game_id_fkey FOREIGN KEY (game_id) REFERENCES public.games(id) ON DELETE CASCADE,
-  CONSTRAINT night_phase_sessions_unique_night UNIQUE (game_id, night_number)
 );
 CREATE TABLE public.games (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -79,6 +67,18 @@ CREATE TABLE public.join_requests (
   CONSTRAINT join_requests_game_id_fkey FOREIGN KEY (game_id) REFERENCES public.games(id),
   CONSTRAINT join_requests_requester_id_fkey FOREIGN KEY (requester_id) REFERENCES public.profiles(id)
 );
+CREATE TABLE public.night_phase_sessions (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  game_id uuid NOT NULL,
+  night_number integer NOT NULL,
+  mafia_target integer,
+  yakuza_target integer,
+  healed_player integer,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT night_phase_sessions_pkey PRIMARY KEY (id),
+  CONSTRAINT night_phase_sessions_game_id_fkey FOREIGN KEY (game_id) REFERENCES public.games(id)
+);
 CREATE TABLE public.profiles (
   id uuid NOT NULL,
   email text NOT NULL UNIQUE,
@@ -87,4 +87,33 @@ CREATE TABLE public.profiles (
   updated_at timestamp with time zone DEFAULT now(),
   CONSTRAINT profiles_pkey PRIMARY KEY (id),
   CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.votes (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  voting_session_id uuid NOT NULL,
+  voter_seat integer NOT NULL,
+  seat_number integer,
+  is_both_leave boolean NOT NULL DEFAULT false,
+  is_auto_vote boolean NOT NULL DEFAULT false,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT votes_pkey PRIMARY KEY (id),
+  CONSTRAINT votes_voting_session_id_fkey FOREIGN KEY (voting_session_id) REFERENCES public.voting_sessions(id)
+);
+CREATE TABLE public.voting_sessions (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  game_id uuid NOT NULL UNIQUE,
+  created_at timestamp with time zone DEFAULT now(),
+  round_number integer NOT NULL DEFAULT 1,
+  candidates ARRAY NOT NULL,
+  current_candidate_index integer DEFAULT 0,
+  voting_active boolean DEFAULT false,
+  voting_started_at timestamp with time zone,
+  votes jsonb DEFAULT '{}'::jsonb,
+  players_who_voted ARRAY DEFAULT '{}'::integer[],
+  is_tie_break boolean DEFAULT false,
+  tie_break_round integer DEFAULT 0,
+  previous_tied_candidates ARRAY,
+  both_leave_vote_active boolean DEFAULT false,
+  CONSTRAINT voting_sessions_pkey PRIMARY KEY (id),
+  CONSTRAINT voting_sessions_game_id_fkey FOREIGN KEY (game_id) REFERENCES public.games(id)
 );

@@ -21,6 +21,7 @@ import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import type { Tables } from "@/db/supabase/database.types";
 import { VOTING } from "@/lib/constants/game";
+import { publishVoteCast, publishVotingSessionState } from "@/lib/liveKit/serverPublish";
 
 type ActionResult = { ok: true } | { ok: false; message: string };
 
@@ -129,6 +130,13 @@ export async function createVotingSessionInternal(
     console.error("Failed to create voting session:", insertErr);
     return null;
   }
+
+  // Publish new voting session state via LiveKit (no votes yet)
+  void publishVotingSessionState(gameId, newSession, {
+    votes: {},
+    playersWhoVoted: [],
+    bothLeaveVoters: [],
+  });
 
   return newSession;
 }
@@ -291,17 +299,22 @@ export async function startVoteWindow(gameId: string): Promise<ActionResult> {
   }
 
   // Start voting window
-  const { error: updateErr } = await adminClient
+  const { data: updatedSession, error: updateErr } = await adminClient
     .from("voting_sessions")
     .update({
       voting_active: true,
       voting_started_at: new Date().toISOString(),
     })
-    .eq("id", votingSession.id);
+    .eq("id", votingSession.id)
+    .select()
+    .single();
 
-  if (updateErr) {
-    return { ok: false, message: updateErr.message };
+  if (updateErr || !updatedSession) {
+    return { ok: false, message: updateErr?.message ?? "Failed to start vote window" };
   }
+
+  // Publish updated session state via LiveKit
+  await publishVotingSessionState(gameId, updatedSession);
 
   return { ok: true };
 }
@@ -338,16 +351,21 @@ export async function endVoteWindow(gameId: string): Promise<ActionResult> {
   }
 
   // End voting window (keep voting_started_at so UI knows vote ended for this candidate)
-  const { error: updateErr } = await adminClient
+  const { data: updatedSession, error: updateErr } = await adminClient
     .from("voting_sessions")
     .update({
       voting_active: false,
     })
-    .eq("id", votingSession.id);
+    .eq("id", votingSession.id)
+    .select()
+    .single();
 
-  if (updateErr) {
-    return { ok: false, message: updateErr.message };
+  if (updateErr || !updatedSession) {
+    return { ok: false, message: updateErr?.message ?? "Failed to end vote window" };
   }
+
+  // Publish updated session state via LiveKit
+  void publishVotingSessionState(gameId, updatedSession);
 
   return { ok: true };
 }
@@ -431,6 +449,9 @@ export async function castVote(gameId: string): Promise<ActionResult> {
     return { ok: false, message: insertErr.message };
   }
 
+  // Publish vote via LiveKit for real-time sync (fire-and-forget, DB is source of truth)
+  void publishVoteCast(gameId, voterSeat, currentCandidate, false);
+
   return { ok: true };
 }
 
@@ -481,22 +502,27 @@ export async function advanceToNextCandidate(
   const isAdvancingToLastCandidate = nextIndex === candidates.length - 1;
 
   // Advance to next candidate and clear voting_started_at for new vote
-  const { error: updateErr } = await adminClient
+  const { data: updatedSession, error: updateErr } = await adminClient
     .from("voting_sessions")
     .update({
       current_candidate_index: nextIndex,
       voting_started_at: null,
     })
-    .eq("id", votingSession.id);
+    .eq("id", votingSession.id)
+    .select()
+    .single();
 
-  if (updateErr) {
-    return { ok: false, message: updateErr.message };
+  if (updateErr || !updatedSession) {
+    return { ok: false, message: updateErr?.message ?? "Failed to advance candidate" };
   }
 
   // If advancing to last candidate, apply auto-votes for non-voters
   if (isAdvancingToLastCandidate) {
     await applyAutoVotesInternal(gameId);
   }
+
+  // Publish updated session state via LiveKit (votes unchanged, candidate advanced)
+  void publishVotingSessionState(gameId, updatedSession);
 
   return { ok: true, allDone: false };
 }
@@ -806,18 +832,27 @@ export async function startTieBreak(
       .delete()
       .eq("voting_session_id", votingSession.id);
 
-    const { error: updateErr } = await adminClient
+    const { data: updatedSession, error: updateErr } = await adminClient
       .from("voting_sessions")
       .update({
         both_leave_vote_active: true,
         voting_active: false,
         voting_started_at: null,
       })
-      .eq("game_id", gameId);
+      .eq("game_id", gameId)
+      .select()
+      .single();
 
-    if (updateErr) {
-      return { ok: false, message: updateErr.message };
+    if (updateErr || !updatedSession) {
+      return { ok: false, message: updateErr?.message ?? "Failed to start both leave vote" };
     }
+
+    // Publish updated session state (votes cleared)
+    void publishVotingSessionState(gameId, updatedSession, {
+      votes: {},
+      playersWhoVoted: [],
+      bothLeaveVoters: [],
+    });
 
     return { ok: true, bothLeaveVote: true };
   }
@@ -828,7 +863,7 @@ export async function startTieBreak(
     .delete()
     .eq("voting_session_id", votingSession.id);
 
-  const { error: updateVotingErr } = await adminClient
+  const { data: updatedSession, error: updateVotingErr } = await adminClient
     .from("voting_sessions")
     .update({
       is_tie_break: true,
@@ -841,11 +876,20 @@ export async function startTieBreak(
       voting_active: false,
       voting_started_at: null,
     })
-    .eq("game_id", gameId);
+    .eq("game_id", gameId)
+    .select()
+    .single();
 
-  if (updateVotingErr) {
-    return { ok: false, message: updateVotingErr.message };
+  if (updateVotingErr || !updatedSession) {
+    return { ok: false, message: updateVotingErr?.message ?? "Failed to start tie break" };
   }
+
+  // Publish updated session state (votes cleared for tie-break)
+  void publishVotingSessionState(gameId, updatedSession, {
+    votes: {},
+    playersWhoVoted: [],
+    bothLeaveVoters: [],
+  });
 
   // Update game session for tie-break justification (30s each)
   const { error: updateGameErr } = await adminClient
@@ -883,17 +927,22 @@ export async function startBothLeaveVote(
   const hostCheck = await verifyHost(gameId, user.id);
   if (!hostCheck.ok) return hostCheck;
 
-  const { error: updateErr } = await adminClient
+  const { data: updatedSession, error: updateErr } = await adminClient
     .from("voting_sessions")
     .update({
       voting_active: true,
       voting_started_at: new Date().toISOString(),
     })
-    .eq("game_id", gameId);
+    .eq("game_id", gameId)
+    .select()
+    .single();
 
-  if (updateErr) {
-    return { ok: false, message: updateErr.message };
+  if (updateErr || !updatedSession) {
+    return { ok: false, message: updateErr?.message ?? "Failed to start both leave vote window" };
   }
+
+  // Publish updated session state via LiveKit
+  void publishVotingSessionState(gameId, updatedSession);
 
   return { ok: true };
 }
@@ -913,16 +962,21 @@ export async function endBothLeaveVote(gameId: string): Promise<ActionResult> {
   const hostCheck = await verifyHost(gameId, user.id);
   if (!hostCheck.ok) return hostCheck;
 
-  const { error: updateErr } = await adminClient
+  const { data: updatedSession, error: updateErr } = await adminClient
     .from("voting_sessions")
     .update({
       voting_active: false,
     })
-    .eq("game_id", gameId);
+    .eq("game_id", gameId)
+    .select()
+    .single();
 
-  if (updateErr) {
-    return { ok: false, message: updateErr.message };
+  if (updateErr || !updatedSession) {
+    return { ok: false, message: updateErr?.message ?? "Failed to end both leave vote window" };
   }
+
+  // Publish updated session state via LiveKit
+  void publishVotingSessionState(gameId, updatedSession);
 
   return { ok: true };
 }
@@ -997,6 +1051,9 @@ export async function castBothLeaveVote(gameId: string): Promise<ActionResult> {
     }
     return { ok: false, message: insertErr.message };
   }
+
+  // Publish vote via LiveKit for real-time sync (fire-and-forget, DB is source of truth)
+  void publishVoteCast(gameId, seatNumber, null, true);
 
   return { ok: true };
 }
@@ -1091,6 +1148,9 @@ export async function startBothLeaveFarewell(
   // Delete voting session - voting has ended (votes cascade delete)
   await adminClient.from("voting_sessions").delete().eq("game_id", gameId);
 
+  // Publish null session state via LiveKit (session ended)
+  void publishVotingSessionState(gameId, null);
+
   // Update game session to farewell_speech with all candidates as speakers
   const { error: updateErr } = await adminClient
     .from("game_sessions")
@@ -1128,6 +1188,9 @@ export async function skipToNightAfterTie(
 
   // Delete voting session (votes cascade delete)
   await adminClient.from("voting_sessions").delete().eq("game_id", gameId);
+
+  // Publish null session state via LiveKit (session ended)
+  void publishVotingSessionState(gameId, null);
 
   // Get current game session
   const { data: gameSession, error: sessionErr } = await adminClient
@@ -1202,6 +1265,9 @@ export async function startVotingFarewell(
   // Delete voting session - voting has ended (votes cascade delete)
   await adminClient.from("voting_sessions").delete().eq("game_id", gameId);
 
+  // Publish null session state via LiveKit (session ended)
+  void publishVotingSessionState(gameId, null);
+
   // Update game session to farewell_speech with winner as speaker
   const { error: updateErr } = await adminClient
     .from("game_sessions")
@@ -1241,6 +1307,9 @@ export async function transitionToNightPhase(
 
   // Delete voting session (votes cascade delete)
   await adminClient.from("voting_sessions").delete().eq("game_id", gameId);
+
+  // Publish null session state via LiveKit (session ended)
+  void publishVotingSessionState(gameId, null);
 
   // Get current game session
   const { data: gameSession, error: sessionErr } = await adminClient
