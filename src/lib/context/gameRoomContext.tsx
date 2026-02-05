@@ -20,15 +20,16 @@ import {
   useLivekitConnect,
   useEnsurePlayerSeat,
   useJoinPermissionListener,
+  useLiveKitVotingListener,
 } from "@/hooks/livekit";
 import { useGameSession, useGamePlayers, usePlayerRoles } from "@/hooks/game";
 import {
   useMyJoinRequestStatus,
   useGameHostSubscription,
   useNightPhaseSessionListener,
-  useVotingSessionListener,
 } from "@/hooks/realtime";
-import type { NightPhaseSession, VotingSession, VoteData } from "@/hooks/realtime";
+import type { NightPhaseSession } from "@/hooks/realtime";
+import type { VotingSession, VoteData } from "@/lib/liveKit/messageTypes";
 import { JOIN_REQUEST_STATUSES } from "@/lib/constants/game";
 import { leaveGamePlayer } from "@/lib/gamePlayers/actions";
 import { Tables } from "@/db/supabase/database.types";
@@ -120,10 +121,12 @@ export function GameRoomProvider({
   const { currentNightSession: nightPhaseSession } =
     useNightPhaseSessionListener(gameId, hasPlayerRecord && !!gameSessionState);
 
-  // Voting session subscription - only during voting phase
+  // Voting session subscription via LiveKit Data Channels - only during voting phase
+  // Uses reliable delivery for guaranteed real-time updates
   const isVotingPhase = gameSessionState?.game_phase === "voting";
-  const { votingSession, setVotingSession, voteData } = useVotingSessionListener(
+  const { votingSession, setVotingSession, voteData } = useLiveKitVotingListener(
     gameId,
+    room,
     hasPlayerRecord && isVotingPhase
   );
 

@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { castVote, castBothLeaveVote } from "@/lib/voting/actions";
 import { VOTING } from "@/lib/constants/game";
-import type { VotingSession, VoteData } from "@/hooks/realtime";
+import type { VotingSession, VoteData } from "@/lib/liveKit/messageTypes";
 
 type UseVotingButtonOptions = {
   votingSession: VotingSession | null;
