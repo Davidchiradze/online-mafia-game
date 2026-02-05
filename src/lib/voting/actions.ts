@@ -270,6 +270,7 @@ export async function initializeVoting(
 /**
  * Start the voting window for the current candidate.
  * Sets voting_active=true and voting_started_at to current time.
+ * Automatically ends the voting window after VOTE_WINDOW_MS.
  * Host only.
  */
 export async function startVoteWindow(gameId: string): Promise<ActionResult> {
@@ -313,8 +314,28 @@ export async function startVoteWindow(gameId: string): Promise<ActionResult> {
     return { ok: false, message: updateErr?.message ?? "Failed to start vote window" };
   }
 
-  // Publish updated session state via LiveKit
+  // Publish voting STARTED state via LiveKit (all clients see this immediately)
   await publishVotingSessionState(gameId, updatedSession);
+
+  // Wait for the voting window duration (server-side timer)
+  await new Promise(resolve => setTimeout(resolve, VOTING.VOTE_WINDOW_MS));
+
+  // End voting window (keep voting_started_at so UI knows vote ended for this candidate)
+  const { data: endedSession, error: endErr } = await adminClient
+    .from("voting_sessions")
+    .update({
+      voting_active: false,
+    })
+    .eq("id", votingSession.id)
+    .select()
+    .single();
+
+  if (endErr || !endedSession) {
+    return { ok: false, message: endErr?.message ?? "Failed to end vote window" };
+  }
+
+  // Publish voting ENDED state via LiveKit
+  await publishVotingSessionState(gameId, endedSession);
 
   return { ok: true };
 }
@@ -912,6 +933,7 @@ export async function startTieBreak(
 /**
  * Start the "both leave" voting window.
  * Enables voting for whether all tied candidates should leave.
+ * Automatically ends the voting window after VOTE_WINDOW_MS.
  * Host only.
  */
 export async function startBothLeaveVote(
@@ -927,6 +949,17 @@ export async function startBothLeaveVote(
   const hostCheck = await verifyHost(gameId, user.id);
   if (!hostCheck.ok) return hostCheck;
 
+  // Get voting session to get its ID
+  const { data: votingSession, error: sessionErr } = await adminClient
+    .from("voting_sessions")
+    .select("id")
+    .eq("game_id", gameId)
+    .single();
+
+  if (sessionErr || !votingSession) {
+    return { ok: false, message: "Voting session not found" };
+  }
+
   const { data: updatedSession, error: updateErr } = await adminClient
     .from("voting_sessions")
     .update({
@@ -941,8 +974,28 @@ export async function startBothLeaveVote(
     return { ok: false, message: updateErr?.message ?? "Failed to start both leave vote window" };
   }
 
-  // Publish updated session state via LiveKit
-  void publishVotingSessionState(gameId, updatedSession);
+  // Publish voting STARTED state via LiveKit (all clients see this immediately)
+  await publishVotingSessionState(gameId, updatedSession);
+
+  // Wait for the voting window duration (server-side timer)
+  await new Promise(resolve => setTimeout(resolve, VOTING.VOTE_WINDOW_MS));
+
+  // End voting window
+  const { data: endedSession, error: endErr } = await adminClient
+    .from("voting_sessions")
+    .update({
+      voting_active: false,
+    })
+    .eq("id", votingSession.id)
+    .select()
+    .single();
+
+  if (endErr || !endedSession) {
+    return { ok: false, message: endErr?.message ?? "Failed to end both leave vote window" };
+  }
+
+  // Publish voting ENDED state via LiveKit
+  await publishVotingSessionState(gameId, endedSession);
 
   return { ok: true };
 }
