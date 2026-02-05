@@ -5,7 +5,7 @@ export { useGameHostSubscription } from "./useGameHostSubscription";
 export { useMyJoinRequestStatus, usePendingJoinRequests } from "./useJoinRequests";
 export { useNightPhaseSessionListener } from "./useNightPhaseSessionListener";
 export type { NightPhaseSession } from "./useNightPhaseSessionListener";
-export { useVotingSessionListener } from "./useVotingSessionListener";
-export type { VotingSession, VoteData, VoteRecord } from "./useVotingSessionListener";
+// Voting session listener has been migrated to LiveKit Data Channels
+// See: useLiveKitVotingListener in @/hooks/livekit
 // export { useGamePlayerListener } from "./useGamePlayerListener"; // Currently commented out
 
