@@ -37,16 +37,16 @@ export function RegularVotingControls({
   const { timeLeft, isLocalVoting, startLocalVoting, stopLocalVoting } = useVotingTimer();
   
   // Track when we're waiting for real-time sync after advancing to next candidate
-  const [waitingForSync, setWaitingForSync] = useState(false);
+  // const [waitingForSync, setWaitingForSync] = useState(false);
 
   // Clear loading when real-time update confirms the advance
   // (voting_started_at becomes null after advancing to next candidate)
   useEffect(() => {
-    if (waitingForSync && votingSession?.voting_started_at === null) {
-      setWaitingForSync(false);
+    if (votingSession?.voting_started_at === null) {
+      // setWaitingForSync(false);
       setIsLoading(false);
     }
-  }, [waitingForSync, votingSession?.voting_started_at, setIsLoading]);
+  }, [ votingSession?.voting_started_at, setIsLoading]);
 
   const candidates = votingSession?.candidates ?? [];
   const currentIdx = votingSession?.current_candidate_index ?? 0;
@@ -95,7 +95,7 @@ export function RegularVotingControls({
     
     // Don't clear loading here - wait for real-time sync
     // useEffect above will clear it when voting_started_at becomes null
-    setWaitingForSync(true);
+    // setWaitingForSync(true);
   }, [gameId, isLoading, setIsLoading]);
 
   // Handler: Tally results
