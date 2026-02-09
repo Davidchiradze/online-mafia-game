@@ -543,7 +543,7 @@ export async function advanceToNextCandidate(
   }
 
   // Publish updated session state via LiveKit (votes unchanged, candidate advanced)
-  void publishVotingSessionState(gameId, updatedSession);
+  await publishVotingSessionState(gameId, updatedSession);
 
   return { ok: true, allDone: false };
 }
