@@ -132,7 +132,7 @@ export async function createVotingSessionInternal(
   }
 
   // Publish new voting session state via LiveKit (no votes yet)
-  void publishVotingSessionState(gameId, newSession, {
+  await publishVotingSessionState(gameId, newSession, {
     votes: {},
     playersWhoVoted: [],
     bothLeaveVoters: [],
@@ -386,7 +386,7 @@ export async function endVoteWindow(gameId: string): Promise<ActionResult> {
   }
 
   // Publish updated session state via LiveKit
-  void publishVotingSessionState(gameId, updatedSession);
+  await publishVotingSessionState(gameId, updatedSession);
 
   return { ok: true };
 }
@@ -471,7 +471,7 @@ export async function castVote(gameId: string): Promise<ActionResult> {
   }
 
   // Publish vote via LiveKit for real-time sync (fire-and-forget, DB is source of truth)
-  void publishVoteCast(gameId, voterSeat, currentCandidate, false);
+  await publishVoteCast(gameId, voterSeat, currentCandidate, false);
 
   return { ok: true };
 }
@@ -869,7 +869,7 @@ export async function startTieBreak(
     }
 
     // Publish updated session state (votes cleared)
-    void publishVotingSessionState(gameId, updatedSession, {
+    await publishVotingSessionState(gameId, updatedSession, {
       votes: {},
       playersWhoVoted: [],
       bothLeaveVoters: [],
@@ -906,7 +906,7 @@ export async function startTieBreak(
   }
 
   // Publish updated session state (votes cleared for tie-break)
-  void publishVotingSessionState(gameId, updatedSession, {
+  await publishVotingSessionState(gameId, updatedSession, {
     votes: {},
     playersWhoVoted: [],
     bothLeaveVoters: [],
@@ -1029,7 +1029,7 @@ export async function endBothLeaveVote(gameId: string): Promise<ActionResult> {
   }
 
   // Publish updated session state via LiveKit
-  void publishVotingSessionState(gameId, updatedSession);
+  await publishVotingSessionState(gameId, updatedSession);
 
   return { ok: true };
 }
@@ -1106,7 +1106,7 @@ export async function castBothLeaveVote(gameId: string): Promise<ActionResult> {
   }
 
   // Publish vote via LiveKit for real-time sync (fire-and-forget, DB is source of truth)
-  void publishVoteCast(gameId, seatNumber, null, true);
+  await publishVoteCast(gameId, seatNumber, null, true);
 
   return { ok: true };
 }
@@ -1202,7 +1202,7 @@ export async function startBothLeaveFarewell(
   await adminClient.from("voting_sessions").delete().eq("game_id", gameId);
 
   // Publish null session state via LiveKit (session ended)
-  void publishVotingSessionState(gameId, null);
+  await publishVotingSessionState(gameId, null);
 
   // Update game session to farewell_speech with all candidates as speakers
   const { error: updateErr } = await adminClient
@@ -1243,7 +1243,7 @@ export async function skipToNightAfterTie(
   await adminClient.from("voting_sessions").delete().eq("game_id", gameId);
 
   // Publish null session state via LiveKit (session ended)
-  void publishVotingSessionState(gameId, null);
+  await publishVotingSessionState(gameId, null);
 
   // Get current game session
   const { data: gameSession, error: sessionErr } = await adminClient
@@ -1319,7 +1319,7 @@ export async function startVotingFarewell(
   await adminClient.from("voting_sessions").delete().eq("game_id", gameId);
 
   // Publish null session state via LiveKit (session ended)
-  void publishVotingSessionState(gameId, null);
+  await publishVotingSessionState(gameId, null);
 
   // Update game session to farewell_speech with winner as speaker
   const { error: updateErr } = await adminClient
@@ -1362,7 +1362,7 @@ export async function transitionToNightPhase(
   await adminClient.from("voting_sessions").delete().eq("game_id", gameId);
 
   // Publish null session state via LiveKit (session ended)
-  void publishVotingSessionState(gameId, null);
+  await publishVotingSessionState(gameId, null);
 
   // Get current game session
   const { data: gameSession, error: sessionErr } = await adminClient

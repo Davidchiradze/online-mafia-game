@@ -52,7 +52,6 @@ export function useLiveKitVotingListener(
   enabled: boolean = true
 ) {
   const [votingSession, setVotingSession] = useState<VotingSession | null>(null);
-  console.log("🚀 ~ useLiveKitVotingListener ~ votingSession:", votingSession)
   const [voteData, setVoteData] = useState<VoteData>(EMPTY_VOTE_DATA);
 
   // Track if we've done initial fetch to avoid race conditions
