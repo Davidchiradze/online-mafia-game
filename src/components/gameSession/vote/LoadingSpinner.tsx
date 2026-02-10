@@ -9,10 +9,9 @@ type Props = {
  */
 export function LoadingSpinner({ text = "Processing..." }: Props) {
   return (
-    <div className="flex items-center gap-2 text-xs text-gray-400">
-      <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+    <div className="flex items-center gap-2 text-xs text-white/60">
+      <div className="w-4 h-4 border-2 border-emerald-400/30 border-t-emerald-400 rounded-full animate-spin" />
       {text}
     </div>
   );
 }
-

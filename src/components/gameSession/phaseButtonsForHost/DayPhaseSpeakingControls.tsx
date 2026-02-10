@@ -8,6 +8,7 @@ import {
   finishCurrentSpeaker,
 } from "@/lib/dayPhase/actions";
 import { SPEAKING_STATE } from "@/lib/constants/game";
+import PhaseButton from "@/components/ui/PhaseButton";
 
 type Props = {
   gameId: string;
@@ -16,9 +17,9 @@ type Props = {
 
 /**
  * Host controls for speaking phase.
- * - "Start Speaking Round" when not started or completed
- * - "Finish Talking" when a speaker is active (mutes them, enters paused state)
- * - "Next Speaker →" when paused (unmutes next speaker)
+ * - "Start" when not started or completed
+ * - "Finish" when a speaker is active (mutes them, enters paused state)
+ * - "Next" when paused (unmutes next speaker)
  */
 export default function DayPhaseSpeakingControls({
   gameId,
@@ -66,40 +67,19 @@ export default function DayPhaseSpeakingControls({
   // Not started yet or completed
   if (isNotStarted || isCompleted) {
     return (
-      <button
-        type="button"
-        className="rounded-md bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-4 py-2 shadow disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed transition-colors"
-        disabled={isLoading}
-        onClick={handleStart}
-      >
-        {isLoading ? "Starting..." : "Start Speaking Round"}
-      </button>
+      <PhaseButton onClick={handleStart} isLoading={isLoading} label="Start" />
     );
   }
 
-  // Paused state - only show Next Speaker button
+  // Paused state - show Start button (to start next speaker)
   if (isPaused) {
     return (
-      <button
-        type="button"
-        className="rounded-md bg-amber-600 hover:bg-amber-500 text-white font-semibold px-4 py-2 shadow disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed transition-colors"
-        disabled={isLoading}
-        onClick={handleNext}
-      >
-        {isLoading ? "..." : "Next Speaker →"}
-      </button>
+      <PhaseButton onClick={handleNext} isLoading={isLoading} label="Start" />
     );
   }
 
-  // Active speaker - show only Finish Talking button
+  // Active speaker - show Finish button
   return (
-    <button
-      type="button"
-      className="rounded-md bg-red-600 hover:bg-red-500 text-white font-semibold px-4 py-2 shadow disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed transition-colors"
-      disabled={isLoading}
-      onClick={handleFinish}
-    >
-      {isLoading ? "..." : "Finish Talking"}
-    </button>
+    <PhaseButton onClick={handleFinish} isLoading={isLoading} label="Finish" />
   );
 }

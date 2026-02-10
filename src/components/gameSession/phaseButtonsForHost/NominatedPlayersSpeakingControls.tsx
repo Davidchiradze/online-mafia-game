@@ -8,6 +8,7 @@ import {
 } from "@/lib/dayPhase/actions";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { SPEAKING_STATE } from "@/lib/constants/game";
+import PhaseButton from "@/components/ui/PhaseButton";
 
 type Props = {
   gameSessionState: GameSessionState;
@@ -17,9 +18,9 @@ type Props = {
  * Host controls for nominated players speaking phase.
  * Shows current speaker and allows advancing to the next nominated player.
  * Each nominated player gets 30 seconds for self-justification.
- * - "Finish Talking" when a speaker is active (mutes them, enters paused state)
- * - "Next Speaker →" when paused (unmutes next speaker)
- * - If foul elimination occurred, shows "Continue to Night Phase" after last speaker
+ * - "Finish" when a speaker is active (mutes them, enters paused state)
+ * - "Start" when paused (start next speaker)
+ * - If foul elimination occurred, shows "Finish" to continue to night phase
  */
 export default function NominatedPlayersSpeakingControls({
   gameSessionState,
@@ -32,23 +33,34 @@ export default function NominatedPlayersSpeakingControls({
   const nominatedPlayers = gameSessionState.nominated_players ?? [];
 
   // Check if foul elimination occurred this round
-  // Type assertion needed until database types are regenerated
-  const foulEliminationOccurred = (
-    gameSessionState as unknown as { foul_elimination_occurred?: boolean }
-  ).foul_elimination_occurred ?? false;
+  const foulEliminationOccurred =
+    (
+      gameSessionState as unknown as { foul_elimination_occurred?: boolean }
+    ).foul_elimination_occurred ?? false;
 
   const isPaused = SPEAKING_STATE.isPaused(currentSpeaker);
 
   // Get the actual speaker seat (decode from paused state if needed)
-  const actualSpeakerSeat = isPaused
+  const lastSpeakerSeat = isPaused
     ? SPEAKING_STATE.getLastSpeakerFromPaused(currentSpeaker!)
-    : currentSpeaker;
+    : null;
+  const activeSpeakerSeat = !isPaused ? currentSpeaker : null;
+
+  // Calculate next speaker when paused
+  const lastSpeakerIndex = lastSpeakerSeat
+    ? speakingOrder.indexOf(lastSpeakerSeat)
+    : -1;
+  const nextSpeakerSeat =
+    isPaused && lastSpeakerIndex < speakingOrder.length - 1
+      ? speakingOrder[lastSpeakerIndex + 1]
+      : null;
 
   // Calculate position in speaking order
-  const currentPosition =
-    actualSpeakerSeat !== null
-      ? speakingOrder.indexOf(actualSpeakerSeat) + 1
-      : 0;
+  const currentPosition = isPaused
+    ? lastSpeakerIndex + 1
+    : activeSpeakerSeat !== null
+    ? speakingOrder.indexOf(activeSpeakerSeat) + 1
+    : 0;
   const totalSpeakers = speakingOrder.length;
   const isLastSpeaker = currentPosition === totalSpeakers;
 
@@ -66,8 +78,6 @@ export default function NominatedPlayersSpeakingControls({
     if (isLoading) return;
     setIsLoading(true);
     try {
-      // advanceToNextNominatedSpeaker will automatically transition to night phase
-      // if foul_elimination_occurred is true
       await advanceToNextNominatedSpeaker(gameId);
     } finally {
       setIsLoading(false);
@@ -76,7 +86,7 @@ export default function NominatedPlayersSpeakingControls({
 
   if (currentSpeaker === null || speakingOrder.length === 0) {
     return (
-      <div className="text-sm text-gray-400">No nominated players speaking</div>
+      <div className="text-sm text-white/50">No nominated players speaking</div>
     );
   }
 
@@ -84,55 +94,43 @@ export default function NominatedPlayersSpeakingControls({
     <div className="flex flex-col items-center gap-3">
       {/* Foul elimination warning */}
       {foulEliminationOccurred && (
-        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 text-center w-full">
-          <p className="text-amber-800 dark:text-amber-200 text-sm font-medium">
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 text-center w-full">
+          <p className="text-amber-300 text-sm font-medium">
             Player eliminated by fouls
           </p>
-          <p className="text-amber-700 dark:text-amber-300 text-xs mt-1">
+          <p className="text-amber-400/70 text-xs mt-1">
             {isPaused
-              ? "Continue to night phase - no more speakers will talk"
-              : "Current speaker can finish, then continue to night phase - no more speakers will talk"}
+              ? "Continue to night phase"
+              : "Current speaker can finish, then continue to night phase"}
           </p>
         </div>
       )}
 
-      {/* Current speaker info */}
-      <div className="flex items-center gap-2 px-3 py-1.5 bg-orange-500/20 border border-orange-500/50 rounded-lg">
-        <span className="text-xs text-orange-300">
-          {isPaused ? "Paused after:" : "Self-Justification:"}
-        </span>
-        <span className="px-2 py-0.5 bg-orange-500 text-white text-xs font-bold rounded-full">
-          #{actualSpeakerSeat}
-        </span>
-        <span className="text-xs text-orange-200">
-          ({currentPosition}/{totalSpeakers})
-        </span>
-      </div>
-
       {/* Progress indicator */}
-      <div className="flex gap-1">
+      <div className="flex gap-1.5">
         {nominatedPlayers.map((seat) => {
           const speakerPosition = speakingOrder.indexOf(seat);
-          const hasSpoken = speakerPosition < currentPosition - 1;
-          const isCurrent = seat === actualSpeakerSeat;
+          const hasSpoken = speakerPosition < currentPosition;
+          const isActive = seat === activeSpeakerSeat;
+          const isNext = seat === nextSpeakerSeat;
 
           return (
             <div
               key={seat}
-              className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-                isCurrent
-                  ? isPaused
-                    ? "bg-gray-500 text-white ring-2 ring-gray-400"
-                    : "bg-orange-500 text-white ring-2 ring-orange-300"
+              className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border transition-all ${
+                isActive
+                  ? "bg-emerald-500/20 text-emerald-300 border-emerald-500 ring-2 ring-emerald-500/30"
+                  : isNext
+                  ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/50"
                   : hasSpoken
-                  ? "bg-green-600 text-white"
-                  : "bg-gray-600 text-gray-300"
+                  ? "bg-white/5 text-white/30 border-white/10"
+                  : "bg-white/5 text-white/60 border-white/20"
               }`}
               title={
-                isCurrent
-                  ? isPaused
-                    ? "Finished, waiting for next"
-                    : "Currently speaking"
+                isActive
+                  ? "Currently speaking"
+                  : isNext
+                  ? "Next speaker"
                   : hasSpoken
                   ? "Finished"
                   : "Waiting"
@@ -146,59 +144,31 @@ export default function NominatedPlayersSpeakingControls({
 
       {/* Control buttons */}
       {foulEliminationOccurred ? (
-        // Foul elimination occurred - skip remaining speakers, go directly to night phase
         isPaused ? (
-          // Paused state - show Continue to Night Phase button
-          <button
-            type="button"
-            className="rounded-md bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-4 py-2 shadow disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed transition-colors"
-            disabled={isLoading}
+          <PhaseButton
             onClick={handleNext}
-          >
-            {isLoading ? "..." : "Continue to Night Phase →"}
-          </button>
+            isLoading={isLoading}
+            label="Finish"
+          />
         ) : (
-          // Active speaker - let them finish first
-          <button
-            type="button"
-            className="rounded-md bg-red-600 hover:bg-red-500 text-white font-semibold px-4 py-2 shadow disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed transition-colors"
-            disabled={isLoading}
+          <PhaseButton
             onClick={handleFinish}
-          >
-            {isLoading ? "..." : "Finish Talking"}
-          </button>
+            isLoading={isLoading}
+            label="Finish"
+          />
         )
+      ) : isPaused ? (
+        <PhaseButton
+          onClick={handleNext}
+          isLoading={isLoading}
+          label={isLastSpeaker ? "Finish" : "Start"}
+        />
       ) : (
-        // Normal flow - no foul elimination
-        isPaused ? (
-          // Paused state - show Next Speaker button or Finish & Start Voting
-          <button
-            type="button"
-            className={`rounded-md font-semibold px-4 py-2 shadow disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed transition-colors ${
-              isLastSpeaker
-                ? "bg-green-600 hover:bg-green-500 text-white"
-                : "bg-amber-600 hover:bg-amber-500 text-white"
-            }`}
-            disabled={isLoading}
-            onClick={handleNext}
-          >
-            {isLoading
-              ? "..."
-              : isLastSpeaker
-              ? "Finish & Start Voting →"
-              : "Next Speaker →"}
-          </button>
-        ) : (
-          // Active speaker - show Finish Talking button
-          <button
-            type="button"
-            className="rounded-md bg-red-600 hover:bg-red-500 text-white font-semibold px-4 py-2 shadow disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed transition-colors"
-            disabled={isLoading}
-            onClick={handleFinish}
-          >
-            {isLoading ? "..." : "Finish Talking"}
-          </button>
-        )
+        <PhaseButton
+          onClick={handleFinish}
+          isLoading={isLoading}
+          label="Finish"
+        />
       )}
     </div>
   );

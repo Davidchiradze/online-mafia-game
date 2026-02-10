@@ -1,5 +1,5 @@
 import React from "react";
-import { GAME_PHASES, SPEAKING_STATE } from "@/lib/constants/game";
+import { GAME_PHASES, GAME_PHASE_LABELS, SPEAKING_STATE } from "@/lib/constants/game";
 import StartGameButton from "../gameSession/phaseButtonsForHost/StartGameButton";
 import StartPickingRolesButton from "../gameSession/phaseButtonsForHost/StartPickingRolesButton";
 import ConfirmRolesButton from "../gameSession/phaseButtonsForHost/ConfirmRolesButton";
@@ -24,6 +24,7 @@ import DayPhaseSpeakingControls from "../gameSession/phaseButtonsForHost/DayPhas
 import StartNominatedPlayersSpeakButton from "../gameSession/phaseButtonsForHost/StartNominatedPlayersSpeakButton";
 import NominatedPlayersSpeakingControls from "../gameSession/phaseButtonsForHost/NominatedPlayersSpeakingControls";
 import NightActionsDisplay from "./NightActionsDisplay";
+import PhaseTitle from "../ui/PhaseTitle";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 
 /**
@@ -40,22 +41,111 @@ function isSpeakingComplete(
 }
 
 /**
- * Component that renders appropriate action buttons based on the current game phase
+ * Builds a dynamic phase title based on game state.
+ * Examples: "N1 — Mafia Chooses Target", "D1 — Voting", "Introduction"
+ */
+function getPhaseTitle(
+  phase: string,
+  nightNumber: number | null | undefined
+): string {
+  const label =
+    GAME_PHASE_LABELS[phase as (typeof GAME_PHASES)[number]] ?? phase;
+  const night = nightNumber ?? 0;
+
+  // Night sub-phases get "N{number}" prefix
+  const nightPhases: string[] = [
+    GAME_PHASES[8], // night_phase
+    GAME_PHASES[9], // mafia_chooses_target
+    GAME_PHASES[10], // don_checks_for_detective
+    GAME_PHASES[11], // right_hand_checks_for_yakuza
+    GAME_PHASES[12], // yakuza_and_shogun_chooses_target
+    GAME_PHASES[13], // detective_checks_for_mafia
+    GAME_PHASES[14], // doctor_heals_player
+  ];
+
+  if (nightPhases.includes(phase) && night > 0) {
+    return `N${night} — ${label}`;
+  }
+
+  // Day sub-phases get "D{number}" prefix (day follows the night of the same number)
+  const dayPhases: string[] = [
+    GAME_PHASES[15], // farewell_speech
+    GAME_PHASES[16], // day_phase
+    GAME_PHASES[17], // nominated_players_speak
+    GAME_PHASES[18], // voting
+  ];
+
+  if (dayPhases.includes(phase) && night > 0) {
+    return `D${night} — ${label}`;
+  }
+
+  return label;
+}
+
+/**
+ * Gets subtitle for speaking phases showing current/next speaker.
+ */
+function getSpeakingSubtitle(
+  speakingOrder: number[],
+  currentSpeaker: number | null | undefined,
+  totalSpeakers: number
+): string | undefined {
+  if (!currentSpeaker) return undefined;
+  
+  const isPaused = SPEAKING_STATE.isPaused(currentSpeaker);
+  const isActive = SPEAKING_STATE.isActive(currentSpeaker);
+  
+  if (isActive) {
+    const position = speakingOrder.indexOf(currentSpeaker) + 1;
+    return `Player #${currentSpeaker} speaking (${position}/${totalSpeakers})`;
+  }
+  
+  if (isPaused) {
+    const lastSpeaker = SPEAKING_STATE.getLastSpeakerFromPaused(currentSpeaker);
+    const lastIndex = speakingOrder.indexOf(lastSpeaker);
+    
+    if (lastIndex < speakingOrder.length - 1) {
+      const nextSpeaker = speakingOrder[lastIndex + 1];
+      const position = lastIndex + 2;
+      return `Next: Player #${nextSpeaker} (${position}/${totalSpeakers})`;
+    }
+  }
+  
+  return undefined;
+}
+
+/**
+ * Component that renders phase title + appropriate action controls for the host.
  */
 const GamePhaseControls = () => {
   const { gameSessionState, gameId } = useGameRoom();
 
   if (!gameSessionState) {
     return (
-      <div className="w-full h-full flex items-center justify-center">
+      <div className="w-full h-full flex flex-col items-center justify-center gap-2">
         <StartGameButton />
       </div>
     );
   }
 
   const currentPhase = gameSessionState.game_phase;
+  const title = getPhaseTitle(
+    currentPhase,
+    gameSessionState.current_night_number
+  );
 
-  const renderPhaseButton = () => {
+  // Calculate subtitle for speaking phases
+  const speakingOrder = gameSessionState.speaking_order ?? [];
+  const currentSpeaker = gameSessionState.current_speaker_index ?? null;
+  const isSpeakingPhase =
+    (currentPhase === GAME_PHASES[7] || currentPhase === GAME_PHASES[16]) &&
+    !isSpeakingComplete(currentSpeaker);
+  
+  const subtitle = isSpeakingPhase
+    ? getSpeakingSubtitle(speakingOrder, currentSpeaker, speakingOrder.length)
+    : undefined;
+
+  const renderPhaseControls = () => {
     switch (currentPhase) {
       case GAME_PHASES[0]: // "game_session_started"
         return <StartPickingRolesButton gameSessionState={gameSessionState} />;
@@ -118,19 +208,18 @@ const GamePhaseControls = () => {
         return <FarewellSpeechControls gameSessionState={gameSessionState} />;
 
       case GAME_PHASES[16]: // "day_phase"
+        if (isSpeakingComplete(gameSessionState.current_speaker_index)) {
+          return (
+            <StartNominatedPlayersSpeakButton
+              gameSessionState={gameSessionState}
+            />
+          );
+        }
         return (
-          <div className="flex flex-col items-center gap-2">
-            {isSpeakingComplete(gameSessionState.current_speaker_index) ? (
-              <StartNominatedPlayersSpeakButton
-                gameSessionState={gameSessionState}
-              />
-            ) : (
-              <DayPhaseSpeakingControls
-                gameId={gameId}
-                gameSessionState={gameSessionState}
-              />
-            )}
-          </div>
+          <DayPhaseSpeakingControls
+            gameId={gameId}
+            gameSessionState={gameSessionState}
+          />
         );
 
       case GAME_PHASES[17]: // "nominated_players_speak"
@@ -151,7 +240,7 @@ const GamePhaseControls = () => {
 
       default:
         return (
-          <div className="text-xs text-gray-300/80">
+          <div className="text-xs text-slate-400">
             Unknown phase: {currentPhase}
           </div>
         );
@@ -161,7 +250,8 @@ const GamePhaseControls = () => {
   return (
     <div className="w-full flex flex-col items-center gap-2">
       <NightActionsDisplay />
-      {renderPhaseButton()}
+      <PhaseTitle title={title} subtitle={subtitle} />
+      {renderPhaseControls()}
     </div>
   );
 };

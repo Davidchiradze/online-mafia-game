@@ -19,11 +19,11 @@ export const GAME_TYPE_LABEL: Record<(typeof GAME_TYPES)[number], string> = {
 };
 
 export const GAME_STATUS_LABEL: Record<(typeof GAME_STATUSES)[number], string> =
-  {
-    not_started: "Not started",
-    playing: "Playing",
-    finished: "Finished",
-  };
+{
+  not_started: "Not started",
+  playing: "Playing",
+  finished: "Finished",
+};
 
 export const GAME_TYPE_MAX_PLAYER_NUMBER: Record<
   (typeof GAME_TYPES)[number],
@@ -88,6 +88,31 @@ export const GAME_PHASES = [
   "repeat",
   "end_game",
 ] as const;
+
+/** Human-readable labels for each game phase */
+export const GAME_PHASE_LABELS: Record<(typeof GAME_PHASES)[number], string> = {
+  game_session_started: "Game Started",
+  picking_roles: "Picking Roles",
+  mafia_meet: "Mafia Meeting",
+  don_chooses_right_hand: "Don Chooses Right Hand",
+  yakuda_shogun_meet: "Yakuza & Shogun Meeting",
+  detective_meet: "Detective Meeting",
+  doctor_meet: "Doctor Meeting",
+  introduction_phase: "Introduction",
+  night_phase: "Night Phase",
+  mafia_chooses_target: "Mafia Chooses Target",
+  don_checks_for_detective: "Don Checks for Detective",
+  right_hand_checks_for_yakuza: "Right Hand Checks for Yakuza",
+  yakuza_and_shogun_chooses_target: "Yakuza & Shogun Choose Target",
+  detective_checks_for_mafia: "Detective Checks for Mafia",
+  doctor_heals_player: "Doctor Heals",
+  farewell_speech: "Farewell Speech",
+  day_phase: "Day Phase",
+  nominated_players_speak: "Self-Justification",
+  voting: "Voting",
+  repeat: "Next Round",
+  end_game: "Game Over",
+};
 
 // Day Phase Speaking Constants
 export const DAY_PHASE_SPEAKING = {

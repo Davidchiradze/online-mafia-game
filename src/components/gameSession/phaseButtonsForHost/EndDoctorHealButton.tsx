@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { GameSessionState } from "@/types/game/type";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { startFarewellSpeech } from "@/lib/farewellSpeech/actions";
+import PhaseButton from "@/components/ui/PhaseButton";
 
 type EndDoctorHealButtonProps = {
   gameSessionState: GameSessionState;
@@ -28,8 +29,6 @@ const EndDoctorHealButton = ({
     if (isLoading) return;
     setIsLoading(true);
     try {
-      // Start farewell speech phase
-      // This will automatically skip to day_phase if no one dies
       const result = await startFarewellSpeech(gameId);
 
       if (!result.ok) {
@@ -40,16 +39,7 @@ const EndDoctorHealButton = ({
     }
   };
 
-  return (
-    <button
-      type="button"
-      className="rounded-md bg-green-600 hover:bg-green-500 text-white font-semibold px-4 py-2 shadow disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed transition-colors"
-      disabled={isLoading}
-      onClick={handleEndDoctorHeal}
-    >
-      {isLoading ? "Ending..." : "End Doctor's Heal"}
-    </button>
-  );
+  return <PhaseButton onClick={handleEndDoctorHeal} isLoading={isLoading} />;
 };
 
 export default EndDoctorHealButton;

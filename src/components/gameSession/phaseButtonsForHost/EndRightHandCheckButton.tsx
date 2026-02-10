@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { updateGameSession } from "@/lib/gameSession/actions";
 import { GameSessionState } from "@/types/game/type";
 import { GAME_PHASES } from "@/lib/constants/game";
+import PhaseButton from "@/components/ui/PhaseButton";
 
 type EndRightHandCheckButtonProps = {
   gameSessionState: GameSessionState;
@@ -21,7 +22,6 @@ const EndRightHandCheckButton = ({
     if (isLoading) return;
     setIsLoading(true);
     try {
-      // Update game session to yakuza_and_shogun_chooses_target phase
       const res = await updateGameSession(gameSessionState.id, {
         game_phase: GAME_PHASES[12], // "yakuza_and_shogun_chooses_target"
       });
@@ -34,14 +34,7 @@ const EndRightHandCheckButton = ({
   };
 
   return (
-    <button
-      type="button"
-      className="rounded-md bg-orange-600 hover:bg-orange-500 text-white font-semibold px-4 py-2 shadow disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed transition-colors"
-      disabled={isLoading}
-      onClick={handleEndRightHandCheck}
-    >
-      {isLoading ? "Ending..." : "End Right Hand's Check"}
-    </button>
+    <PhaseButton onClick={handleEndRightHandCheck} isLoading={isLoading} />
   );
 };
 

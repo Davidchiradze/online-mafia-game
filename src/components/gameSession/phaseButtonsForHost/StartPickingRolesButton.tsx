@@ -7,6 +7,7 @@ import {
 } from "@/lib/gameSession/actions";
 import { GameSessionState } from "@/types/game/type";
 import { GAME_PHASES } from "@/lib/constants/game";
+import PhaseButton from "@/components/ui/PhaseButton";
 
 type StartPickingRolesButtonProps = {
   gameSessionState: GameSessionState;
@@ -24,7 +25,6 @@ const StartPickingRolesButton = ({
     if (isLoading) return;
     setIsLoading(true);
     try {
-      // Assign random roles to all 12 players
       const assignRes = await assignRandomRoles(gameSessionState.game_id);
       if (!assignRes?.ok) {
         console.error("Failed to assign roles:", assignRes?.message);
@@ -32,7 +32,6 @@ const StartPickingRolesButton = ({
         return;
       }
 
-      // Update game session to picking_roles phase
       const res = await updateGameSession(gameSessionState.id, {
         game_phase: GAME_PHASES[1], // "picking_roles"
       });
@@ -46,14 +45,11 @@ const StartPickingRolesButton = ({
   };
 
   return (
-    <button
-      type="button"
-      className="rounded-md bg-purple-600 hover:bg-purple-500 text-white font-semibold px-4 py-2 shadow disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed transition-colors"
-      disabled={isLoading}
+    <PhaseButton
       onClick={handleStartPickingRoles}
-    >
-      {isLoading ? "Assigning Roles..." : "Start Picking Roles"}
-    </button>
+      isLoading={isLoading}
+      label="Start"
+    />
   );
 };
 

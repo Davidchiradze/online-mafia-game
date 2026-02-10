@@ -6,6 +6,7 @@ import { startNight } from "@/lib/nightPhase/actions";
 import { GameSessionState } from "@/types/game/type";
 import { GAME_PHASES } from "@/lib/constants/game";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
+import PhaseButton from "@/components/ui/PhaseButton";
 
 type ContinueNextRoundButtonProps = {
   gameSessionState: GameSessionState;
@@ -25,14 +26,12 @@ const ContinueNextRoundButton = ({
     if (isLoading) return;
     setIsLoading(true);
     try {
-      // Start a new night (increments night number, creates night_phase_sessions row)
       const nightRes = await startNight(gameId);
       if (!nightRes.ok) {
         console.error("Failed to start night:", nightRes.message);
         return;
       }
 
-      // Update game session back to night_phase for next round (startNight already set current_night_number)
       const res = await updateGameSession(gameSessionState.id, {
         game_phase: GAME_PHASES[8], // "night_phase"
         nominated_players: [], // Reset nominations
@@ -46,14 +45,11 @@ const ContinueNextRoundButton = ({
   };
 
   return (
-    <button
-      type="button"
-      className="rounded-md bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-4 py-2 shadow disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed transition-colors"
-      disabled={isLoading}
+    <PhaseButton
       onClick={handleContinueNextRound}
-    >
-      {isLoading ? "Continuing..." : "Continue to Next Round"}
-    </button>
+      isLoading={isLoading}
+      label="Start"
+    />
   );
 };
 

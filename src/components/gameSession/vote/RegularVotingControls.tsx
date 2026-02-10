@@ -146,7 +146,7 @@ export function RegularVotingControls({
     <div className="flex flex-col items-center gap-2">
       {/* Tie-break indicator */}
       {isTieBreak && (
-        <div className="text-[10px] text-red-400 uppercase tracking-wide">
+        <div className="text-[10px] text-amber-400 uppercase tracking-wide font-medium">
           Tie-break #{tieBreakRound}
         </div>
       )}
