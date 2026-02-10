@@ -97,7 +97,7 @@ export function BothLeaveVoteControls({
       />
 
       {/* Question */}
-      <div className="text-xs text-center text-amber-400">
+      <div className="text-xs text-center text-white/70">
         Should all {candidates.length} leave?
       </div>
 
@@ -108,7 +108,7 @@ export function BothLeaveVoteControls({
           subtitle={`${bothLeaveVotes.length} votes`}
         />
       ) : (
-        <div className="text-xs text-gray-300">{getStatusText()}</div>
+        <div className="text-xs text-white/60">{getStatusText()}</div>
       )}
 
       {/* Result message */}

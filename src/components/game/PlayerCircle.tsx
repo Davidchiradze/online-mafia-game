@@ -115,18 +115,20 @@ export default function PlayerCircle({
         );
       })}
       <div style={{ gridColumn: 3, gridRow: 2, position: "relative" }}>
-        <div className="absolute top-0 left-0 w-full h-[200%] flex flex-col items-center justify-center gap-2">
-          <div className="w-full h-[50%] flex flex-col items-center justify-center gap-2">
-            {isHost && <GamePhaseControls />}
-            {isHost ? (
-              <NominatedPlayersDisplay
-                nominatedPlayers={gameSessionState?.nominated_players ?? []}
-              />
-            ) : gameSessionState?.game_phase === "voting" ? (
-              <VotingDisplay />
-            ) : null}
+      {(isHost || gameSessionState?.game_phase === "voting") && (
+          <div className="absolute top-0 left-0 w-full h-[200%] flex flex-col items-center justify-center gap-2">
+            <div className="w-full h-[50%] flex flex-col items-center justify-center gap-3 px-4 py-3 rounded-2xl bg-black/50 backdrop-blur-md border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.4)] ring-1 ring-inset ring-white/[0.05]">
+              {isHost ? (
+                <NominatedPlayersDisplay
+                  nominatedPlayers={gameSessionState?.nominated_players ?? []}
+                />
+              ) : (
+                <VotingDisplay />
+              )}
+              {isHost && <GamePhaseControls />}
+            </div>
           </div>
-        </div>
+        )}
       </div>
       <div style={{ gridColumn: 3, gridRow: 3 }}></div>
     </div>

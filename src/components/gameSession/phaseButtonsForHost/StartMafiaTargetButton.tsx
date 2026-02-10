@@ -6,6 +6,7 @@ import { startNight } from "@/lib/nightPhase/actions";
 import { GameSessionState } from "@/types/game/type";
 import { GAME_PHASES } from "@/lib/constants/game";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
+import PhaseButton from "@/components/ui/PhaseButton";
 
 type StartMafiaTargetButtonProps = {
   gameSessionState: GameSessionState;
@@ -26,7 +27,6 @@ const StartMafiaTargetButton = ({
     if (isLoading) return;
     setIsLoading(true);
     try {
-      // If current_night_number is 0, we need to start the night first
       if (
         !gameSessionState.current_night_number ||
         gameSessionState.current_night_number === 0
@@ -38,7 +38,6 @@ const StartMafiaTargetButton = ({
         }
       }
 
-      // Update game session to mafia_chooses_target phase
       const res = await updateGameSession(gameSessionState.id, {
         game_phase: GAME_PHASES[9], // "mafia_chooses_target"
       });
@@ -51,15 +50,11 @@ const StartMafiaTargetButton = ({
   };
 
   return (
-    <button
-      type="button"
-      className="rounded-md bg-slate-700 hover:bg-slate-600 text-white font-semibold px-4 py-2 shadow disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed transition-colors font-size-xs
-"
-      disabled={isLoading}
+    <PhaseButton
       onClick={handleStartMafiaTarget}
-    >
-      {isLoading ? "Starting..." : "Mafia Choose Target"}
-    </button>
+      isLoading={isLoading}
+      label="Start"
+    />
   );
 };
 

@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { updateGameSession } from "@/lib/gameSession/actions";
 import { GameSessionState } from "@/types/game/type";
 import { GAME_PHASES } from "@/lib/constants/game";
+import PhaseButton from "@/components/ui/PhaseButton";
 
 type EndMafiaTargetButtonProps = {
   gameSessionState: GameSessionState;
@@ -21,8 +22,6 @@ const EndMafiaTargetButton = ({
     if (isLoading) return;
     setIsLoading(true);
     try {
-      // TODO: Store selected target in attempt_to_kill_players array
-      // Update game session to don_checks_for_detective phase
       const res = await updateGameSession(gameSessionState.id, {
         game_phase: GAME_PHASES[10], // "don_checks_for_detective"
       });
@@ -34,16 +33,7 @@ const EndMafiaTargetButton = ({
     }
   };
 
-  return (
-    <button
-      type="button"
-      className="rounded-md bg-red-600 hover:bg-red-500 text-white font-semibold px-4 py-2 shadow disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed transition-colors"
-      disabled={isLoading}
-      onClick={handleEndMafiaTarget}
-    >
-      {isLoading ? "Ending..." : "End Mafia Target Selection"}
-    </button>
-  );
+  return <PhaseButton onClick={handleEndMafiaTarget} isLoading={isLoading} />;
 };
 
 export default EndMafiaTargetButton;

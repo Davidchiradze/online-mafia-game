@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { updateGameSession } from "@/lib/gameSession/actions";
 import { GameSessionState } from "@/types/game/type";
 import { GAME_PHASES } from "@/lib/constants/game";
+import PhaseButton from "@/components/ui/PhaseButton";
 
 type ConfirmRolesButtonProps = {
   gameSessionState: GameSessionState;
@@ -19,8 +20,6 @@ const ConfirmRolesButton = ({ gameSessionState }: ConfirmRolesButtonProps) => {
     if (isLoading) return;
     setIsLoading(true);
     try {
-      // TODO: Validate that all roles are assigned
-      // Update game session to mafia_meet phase
       const res = await updateGameSession(gameSessionState.id, {
         game_phase: GAME_PHASES[2], // "mafia_meet"
       });
@@ -32,16 +31,7 @@ const ConfirmRolesButton = ({ gameSessionState }: ConfirmRolesButtonProps) => {
     }
   };
 
-  return (
-    <button
-      type="button"
-      className="rounded-md bg-blue-600 hover:bg-blue-500 text-white font-semibold px-4 py-2 shadow disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed transition-colors"
-      disabled={isLoading}
-      onClick={handleConfirmRoles}
-    >
-      {isLoading ? "Processing..." : "Confirm Roles"}
-    </button>
-  );
+  return <PhaseButton onClick={handleConfirmRoles} isLoading={isLoading} />;
 };
 
 export default ConfirmRolesButton;

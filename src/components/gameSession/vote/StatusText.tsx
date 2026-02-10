@@ -5,9 +5,8 @@ type Props = {
 };
 
 /**
- * Gray status text display.
+ * Status text display.
  */
 export function StatusText({ text }: Props) {
-  return <div className="text-xs text-gray-300">{text}</div>;
+  return <div className="text-xs text-white/70">{text}</div>;
 }
-

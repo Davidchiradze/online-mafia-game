@@ -5,10 +5,13 @@ import { startGame, createGameSession } from "@/lib/gameSession/actions";
 import { useTracks } from "@livekit/components-react";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { Track } from "livekit-client";
+import PhaseButton from "@/components/ui/PhaseButton";
+import PhaseTitle from "@/components/ui/PhaseTitle";
 
 /**
- * Button to start the game session
- * Handles game initialization and session creation
+ * Button to start the game session.
+ * Shows ready count when not all players are ready.
+ * Shows title + "Start" button when everyone is ready.
  */
 const StartGameButton = () => {
   const tracks = useTracks(
@@ -42,38 +45,29 @@ const StartGameButton = () => {
     if (isLoading) return;
     setIsLoading(true);
     try {
-      // Start the game first
       const res = await startGame(gameId);
       if (!res?.ok) {
         console.error("Failed to start game:", res?.message);
         return;
       }
 
-      // Create game session
       const sessionRes = await createGameSession(gameId);
       if (!sessionRes?.ok) {
         console.error("Failed to create game session:", sessionRes?.message);
         return;
       }
-
-      // Players will auto-mute themselves via useSpeakingAutoMute hook
-      // when they receive the gameSessionState update
     } finally {
       setIsLoading(false);
     }
   };
 
   return allReady ? (
-    <button
-      type="button"
-      className="rounded-md bg-amber-600 hover:bg-amber-500 text-white font-semibold px-4 py-2 shadow disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed transition-colors"
-      disabled={isLoading}
-      onClick={handleStartGame}
-    >
-      {isLoading ? "Starting..." : "Start Game"}
-    </button>
+    <div className="flex flex-col items-center gap-2">
+      <PhaseTitle title="Ready to Play" />
+      <PhaseButton onClick={handleStartGame} isLoading={isLoading} label="Start" />
+    </div>
   ) : (
-    <div className="text-xs text-gray-300/80">
+    <div className="text-xs text-white/50">
       {readyCount}/{maxPlayers} ready
     </div>
   );

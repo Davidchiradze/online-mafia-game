@@ -1,6 +1,6 @@
 "use client";
 
-import { LoadingSpinner } from "./LoadingSpinner";
+import PhaseButton from "@/components/ui/PhaseButton";
 
 export type ActionState =
   | "loading"
@@ -17,13 +17,13 @@ type Props = {
   onNextCandidate?: () => void;
   onTally?: () => void;
   onSeeResult?: () => void;
-  /** Button variant for "both leave" mode uses red color */
+  /** Button variant for "both leave" mode uses danger color */
   variant?: "regular" | "both_leave";
 };
 
 /**
  * Smart action button that renders the appropriate button based on voting state.
- * Replaces nested ternaries with a clean switch statement.
+ * Uses PhaseButton for consistent styling across all game phases.
  */
 export function VotingActionButton({
   state,
@@ -35,57 +35,54 @@ export function VotingActionButton({
 }: Props) {
   switch (state) {
     case "loading":
-      return <LoadingSpinner text="Processing..." />;
+      return (
+        <div className="flex items-center gap-2 text-xs text-white/60">
+          <span className="w-4 h-4 border-2 border-emerald-400/30 border-t-emerald-400 rounded-full animate-spin" />
+          Processing...
+        </div>
+      );
 
     case "voting":
-      return <span className="text-xs text-gray-500">Voting in progress...</span>;
+      return (
+        <span className="text-xs text-white/50">Voting in progress...</span>
+      );
 
     case "tally":
       return (
-        <button
-          type="button"
-          onClick={onTally}
-          className="px-4 py-1.5 text-sm bg-green-600 hover:bg-green-500 text-white rounded-md"
-        >
-          Tally Results
-        </button>
+        <PhaseButton
+          onClick={onTally ?? (() => {})}
+          isLoading={false}
+          label="Tally Results"
+        />
       );
 
     case "next":
       return (
-        <button
-          type="button"
-          onClick={onNextCandidate}
-          className="px-4 py-1.5 text-sm bg-blue-600 hover:bg-blue-500 text-white rounded-md"
-        >
-          Next Candidate →
-        </button>
+        <PhaseButton
+          onClick={onNextCandidate ?? (() => {})}
+          isLoading={false}
+          label="Next"
+          variant="secondary"
+        />
       );
 
     case "vote_now":
       return (
-        <button
-          type="button"
-          onClick={onVoteNow}
-          className={`px-4 py-1.5 text-sm text-white rounded-md ${
-            variant === "both_leave"
-              ? "bg-red-600 hover:bg-red-500"
-              : "bg-amber-600 hover:bg-amber-500"
-          }`}
-        >
-          Vote Now
-        </button>
+        <PhaseButton
+          onClick={onVoteNow ?? (() => {})}
+          isLoading={false}
+          label="Vote Now"
+          variant={variant === "both_leave" ? "danger" : "primary"}
+        />
       );
 
     case "see_result":
       return (
-        <button
-          type="button"
-          onClick={onSeeResult}
-          className="px-4 py-1.5 text-sm bg-green-600 hover:bg-green-500 text-white rounded-md"
-        >
-          See Result
-        </button>
+        <PhaseButton
+          onClick={onSeeResult ?? (() => {})}
+          isLoading={false}
+          label="See Result"
+        />
       );
 
     case "idle":
@@ -104,7 +101,13 @@ export function getRegularVotingActionState(params: {
   showNextCandidateButton: boolean;
   showVoteNowButton: boolean;
 }): ActionState {
-  const { isLoading, isVoting, showTallyButton, showNextCandidateButton, showVoteNowButton } = params;
+  const {
+    isLoading,
+    isVoting,
+    showTallyButton,
+    showNextCandidateButton,
+    showVoteNowButton,
+  } = params;
 
   if (isLoading) return "loading";
   if (isVoting) return "voting";
@@ -129,4 +132,3 @@ export function getBothLeaveActionState(params: {
   if (voteEnded) return "see_result";
   return "vote_now";
 }
-

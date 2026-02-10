@@ -21,7 +21,7 @@ export function CandidateDots({
 }: Props) {
   const getDotStyle = (idx: number) => {
     if (variant === "both_leave") {
-      return "bg-red-500 text-white";
+      return "bg-rose-500 text-white border-rose-400";
     }
 
     const isCurrent = idx === currentIdx;
@@ -29,19 +29,19 @@ export function CandidateDots({
 
     if (isCurrent) {
       return isVoting
-        ? "bg-amber-500 text-white animate-pulse"
-        : "bg-amber-500 text-white";
+        ? "bg-emerald-500 text-white border-emerald-400 animate-pulse"
+        : "bg-emerald-500 text-white border-emerald-400";
     }
-    if (isPast) return "bg-gray-600 text-gray-300";
-    return "bg-gray-700 text-gray-400";
+    if (isPast) return "bg-white/10 text-white/50 border-white/20";
+    return "bg-white/5 text-white/40 border-white/10";
   };
 
   return (
-    <div className="flex gap-1">
+    <div className="flex gap-1.5">
       {candidates.map((seat, idx) => (
         <div
           key={seat}
-          className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${getDotStyle(idx)}`}
+          className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold border ${getDotStyle(idx)}`}
           title={`#${seat}: ${(votes[String(seat)] ?? []).length} votes`}
         >
           {seat}
@@ -50,4 +50,3 @@ export function CandidateDots({
     </div>
   );
 }
-

@@ -43,11 +43,13 @@ export function useDeadPlayerMute(
     // Avoid redundant updates
     if (prevIsDeadRef.current === isDead) return;
     prevIsDeadRef.current = isDead;
-
     if (isDead) {
       // Dead player: disable both microphone and camera
       void room.localParticipant.setMicrophoneEnabled(false);
       void room.localParticipant.setCameraEnabled(false);
+    } else {
+      void room.localParticipant.setMicrophoneEnabled(true);
+      void room.localParticipant.setCameraEnabled(true);
     }
     // Note: We don't re-enable on "resurrection" since death is permanent
     // If a player was dead and is now somehow alive (shouldn't happen),
