@@ -376,6 +376,7 @@ export function getCoverMessage(gamePhase: GamePhase | null): string {
  * Determines the visibility state for a participant, accounting for dead players.
  *
  * Dead player rules:
+ * - If game is finished: everyone is VISIBLE (reveal phase)
  * - If target is dead: always show DEAD state (regardless of phase)
  * - If viewer is dead during night phases: show COVERED (Zzz) for all targets
  * - Host always sees everything (dead overlay for dead, dimmed for sleeping)
@@ -387,6 +388,7 @@ export function getCoverMessage(gamePhase: GamePhase | null): string {
  * @param isTargetHost - Whether the target is the host
  * @param viewerIsAlive - Whether the viewer is alive
  * @param targetIsAlive - Whether the target is alive
+ * @param isGameFinished - Whether the game has finished (reveal phase)
  * @returns VisibilityState indicating how the participant should be displayed
  */
 export function getVisibilityStateWithDeath(
@@ -396,8 +398,14 @@ export function getVisibilityStateWithDeath(
   isViewerHost: boolean,
   isTargetHost: boolean,
   viewerIsAlive: boolean,
-  targetIsAlive: boolean
+  targetIsAlive: boolean,
+  isGameFinished: boolean = false
 ): VisibilityState {
+  // If game is finished, everyone is visible (reveal phase)
+  if (isGameFinished) {
+    return VisibilityState.VISIBLE;
+  }
+
   // If target is dead, always show dead overlay (except for host tile)
   if (!targetIsAlive && !isTargetHost) {
     return VisibilityState.DEAD;

@@ -107,9 +107,9 @@ export async function updateGameSession(
 
 export async function getGameSession(gameId: string): Promise<
   | {
-      ok: true;
-      gameSessionState: GameSessionState;
-    }
+    ok: true;
+    gameSessionState: GameSessionState;
+  }
   | { ok: false; message: string }
 > {
   const supabase = await createClient();
@@ -227,6 +227,98 @@ export async function assignRandomRoles(
         message: `Failed to assign role: ${result.message}`,
       };
     }
+  }
+
+  return { ok: true };
+}
+
+/**
+ * Finishes a game:
+ * - Ensures caller is host
+ * - Ensures game is currently playing and not already finished
+ * - Sets games.game_status = 'finished'
+ * - Marks game_sessions.is_finished = true (keeps session row for listeners)
+ * - Deletes related voting_sessions and night_phase_sessions
+ * - Schedules room deletion after 1 minute
+ *
+ * After finishing:
+ * - Frontend listens to game_sessions.is_finished to reveal roles / cameras
+ * - Room will be deleted after 1 minute by cron job
+ */
+export async function finishGame(
+  gameId: string
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  if (userError || !user) return { ok: false, message: "Not authenticated" };
+
+  // 1. Verify user is the host & game is playing
+  const { data: gameRow, error: gameErr } = await supabase
+    .from("games")
+    .select("id, host_id, game_status")
+    .eq("id", gameId)
+    .single<Pick<Tables<"games">, "id" | "host_id" | "game_status">>();
+  if (gameErr || !gameRow) return { ok: false, message: "Game not found" };
+  if (gameRow.host_id !== user.id)
+    return { ok: false, message: "Forbidden: Only host can finish the game" };
+
+  // Game must be in 'playing' status to finish
+  if (gameRow.game_status !== "playing") {
+    return { ok: false, message: "Game is not currently playing" };
+  }
+
+  // 2. Fetch game session to ensure it exists and not already finished
+  const { data: gameSession, error: sessionErr } = await adminClient
+    .from("game_sessions")
+    .select("id, is_finished")
+    .eq("game_id", gameId)
+    .maybeSingle<Pick<Tables<"game_sessions">, "id" | "is_finished">>();
+
+  if (sessionErr) {
+    return { ok: false, message: sessionErr.message };
+  }
+
+  if (!gameSession) {
+    return { ok: false, message: "Game session not found" };
+  }
+
+  if (gameSession.is_finished) {
+    return { ok: false, message: "Game is already finished" };
+  }
+
+  // 3. Update game status to 'finished'
+  const { error: updateGameErr } = await adminClient
+    .from("games")
+    .update({ game_status: "finished" })
+    .eq("id", gameId);
+  if (updateGameErr) return { ok: false, message: updateGameErr.message };
+
+  // 4. Mark game session as finished (keep row so listeners can react)
+  const { error: updateSessionErr } = await adminClient
+    .from("game_sessions")
+    .update({ is_finished: true as const })
+    .eq("id", gameSession.id);
+  if (updateSessionErr) {
+    return { ok: false, message: updateSessionErr.message };
+  }
+
+  // 7. Schedule room deletion after 1 minute
+  const deleteAt = new Date(Date.now() + 60 * 1000).toISOString();
+  const { error: scheduleErr } = await adminClient
+    .from("scheduled_deletions")
+    .upsert(
+      {
+        game_id: gameId,
+        delete_at: deleteAt,
+      },
+      { onConflict: "game_id" }
+    );
+  if (scheduleErr) {
+    console.warn("Failed to schedule deletion:", scheduleErr.message);
+    // Don't fail the whole operation for this
   }
 
   return { ok: true };

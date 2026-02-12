@@ -104,6 +104,9 @@ export function useParticipantVisibility(
     return foundPlayer?.is_alive !== false;
   }, [targetPlayer, players, targetUserId, isTargetHost]);
 
+  // Check if game is finished (reveal phase)
+  const isGameFinished = Boolean(gameSessionState?.is_finished);
+
   // Calculate visibility state (visible, dimmed, covered, or dead)
   const visibilityState = useMemo(() => {
     return getVisibilityStateWithDeath(
@@ -113,9 +116,10 @@ export function useParticipantVisibility(
       isViewerHost,
       isTargetHost,
       viewerIsAlive,
-      targetIsAlive
+      targetIsAlive,
+      isGameFinished
     );
-  }, [viewerRole, targetRole, gamePhase, isViewerHost, isTargetHost, viewerIsAlive, targetIsAlive]);
+  }, [viewerRole, targetRole, gamePhase, isViewerHost, isTargetHost, viewerIsAlive, targetIsAlive, isGameFinished]);
 
   // Calculate basic visibility (for backwards compatibility)
   const isVisible = useMemo(() => {
