@@ -9,11 +9,14 @@ import {
 } from "@/assets/icons";
 import { LeaveIcon } from "@livekit/components-react";
 import JoinRequestsDrawer from "@/components/host-controls/JoinRequestsDrawer";
+import FinishGameButton from "@/components/host-controls/FinishGameButton";
 
 type FloatingOptionsProps = {
   gameId: string;
   isHost: boolean;
   isFullscreen: boolean;
+  /** Whether the game can be finished (e.g., not already finished) */
+  canFinishGame: boolean;
   onToggleFullscreen: () => void;
   onLeaveRoom: () => void;
 };
@@ -22,6 +25,7 @@ export default function FloatingOptions({
   gameId,
   isHost,
   isFullscreen,
+  canFinishGame,
   onToggleFullscreen,
   onLeaveRoom,
 }: FloatingOptionsProps) {
@@ -29,20 +33,23 @@ export default function FloatingOptions({
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   return (
-    <div className=" fixed bottom-6 right-6 z-40">
+    <div className="fixed bottom-6 right-6 z-40">
       <div className="pointer-events-auto flex flex-col items-end gap-3">
         {menuOpen && (
           <div className="flex flex-col items-end gap-2">
             {isHost && (
-              <button
-                type="button"
-                aria-label="Manage join requests"
-                title="Manage join requests"
-                onClick={() => setIsDrawerOpen(true)}
-                className="rounded-full border border-white/10 bg-black/40 backdrop-blur p-3 text-white hover:bg-black/50 transition"
-              >
-                <UsersIcon width={20} height={20} />
-              </button>
+              <>
+                  {canFinishGame && <FinishGameButton gameId={gameId} />}
+                <button
+                  type="button"
+                  aria-label="Manage join requests"
+                  title="Manage join requests"
+                  onClick={() => setIsDrawerOpen(true)}
+                  className="rounded-full border border-white/10 bg-black/40 backdrop-blur p-3 text-white hover:bg-black/50 transition"
+                >
+                  <UsersIcon width={20} height={20} />
+                </button>
+              </>
             )}
             <button
               type="button"

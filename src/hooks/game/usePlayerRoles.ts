@@ -1,8 +1,23 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { getFilteredPlayerRoles } from "@/lib/gamePlayerRoles/actions";
 import type { PlayerRolesMap } from "@/types/game/type";
+
+/** Phases that require roles to be fetched/refetched */
+const PHASES_REQUIRING_ROLES = [
+  "mafia_meet",
+  "don_chooses_right_hand",
+  "yakuda_shogun_meet",
+  "detective_meet",
+  "doctor_meet",
+  "mafia_chooses_target",
+  "don_checks_for_detective",
+  "right_hand_checks_for_yakuza",
+  "yakuza_and_shogun_chooses_target",
+  "detective_checks_for_mafia",
+  "doctor_heals_player",
+] as const;
 
 /**
  * Hook to fetch and manage player roles for a game
@@ -14,18 +29,34 @@ import type { PlayerRolesMap } from "@/types/game/type";
  * - Yakuza team members (YAKUZA, SHOGUN) see each other's roles
  * - Host can see all roles
  * - Others see roles as null
+ *
+ * Auto-refetches when:
+ * - Game phase changes to a phase requiring roles
+ * - Game is finished (reveal phase - everyone sees all roles)
  */
 export function usePlayerRoles(
   gameId: string,
   userId: string,
-  options?: { enabled?: boolean }
+  options?: {
+    enabled?: boolean;
+    /** Current game phase - triggers refetch for role-dependent phases */
+    gamePhase?: string | null;
+    /** Whether the game is finished - triggers refetch for role reveal */
+    isGameFinished?: boolean;
+  }
 ) {
   const enabled = options?.enabled ?? true;
+  const gamePhase = options?.gamePhase ?? null;
+  const isGameFinished = options?.isGameFinished ?? false;
+
   const [viewerRole, setViewerRole] = useState<string | null>(null);
   const [playerRolesMap, setPlayerRolesMap] = useState<PlayerRolesMap>(
     new Map()
   );
   const [isLoading, setIsLoading] = useState(false);
+
+  // Track if we've already refetched for finished state
+  const hasRefetchedForFinished = useRef(false);
 
   const fetchRoles = useCallback(async () => {
     if (!gameId || !userId || gameId === "" || userId === "" || !enabled) {
@@ -62,6 +93,26 @@ export function usePlayerRoles(
   useEffect(() => {
     fetchRoles();
   }, [fetchRoles]);
+
+  // Refetch roles when phase changes to phases that require roles
+  useEffect(() => {
+    if (!gamePhase || !enabled) return;
+    if (PHASES_REQUIRING_ROLES.includes(gamePhase as (typeof PHASES_REQUIRING_ROLES)[number])) {
+      void fetchRoles();
+    }
+  }, [gamePhase, enabled, fetchRoles]);
+
+  // Refetch roles when game is finished - everyone can now see all roles
+  useEffect(() => {
+    if (isGameFinished && !hasRefetchedForFinished.current && enabled) {
+      hasRefetchedForFinished.current = true;
+      void fetchRoles();
+    }
+    // Reset the ref when game is no longer finished (new game)
+    if (!isGameFinished) {
+      hasRefetchedForFinished.current = false;
+    }
+  }, [isGameFinished, enabled, fetchRoles]);
 
   /**
    * Get the role for a specific user

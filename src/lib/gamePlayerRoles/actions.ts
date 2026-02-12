@@ -26,6 +26,8 @@ export async function getPlayerRole(
 /**
  * Secure server action to get filtered player roles based on team relationships.
  * Returns roles only for players the requesting user is allowed to see.
+ *
+ * When game is finished, all roles are visible to everyone.
  */
 export async function getFilteredPlayerRoles(
   gameId: string,
@@ -51,6 +53,17 @@ export async function getFilteredPlayerRoles(
 
   if (gameError) return { ok: false, message: gameError.message };
 
+  // Check if game session is finished - if so, everyone can see all roles
+  const { data: session, error: sessionError } = await adminClient
+    .from("game_sessions")
+    .select("is_finished")
+    .eq("game_id", gameId)
+    .maybeSingle<Pick<Tables<"game_sessions">, "is_finished">>();
+
+  if (sessionError) return { ok: false, message: sessionError.message };
+
+  const isGameFinished = Boolean(session?.is_finished);
+
   // Get requesting user's role
   const { data: requestingRoleData, error: roleError } = await adminClient
     .from("game_player_roles")
@@ -72,13 +85,17 @@ export async function getFilteredPlayerRoles(
 
   if (allRolesError) return { ok: false, message: allRolesError.message };
 
-  // Filter roles based on team relationships
+  // Filter roles based on team relationships (or show all if game is finished)
   const filteredRoles = (allRoles || []).map((roleData) => {
     const targetRole = roleData.role;
     let canSeeRole = false;
 
+    // When game is finished, everyone can see all roles
+    if (isGameFinished) {
+      canSeeRole = true;
+    }
     // 1. Always see your own role
-    if (roleData.player_id === requestingPlayerId) {
+    else if (roleData.player_id === requestingPlayerId) {
       canSeeRole = true;
     }
     // 2. Host can always see all roles
