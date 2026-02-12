@@ -45,7 +45,9 @@ export default function LiveKitTestComponent({
 
   // Disable microphone and camera for dead players
   // Dead players cannot speak or show video for the rest of the game
-  useDeadPlayerMute(room, players, userId);
+  // When game is finished (gameSessionState.is_finished), all cameras are enabled for role reveal
+  const isGameFinished = Boolean(gameSessionState?.is_finished);
+  useDeadPlayerMute(room, players, userId, isGameFinished);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -95,6 +97,7 @@ export default function LiveKitTestComponent({
           gameId={gameId}
           isHost={isHost}
           isFullscreen={isFullscreen}
+          canFinishGame={isHost && !isGameFinished}
           onToggleFullscreen={toggleFullscreen}
           onLeaveRoom={disconnect}
         />

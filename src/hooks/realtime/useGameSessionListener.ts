@@ -31,7 +31,9 @@ export function useGameSessionListener(
         },
         (payload) => {
           const next = payload?.new as GameSessionState;
-          if (next) setGameSessionState((prev) => ({ ...prev, ...next }));
+          if (next) {
+            setGameSessionState((prev) => ({ ...prev, ...next }));
+          }
         }
       )
       .subscribe();

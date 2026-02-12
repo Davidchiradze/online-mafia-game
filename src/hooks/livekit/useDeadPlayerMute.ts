@@ -11,22 +11,30 @@ import type { Tables } from "@/db/supabase/database.types";
  * - Cannot speak (microphone disabled)
  * - Cannot show video (camera disabled)
  *
+ * When the game is finished (isGameFinished === true, from game_sessions.is_finished):
+ * - All players have their cameras enabled (even dead players)
+ * - Microphones remain disabled (to avoid chaos)
+ *
  * This is enforced client-side and persists across reconnections since
  * the death state is stored in the database.
  *
  * @param room - The LiveKit Room instance
  * @param players - Array of game players (to find current user's alive status)
  * @param userId - The current user's ID
+ * @param isGameFinished - Whether the game has finished (from gameSessionState.is_finished)
  * @param enabled - Whether to enable this behavior (default: true)
  */
 export function useDeadPlayerMute(
   room: LiveKitRoom | null | undefined,
   players: Tables<"game_players">[],
   userId: string,
+  isGameFinished?: boolean,
   enabled: boolean = true
 ) {
-  // Track previous dead state to avoid redundant updates
-  const prevIsDeadRef = useRef<boolean | null>(null);
+  // Track previous state to avoid redundant updates
+  const prevStateRef = useRef<{ isDead: boolean; isFinished: boolean } | null>(
+    null
+  );
 
   useEffect(() => {
     if (!room || !enabled) return;
@@ -37,22 +45,36 @@ export function useDeadPlayerMute(
     // If no player record found, do nothing (player might not have joined yet)
     if (!myPlayer) return;
 
-    // Check if player is dead
+    // Check if player is dead and if game is finished
     const isDead = myPlayer.is_alive === false;
+    const isFinished = Boolean(isGameFinished);
 
     // Avoid redundant updates
-    if (prevIsDeadRef.current === isDead) return;
-    prevIsDeadRef.current = isDead;
+    const prevState = prevStateRef.current;
+    if (
+      prevState &&
+      prevState.isDead === isDead &&
+      prevState.isFinished === isFinished
+    ) {
+      return;
+    }
+    prevStateRef.current = { isDead, isFinished };
+
+    // When game is finished, enable camera for everyone (reveal phase)
+    if (isFinished) {
+      void room.localParticipant.setCameraEnabled(true);
+      // Keep microphone disabled to avoid chaos
+      void room.localParticipant.setMicrophoneEnabled(false);
+      return;
+    }
+
+    // Normal game logic: dead players have camera and mic disabled
     if (isDead) {
-      // Dead player: disable both microphone and camera
       void room.localParticipant.setMicrophoneEnabled(false);
       void room.localParticipant.setCameraEnabled(false);
     } else {
       void room.localParticipant.setMicrophoneEnabled(true);
       void room.localParticipant.setCameraEnabled(true);
     }
-    // Note: We don't re-enable on "resurrection" since death is permanent
-    // If a player was dead and is now somehow alive (shouldn't happen),
-    // they would need to manually enable their devices
-  }, [room, players, userId, enabled]);
+  }, [room, players, userId, isGameFinished, enabled]);
 }

@@ -131,38 +131,16 @@ export function GameRoomProvider({
   );
 
   // Player roles (fetched once, filtered by team visibility)
-  const {
-    viewerRole,
-    playerRolesMap,
-    getRoleForUser,
-    refetch: refetchRoles,
-  } = usePlayerRoles(gameId, userId, {
-    enabled: hasPlayerRecord && !!gameSessionState,
-  });
-
-  // Refetch roles when phase changes to phases that require roles (e.g., mafia_meet)
-  // This ensures roles are loaded when transitioning from picking_roles to mafia_meet
-
-  // TODO: Refactor this to use a more efficient approach
-  useEffect(() => {
-    if (!gameSessionState?.game_phase) return;
-    const phasesRequiringRoles = [
-      "mafia_meet",
-      "don_chooses_right_hand",
-      "yakuda_shogun_meet",
-      "detective_meet",
-      "doctor_meet",
-      "mafia_chooses_target",
-      "don_checks_for_detective",
-      "right_hand_checks_for_yakuza",
-      "yakuza_and_shogun_chooses_target",
-      "detective_checks_for_mafia",
-      "doctor_heals_player",
-    ];
-    if (phasesRequiringRoles.includes(gameSessionState.game_phase)) {
-      void refetchRoles();
+  // Auto-refetches on phase changes and when game finishes
+  const { viewerRole, playerRolesMap, getRoleForUser } = usePlayerRoles(
+    gameId,
+    userId,
+    {
+      enabled: hasPlayerRecord && !!gameSessionState,
+      gamePhase: gameSessionState?.game_phase,
+      isGameFinished: gameSessionState?.is_finished,
     }
-  }, [gameSessionState?.game_phase, refetchRoles]);
+  );
 
   // Redirect back to lobby on disconnect by default
   useLivekitRoom(
