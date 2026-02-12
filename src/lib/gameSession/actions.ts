@@ -239,7 +239,6 @@ export async function assignRandomRoles(
  * - Sets games.game_status = 'finished'
  * - Marks game_sessions.is_finished = true (keeps session row for listeners)
  * - Deletes related voting_sessions and night_phase_sessions
- * - Schedules room deletion after 1 minute
  *
  * After finishing:
  * - Frontend listens to game_sessions.is_finished to reveal roles / cameras
@@ -305,21 +304,7 @@ export async function finishGame(
     return { ok: false, message: updateSessionErr.message };
   }
 
-  // 7. Schedule room deletion after 1 minute
-  const deleteAt = new Date(Date.now() + 60 * 1000).toISOString();
-  const { error: scheduleErr } = await adminClient
-    .from("scheduled_deletions")
-    .upsert(
-      {
-        game_id: gameId,
-        delete_at: deleteAt,
-      },
-      { onConflict: "game_id" }
-    );
-  if (scheduleErr) {
-    console.warn("Failed to schedule deletion:", scheduleErr.message);
-    // Don't fail the whole operation for this
-  }
+
 
   return { ok: true };
 }

@@ -314,35 +314,6 @@ export type Database = {
         }
         Relationships: []
       }
-      scheduled_deletions: {
-        Row: {
-          created_at: string | null
-          delete_at: string
-          game_id: string
-          id: string
-        }
-        Insert: {
-          created_at?: string | null
-          delete_at: string
-          game_id: string
-          id?: string
-        }
-        Update: {
-          created_at?: string | null
-          delete_at?: string
-          game_id?: string
-          id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "scheduled_deletions_game_id_fkey"
-            columns: ["game_id"]
-            isOneToOne: true
-            referencedRelation: "games"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       votes: {
         Row: {
           created_at: string | null
