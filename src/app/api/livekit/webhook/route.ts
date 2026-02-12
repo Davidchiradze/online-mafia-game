@@ -4,6 +4,7 @@ import {
   joinGamePlayer,
   leaveGamePlayerAdmin,
 } from "@/lib/gamePlayers/actions";
+import { deleteGameRoomAdmin } from "@/lib/gameRoom/actions";
 
 /**
  * LiveKit Webhook Endpoint
@@ -88,6 +89,25 @@ export async function POST(request: NextRequest) {
         // Don't return error - webhook should acknowledge receipt
       } else {
         console.log(`Player ${userId} disconnected from game ${gameId}`);
+      }
+    }
+
+    // Handle room finished event - cleanup game data when LiveKit room closes
+    if (event.event === "room_finished") {
+      const room = event.room;
+
+      if (!room?.name) {
+        return NextResponse.json({ received: true });
+      }
+
+      const gameId = room.name;
+
+      const result = await deleteGameRoomAdmin(gameId);
+
+      if (result.ok) {
+        console.log(`Game ${gameId} deleted after room finished`);
+      } else {
+        console.log(`Failed to delete game ${gameId}: ${result.message}`);
       }
     }
 

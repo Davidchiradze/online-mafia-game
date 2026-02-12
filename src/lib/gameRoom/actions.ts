@@ -33,10 +33,10 @@ function toJoinRequest(row: Tables<"join_requests">): JoinRequest {
 export async function createGameRoom(input: {
   name: string;
   type: keyof typeof GAME_TYPE_MAX_PLAYER_NUMBER extends infer K
-    ? K extends string
-      ? K
-      : never
-    : never;
+  ? K extends string
+  ? K
+  : never
+  : never;
 }): Promise<{ ok: true; data: GameRoom } | { ok: false; message: string }> {
   const supabase = await createClient();
   const {
@@ -559,6 +559,36 @@ export async function transferHost(
     if (insertOldReqErr)
       return { ok: false, message: insertOldReqErr.message } as const;
   }
+
+  return { ok: true } as const;
+}
+
+/**
+ * Admin version of deleteGameRoom - used by webhooks (no auth check).
+ * Called when LiveKit room_finished event fires, indicating the room is empty.
+ */
+export async function deleteGameRoomAdmin(
+  gameId: string
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  // Verify the game exists
+  const { data: gameRow, error: gameErr } = await adminClient
+    .from("games")
+    .select("id")
+    .eq("id", gameId)
+    .single();
+
+  if (gameErr || !gameRow) return { ok: false, message: "Game not found" };
+
+  // Delete the game (cascade should handle related records)
+  const { error: deleteErr } = await adminClient
+    .from("games")
+    .delete()
+    .eq("id", gameId);
+
+  if (deleteErr) return { ok: false, message: deleteErr.message } as const;
+
+  // Note: We skip deleteLivekitRoom here because this function is called
+  // from the room_finished webhook - the LiveKit room is already gone.
 
   return { ok: true } as const;
 }
