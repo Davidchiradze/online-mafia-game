@@ -105,12 +105,19 @@ export default function ParticipantComponent({
     isTargetHost,
   });
 
+  // Check if current phase allows fouls (needed for speaking state)
+  const isFoulAllowedPhase = useMemo(() => {
+    const currentPhase = gameSessionState?.game_phase;
+    if (!currentPhase) return false;
+    return (FOULS.ALLOWED_PHASES as readonly string[]).includes(currentPhase);
+  }, [gameSessionState?.game_phase]);
+
   // Speaking state
   const { isSpeaking, boxShadowClass } = useParticipantSpeaking(
     gameSessionState,
     player.seat_number,
     isMicEnabled,
-    isDayPhase,
+    isFoulAllowedPhase,
     isTargetHost,
     isTargetDead
   );
@@ -121,13 +128,6 @@ export default function ParticipantComponent({
     isSpeaking,
     gameSessionState?.game_phase
   );
-
-  // Check if current phase allows fouls
-  const isFoulAllowedPhase = useMemo(() => {
-    const currentPhase = gameSessionState?.game_phase;
-    if (!currentPhase) return false;
-    return (FOULS.ALLOWED_PHASES as readonly string[]).includes(currentPhase);
-  }, [gameSessionState?.game_phase]);
 
   // Foul-related functionality
   const {

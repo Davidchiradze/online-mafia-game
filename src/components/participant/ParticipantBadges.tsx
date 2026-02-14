@@ -49,7 +49,7 @@ export default function ParticipantBadges({
   return (
     <>
       {/* Microphone indicator */}
-      {(!gameSessionState || (isLocal && isTargetHost)) &&
+      {(!gameSessionState || gameSessionState?.is_finished || (isLocal && isTargetHost)) &&
         (isLocal ? (
           <div className="absolute left-1 top-1 z-10 scale-60 lg:scale-100">
             <TrackToggle source={Track.Source.Microphone} showIcon={true} />
