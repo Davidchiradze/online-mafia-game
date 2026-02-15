@@ -138,7 +138,6 @@ canSeeParticipant(
 - `game_status` - `not_started` | `playing` | `finished`
 - `game_type` - `traditional` | `city_mafia` | `japanese_mafia`
 - `max_players` - Maximum players (10 or 12)
-- `current_players` - Current player count
 
 ### Game Players Table
 

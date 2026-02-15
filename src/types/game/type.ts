@@ -2,6 +2,7 @@ import { Tables } from "@/db/supabase/database.types";
 
 export type DbGame = Tables<"games">;
 export type DbJoinRequest = Tables<"join_requests">;
+export type DbGamePlayer = Tables<"game_players">;
 
 export type GameRoom = Pick<
   DbGame,
@@ -11,11 +12,11 @@ export type GameRoom = Pick<
   | "game_type"
   | "game_status"
   | "max_players"
-  | "current_players"
   | "created_at"
   | "updated_at"
 > & {
-  participant_names: string[];
+  /** Players in the game from game_players table */
+  players: DbGamePlayer[];
 };
 
 export type JoinRequest = Pick<

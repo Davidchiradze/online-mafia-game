@@ -12,8 +12,6 @@ import GameTableRowActions from "./GameTableRowActions";
 type Props = {
   session: GameRoom;
   onRowClick?: (session: GameRoom) => void;
-  participantCount: number;
-  participantNames: string[];
   userId?: string;
   onRoomDeleted?: (gameId: string) => void;
 };
@@ -21,12 +19,12 @@ type Props = {
 export default function GameTableRow({
   session,
   onRowClick,
-  participantCount,
-  participantNames,
   userId,
   onRoomDeleted,
 }: Props) {
-  const playersLabel = GAME_TYPE_MAX_PLAYER_NUMBER[session.game_type];
+  const maxPlayers = GAME_TYPE_MAX_PLAYER_NUMBER[session.game_type];
+  const players = session.players;
+  const playerCount = players.length;
 
   return (
     <>
@@ -42,25 +40,25 @@ export default function GameTableRow({
           {GAME_TYPE_LABEL[session.game_type]}
         </td>
         <td className="px-6 py-4 text-gray-700 dark:text-gray-300">
-          {participantNames.length > 0 ? (
+          {players.length > 0 ? (
             <Tooltip
               side="top"
               align="center"
               content={
                 <div className=" flex flex-col gap-1">
-                  {participantNames.map((name) => (
-                    <span key={name}>{name}</span>
+                  {players.map((player) => (
+                    <span key={player.id}>{player.nickname ?? "Player"}</span>
                   ))}
                 </div>
               }
             >
               <span className="">
-                {participantCount}/{playersLabel + 1}
+                {playerCount}/{maxPlayers + 1}
               </span>
             </Tooltip>
           ) : (
             <span>
-              {participantCount}/{playersLabel + 1}
+              {playerCount}/{maxPlayers + 1}
             </span>
           )}
         </td>
@@ -68,7 +66,7 @@ export default function GameTableRow({
           <GameStatusBadge status={session.game_status} />
         </td>
         <td className="px-6 py-4 text-gray-700 dark:text-gray-300">
-          {participantCount}
+          {playerCount}
         </td>
         <td className="px-6 py-4 relative">
           <div className="relative">

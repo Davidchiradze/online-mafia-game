@@ -7,6 +7,7 @@ import { createLivekitRoom } from "@/lib/liveKit/actions";
 import GameTable from "@/components/game/GameTable";
 import CreateGameModal from "@/components/modals/CreateGameModal";
 import LobbyHeader from "./LobbyHeader";
+import { useLobbySubscription } from "@/hooks/lobby/useLobbySubscription";
 
 type LobbyUser = {
   id: string;
@@ -23,6 +24,9 @@ export default function LobbyContent({ user, initialSessions }: Props) {
   const [sessions, setSessions] = useState<GameRoom[]>(initialSessions);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const router = useRouter();
+
+  // Subscribe to real-time lobby updates (games + players)
+  useLobbySubscription(sessions, setSessions);
 
   const handleCreated = async (session: GameRoom) => {
     setSessions((prev) => [session, ...prev]);

@@ -21,6 +21,7 @@ CREATE TABLE public.game_players (
   seat_number numeric,
   fouls numeric,
   state text,
+  nickname text,
   CONSTRAINT game_players_pkey PRIMARY KEY (id),
   CONSTRAINT game_players_game_id_fkey FOREIGN KEY (game_id) REFERENCES public.games(id),
   CONSTRAINT game_players_player_id_fkey FOREIGN KEY (player_id) REFERENCES public.profiles(id)
@@ -46,7 +47,6 @@ CREATE TABLE public.games (
   code text NOT NULL UNIQUE,
   name text NOT NULL,
   host_id uuid,
-  current_players integer NOT NULL DEFAULT 0,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   game_status USER-DEFINED NOT NULL DEFAULT 'not_started'::"game-status",
