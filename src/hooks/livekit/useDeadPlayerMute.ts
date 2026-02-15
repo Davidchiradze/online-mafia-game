@@ -72,9 +72,6 @@ export function useDeadPlayerMute(
     if (isDead) {
       void room.localParticipant.setMicrophoneEnabled(false);
       void room.localParticipant.setCameraEnabled(false);
-    } else {
-      void room.localParticipant.setMicrophoneEnabled(true);
-      void room.localParticipant.setCameraEnabled(true);
     }
   }, [room, players, userId, isGameFinished, enabled]);
 }

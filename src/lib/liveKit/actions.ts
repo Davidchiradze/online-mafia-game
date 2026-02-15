@@ -4,6 +4,7 @@ import {
   VideoGrant,
   Room,
   RoomServiceClient,
+  TrackSource,
 } from "livekit-server-sdk";
 import { createClient } from "@/lib/supabase/server";
 
@@ -138,4 +139,54 @@ export async function setParticipantReady(
   await roomService.updateParticipant(roomId, participantId, {
     metadata: JSON.stringify({ ...existingMeta, ready }),
   });
+}
+
+
+export async function mutePublishedTrack(
+  roomId: string,
+  participantId: string,
+  trackSid: string,
+  muted: boolean
+) {
+  const roomService = new RoomServiceClient(
+    process.env.NEXT_PUBLIC_LIVEKIT_URL!,
+    process.env.LIVEKIT_API_KEY!,
+    process.env.LIVEKIT_API_SECRET!
+  );
+  await roomService.mutePublishedTrack(roomId, participantId, trackSid, muted);
+}
+
+/**
+ * Mute or unmute a participant's microphone from the server.
+ * This finds the microphone track server-side, so the client only needs to pass room and participant info.
+ */
+export async function muteParticipantMicrophone(
+  roomName: string,
+  participantIdentity: string,
+  muted: boolean
+) {
+  const roomService = new RoomServiceClient(
+    process.env.NEXT_PUBLIC_LIVEKIT_URL!,
+    process.env.LIVEKIT_API_KEY!,
+    process.env.LIVEKIT_API_SECRET!
+  );
+
+  // Get participant info from server
+  const participant = await roomService.getParticipant(roomName, participantIdentity);
+
+  // Find the microphone track
+  const audioTrack = participant.tracks.find(
+    (track) => track.source === TrackSource.MICROPHONE
+  );
+
+  if (!audioTrack?.sid) {
+    throw new Error("No microphone track found for participant");
+  }
+
+  await roomService.mutePublishedTrack(
+    roomName,
+    participantIdentity,
+    audioTrack.sid,
+    muted
+  );
 }

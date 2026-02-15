@@ -27,7 +27,7 @@ export default async function GamePage({ params }: PageProps) {
   if (
     Number(sessionRes.data.max_players) +
       1 -
-      Number(sessionRes.data.current_players) ===
+      sessionRes.data.players.length ===
       0
   ) {
     return (

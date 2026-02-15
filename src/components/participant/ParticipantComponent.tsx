@@ -36,6 +36,7 @@ import ParticipantBadges from "./ParticipantBadges";
 import NominationFoulSection from "./NominationFoulSection";
 import NightActionButtons from "./NightActionButtons";
 import VoteIndicator from "./VoteIndicator";
+import { muteParticipantMicrophone } from "@/lib/liveKit/actions";
 
 export default function ParticipantComponent({
   gameId,
@@ -105,12 +106,19 @@ export default function ParticipantComponent({
     isTargetHost,
   });
 
+  // Check if current phase allows fouls (needed for speaking state)
+  const isFoulAllowedPhase = useMemo(() => {
+    const currentPhase = gameSessionState?.game_phase;
+    if (!currentPhase) return false;
+    return (FOULS.ALLOWED_PHASES as readonly string[]).includes(currentPhase);
+  }, [gameSessionState?.game_phase]);
+
   // Speaking state
   const { isSpeaking, boxShadowClass } = useParticipantSpeaking(
     gameSessionState,
     player.seat_number,
     isMicEnabled,
-    isDayPhase,
+    isFoulAllowedPhase,
     isTargetHost,
     isTargetDead
   );
@@ -121,13 +129,6 @@ export default function ParticipantComponent({
     isSpeaking,
     gameSessionState?.game_phase
   );
-
-  // Check if current phase allows fouls
-  const isFoulAllowedPhase = useMemo(() => {
-    const currentPhase = gameSessionState?.game_phase;
-    if (!currentPhase) return false;
-    return (FOULS.ALLOWED_PHASES as readonly string[]).includes(currentPhase);
-  }, [gameSessionState?.game_phase]);
 
   // Foul-related functionality
   const {
@@ -203,6 +204,16 @@ export default function ParticipantComponent({
   // Suppress unused variable warning - used for future features
   void isDoctorHealSelected;
 
+  const handleMutePlayer = useCallback(async () => {
+    if (!room || !player?.player_id) return;
+    
+    try {
+      await muteParticipantMicrophone(room.name, player.player_id, true);
+    } catch (error) {
+      console.error("Failed to mute participant:", error);
+    }
+  }, [room, player.player_id]);
+
   return (
     <div
       className={`relative w-full h-full flex flex-col items-stretch justify-stretch text-sm text-gray-200 group transition-shadow duration-300 overflow-hidden rounded-xl ${boxShadowClass}`}
@@ -246,6 +257,7 @@ export default function ParticipantComponent({
               className: "text-red-600 dark:text-red-400",
             },
             { label: "Make host", onClick: onMakeHost },
+            { label: "Mute player", onClick: handleMutePlayer },
           ]}
           ariaLabel="Participant settings"
         />

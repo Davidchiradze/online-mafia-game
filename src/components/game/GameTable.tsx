@@ -17,6 +17,7 @@ export default function GameTable({
   userId,
   onRoomDeleted,
 }: Props) {
+  console.log("🚀 ~ GameTable ~ data:", data)
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm bg-white dark:bg-gray-900">
       {/* Mobile: grid of cards */}
@@ -33,8 +34,6 @@ export default function GameTable({
                   key={session.id}
                   session={session}
                   onClick={onRowClick}
-                  participantCount={session.current_players}
-                  participantNames={session?.participant_names || []}
                 />
               );
             })}
@@ -84,8 +83,6 @@ export default function GameTable({
                     key={session.id}
                     session={session}
                     onRowClick={onRowClick}
-                    participantCount={session.current_players}
-                    participantNames={session?.participant_names || []}
                     userId={userId}
                     onRoomDeleted={onRoomDeleted}
                   />

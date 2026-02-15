@@ -11,17 +11,15 @@ import Tooltip from "@/components/ui/Tooltip";
 type Props = {
   session: GameRoom;
   onClick?: (session: GameRoom) => void;
-  participantCount: number;
-  participantNames: string[];
 };
 
 export default function GameCard({
   session,
   onClick,
-  participantCount,
-  participantNames,
 }: Props) {
   const maxPlayers = GAME_TYPE_MAX_PLAYER_NUMBER[session.game_type];
+  const players = session.players;
+  const playerCount = players.length;
 
   return (
     <button
@@ -43,29 +41,29 @@ export default function GameCard({
       <div className="flex items-center justify-between text-sm">
         <div className="text-gray-700 dark:text-gray-300">
           Players:
-          {participantNames.length > 0 ? (
+          {players.length > 0 ? (
             <Tooltip
               side="top"
               align="center"
               content={
                 <div className="max-h-48 overflow-auto leading-relaxed whitespace-pre-wrap">
-                  {participantNames.join(", ")}
+                  {players.map((p) => p.nickname ?? "Player").join(", ")}
                 </div>
               }
             >
               <span className="ml-1 underline decoration-dotted underline-offset-4">
-                {participantCount}/{maxPlayers}
+                {playerCount}/{maxPlayers}
               </span>
             </Tooltip>
           ) : (
             <span className="ml-1">
-              {participantCount}/{maxPlayers}
+              {playerCount}/{maxPlayers}
             </span>
           )}
         </div>
 
         <div className="text-gray-500 dark:text-gray-400">
-          Spectators: {participantCount}
+          Spectators: {playerCount}
         </div>
       </div>
     </button>

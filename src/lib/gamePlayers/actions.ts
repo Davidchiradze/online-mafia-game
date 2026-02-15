@@ -31,7 +31,7 @@ export async function joinGamePlayer(gameId: string): Promise<JoinResult> {
 
   const { data: gameRow, error: gameErr } = await adminClient
     .from("games")
-    .select("id, host_id, max_players, game_status, current_players")
+    .select("id, host_id, max_players, game_status")
     .eq("id", gameId)
     .single<Tables<"games">>();
   if (gameErr || !gameRow)
@@ -72,8 +72,8 @@ export async function joinGamePlayer(gameId: string): Promise<JoinResult> {
   const seatIndex = isHost
     ? maxSeats + 1
     : isGameStarted(gameRow.game_status)
-    ? null
-    : (() => {
+      ? null
+      : (() => {
         for (let i = 1; i <= maxSeats; i++) {
           if (!usedSeats.has(i)) return i;
         }
@@ -83,14 +83,17 @@ export async function joinGamePlayer(gameId: string): Promise<JoinResult> {
   if (!isHost && seatIndex === null)
     return { ok: false, message: "Room is full" };
 
+  // Get nickname from user metadata
+  const nickname = user.user_metadata?.nickname || user.email || "Player";
+
   const insertPayload: TablesInsert<"game_players"> = {
     game_id: gameId,
     player_id: userId,
     seat_number: seatIndex,
     is_alive: true,
     joined_at: new Date().toISOString(),
-    // Roles are stored in game_player_roles table, not here
     state: "joined",
+    nickname: nickname,
   };
 
   const { data: inserted, error: insertErr } = await adminClient
@@ -104,20 +107,7 @@ export async function joinGamePlayer(gameId: string): Promise<JoinResult> {
       message: insertErr?.message || "Unable to join game",
     };
 
-  const nextPlayerCount = (players?.length || 0) + 1;
-  const { data: updatedGame, error: updateErr } = await adminClient
-    .from("games")
-    .update({
-      current_players: nextPlayerCount,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", gameId)
-    .select("*")
-    .single<Tables<"games">>();
-  if (updateErr)
-    return { ok: false, message: updateErr.message || "Failed to update game" };
-
-  return { ok: true, player: inserted, game: updatedGame || gameRow };
+  return { ok: true, player: inserted, game: gameRow };
 }
 
 /**
@@ -149,20 +139,6 @@ async function leaveGamePlayerByUserId(
         ok: false,
         message: deleteErr.message || "Unable to leave game",
       };
-
-    const { count } = await adminClient
-      .from("game_players")
-      .select("id", { head: true, count: "exact" })
-      .eq("game_id", gameId);
-
-    const { error: updateErr } = await adminClient
-      .from("games")
-      .update({
-        current_players: count ?? 0,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", gameId);
-    if (updateErr) return { ok: false, message: updateErr.message };
   } else {
     const { error: updateStateErr } = await adminClient
       .from("game_players")

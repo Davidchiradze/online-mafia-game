@@ -6,9 +6,8 @@ import {
   GAME_TYPE_MAX_PLAYER_NUMBER,
   JOIN_REQUEST_STATUSES,
 } from "@/lib/constants/game";
-import { GameRoom, JoinRequest } from "@/types/game/type";
+import { GameRoom, JoinRequest, DbGamePlayer } from "@/types/game/type";
 import { Tables } from "@/db/supabase/database.types";
-import { listParticipantsForRooms } from "../liveKit/actions";
 
 function generateGameCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -54,7 +53,6 @@ export async function createGameRoom(input: {
     | "name"
     | "game_status"
     | "max_players"
-    | "current_players"
     | "created_at"
     | "updated_at"
   > | null = null;
@@ -66,14 +64,13 @@ export async function createGameRoom(input: {
     game_status: "not_started" as const,
     game_type: input.type,
     max_players: GAME_TYPE_MAX_PLAYER_NUMBER[input.type],
-    current_players: 0,
   };
   while (attempt < 3 && !inserted) {
     const { data, error } = await supabase
       .from("games")
       .insert(dataToInsert)
       .select(
-        "id,name,host_id,game_status,max_players,current_players,created_at,updated_at"
+        "id,name,host_id,game_status,max_players,created_at,updated_at"
       )
       .single<
         Pick<
@@ -82,7 +79,6 @@ export async function createGameRoom(input: {
           | "name"
           | "game_status"
           | "max_players"
-          | "current_players"
           | "created_at"
           | "updated_at"
         >
@@ -105,13 +101,31 @@ export async function createGameRoom(input: {
     game_type: input.type,
     game_status: inserted.game_status as GameRoom["game_status"],
     max_players: inserted.max_players,
-    current_players: inserted.current_players,
-    participant_names: [],
+    players: [],
     created_at: inserted.created_at!,
     updated_at: inserted.updated_at!,
   };
 
   return { ok: true, data: gameSession } as const;
+}
+
+/**
+ * Fetch players for a single game room from game_players table.
+ * Returns players array with full player data.
+ */
+export async function fetchGamePlayersForRoom(
+  gameId: string
+): Promise<{ players: DbGamePlayer[] }> {
+  const { data, error } = await adminClient
+    .from("game_players")
+    .select("*")
+    .eq("game_id", gameId);
+
+  if (error || !data) {
+    return { players: [] };
+  }
+
+  return { players: data };
 }
 
 export async function fetchAllGameRooms(): Promise<
@@ -121,10 +135,11 @@ export async function fetchAllGameRooms(): Promise<
   const { data, error } = await supabase
     .from("games")
     .select(
-      "id,name,host_id,game_type,game_status,max_players,current_players,created_at,updated_at"
+      "id,name,host_id,game_type,game_status,max_players,created_at,updated_at"
     )
     .order("created_at", { ascending: false });
   if (error) return { ok: false, message: error.message } as const;
+
   type GameSelect = Pick<
     Tables<"games">,
     | "id"
@@ -133,32 +148,28 @@ export async function fetchAllGameRooms(): Promise<
     | "game_type"
     | "game_status"
     | "max_players"
-    | "current_players"
     | "created_at"
     | "updated_at"
   >;
   const rows = (data ?? []) as GameSelect[];
-  const participantsByRoom = await listParticipantsForRooms(
-    rows.map((row) => row.id)
+
+  // Fetch players for each game using the shared function
+  const sessions: GameRoom[] = await Promise.all(
+    rows.map(async (row) => {
+      const { players } = await fetchGamePlayersForRoom(row.id);
+      return {
+        id: row.id,
+        name: row.name,
+        host_id: row.host_id!,
+        game_type: row.game_type as GameRoom["game_type"],
+        game_status: row.game_status as GameRoom["game_status"],
+        max_players: row.max_players,
+        players,
+        created_at: row.created_at!,
+        updated_at: row.updated_at!,
+      };
+    })
   );
-  const sessions: GameRoom[] = rows.map((row) => {
-    const participantData = participantsByRoom[row.id] || {
-      count: 0,
-      names: [],
-    };
-    return {
-      id: row.id,
-      name: row.name,
-      host_id: row.host_id!,
-      game_type: row.game_type as GameRoom["game_type"],
-      game_status: row.game_status as GameRoom["game_status"],
-      max_players: row.max_players,
-      current_players: participantData.count,
-      participant_names: participantData.names,
-      created_at: row.created_at!,
-      updated_at: row.updated_at!,
-    };
-  });
   return { ok: true, data: sessions } as const;
 }
 
@@ -169,7 +180,7 @@ export async function fetchGameRoomById(
   const { data, error } = await supabase
     .from("games")
     .select(
-      "id,name,host_id,game_type,game_status,max_players,current_players,created_at,updated_at"
+      "id,name,host_id,game_type,game_status,max_players,created_at,updated_at"
     )
     .eq("id", id)
     .single<Tables<"games">>();
@@ -177,11 +188,7 @@ export async function fetchGameRoomById(
     return { ok: false, message: error?.message || "Not found" } as const;
 
   const gameRow = data;
-  const participantsByRoom = await listParticipantsForRooms([id]);
-  const participantData = participantsByRoom[id] || {
-    count: 0,
-    names: [],
-  };
+  const { players } = await fetchGamePlayersForRoom(id);
   const session: GameRoom = {
     id: gameRow.id,
     name: gameRow.name,
@@ -189,8 +196,7 @@ export async function fetchGameRoomById(
     game_type: gameRow.game_type as GameRoom["game_type"],
     game_status: gameRow.game_status as GameRoom["game_status"],
     max_players: gameRow.max_players,
-    current_players: participantData.count,
-    participant_names: participantData.names,
+    players: players,
     created_at: gameRow.created_at!,
     updated_at: gameRow.updated_at!,
   };
