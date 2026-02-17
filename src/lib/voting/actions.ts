@@ -425,10 +425,10 @@ export async function castVote(gameId: string): Promise<ActionResult> {
     return { ok: false, message: "Voting session not found" };
   }
 
-  // Check if voting is active
-  if (!votingSession.voting_active) {
-    return { ok: false, message: "Voting is not currently active" };
-  }
+  // // Check if voting is active
+  // if (!votingSession.voting_active) {
+  //   return { ok: false, message: "Voting is not currently active" };
+  // }
 
   // Check if player is alive
   const { data: player } = await adminClient
@@ -1080,13 +1080,13 @@ export async function castBothLeaveVote(gameId: string): Promise<ActionResult> {
     return { ok: false, message: "Voting session not found" };
   }
 
-  if (!votingSession.both_leave_vote_active) {
-    return { ok: false, message: "Both leave vote is not active" };
-  }
+  // if (!votingSession.both_leave_vote_active) {
+  //   return { ok: false, message: "Both leave vote is not active" };
+  // }
 
-  if (!votingSession.voting_active) {
-    return { ok: false, message: "Voting window is not open" };
-  }
+  // if (!votingSession.voting_active) {
+  //   return { ok: false, message: "Voting window is not open" };
+  // }
 
   // ATOMIC INSERT - unique constraint prevents duplicate votes
   const { error: insertErr } = await adminClient.from("votes").insert({
@@ -1118,12 +1118,12 @@ export async function castBothLeaveVote(gameId: string): Promise<ActionResult> {
  */
 export async function processBothLeaveResult(gameId: string): Promise<
   | {
-      ok: true;
-      allLeave: boolean;
-      candidates: number[];
-      voteCount: number;
-      totalVoters: number;
-    }
+    ok: true;
+    allLeave: boolean;
+    candidates: number[];
+    voteCount: number;
+    totalVoters: number;
+  }
   | { ok: false; message: string }
 > {
   const supabase = await createClient();
