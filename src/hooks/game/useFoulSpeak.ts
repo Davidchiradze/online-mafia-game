@@ -1,12 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Room as LiveKitRoom } from "livekit-client";
 import { FOULS } from "@/lib/constants/game";
 import { Tables } from "@/db/supabase/database.types";
+import { startFoulSpeak, endFoulSpeak } from "@/lib/fouls/actions";
 
 type UseFoulSpeakOptions = {
-  room: LiveKitRoom | null | undefined;
+  gameId: string;
   player: Tables<"game_players">;
   isLocal: boolean;
   isFoulAllowedPhase: boolean;
@@ -18,7 +18,7 @@ type UseFoulSpeakOptions = {
 type UseFoulSpeakReturn = {
   isFoulSpeaking: boolean;
   foulSpeakTimeLeft: number;
-  startFoulSpeak: () => Promise<void>;
+  startFoulSpeakAction: () => Promise<void>;
   canFoulSpeak: boolean;
   canShowFoulSpeakButton: boolean;
   currentFouls: number;
@@ -27,22 +27,26 @@ type UseFoulSpeakReturn = {
 
 /**
  * Hook that manages all foul-related functionality:
- * - Foul speaking (5-second unmute)
+ * - Foul speaking (5-second unmute via server-side control)
  * - Foul display UI
  * - Foul button visibility
+ *
+ * Server-side approach:
+ * - Muting/unmuting is handled by server actions (startFoulSpeak, endFoulSpeak)
+ * - Client tracks foul_speak_started_at from DB and calculates time remaining
+ * - Client calls endFoulSpeak when time expires
  *
  * @param options - Configuration object
  * @returns Object with:
  *   - isFoulSpeaking: Whether the player is currently in foul speaking mode
  *   - foulSpeakTimeLeft: Seconds remaining in foul speaking mode
- *   - startFoulSpeak: Function to start foul speaking
+ *   - startFoulSpeakAction: Function to start foul speaking (calls server action)
  *   - canFoulSpeak: Whether the player can start foul speaking
  *   - currentFouls: Current number of fouls
  *   - canShowFoulButton: Whether to show the foul button (host only)
- *   - FoulDisplay: React component to display fouls
  */
 export function useFoulSpeak({
-  room,
+  gameId,
   player,
   isLocal,
   isFoulAllowedPhase,
@@ -63,79 +67,73 @@ export function useFoulSpeak({
   // Only enabled for local player who is NOT the current speaker and NOT the host
   const canUseFoulSpeak =
     isLocal && isFoulAllowedPhase && !isSpeaking && !isTargetHost;
-  const [isFoulSpeaking, setIsFoulSpeaking] = useState(false);
-  const [foulSpeakTimeLeft, setFoulSpeakTimeLeft] = useState(0);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const countdownRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Cleanup function
-  const cleanup = useCallback(() => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
+  // UI state derived from DB timestamp
+  const foulSpeakStartedAt = player.foul_speak_started_at;
+  const [foulSpeakTimeLeft, setFoulSpeakTimeLeft] = useState(0);
+  const countdownRef = useRef<NodeJS.Timeout | null>(null);
+  const hasEndedRef = useRef(false);
+
+  // Calculate time remaining from DB timestamp
+  useEffect(() => {
+    // Clear any existing interval
     if (countdownRef.current) {
       clearInterval(countdownRef.current);
       countdownRef.current = null;
     }
-  }, []);
 
-  // Start foul speaking - unmute for 5 seconds
-  const startFoulSpeak = useCallback(async () => {
-    if (!room || !canUseFoulSpeak || isFoulSpeaking) return;
-
-    // Clean up any existing timers
-    cleanup();
-
-    // Unmute the player
-    await room.localParticipant.setMicrophoneEnabled(true);
-    setIsFoulSpeaking(true);
-    setFoulSpeakTimeLeft(FOULS.FOUL_SPEAK_DURATION_SECONDS);
-
-    // Start countdown timer (updates every second)
-    countdownRef.current = setInterval(() => {
-      setFoulSpeakTimeLeft((prev) => {
-        if (prev <= 1) {
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    // Set timer to mute after 5 seconds
-    timerRef.current = setTimeout(async () => {
-      // Re-mute the player
-      await room.localParticipant.setMicrophoneEnabled(false);
-      setIsFoulSpeaking(false);
+    if (!foulSpeakStartedAt) {
       setFoulSpeakTimeLeft(0);
-      cleanup();
-    }, FOULS.FOUL_SPEAK_DURATION_MS);
-  }, [room, canUseFoulSpeak, isFoulSpeaking, cleanup]);
-
-  // Cleanup on unmount or when disabled
-  useEffect(() => {
-    return () => {
-      cleanup();
-    };
-  }, [cleanup]);
-
-  // When disabled mid-foul-speak, stop it
-  useEffect(() => {
-    if (!canUseFoulSpeak && isFoulSpeaking) {
-      cleanup();
-      setIsFoulSpeaking(false);
-      setFoulSpeakTimeLeft(0);
-      // Re-mute when disabled
-      if (room) {
-        void room.localParticipant.setMicrophoneEnabled(false);
-      }
+      hasEndedRef.current = false;
+      return;
     }
-  }, [canUseFoulSpeak, isFoulSpeaking, room, cleanup]);
+
+    const updateTimeLeft = () => {
+      const startTime = new Date(foulSpeakStartedAt).getTime();
+      const elapsed = Date.now() - startTime;
+      const remaining = Math.max(0, FOULS.FOUL_SPEAK_DURATION_MS - elapsed);
+      const secondsLeft = Math.ceil(remaining / 1000);
+      setFoulSpeakTimeLeft(secondsLeft);
+
+      // Auto-end when time expires (only local player triggers server action)
+      if (remaining <= 0 && isLocal && !hasEndedRef.current) {
+        hasEndedRef.current = true;
+        void endFoulSpeak(gameId);
+      }
+    };
+
+    updateTimeLeft();
+    countdownRef.current = setInterval(updateTimeLeft, 100);
+
+    return () => {
+      if (countdownRef.current) {
+        clearInterval(countdownRef.current);
+        countdownRef.current = null;
+      }
+    };
+  }, [foulSpeakStartedAt, gameId, isLocal]);
+
+  const isFoulSpeaking = foulSpeakTimeLeft > 0;
+
+  // Start foul speak via server action
+  const startFoulSpeakAction = useCallback(async () => {
+    if (!canUseFoulSpeak || isFoulSpeaking) return;
+    hasEndedRef.current = false;
+    await startFoulSpeak(gameId);
+  }, [gameId, canUseFoulSpeak, isFoulSpeaking]);
+
+  // Force end foul speak when conditions change (e.g., becomes the speaker, phase changes)
+  useEffect(() => {
+    if (!canUseFoulSpeak && isFoulSpeaking && isLocal && !hasEndedRef.current) {
+      hasEndedRef.current = true;
+      void endFoulSpeak(gameId);
+    }
+  }, [canUseFoulSpeak, isFoulSpeaking, gameId, isLocal]);
 
   return {
     isFoulSpeaking,
     foulSpeakTimeLeft,
-    startFoulSpeak,
+    startFoulSpeakAction,
     canFoulSpeak: canUseFoulSpeak && !isFoulSpeaking,
     canShowFoulSpeakButton: canUseFoulSpeak,
     currentFouls,

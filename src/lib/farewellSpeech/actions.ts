@@ -22,6 +22,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { resetSpeakingState } from "@/lib/dayPhase/actions";
+import {
+  muteParticipantMicrophone,
+  muteAllParticipants,
+} from "@/lib/liveKit/actions";
 
 type ActionResult = { ok: true } | { ok: false; message: string };
 
@@ -62,6 +66,47 @@ async function verifyHost(
   }
 
   return { ok: true };
+}
+
+/**
+ * Helper to get player user ID from seat number.
+ */
+async function getPlayerIdFromSeat(
+  gameId: string,
+  seatNumber: number
+): Promise<string | null> {
+  const { data: player } = await adminClient
+    .from("game_players")
+    .select("player_id")
+    .eq("game_id", gameId)
+    .eq("seat_number", seatNumber)
+    .single();
+
+  return player?.player_id ?? null;
+}
+
+/**
+ * Helper to get all player IDs in a game (excluding host).
+ */
+async function getAllPlayerIds(
+  gameId: string,
+  maxSeats: number
+): Promise<string[]> {
+  const { data: players } = await adminClient
+    .from("game_players")
+    .select("player_id, seat_number")
+    .eq("game_id", gameId);
+
+  if (!players) return [];
+
+  return players
+    .filter(
+      (p) =>
+        p.player_id !== null &&
+        p.seat_number !== null &&
+        p.seat_number <= maxSeats
+    )
+    .map((p) => p.player_id!);
 }
 
 /**
@@ -270,6 +315,26 @@ export async function grantFarewellTime(gameId: string): Promise<ActionResult> {
     return { ok: true };
   }
 
+  // Get game info for maxSeats
+  const { data: game } = await adminClient
+    .from("games")
+    .select("max_players")
+    .eq("id", gameId)
+    .single();
+  const maxSeats = Number(game?.max_players ?? 12);
+
+  // Server-side muting: mute all players first
+  const allPlayerIds = await getAllPlayerIds(gameId, maxSeats);
+  await muteAllParticipants(gameId, allPlayerIds);
+
+  // Then unmute the farewell speaker
+  const speakerId = await getPlayerIdFromSeat(gameId, nextSpeaker);
+  if (speakerId) {
+    await muteParticipantMicrophone(gameId, speakerId, false).catch(
+      console.error
+    );
+  }
+
   // Grant time to the next speaker
   const { error: updateErr } = await adminClient
     .from("game_sessions")
@@ -330,6 +395,14 @@ export async function markDeadAndAdvance(
 
   if (currentSpeaker === null || speakingOrder.length === 0) {
     return { ok: false, message: "No active farewell speaker" };
+  }
+
+  // Server-side muting: mute the player being marked as dead
+  const deadPlayerId = await getPlayerIdFromSeat(gameId, currentSpeaker);
+  if (deadPlayerId) {
+    await muteParticipantMicrophone(gameId, deadPlayerId, true).catch(
+      console.error
+    );
   }
 
   // Mark current speaker as dead

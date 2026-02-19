@@ -1,76 +1,57 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { ConnectionState, Room as LiveKitRoom, Room } from "livekit-client";
+import { useMemo } from "react";
 import type { GameSessionState } from "@/types/game/type";
 import type { Tables } from "@/db/supabase/database.types";
 import { SPEAKING_STATE } from "@/lib/constants/game";
-import { useConnectionState } from "@livekit/components-react";
 
 /**
- * Hook that automatically mutes/unmutes the local participant's microphone
- * based on the game session state.
+ * Hook that determines speaking state for UI purposes.
  *
- * Logic:
- * 1. In lobby (no game session): everyone can talk
- * 2. Game started but no active speaking round:
- *    - If in a free-talk phase (introduction_phase, day_phase) with completed speaking round: can talk
- *    - Otherwise: muted by default
- * 3. Active speaking round (speaking_order.length > 0 && current_speaker_index >= 1):
- *    - If current_speaker_index === mySeatNumber → unmute
- *    - Otherwise → mute
- * 4. Paused state (current_speaker_index is negative seat number, not COMPLETED):
- *    - Everyone is muted, waiting for host to click "Next Speaker"
+ * NOTE: This hook NO LONGER controls muting/unmuting. All muting is now
+ * handled server-side via LiveKit's mutePublishedTrack API in server actions.
  *
- * This approach is resilient to reconnections since the state comes from the database
- * (via Supabase Realtime) rather than LiveKit metadata.
+ * This hook is kept for UI purposes:
+ * - Show speaking indicators
+ * - Display correct UI states
+ * - Know when local player should be speaking
  *
- * @param room - The LiveKit Room instance
  * @param gameSessionState - The current game session state from database
  * @param players - Array of game players (to find current user's seat)
  * @param userId - The current user's ID
- * @param isHost - Whether the current user is the host (hosts are never auto-muted)
- * @param enabled - Whether to enable this behavior (default: true)
+ * @param isHost - Whether the current user is the host
+ * @returns Speaking state information for UI rendering
  */
-export function useSpeakingAutoMute(
-  room: LiveKitRoom | null | undefined,
+export function useSpeakingState(
   gameSessionState: GameSessionState | null,
   players: Tables<"game_players">[],
   userId: string,
-  isHost: boolean,
-  enabled: boolean = true
-) {
-  const connectionState = useConnectionState(room ?? undefined);
-  const isConnected = connectionState === ConnectionState.Connected;
-  // Track previous mute state to avoid redundant updates
-  const prevShouldMuteRef = useRef<boolean | null>(null);
-
-  useEffect(() => {
-    if (!room || !enabled || isHost || !isConnected) return;
-
+  isHost: boolean
+): {
+  shouldBeSpeaking: boolean;
+  isSpeakingRoundActive: boolean;
+  isPaused: boolean;
+  isCompleted: boolean;
+  currentSpeakerSeat: number | null;
+  mySeatNumber: number | null;
+} {
+  return useMemo(() => {
     // Find current user's seat number
     const myPlayer = players.find((p) => p.player_id === userId);
     const mySeatNumber = myPlayer?.seat_number ?? null;
 
-    // No game session yet (lobby) → everyone can talk
+    // Default state when no game session
     if (!gameSessionState) {
-      if (prevShouldMuteRef.current !== false) {
-        prevShouldMuteRef.current = false;
-        void room.localParticipant.setMicrophoneEnabled(false);
-      }
-      return;
+      return {
+        shouldBeSpeaking: false,
+        isSpeakingRoundActive: false,
+        isPaused: false,
+        isCompleted: false,
+        currentSpeakerSeat: null,
+        mySeatNumber,
+      };
     }
 
-    // Can't determine seat after game started - stay muted for safety
-    if (mySeatNumber === null) {
-      if (prevShouldMuteRef.current !== true) {
-        prevShouldMuteRef.current = true;
-        void room.localParticipant.setMicrophoneEnabled(false);
-      }
-      return;
-    }
-
-    // Determine speaking state
     const speakingOrder = gameSessionState.speaking_order ?? [];
     const currentSpeakerIndex = gameSessionState.current_speaker_index ?? null;
 
@@ -84,27 +65,41 @@ export function useSpeakingAutoMute(
     const isPaused = SPEAKING_STATE.isPaused(currentSpeakerIndex);
 
     // Speaking round is completed when current_speaker_index is COMPLETED (-99)
-    // const isSpeakingRoundCompleted =
-    //   SPEAKING_STATE.isCompleted(currentSpeakerIndex);
+    const isCompleted = SPEAKING_STATE.isCompleted(currentSpeakerIndex);
 
-    let shouldMute: boolean;
+    // Determine if local player should be speaking
+    const shouldBeSpeaking =
+      !isHost &&
+      isSpeakingRoundActive &&
+      currentSpeakerIndex === mySeatNumber;
 
-    if (isSpeakingRoundActive) {
-      // During speaking round: only current speaker is unmuted
-      shouldMute = currentSpeakerIndex !== mySeatNumber;
-    } else if (isPaused) {
-      // Paused: everyone is muted, waiting for host to click "Next Speaker"
-      shouldMute = true;
-    } else {
-      // Game started but not in a speaking turn (completed, not started, etc.) → muted by default
-      shouldMute = true;
-    }
+    return {
+      shouldBeSpeaking,
+      isSpeakingRoundActive,
+      isPaused,
+      isCompleted,
+      currentSpeakerSeat: SPEAKING_STATE.isActive(currentSpeakerIndex)
+        ? currentSpeakerIndex
+        : null,
+      mySeatNumber,
+    };
+  }, [gameSessionState, players, userId, isHost]);
+}
 
-    // Avoid redundant updates
-    if (prevShouldMuteRef.current === shouldMute) return;
-    prevShouldMuteRef.current = shouldMute;
-
-    // Set microphone state
-    void room.localParticipant.setMicrophoneEnabled(!shouldMute);
-  }, [room, gameSessionState, players, userId, isHost, enabled, isConnected]);
+/**
+ * @deprecated Use useSpeakingState instead. This hook no longer controls muting.
+ * Muting is now handled server-side via LiveKit's mutePublishedTrack API.
+ *
+ * This function is kept for backwards compatibility but does nothing.
+ */
+export function useSpeakingAutoMute(
+  _room: unknown,
+  _gameSessionState: GameSessionState | null,
+  _players: Tables<"game_players">[],
+  _userId: string,
+  _isHost: boolean,
+  _enabled: boolean = true
+): void {
+  // No-op: Muting is now handled server-side
+  // This function is kept for backwards compatibility during migration
 }

@@ -134,13 +134,13 @@ export default function ParticipantComponent({
   const {
     isFoulSpeaking,
     foulSpeakTimeLeft,
-    startFoulSpeak,
+    startFoulSpeakAction: startFoulSpeak,
     canFoulSpeak,
     canShowFoulSpeakButton,
     currentFouls,
     canShowFoulButton,
   } = useFoulSpeak({
-    room,
+    gameId,
     player,
     isLocal,
     isFoulAllowedPhase,

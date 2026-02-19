@@ -58,6 +58,7 @@ export type Database = {
       }
       game_players: {
         Row: {
+          foul_speak_started_at: string | null
           fouls: number | null
           game_id: string | null
           id: string
@@ -69,6 +70,7 @@ export type Database = {
           state: string | null
         }
         Insert: {
+          foul_speak_started_at?: string | null
           fouls?: number | null
           game_id?: string | null
           id?: string
@@ -80,6 +82,7 @@ export type Database = {
           state?: string | null
         }
         Update: {
+          foul_speak_started_at?: string | null
           fouls?: number | null
           game_id?: string | null
           id?: string

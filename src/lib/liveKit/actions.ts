@@ -159,34 +159,101 @@ export async function mutePublishedTrack(
 /**
  * Mute or unmute a participant's microphone from the server.
  * This finds the microphone track server-side, so the client only needs to pass room and participant info.
+ *
+ * @param roomName - The LiveKit room name (game ID)
+ * @param participantIdentity - The participant's identity (user ID)
+ * @param muted - Whether to mute (true) or unmute (false)
+ * @returns Object with success status and optional error message
  */
 export async function muteParticipantMicrophone(
   roomName: string,
   participantIdentity: string,
   muted: boolean
-) {
-  const roomService = new RoomServiceClient(
-    process.env.NEXT_PUBLIC_LIVEKIT_URL!,
-    process.env.LIVEKIT_API_KEY!,
-    process.env.LIVEKIT_API_SECRET!
-  );
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  try {
+    const roomService = new RoomServiceClient(
+      process.env.NEXT_PUBLIC_LIVEKIT_URL!,
+      process.env.LIVEKIT_API_KEY!,
+      process.env.LIVEKIT_API_SECRET!
+    );
 
-  // Get participant info from server
-  const participant = await roomService.getParticipant(roomName, participantIdentity);
+    // Get participant info from server
+    const participant = await roomService.getParticipant(
+      roomName,
+      participantIdentity
+    );
 
-  // Find the microphone track
-  const audioTrack = participant.tracks.find(
-    (track) => track.source === TrackSource.MICROPHONE
-  );
+    // Find the microphone track
+    const audioTrack = participant.tracks.find(
+      (track) => track.source === TrackSource.MICROPHONE
+    );
 
-  if (!audioTrack?.sid) {
-    throw new Error("No microphone track found for participant");
+    if (!audioTrack?.sid) {
+      // Participant might not have published their mic yet - this is not a critical error
+      console.warn(
+        `[muteParticipantMicrophone] No microphone track for ${participantIdentity} in room ${roomName}`
+      );
+      return { ok: false, message: "No microphone track found" };
+    }
+
+    await roomService.mutePublishedTrack(
+      roomName,
+      participantIdentity,
+      audioTrack.sid,
+      muted
+    );
+
+    return { ok: true };
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    console.error(
+      `[muteParticipantMicrophone] Failed to ${muted ? "mute" : "unmute"} ${participantIdentity}:`,
+      errorMessage
+    );
+    return { ok: false, message: errorMessage };
   }
+}
 
-  await roomService.mutePublishedTrack(
-    roomName,
-    participantIdentity,
-    audioTrack.sid,
-    muted
+/**
+ * Mute all participants in a room except for the specified speaker.
+ * Used when transitioning speaking turns.
+ *
+ * @param roomName - The LiveKit room name (game ID)
+ * @param speakerIdentity - The identity of the participant who should be unmuted (or null to mute all)
+ * @param participantIdentities - Array of all participant identities in the room
+ */
+export async function muteAllExceptSpeaker(
+  roomName: string,
+  speakerIdentity: string | null,
+  participantIdentities: string[]
+): Promise<void> {
+  await Promise.all(
+    participantIdentities.map((identity) =>
+      muteParticipantMicrophone(
+        roomName,
+        identity,
+        identity !== speakerIdentity
+      ).catch((err) => {
+        console.error(
+          `[muteAllExceptSpeaker] Failed to set mute state for ${identity}:`,
+          err
+        );
+      })
+    )
   );
+}
+
+/**
+ * Mute all participants in a room.
+ * Used when pausing speaking or transitioning phases.
+ *
+ * @param roomName - The LiveKit room name (game ID)
+ * @param participantIdentities - Array of all participant identities in the room
+ */
+export async function muteAllParticipants(
+  roomName: string,
+  participantIdentities: string[]
+): Promise<void> {
+  await muteAllExceptSpeaker(roomName, null, participantIdentities);
 }

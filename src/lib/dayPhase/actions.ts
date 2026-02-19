@@ -17,6 +17,11 @@ import { computeSpeakingOrder, getNextSpeaker } from "@/lib/game/speakingOrder";
 import type { GameSessionState } from "@/types/game/type";
 import { FOULS, SPEAKING_STATE } from "@/lib/constants/game";
 import { createVotingSessionInternal } from "@/lib/voting/actions";
+import {
+  muteParticipantMicrophone,
+  muteAllParticipants,
+} from "@/lib/liveKit/actions";
+import { clearAllFoulSpeakStates } from "@/lib/fouls/actions";
 
 type ActionResult = { ok: true } | { ok: false; message: string };
 
@@ -47,6 +52,47 @@ async function verifyHost(
   }
 
   return { ok: true, game: gameRow };
+}
+
+/**
+ * Helper to get player user ID from seat number.
+ */
+async function getPlayerIdFromSeat(
+  gameId: string,
+  seatNumber: number
+): Promise<string | null> {
+  const { data: player } = await adminClient
+    .from("game_players")
+    .select("player_id")
+    .eq("game_id", gameId)
+    .eq("seat_number", seatNumber)
+    .single();
+
+  return player?.player_id ?? null;
+}
+
+/**
+ * Helper to get all player IDs in a game (excluding host).
+ */
+async function getAllPlayerIds(
+  gameId: string,
+  maxSeats: number
+): Promise<string[]> {
+  const { data: players } = await adminClient
+    .from("game_players")
+    .select("player_id, seat_number")
+    .eq("game_id", gameId);
+
+  if (!players) return [];
+
+  return players
+    .filter(
+      (p) =>
+        p.player_id !== null &&
+        p.seat_number !== null &&
+        p.seat_number <= maxSeats
+    )
+    .map((p) => p.player_id!);
 }
 
 /**
@@ -124,8 +170,28 @@ export async function startDayPhaseSpeaking(
     return { ok: false, message: updateErr.message };
   }
 
-  // Players will auto-mute/unmute themselves based on current_speaker_index
-  // via the useSpeakingAutoMute hook on the client
+  // Clear any foul speak states from previous phases
+  await clearAllFoulSpeakStates(gameId);
+
+  // Server-side muting: mute all except the opener
+  const speakerPlayerId = await getPlayerIdFromSeat(gameId, openerIndex);
+  const allPlayerIds = await getAllPlayerIds(gameId, maxSeats);
+
+  if (speakerPlayerId) {
+    await muteParticipantMicrophone(gameId, speakerPlayerId, false).catch(
+      console.error
+    );
+  }
+
+  // Mute all other players
+  for (const playerId of allPlayerIds) {
+    if (playerId !== speakerPlayerId) {
+      await muteParticipantMicrophone(gameId, playerId, true).catch(
+        console.error
+      );
+    }
+  }
+
   return { ok: true };
 }
 
@@ -174,6 +240,14 @@ export async function advanceToNextSpeaker(
   // Get next speaker
   const nextSpeaker = getNextSpeaker(lastSpeaker, speakingOrder);
 
+  // Get game info for maxSeats
+  const { data: game } = await adminClient
+    .from("games")
+    .select("max_players")
+    .eq("id", gameId)
+    .single();
+  const maxSeats = Number(game?.max_players ?? 12);
+
   if (nextSpeaker === null) {
     // All done - set current_speaker_index to COMPLETED marker
     const { error: updateErr } = await adminClient
@@ -188,8 +262,27 @@ export async function advanceToNextSpeaker(
       return { ok: false, message: updateErr.message };
     }
 
+    // Server-side muting: mute all players when speaking completes
+    const allPlayerIds = await getAllPlayerIds(gameId, maxSeats);
+    await muteAllParticipants(gameId, allPlayerIds);
+
     // Speaking round completed
     return { ok: true };
+  }
+
+  // Server-side muting: mute the previous speaker, unmute the next speaker
+  const previousSpeakerId = await getPlayerIdFromSeat(gameId, lastSpeaker);
+  const nextSpeakerId = await getPlayerIdFromSeat(gameId, nextSpeaker);
+
+  if (previousSpeakerId) {
+    await muteParticipantMicrophone(gameId, previousSpeakerId, true).catch(
+      console.error
+    );
+  }
+  if (nextSpeakerId) {
+    await muteParticipantMicrophone(gameId, nextSpeakerId, false).catch(
+      console.error
+    );
   }
 
   // Advance to next speaker
@@ -205,8 +298,6 @@ export async function advanceToNextSpeaker(
     return { ok: false, message: updateErr.message };
   }
 
-  // Players will auto-mute/unmute themselves based on current_speaker_index
-  // via the useSpeakingAutoMute hook on the client
   return { ok: true };
 }
 
@@ -245,6 +336,14 @@ export async function finishCurrentSpeaker(
   // Can only finish if there's an active speaker (positive seat number)
   if (!SPEAKING_STATE.isActive(currentSpeaker) || speakingOrder.length === 0) {
     return { ok: false, message: "No active speaker to finish" };
+  }
+
+  // Server-side muting: mute the current speaker when their turn ends
+  const currentSpeakerId = await getPlayerIdFromSeat(gameId, currentSpeaker!);
+  if (currentSpeakerId) {
+    await muteParticipantMicrophone(gameId, currentSpeakerId, true).catch(
+      console.error
+    );
   }
 
   // Set to paused state: negative of the current speaker's seat
@@ -486,6 +585,28 @@ export async function startNominatedPlayersSpeaking(
     return { ok: false, message: updateErr.message };
   }
 
+  // Get game info for maxSeats
+  const { data: game } = await adminClient
+    .from("games")
+    .select("max_players")
+    .eq("id", gameId)
+    .single();
+  const maxSeats = Number(game?.max_players ?? 12);
+
+  // Server-side muting: mute all except the first nominated speaker
+  const firstSpeakerId = await getPlayerIdFromSeat(gameId, firstSpeaker);
+  const allPlayerIds = await getAllPlayerIds(gameId, maxSeats);
+
+  // Mute all players first
+  await muteAllParticipants(gameId, allPlayerIds);
+
+  // Then unmute the first speaker
+  if (firstSpeakerId) {
+    await muteParticipantMicrophone(gameId, firstSpeakerId, false).catch(
+      console.error
+    );
+  }
+
   return { ok: true };
 }
 
@@ -588,9 +709,21 @@ export async function advanceToNextNominatedSpeaker(
   // Get next speaker
   const nextSpeaker = getNextSpeaker(lastSpeaker, speakingOrder);
 
+  // Get game info for maxSeats
+  const { data: game } = await adminClient
+    .from("games")
+    .select("max_players")
+    .eq("id", gameId)
+    .single();
+  const maxSeats = Number(game?.max_players ?? 12);
+
   if (nextSpeaker === null) {
     // All nominated players have spoken - transition to voting phase
     const nominatedPlayers = session.nominated_players ?? [];
+
+    // Server-side muting: mute all players when nominated speaking completes
+    const allPlayerIds = await getAllPlayerIds(gameId, maxSeats);
+    await muteAllParticipants(gameId, allPlayerIds);
 
     // Create voting session FIRST, before updating the phase
     // This prevents race condition where players fetch voting session before it exists
@@ -612,6 +745,21 @@ export async function advanceToNextNominatedSpeaker(
     }
 
     return { ok: true };
+  }
+
+  // Server-side muting: mute the previous speaker, unmute the next speaker
+  const previousSpeakerId = await getPlayerIdFromSeat(gameId, lastSpeaker);
+  const nextSpeakerId = await getPlayerIdFromSeat(gameId, nextSpeaker);
+
+  if (previousSpeakerId) {
+    await muteParticipantMicrophone(gameId, previousSpeakerId, true).catch(
+      console.error
+    );
+  }
+  if (nextSpeakerId) {
+    await muteParticipantMicrophone(gameId, nextSpeakerId, false).catch(
+      console.error
+    );
   }
 
   // Advance to next nominated speaker
@@ -674,6 +822,14 @@ export async function finishCurrentNominatedSpeaker(
   // Can only finish if there's an active speaker (positive seat number)
   if (!SPEAKING_STATE.isActive(currentSpeaker) || speakingOrder.length === 0) {
     return { ok: false, message: "No active speaker to finish" };
+  }
+
+  // Server-side muting: mute the current nominated speaker when their turn ends
+  const currentSpeakerId = await getPlayerIdFromSeat(gameId, currentSpeaker!);
+  if (currentSpeakerId) {
+    await muteParticipantMicrophone(gameId, currentSpeakerId, true).catch(
+      console.error
+    );
   }
 
   // Set to paused state: negative of the current speaker's seat
