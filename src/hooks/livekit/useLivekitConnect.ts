@@ -46,7 +46,7 @@ export function useLivekitConnect({
         if (isJoiningGame) return;
 
         const token = await generateLivekitAccessToken(gameId, userId, {
-          hidden: false, // Spectators are hidden from other participants
+          hidden: true, // Spectators are hidden from other participants
           roomAdmin: false,
           isSpectator: true,
         });

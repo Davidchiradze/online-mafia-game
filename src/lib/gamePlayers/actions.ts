@@ -129,23 +129,37 @@ async function leaveGamePlayerByUserId(
     return { ok: false, message: gameErr?.message || "Game not found" };
 
   if (!isGameStarted(gameRow.game_status)) {
-    const { error: deleteErr } = await adminClient
+    const { data: deleted, error: deleteErr } = await adminClient
       .from("game_players")
       .delete()
       .eq("game_id", gameId)
-      .eq("player_id", userId);
+      .eq("player_id", userId)
+      .select("id");
+
     if (deleteErr)
       return {
         ok: false,
         message: deleteErr.message || "Unable to leave game",
       };
+
+    // Check if any row was actually deleted
+    if (!deleted || deleted.length === 0) {
+      return { ok: false, message: "Player not found in game" };
+    }
   } else {
-    const { error: updateStateErr } = await adminClient
+    const { data: updated, error: updateStateErr } = await adminClient
       .from("game_players")
       .update({ state: "disconnected" })
       .eq("game_id", gameId)
-      .eq("player_id", userId);
+      .eq("player_id", userId)
+      .select("id");
+
     if (updateStateErr) return { ok: false, message: updateStateErr.message };
+
+    // Check if any row was actually updated
+    if (!updated || updated.length === 0) {
+      return { ok: false, message: "Player not found in game" };
+    }
   }
 
   return { ok: true };
