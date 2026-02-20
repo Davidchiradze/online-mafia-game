@@ -32,6 +32,7 @@ import type { NightPhaseSession } from "@/hooks/realtime";
 import type { VotingSession, VoteData } from "@/lib/liveKit/messageTypes";
 import { JOIN_REQUEST_STATUSES } from "@/lib/constants/game";
 import { leaveGamePlayer } from "@/lib/gamePlayers/actions";
+import { leaveAsSpectator } from "@/lib/spectators/actions";
 import { Tables } from "@/db/supabase/database.types";
 import type { PlayerRolesMap } from "@/types/game/type";
 
@@ -40,6 +41,8 @@ type GameRoomContextValue = {
   userId: string;
   hostUserId: string | null;
   isHost: boolean;
+  /** True if user is a spectator (view-only mode, validated server-side via database) */
+  isSpectator: boolean;
   room: LiveKitRoom;
   maxPlayers: number | null;
   livekitToken: string | null;
@@ -51,7 +54,7 @@ type GameRoomContextValue = {
   isJoiningGame: boolean;
   joinError: string | null;
   players: Tables<"game_players">[];
-  /** Current user's role (null if no role assigned yet) */
+  /** Current user's role (null if no role assigned yet, always null for spectators) */
   viewerRole: string | null;
   /** Map of player roles filtered by team visibility */
   playerRolesMap: PlayerRolesMap;
@@ -72,15 +75,18 @@ const GameRoomContext = createContext<GameRoomContextValue | null>(null);
 export function GameRoomProvider({
   userId,
   game,
+  isSpectator = false,
   children,
 }: PropsWithChildren<{
   game: GameRoom;
   userId: string;
+  /** If true, user is a validated spectator (has database record) */
+  isSpectator?: boolean;
 }>) {
   const { id: gameId, host_id, max_players: maxPlayers } = game;
 
   const [currentHostId, setCurrentHostId] = useState<string | null>(host_id);
-  const isHost = currentHostId === userId;
+  const isHost = !isSpectator && currentHostId === userId; // Spectators are never hosts
   const [hasPlayerRecord, setHasPlayerRecord] = useState(false);
   const [isJoiningGame, setIsJoiningGame] = useState(false);
   const [joinError, setJoinError] = useState<string | null>(null);
@@ -93,50 +99,63 @@ export function GameRoomProvider({
       new LiveKitRoom({
         adaptiveStream: true,
         dynacast: true,
+        videoCaptureDefaults:{
+          resolution:{ width: 320, height: 240 },
+          frameRate: 20
+        }
       })
   );
 
   // Disconnect handler - defined early so it can be used in hooks
   const disconnect = useCallback(async () => {
     try {
-      if (hasPlayerRecord) await leaveGamePlayer(gameId);
+      if (isSpectator) {
+        await leaveAsSpectator(gameId);
+      } else if (hasPlayerRecord) {
+        await leaveGamePlayer(gameId);
+      }
       room.disconnect();
     } catch {
       // noop
     }
-  }, [gameId, hasPlayerRecord, room]);
+  }, [gameId, hasPlayerRecord, isSpectator, room]);
 
   // Game session subscription (status + startGame action)
+  // Spectators can subscribe to game session updates immediately
   const { gameSessionState, startGame, setGameSessionState } = useGameSession(
     gameId,
     userId,
-    { enabled: hasPlayerRecord }
+    { enabled: isSpectator || hasPlayerRecord }
   );
 
   // Game players subscription
-  const players = useGamePlayers(gameId, hasPlayerRecord);
+  // Spectators need to see players too
+  const players = useGamePlayers(gameId, isSpectator || hasPlayerRecord);
 
   // Night phase session subscription (RLS removed temporarily - all players can see)
-  // Subscribe when game is in progress
+  // Subscribe when game is in progress (spectators can also view)
+  const isReady = isSpectator || hasPlayerRecord;
   const { currentNightSession: nightPhaseSession } =
-    useNightPhaseSessionListener(gameId, hasPlayerRecord && !!gameSessionState);
+    useNightPhaseSessionListener(gameId, isReady && !!gameSessionState);
 
   // Voting session subscription via LiveKit Data Channels - only during voting phase
   // Uses reliable delivery for guaranteed real-time updates
+  // Spectators can view voting but cannot participate
   const isVotingPhase = gameSessionState?.game_phase === "voting";
   const { votingSession, setVotingSession, voteData } = useLiveKitVotingListener(
     gameId,
     room,
-    hasPlayerRecord && isVotingPhase
+    isReady && isVotingPhase
   );
 
   // Player roles (fetched once, filtered by team visibility)
   // Auto-refetches on phase changes and when game finishes
+  // Spectators don't see any roles (treated like dead players - see visibility after game ends)
   const { viewerRole, playerRolesMap, getRoleForUser } = usePlayerRoles(
     gameId,
     userId,
     {
-      enabled: hasPlayerRecord && !!gameSessionState,
+      enabled: !isSpectator && hasPlayerRecord && !!gameSessionState,
       gamePhase: gameSessionState?.game_phase,
       isGameFinished: gameSessionState?.is_finished,
     }
@@ -149,7 +168,7 @@ export function GameRoomProvider({
       redirectOnDisconnect: true,
       redirectPath: "/lobby",
     },
-    hasPlayerRecord
+    isSpectator || hasPlayerRecord
   );
 
   // Handle tab close/unload events to ensure cleanup
@@ -160,13 +179,20 @@ export function GameRoomProvider({
   //   onCleanup: disconnect,
   // });
 
-  useJoinPermissionListener({ gameId, room, hasPlayerRecord, setJoinStatus });
+  // Spectators don't need join permission or player seat hooks
+  useJoinPermissionListener({
+    gameId,
+    room,
+    hasPlayerRecord: !isSpectator && hasPlayerRecord,
+    setJoinStatus,
+  });
 
+  // Only non-spectators need to ensure a player seat
   useEnsurePlayerSeat({
     gameId,
     isHost,
     joinStatus,
-    hasPlayerRecord,
+    hasPlayerRecord: isSpectator || hasPlayerRecord, // Skip for spectators
     setIsJoiningGame,
     setJoinError,
     setHasPlayerRecord,
@@ -183,10 +209,13 @@ export function GameRoomProvider({
     joinError,
     room,
     setLivekitToken,
+    isSpectator,
   });
 
   // Listen to my join request updates (kick -> disconnect)
+  // Spectators don't have join requests
   useMyJoinRequestStatus(gameId, userId, (nextStatus) => {
+    if (isSpectator) return;
     setJoinStatus(nextStatus);
     if (nextStatus === JOIN_REQUEST_STATUSES.REJECTED) {
       room.disconnect();
@@ -197,7 +226,9 @@ export function GameRoomProvider({
   useGameHostSubscription(
     gameId,
     (newHostId) => {
-      setCurrentHostId(newHostId);
+      if (!isSpectator) {
+        setCurrentHostId(newHostId);
+      }
     },
     true
   );
@@ -209,6 +240,7 @@ export function GameRoomProvider({
       userId,
       hostUserId: currentHostId,
       isHost,
+      isSpectator,
       room,
       livekitToken,
       joinStatus,
@@ -216,6 +248,10 @@ export function GameRoomProvider({
       setGameSessionState,
       maxPlayers,
       startGame: async () => {
+        // Spectators cannot start games
+        if (isSpectator) {
+          return { ok: false, message: "Spectators cannot start games" };
+        }
         const res = await startGame();
         return {
           ok: Boolean(res?.ok),
@@ -239,6 +275,7 @@ export function GameRoomProvider({
       userId,
       currentHostId,
       isHost,
+      isSpectator,
       room,
       livekitToken,
       maxPlayers,

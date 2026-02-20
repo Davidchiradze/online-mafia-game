@@ -8,10 +8,11 @@ import {
 import { Room, Track } from "livekit-client";
 import "@livekit/components-styles";
 import PlayerCircle from "@/components/game/PlayerCircle";
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import FloatingOptions from "./FloatingOptions";
 import { useRoleAssignmentNotification } from "@/hooks/game";
 import { useSpeakingAutoMute, useDeadPlayerMute } from "@/hooks/livekit";
+import { useFullscreen } from "@/hooks/ui";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import RoleRevealModal from "@/components/modals/RoleRevealModal";
@@ -31,9 +32,8 @@ export default function LiveKitTestComponent({
   isHost: boolean;
 }) {
   const { disconnect, viewerRole, gameSessionState, players } = useGameRoom();
-  // Connect to room
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  const { isFullscreen, toggleFullscreen } = useFullscreen(containerRef);
 
   // Role assignment notification - triggers modal when role is first assigned
   const { showRoleModal, role, description, closeRoleModal } =
@@ -46,45 +46,8 @@ export default function LiveKitTestComponent({
   // Disable microphone and camera for dead players
   // Dead players cannot speak or show video for the rest of the game
   // When game is finished (gameSessionState.is_finished), all cameras are enabled for role reveal
-  const isGameFinished = Boolean(gameSessionState?.is_finished);
+  const isGameFinished = Boolean(gameSessionState?.is_finished)
   useDeadPlayerMute(room, players, userId, isGameFinished);
-
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(Boolean(document.fullscreenElement));
-    };
-
-    document.addEventListener("fullscreenchange", handleFullscreenChange);
-    return () =>
-      document.removeEventListener("fullscreenchange", handleFullscreenChange);
-  }, []);
-
-  const enterFullscreen = async () => {
-    if (!containerRef.current) return;
-    if (document.fullscreenElement) return;
-    try {
-      await containerRef.current.requestFullscreen();
-    } catch {
-      // noop
-    }
-  };
-
-  const exitFullscreen = async () => {
-    if (!document.fullscreenElement) return;
-    try {
-      await document.exitFullscreen();
-    } catch {
-      // noop
-    }
-  };
-
-  const toggleFullscreen = () => {
-    if (isFullscreen) {
-      void exitFullscreen();
-    } else {
-      void enterFullscreen();
-    }
-  };
 
   return (
     <RoomContext.Provider value={room}>

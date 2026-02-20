@@ -14,6 +14,8 @@ export async function generateLivekitAccessToken(
   permissions: {
     hidden: boolean;
     roomAdmin: boolean;
+    /** If true, participant is a spectator with view-only access (no publishing) */
+    isSpectator?: boolean;
   }
 ) {
   // Resolve participant display name from the authenticated user
@@ -35,12 +37,15 @@ export async function generateLivekitAccessToken(
     }
   );
 
+  // Spectators can only subscribe (view-only), not publish
+  const isSpectator = permissions.isSpectator ?? false;
+
   const videoGrant: VideoGrant = {
     room: roomId,
     roomJoin: true,
-    canPublish: true,
+    canPublish: !isSpectator, // Spectators cannot publish
     canSubscribe: true,
-    hidden: permissions.hidden || false,
+    hidden: permissions.hidden || isSpectator, // Spectators are hidden
     roomAdmin: permissions.roomAdmin || false,
   };
 
