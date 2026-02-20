@@ -35,6 +35,8 @@ export default function LobbyContent({ user, initialSessions }: Props) {
   };
 
   const handleGameRowClick = (session: GameRoom) => {
+    // Always navigate to the game page - server-side logic will determine
+    // if user should see spectator prompt (for playing games where user is not a player)
     router.push(`/game/${session.id}`);
   };
 

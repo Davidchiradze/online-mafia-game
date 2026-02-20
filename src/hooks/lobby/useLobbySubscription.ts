@@ -2,7 +2,7 @@
 
 import { useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { GameRoom, DbGamePlayer } from "@/types/game/type";
+import { GameRoom, DbGamePlayer, GameSpectator } from "@/types/game/type";
 import { Tables } from "@/db/supabase/database.types";
 
 type GameRow = Tables<"games">;
@@ -28,6 +28,7 @@ export function useLobbySubscription(
                 game_status: newGame.game_status as GameRoom["game_status"],
                 max_players: newGame.max_players,
                 players: [],
+                spectators: [],
                 created_at: newGame.created_at!,
                 updated_at: newGame.updated_at!,
             };
@@ -98,6 +99,52 @@ export function useLobbySubscription(
         [setSessions]
     );
 
+    const handlePlayerUpdate = useCallback(
+        (player: DbGamePlayer) => {
+            setSessions((prev) =>
+                prev.map((s) =>
+                    s.id === player.game_id
+                        ? {
+                            ...s,
+                            players: s.players.map((p) =>
+                                p.id === player.id ? player : p
+                            ),
+                        }
+                        : s
+                )
+            );
+        },
+        [setSessions]
+    );
+
+    const handleSpectatorInsert = useCallback(
+        (spectator: GameSpectator) => {
+            setSessions((prev) =>
+                prev.map((s) =>
+                    s.id === spectator.game_id
+                        ? {
+                            ...s,
+                            spectators: [...s.spectators, spectator],
+                        }
+                        : s
+                )
+            );
+        },
+        [setSessions]
+    );
+
+    const handleSpectatorDelete = useCallback(
+        (spectatorId: string) => {
+            setSessions((prev) =>
+                prev.map((s) => ({
+                    ...s,
+                    spectators: s.spectators.filter((sp) => sp.id !== spectatorId),
+                }))
+            );
+        },
+        [setSessions]
+    );
+
     useEffect(() => {
         const supabase = createClient();
 
@@ -158,6 +205,20 @@ export function useLobbySubscription(
             .on(
                 "postgres_changes",
                 {
+                    event: "UPDATE",
+                    schema: "public",
+                    table: "game_players",
+                },
+                (payload) => {
+                    const updatedPlayer = payload.new as DbGamePlayer;
+                    if (updatedPlayer.game_id) {
+                        handlePlayerUpdate(updatedPlayer);
+                    }
+                }
+            )
+            .on(
+                "postgres_changes",
+                {
                     event: "DELETE",
                     schema: "public",
                     table: "game_players",
@@ -169,11 +230,40 @@ export function useLobbySubscription(
                     }
                 }
             )
+            // Subscribe to game_spectators table changes
+            .on(
+                "postgres_changes",
+                {
+                    event: "INSERT",
+                    schema: "public",
+                    table: "game_spectators",
+                },
+                (payload) => {
+                    const newSpectator = payload.new as GameSpectator;
+                    if (newSpectator.game_id) {
+                        handleSpectatorInsert(newSpectator);
+                    }
+                }
+            )
+            .on(
+                "postgres_changes",
+                {
+                    event: "DELETE",
+                    schema: "public",
+                    table: "game_spectators",
+                },
+                (payload) => {
+                    const oldSpectator = payload.old as { id?: string };
+                    if (oldSpectator.id) {
+                        handleSpectatorDelete(oldSpectator.id);
+                    }
+                }
+            )
             .subscribe();
 
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [handleGameInsert, handleGameUpdate, handleGameDelete, handlePlayerInsert, handlePlayerDelete]);
+    }, [handleGameInsert, handleGameUpdate, handleGameDelete, handlePlayerInsert, handlePlayerUpdate, handlePlayerDelete, handleSpectatorInsert, handleSpectatorDelete]);
 }
 

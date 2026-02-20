@@ -195,3 +195,9 @@ export const VOTING = {
   /** Minimum percentage for "both leave" vote to pass (>50%) */
   BOTH_LEAVE_THRESHOLD: 0.5,
 } as const;
+
+// Spectator Constants
+export const SPECTATOR = {
+  /** Maximum number of spectators allowed per game */
+  MAX_SPECTATORS_PER_GAME: 5,
+} as const;

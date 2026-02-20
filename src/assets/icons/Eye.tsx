@@ -1,0 +1,28 @@
+import React from "react";
+import type { IconProps } from "./FullscreenEnter";
+
+export default function EyeIcon({
+  title = "Eye",
+  ...props
+}: IconProps) {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden={title ? undefined : true}
+      role={title ? "img" : "presentation"}
+      {...props}
+    >
+      {title ? <title>{title}</title> : null}
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+

@@ -6,7 +6,7 @@ import {
   GAME_TYPE_MAX_PLAYER_NUMBER,
   JOIN_REQUEST_STATUSES,
 } from "@/lib/constants/game";
-import { GameRoom, JoinRequest, DbGamePlayer } from "@/types/game/type";
+import { GameRoom, JoinRequest, DbGamePlayer, GameSpectator } from "@/types/game/type";
 import { Tables } from "@/db/supabase/database.types";
 
 function generateGameCode() {
@@ -102,6 +102,7 @@ export async function createGameRoom(input: {
     game_status: inserted.game_status as GameRoom["game_status"],
     max_players: inserted.max_players,
     players: [],
+    spectators: [],
     created_at: inserted.created_at!,
     updated_at: inserted.updated_at!,
   };
@@ -126,6 +127,25 @@ export async function fetchGamePlayersForRoom(
   }
 
   return { players: data };
+}
+
+/**
+ * Fetch spectators for a single game room from game_spectators table.
+ * Returns spectators array with full spectator data.
+ */
+export async function fetchGameSpectatorsForRoom(
+  gameId: string
+): Promise<{ spectators: GameSpectator[] }> {
+  const { data, error } = await adminClient
+    .from("game_spectators")
+    .select("*")
+    .eq("game_id", gameId);
+
+  if (error || !data) {
+    return { spectators: [] };
+  }
+
+  return { spectators: data };
 }
 
 export async function fetchAllGameRooms(): Promise<
@@ -153,10 +173,11 @@ export async function fetchAllGameRooms(): Promise<
   >;
   const rows = (data ?? []) as GameSelect[];
 
-  // Fetch players for each game using the shared function
+  // Fetch players and spectators for each game using the shared functions
   const sessions: GameRoom[] = await Promise.all(
     rows.map(async (row) => {
       const { players } = await fetchGamePlayersForRoom(row.id);
+      const { spectators } = await fetchGameSpectatorsForRoom(row.id);
       return {
         id: row.id,
         name: row.name,
@@ -165,6 +186,7 @@ export async function fetchAllGameRooms(): Promise<
         game_status: row.game_status as GameRoom["game_status"],
         max_players: row.max_players,
         players,
+        spectators,
         created_at: row.created_at!,
         updated_at: row.updated_at!,
       };
@@ -189,6 +211,7 @@ export async function fetchGameRoomById(
 
   const gameRow = data;
   const { players } = await fetchGamePlayersForRoom(id);
+  const { spectators } = await fetchGameSpectatorsForRoom(id);
   const session: GameRoom = {
     id: gameRow.id,
     name: gameRow.name,
@@ -197,6 +220,7 @@ export async function fetchGameRoomById(
     game_status: gameRow.game_status as GameRoom["game_status"],
     max_players: gameRow.max_players,
     players: players,
+    spectators: spectators,
     created_at: gameRow.created_at!,
     updated_at: gameRow.updated_at!,
   };

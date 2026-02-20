@@ -19,6 +19,8 @@ type FloatingOptionsProps = {
   canFinishGame: boolean;
   onToggleFullscreen: () => void;
   onLeaveRoom: () => void;
+  /** Custom label for the leave button (default: "Leave room") */
+  leaveLabel?: string;
 };
 
 export default function FloatingOptions({
@@ -28,6 +30,7 @@ export default function FloatingOptions({
   canFinishGame,
   onToggleFullscreen,
   onLeaveRoom,
+  leaveLabel = "Leave room",
 }: FloatingOptionsProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -68,8 +71,8 @@ export default function FloatingOptions({
             </button>
             <button
               type="button"
-              aria-label="Leave room"
-              title="Leave room"
+              aria-label={leaveLabel}
+              title={leaveLabel}
               onClick={onLeaveRoom}
               className="rounded-full border border-white/10 bg-black/40 backdrop-blur p-3 text-white hover:bg-black/50 transition"
             >

@@ -5,14 +5,16 @@ import Room from "@/components/game/Room";
 import { redirect } from "next/navigation";
 import { GameRoomProvider } from "@/lib/context/gameRoomContext";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import SpectatorJoinPrompt from "@/components/game/SpectatorJoinPrompt";
+import { isUserSpectator } from "@/lib/spectators/actions";
 
 type PageProps = {
   params: Promise<{ id: string }>;
-  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
 export default async function GamePage({ params }: PageProps) {
   const { id } = await params;
+
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) {
@@ -24,22 +26,40 @@ export default async function GamePage({ params }: PageProps) {
   if (!sessionRes.ok) {
     redirect("/lobby");
   }
-  // if (
-  //   Number(sessionRes.data.max_players) +
-  //     1 -
-  //     sessionRes.data.players.length ===
-  //     0
-  // ) {
-  //   return (
-  //     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-black">
-  //       <div className="flex h-full items-center justify-center text-gray-600 dark:text-gray-400">
-  //         <span className="animate-pulse">Game is full</span>
-  //       </div>
-  //     </div>
-  //   );
-  // }
+
   const game = sessionRes.data;
 
+  // Server-side spectator check - database record is the source of truth
+  // Only check if game is playing (spectators can only exist for in-progress games)
+  let isSpectator = false;
+  if (game.game_status === "playing" && userId) {
+    const spectatorCheck = await isUserSpectator(id);
+    isSpectator = spectatorCheck.ok && spectatorCheck.isSpectator;
+  }
+
+  // Check if user is a player in this game
+  const isPlayer = game.players.some((p) => p.player_id === userId);
+  const isHost = game.host_id === userId;
+
+  // Gate: Show spectator prompt BEFORE mounting GameRoomProvider
+  // This avoids instantiating LiveKit room and subscriptions unnecessarily
+  const shouldShowSpectatorPrompt =
+    game.game_status === "playing" && !isPlayer && !isHost && !isSpectator;
+
+  if (shouldShowSpectatorPrompt) {
+    return (
+      <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-black h-[100vh]">
+        <div className="mx-auto px-4 sm:px-6 lg:px-8 py-6 h-full flex items-center justify-center">
+          <SpectatorJoinPrompt
+            gameId={id}
+            currentSpectatorCount={game.spectators?.length ?? 0}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Normal flow: User is player, host, or validated spectator
   return (
     <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-black h-[100vh]">
       <div className="mx-auto px-4 sm:px-6 lg:px-8 py-6 h-full flex items-center justify-center">
@@ -50,7 +70,11 @@ export default async function GamePage({ params }: PageProps) {
             </div>
           ) : (
             <Suspense>
-              <GameRoomProvider userId={userId} game={game}>
+              <GameRoomProvider
+                userId={userId}
+                game={game}
+                isSpectator={isSpectator}
+              >
                 <Room />
               </GameRoomProvider>
             </Suspense>
