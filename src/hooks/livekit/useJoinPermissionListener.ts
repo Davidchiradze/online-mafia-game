@@ -12,18 +12,25 @@ type Params = {
   room: LiveKitRoom;
   hasPlayerRecord: boolean;
   setJoinStatus: (status: JoinRequest["status"] | undefined) => void;
+  /** If false, skip join permission check entirely (e.g., for spectators) */
+  enabled?: boolean;
 };
 
 /**
  * Listens for join permission status and keeps room lifecycle aligned.
+ * Disabled for spectators who don't need join permission.
  */
 export function useJoinPermissionListener({
   gameId,
   room,
   hasPlayerRecord,
   setJoinStatus,
+  enabled = true,
 }: Params) {
   useEffect(() => {
+    // Skip join permission check if disabled (e.g., spectators)
+    if (!enabled) return;
+
     let mounted = true;
     checkOrRequestJoin(gameId).then((res) => {
       if (!mounted) return;
@@ -38,6 +45,6 @@ export function useJoinPermissionListener({
       if (hasPlayerRecord) void leaveGamePlayer(gameId);
       room.disconnect();
     };
-  }, [gameId, room, hasPlayerRecord, setJoinStatus]);
+  }, [gameId, room, hasPlayerRecord, setJoinStatus, enabled]);
 }
 

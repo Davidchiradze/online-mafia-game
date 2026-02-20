@@ -185,6 +185,7 @@ export function GameRoomProvider({
     room,
     hasPlayerRecord: !isSpectator && hasPlayerRecord,
     setJoinStatus,
+    enabled: !isSpectator, // Disable for spectators - they don't need join requests
   });
 
   // Only non-spectators need to ensure a player seat
