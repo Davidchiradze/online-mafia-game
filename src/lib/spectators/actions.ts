@@ -118,12 +118,23 @@ export async function leaveAsSpectator(
         return { ok: false, message: "Not authenticated" };
     }
 
+    return leaveSpectatorAdmin(gameId, user.id);
+}
+
+/**
+ * Admin function to remove a spectator by userId.
+ * Used by webhooks when a spectator disconnects from the LiveKit room.
+ */
+export async function leaveSpectatorAdmin(
+    gameId: string,
+    userId: string
+): Promise<{ ok: true } | { ok: false; message: string }> {
     // Delete the spectator record using admin client
     const { error: deleteError } = await adminClient
         .from("game_spectators")
         .delete()
         .eq("game_id", gameId)
-        .eq("user_id", user.id);
+        .eq("user_id", userId);
 
     if (deleteError) {
         return { ok: false, message: deleteError.message };

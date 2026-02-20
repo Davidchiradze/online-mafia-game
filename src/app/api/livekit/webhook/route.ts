@@ -5,6 +5,7 @@ import {
   leaveGamePlayerAdmin,
 } from "@/lib/gamePlayers/actions";
 import { deleteGameRoomAdmin } from "@/lib/gameRoom/actions";
+import { leaveSpectatorAdmin } from "@/lib/spectators/actions";
 
 /**
  * LiveKit Webhook Endpoint
@@ -82,13 +83,20 @@ export async function POST(request: NextRequest) {
       const gameId = room.name;
       const userId = participant.identity;
 
-      // Use the existing leaveGamePlayerAdmin action to handle disconnection
-      const result = await leaveGamePlayerAdmin(gameId, userId);
+      // Try to remove as player first, then as spectator
+      // A user can only be one or the other, so we try both
+      const playerResult = await leaveGamePlayerAdmin(gameId, userId);
 
-      if (!result.ok) {
-        // Don't return error - webhook should acknowledge receipt
-      } else {
+      if (playerResult.ok) {
         console.log(`Player ${userId} disconnected from game ${gameId}`);
+      } else {
+        // If not a player, try removing as spectator
+        const spectatorResult = await leaveSpectatorAdmin(gameId, userId);
+        
+        if (spectatorResult.ok) {
+          console.log(`Spectator ${userId} disconnected from game ${gameId}`);
+        }
+        // If neither succeeds, that's fine - participant may have already been removed
       }
     }
 
