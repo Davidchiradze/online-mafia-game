@@ -101,7 +101,7 @@ export function GameRoomProvider({
         dynacast: true,
         videoCaptureDefaults:{
           resolution:{ width: 320, height: 240 },
-          frameRate: 20
+          frameRate: 30
         }
       })
   );
