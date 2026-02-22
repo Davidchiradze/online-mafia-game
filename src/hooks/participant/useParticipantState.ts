@@ -13,7 +13,6 @@ export interface ParticipantStateResult {
   participantId: string | undefined;
   isViewerHost: boolean;
   isTargetHost: boolean;
-  isDisconnected: boolean;
 }
 
 /**
@@ -33,13 +32,6 @@ export function useParticipantState(
   const isViewerHost = currentUserId === hostUserId;
   const isTargetHost = participantId === hostUserId;
 
-  const isDisconnected = useMemo(() => {
-    //temporary fix to reload the page if the player is disconnected
-    // if (isLocal && player?.state === "disconnected")
-    //   void window.location.reload();
-
-    return player?.state === "disconnected";
-  }, [player, isLocal]);
 
   return {
     participant,
@@ -49,6 +41,5 @@ export function useParticipantState(
     participantId,
     isViewerHost,
     isTargetHost,
-    isDisconnected,
   };
 }

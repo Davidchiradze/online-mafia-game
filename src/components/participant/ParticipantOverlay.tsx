@@ -9,7 +9,6 @@ import ParticipantCover from "@/components/video/ParticipantCover";
 
 interface ParticipantOverlayProps {
   visibilityState: VisibilityState;
-  isDisconnected: boolean;
   coverMessage?: string;
   trackRef: TrackReferenceOrPlaceholder | undefined;
 }
@@ -20,7 +19,6 @@ interface ParticipantOverlayProps {
  */
 export default function ParticipantOverlay({
   visibilityState,
-  isDisconnected,
   coverMessage,
   trackRef,
 }: ParticipantOverlayProps) {
@@ -28,11 +26,11 @@ export default function ParticipantOverlay({
     return <ParticipantCover isDead={true} />;
   }
 
-  if (visibilityState === VisibilityState.COVERED || !trackRef) {
+  if (visibilityState === VisibilityState.COVERED) {
     return <ParticipantCover message={coverMessage} />;
   }
 
-  if (isDisconnected) {
+  if (!trackRef) {
     return <ParticipantCover isDisconnected={true} />;
   }
 

@@ -63,7 +63,6 @@ export default function ParticipantComponent({
     participantId,
     isViewerHost,
     isTargetHost,
-    isDisconnected,
   } = useParticipantState(trackRef, player, currentUserId, hostUserId);
 
   // Ready state
@@ -85,13 +84,13 @@ export default function ParticipantComponent({
       participantId,
       hostUserId,
       isViewerHost,
-      gameSessionState
+      gameSessionState,
     );
 
   // Mobile ready visibility
   const { isMobileReadyVisible, handleTileClick } = useMobileReady(
     isLocal,
-    isTargetHost
+    isTargetHost,
   );
 
   // Nomination state
@@ -120,14 +119,14 @@ export default function ParticipantComponent({
     isMicEnabled,
     isFoulAllowedPhase,
     isTargetHost,
-    isTargetDead
+    isTargetDead,
   );
 
   // Speaking progress (uses different durations based on phase)
   const speakingProgress = useSpeakingProgress(
     gameSessionState?.speaker_started_at,
     isSpeaking,
-    gameSessionState?.game_phase
+    gameSessionState?.game_phase,
   );
 
   // Foul-related functionality
@@ -159,7 +158,7 @@ export default function ParticipantComponent({
     player.seat_number,
     isViewerHost,
     isTargetHost,
-    player.is_alive !== false
+    player.is_alive !== false,
   );
 
   // Yakuza target selection
@@ -172,7 +171,7 @@ export default function ParticipantComponent({
     player.seat_number,
     isViewerHost,
     isTargetHost,
-    player.is_alive !== false
+    player.is_alive !== false,
   );
 
   // Doctor heal selection
@@ -186,7 +185,7 @@ export default function ParticipantComponent({
     player.seat_number,
     isViewerHost,
     isTargetHost,
-    player.is_alive !== false
+    player.is_alive !== false,
   );
 
   // Vote indicator (voting phase)
@@ -206,7 +205,7 @@ export default function ParticipantComponent({
 
   const handleMutePlayer = useCallback(async () => {
     if (!room || !player?.player_id) return;
-    
+
     try {
       await muteParticipantMicrophone(room.name, player.player_id, true);
     } catch (error) {
@@ -223,7 +222,6 @@ export default function ParticipantComponent({
       {/* Video / Cover layer */}
       <ParticipantOverlay
         visibilityState={visibilityState}
-        isDisconnected={isDisconnected}
         coverMessage={coverMessage}
         trackRef={trackRef}
       />
