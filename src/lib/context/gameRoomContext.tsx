@@ -99,11 +99,11 @@ export function GameRoomProvider({
       new LiveKitRoom({
         adaptiveStream: true,
         dynacast: true,
-        videoCaptureDefaults:{
-          resolution:{ width: 320, height: 240 },
-          frameRate: 30
-        }
-      })
+        videoCaptureDefaults: {
+          resolution: { width: 320, height: 240 },
+          frameRate: 30,
+        },
+      }),
   );
 
   // Disconnect handler - defined early so it can be used in hooks
@@ -125,7 +125,7 @@ export function GameRoomProvider({
   const { gameSessionState, startGame, setGameSessionState } = useGameSession(
     gameId,
     userId,
-    { enabled: isSpectator || hasPlayerRecord }
+    { enabled: isSpectator || hasPlayerRecord },
   );
 
   // Game players subscription
@@ -142,23 +142,20 @@ export function GameRoomProvider({
   // Uses reliable delivery for guaranteed real-time updates
   // Spectators can view voting but cannot participate
   const isVotingPhase = gameSessionState?.game_phase === "voting";
-  const { votingSession, setVotingSession, voteData } = useLiveKitVotingListener(
-    gameId,
-    room,
-    isReady && isVotingPhase
-  );
+  const { votingSession, setVotingSession, voteData } =
+    useLiveKitVotingListener(gameId, room, isReady && isVotingPhase);
 
   // Player roles (fetched once, filtered by team visibility)
   // Auto-refetches on phase changes and when game finishes
-  // Spectators don't see any roles (treated like dead players - see visibility after game ends)
+  // Spectators don't see any roles until game finishes (treated like dead players - see visibility after game ends)
   const { viewerRole, playerRolesMap, getRoleForUser } = usePlayerRoles(
     gameId,
     userId,
     {
-      enabled: !isSpectator && hasPlayerRecord && !!gameSessionState,
+      enabled: (isSpectator || hasPlayerRecord) && !!gameSessionState,
       gamePhase: gameSessionState?.game_phase,
       isGameFinished: gameSessionState?.is_finished,
-    }
+    },
   );
 
   // Redirect back to lobby on disconnect by default
@@ -168,7 +165,7 @@ export function GameRoomProvider({
       redirectOnDisconnect: true,
       redirectPath: "/lobby",
     },
-    isSpectator || hasPlayerRecord
+    isSpectator || hasPlayerRecord,
   );
 
   // Handle tab close/unload events to ensure cleanup
@@ -231,7 +228,7 @@ export function GameRoomProvider({
         setCurrentHostId(newHostId);
       }
     },
-    true
+    true,
   );
 
   // In the future, we may subscribe to host changes in a hook and update currentHostId here.
@@ -295,7 +292,7 @@ export function GameRoomProvider({
       votingSession,
       setVotingSession,
       voteData,
-    ]
+    ],
   );
 
   return (
