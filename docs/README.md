@@ -20,6 +20,7 @@ This documentation describes the architecture, patterns, and conventions used in
 - **[frontend.md](./frontend.md)** - React conventions, component patterns, UI guidelines
 - **[backend.md](./backend.md)** - Server actions, API routes, database patterns
 - **[decisions.md](./decisions.md)** - Architectural Decision Records (ADRs)
+- **[livekit-server.md](./livekit-server.md)** - Self-hosted LiveKit server (VPS setup, monitoring, maintenance)
 
 ## Core Principles
 
