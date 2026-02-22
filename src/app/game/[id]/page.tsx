@@ -6,7 +6,6 @@ import { redirect } from "next/navigation";
 import { GameRoomProvider } from "@/lib/context/gameRoomContext";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import SpectatorJoinPrompt from "@/components/game/SpectatorJoinPrompt";
-import { isUserSpectator } from "@/lib/spectators/actions";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -29,22 +28,16 @@ export default async function GamePage({ params }: PageProps) {
 
   const game = sessionRes.data;
 
-  // Server-side spectator check - database record is the source of truth
-  // Only check if game is playing (spectators can only exist for in-progress games)
-  let isSpectator = false;
-  if (game.game_status === "playing" && userId) {
-    const spectatorCheck = await isUserSpectator(id);
-    isSpectator = spectatorCheck.ok && spectatorCheck.isSpectator;
-  }
-
-  // Check if user is a player in this game
   const isPlayer = game.players.some((p) => p.player_id === userId);
   const isHost = game.host_id === userId;
 
-  // Gate: Show spectator prompt BEFORE mounting GameRoomProvider
-  // This avoids instantiating LiveKit room and subscriptions unnecessarily
+  // Non-players/hosts see the spectator prompt for in-progress games.
+  // A fresh game_spectators row is created each time they click join,
+  // and the webhook cleans it up on disconnect. No stale-row race conditions.
   const shouldShowSpectatorPrompt =
-    game.game_status === "playing" && !isPlayer && !isHost && !isSpectator;
+    (game.game_status === "playing" || game.game_status === "finished") &&
+    !isPlayer &&
+    !isHost;
 
   if (shouldShowSpectatorPrompt) {
     return (
@@ -52,6 +45,8 @@ export default async function GamePage({ params }: PageProps) {
         <div className="mx-auto px-4 sm:px-6 lg:px-8 py-6 h-full flex items-center justify-center">
           <SpectatorJoinPrompt
             gameId={id}
+            userId={userId!}
+            game={game}
             currentSpectatorCount={game.spectators?.length ?? 0}
           />
         </div>
@@ -59,7 +54,7 @@ export default async function GamePage({ params }: PageProps) {
     );
   }
 
-  // Normal flow: User is player, host, or validated spectator
+  // Normal flow: User is player or host
   return (
     <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-black h-[100vh]">
       <div className="mx-auto px-4 sm:px-6 lg:px-8 py-6 h-full flex items-center justify-center">
@@ -70,11 +65,7 @@ export default async function GamePage({ params }: PageProps) {
             </div>
           ) : (
             <Suspense>
-              <GameRoomProvider
-                userId={userId}
-                game={game}
-                isSpectator={isSpectator}
-              >
+              <GameRoomProvider userId={userId} game={game}>
                 <Room />
               </GameRoomProvider>
             </Suspense>

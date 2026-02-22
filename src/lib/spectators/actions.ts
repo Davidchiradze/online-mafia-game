@@ -54,17 +54,13 @@ export async function joinAsSpectator(
         return { ok: false, message: "You are already a player in this game" };
     }
 
-    // 3) Check if user is already a spectator
-    const { data: existingSpectator } = await supabase
+    // 3) Remove any existing spectator row for this user (stale from a previous
+    //    session / page refresh). This makes re-joining idempotent.
+    await adminClient
         .from("game_spectators")
-        .select("id")
+        .delete()
         .eq("game_id", gameId)
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-    if (existingSpectator) {
-        return { ok: false, message: "You are already spectating this game" };
-    }
+        .eq("user_id", user.id);
 
     // 4) Check spectator count
     const { count, error: countError } = await supabase

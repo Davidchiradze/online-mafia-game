@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { WebhookReceiver, RoomServiceClient } from "livekit-server-sdk";
+import { WebhookReceiver } from "livekit-server-sdk";
 import {
   joinGamePlayer,
   leaveGamePlayerAdmin,
@@ -28,28 +28,6 @@ const receiver = new WebhookReceiver(
   process.env.LIVEKIT_API_KEY!,
   process.env.LIVEKIT_API_SECRET!
 );
-
-const roomService = new RoomServiceClient(
-  process.env.NEXT_PUBLIC_LIVEKIT_URL!,
-  process.env.LIVEKIT_API_KEY!,
-  process.env.LIVEKIT_API_SECRET!
-);
-
-/**
- * Check whether a participant is still connected to the LiveKit room.
- * Used to avoid deleting DB rows for stale disconnect events (e.g. page refresh).
- */
-async function isParticipantStillConnected(
-  roomName: string,
-  identity: string
-): Promise<boolean> {
-  try {
-    const participants = await roomService.listParticipants(roomName);
-    return participants.some((p) => p.identity === identity);
-  } catch {
-    return false;
-  }
-}
 
 /**
  * POST /api/livekit/webhook
@@ -104,17 +82,6 @@ export async function POST(request: NextRequest) {
 
       const gameId = room.name;
       const userId = participant.identity;
-
-      // Guard against stale disconnect events (e.g. page refresh reconnects
-      // before the old participant_left webhook arrives). If the user already
-      // reconnected, skip the DB cleanup.
-      const stillConnected = await isParticipantStillConnected(gameId, userId);
-      if (stillConnected) {
-        console.log(
-          `Participant ${userId} already reconnected to ${gameId}, skipping removal`
-        );
-        return NextResponse.json({ received: true });
-      }
 
       // Try to remove as player first, then as spectator
       // A user can only be one or the other, so we try both

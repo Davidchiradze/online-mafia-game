@@ -1,34 +1,33 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter } from "next/navigation";
 import { joinAsSpectator } from "@/lib/spectators/actions";
 import { SPECTATOR } from "@/lib/constants/game";
+import { GameRoomProvider } from "@/lib/context/gameRoomContext";
+import Room from "@/components/game/Room";
+import type { GameRoom } from "@/types/game/type";
 
 type Props = {
   gameId: string;
+  userId: string;
+  game: GameRoom;
   currentSpectatorCount: number;
 };
 
 /**
  * Prompt shown when a user navigates to a game that's already in progress.
  * Allows them to join as a spectator (view-only mode).
- * Rendered at the page level before GameRoomProvider is mounted.
+ * After joining, renders GameRoomProvider directly (no page refresh needed).
  */
-export default function SpectatorJoinPrompt({
-  gameId,
-  currentSpectatorCount,
-}: Props) {
+export default function SpectatorJoinPrompt({ gameId, userId, game }: Props) {
   const router = useRouter();
   const [isJoining, setIsJoining] = useState(false);
+  const [hasJoined, setHasJoined] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const availableSlots =
-    SPECTATOR.MAX_SPECTATORS_PER_GAME - currentSpectatorCount;
-  const isFull = availableSlots <= 0;
-
   const handleJoinAsSpectator = async () => {
-    if (isJoining || isFull) return;
+    if (isJoining) return;
 
     setIsJoining(true);
     setError(null);
@@ -42,11 +41,11 @@ export default function SpectatorJoinPrompt({
         return;
       }
 
-      // Successfully joined - refresh the page to re-run server component
-      // This will now find the spectator record and render the game room
-      router.refresh();
+      setHasJoined(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to join as spectator");
+      setError(
+        err instanceof Error ? err.message : "Failed to join as spectator",
+      );
       setIsJoining(false);
     }
   };
@@ -54,6 +53,18 @@ export default function SpectatorJoinPrompt({
   const handleGoBack = () => {
     router.push("/lobby");
   };
+
+  if (hasJoined) {
+    return (
+      <div className="flex flex-col gap-6 h-full w-full sm:w-[80%] md:w-[90%] lg:w-[90%]">
+        <Suspense>
+          <GameRoomProvider userId={userId} game={game} isSpectator>
+            <Room />
+          </GameRoomProvider>
+        </Suspense>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-full items-center justify-center">
@@ -89,28 +100,9 @@ export default function SpectatorJoinPrompt({
 
           {/* Description */}
           <p className="text-gray-600 dark:text-gray-400 mb-6">
-            This game has already started. Would you like to join as a spectator?
+            This game has already started. Would you like to join as a
+            spectator?
           </p>
-
-          {/* Spectator slots info */}
-          <div className="bg-gray-100 dark:bg-gray-700/50 rounded-lg px-4 py-3 mb-6">
-            <p className="text-sm text-gray-700 dark:text-gray-300">
-              {isFull ? (
-                <span className="text-red-600 dark:text-red-400">
-                  Spectator slots are full ({SPECTATOR.MAX_SPECTATORS_PER_GAME}/
-                  {SPECTATOR.MAX_SPECTATORS_PER_GAME})
-                </span>
-              ) : (
-                <>
-                  <span className="font-medium">{availableSlots}</span> of{" "}
-                  <span className="font-medium">
-                    {SPECTATOR.MAX_SPECTATORS_PER_GAME}
-                  </span>{" "}
-                  spectator slots available
-                </>
-              )}
-            </p>
-          </div>
 
           {/* Error message */}
           {error && (
@@ -155,7 +147,7 @@ export default function SpectatorJoinPrompt({
             </button>
             <button
               onClick={handleJoinAsSpectator}
-              disabled={isJoining || isFull}
+              disabled={isJoining}
               className="flex-1 px-4 py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isJoining ? "Joining..." : "Join as Spectator"}
@@ -166,4 +158,3 @@ export default function SpectatorJoinPrompt({
     </div>
   );
 }
-
