@@ -199,5 +199,5 @@ export const VOTING = {
 // Spectator Constants
 export const SPECTATOR = {
   /** Maximum number of spectators allowed per game */
-  MAX_SPECTATORS_PER_GAME: 5,
+  MAX_SPECTATORS_PER_GAME: 7,
 } as const;
