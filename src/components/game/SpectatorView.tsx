@@ -3,6 +3,7 @@
 import {
   RoomAudioRenderer,
   RoomContext,
+  StartAudio,
   useTracks,
 } from "@livekit/components-react";
 import { Room, Track } from "livekit-client";
@@ -83,6 +84,7 @@ export default function SpectatorView({
           userId={userId}
         />
         <RoomAudioRenderer />
+        <StartAudio label="Click to allow audio playback" />
       </div>
     </RoomContext.Provider>
   );
