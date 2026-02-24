@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 
 type CollisionPadding =
@@ -17,9 +17,12 @@ type ClickableTooltipProps = {
   className?: string;
 };
 
+const CLOSE_DELAY_MS = 150;
+
 /**
  * A popover that works with both hover (desktop) and click (mobile).
  * Uses Radix Popover for proper click-outside handling.
+ * Hover uses a close delay so the user can move between trigger and content.
  */
 export default function ClickableTooltip({
   children,
@@ -31,6 +34,24 @@ export default function ClickableTooltip({
   className = "",
 }: ClickableTooltipProps) {
   const [open, setOpen] = useState(false);
+  const closeTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const cancelClose = useCallback(() => {
+    if (closeTimeout.current) {
+      clearTimeout(closeTimeout.current);
+      closeTimeout.current = null;
+    }
+  }, []);
+
+  const handleOpen = useCallback(() => {
+    cancelClose();
+    setOpen(true);
+  }, [cancelClose]);
+
+  const handleDelayedClose = useCallback(() => {
+    cancelClose();
+    closeTimeout.current = setTimeout(() => setOpen(false), CLOSE_DELAY_MS);
+  }, [cancelClose]);
 
   return (
     <PopoverPrimitive.Root open={open} onOpenChange={setOpen}>
@@ -45,8 +66,8 @@ export default function ClickableTooltip({
           }}
           role="button"
           tabIndex={0}
-          onMouseEnter={() => setOpen(true)}
-          onMouseLeave={() => setOpen(false)}
+          onMouseEnter={handleOpen}
+          onMouseLeave={handleDelayedClose}
         >
           {children}
         </span>
@@ -58,16 +79,19 @@ export default function ClickableTooltip({
           sideOffset={sideOffset}
           collisionPadding={collisionPadding}
           className={`z-50 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm shadow-xl border border-gray-200 dark:border-gray-700 p-0 min-w-[180px] max-w-[280px] overflow-hidden animate-in fade-in-0 zoom-in-95 ${className}`}
-          onMouseEnter={() => setOpen(true)}
-          onMouseLeave={() => setOpen(false)}
+          onMouseEnter={handleOpen}
+          onMouseLeave={handleDelayedClose}
           onOpenAutoFocus={(e: Event) => e.preventDefault()}
           onCloseAutoFocus={(e: Event) => e.preventDefault()}
         >
           {content}
-          <PopoverPrimitive.Arrow className="fill-white dark:fill-gray-800" width={10} height={5} />
+          <PopoverPrimitive.Arrow
+            className="fill-white dark:fill-gray-800"
+            width={10}
+            height={5}
+          />
         </PopoverPrimitive.Content>
       </PopoverPrimitive.Portal>
     </PopoverPrimitive.Root>
   );
 }
-
