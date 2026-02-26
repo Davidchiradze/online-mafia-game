@@ -1,100 +1,65 @@
 "use client";
 
-import { useState } from "react";
 import { FormProvider } from "react-hook-form";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useAuthForm } from "@/hooks/auth";
 import Link from "next/link";
+import { AuthInput } from "./AuthInput";
 
 export default function SignInForm() {
   const { form, onSubmit, serverError } = useAuthForm("signin");
-  const [showPassword, setShowPassword] = useState(false);
   const isSubmitting = form.formState.isSubmitting;
 
   return (
-    <div className="w-full max-w-md mx-auto">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-200 dark:border-gray-700">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+    <div className="w-full max-w-[420px]">
+      {/* Glass card */}
+      <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] backdrop-blur-sm p-8 shadow-[0_0_60px_rgba(0,0,0,0.5)]">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-2xl font-orbitron font-bold text-white mb-2 tracking-tight">
             Welcome Back
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Sign in to continue your game
-          </p>
+          <p className="text-gray-500 font-sans text-sm">Sign in to continue your game</p>
         </div>
 
         <FormProvider {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                {...form.register("email" as const)}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
-                placeholder="Enter your email"
-                required
-              />
-              {form.formState.errors.email && (
-                <p className="mt-2 text-xs text-red-600 dark:text-red-400">
-                  {form.formState.errors.email.message as string}
-                </p>
-              )}
-            </div>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+            <AuthInput
+              id="email"
+              label="Email"
+              type="email"
+              placeholder="you@example.com"
+              error={form.formState.errors.email?.message as string | undefined}
+              {...form.register("email" as const)}
+            />
 
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >
-                Password
-              </label>
-              <div className="relative">
-                <input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  {...form.register("password" as const)}
-                  className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
-                  placeholder="Enter your password"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
-              </div>
-              {form.formState.errors.password && (
-                <p className="mt-2 text-xs text-red-600 dark:text-red-400">
-                  {form.formState.errors.password.message as string}
-                </p>
-              )}
-            </div>
+            <AuthInput
+              id="password"
+              label="Password"
+              isPassword
+              placeholder="Enter your password"
+              error={form.formState.errors.password?.message as string | undefined}
+              {...form.register("password" as const)}
+            />
 
-            {(serverError as string) && (
-              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                <p className="text-sm text-red-600 dark:text-red-400">
-                  {serverError}
-                </p>
+            {/* Server error */}
+            {serverError && (
+              <div className="flex items-start gap-2.5 rounded-xl border border-red-500/20 bg-red-500/[0.08] px-4 py-3">
+                <span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+                <p className="text-sm text-red-400 font-sans">{serverError as string}</p>
               </div>
             )}
 
+            {/* Submit */}
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center"
+              className="w-full relative py-3.5 px-4 rounded-xl bg-gradient-to-r from-red-600 via-red-500 to-red-600 text-white font-semibold font-sans text-sm shadow-[0_0_25px_rgba(220,38,38,0.35)] hover:shadow-[0_0_40px_rgba(220,38,38,0.55)] disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2"
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5" />
-                  Signin In...
+                  <Loader2 className="animate-spin w-4 h-4" />
+                  Signing In…
                 </>
               ) : (
                 "Sign In"
@@ -103,18 +68,25 @@ export default function SignInForm() {
           </form>
         </FormProvider>
 
-        <div className="mt-6 text-center">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            Dont have an account?{" "}
-            <Link
-              href="/auth/signup"
-              className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
-            >
-              Sign Up
-            </Link>
-          </p>
+        {/* Divider */}
+        <div className="my-6 flex items-center gap-3">
+          <div className="flex-1 h-px bg-white/[0.06]" />
+          <span className="text-gray-700 font-sans text-xs uppercase tracking-widest">or</span>
+          <div className="flex-1 h-px bg-white/[0.06]" />
         </div>
+
+        {/* Switch to Sign Up */}
+        <p className="text-center text-gray-500 font-sans text-sm">
+          Don&apos;t have an account?{" "}
+          <Link
+            href="/auth/signup"
+            className="text-red-400 hover:text-red-300 font-medium transition-colors"
+          >
+            Create one
+          </Link>
+        </p>
       </div>
+
     </div>
   );
 }

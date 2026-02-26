@@ -1,16 +1,16 @@
 "use client";
 
-import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 import { SignUpFormData, signUpSchema } from "@/lib/auth/schemas";
 import { signUpAction, type SignUpActionResult } from "@/lib/auth/actions";
+import { AuthInput } from "./AuthInput";
 
 export default function SignUpForm() {
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [nonFieldError, setNonFieldError] = useState<string | null>(null);
 
   const {
     control,
@@ -21,18 +21,11 @@ export default function SignUpForm() {
     formState: { errors, isValid, isSubmitting },
   } = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-      confirmPassword: "",
-      nickname: "",
-    },
+    defaultValues: { email: "", password: "", confirmPassword: "", nickname: "" },
     mode: "onChange",
     criteriaMode: "all",
     reValidateMode: "onChange",
   });
-
-  const [nonFieldError, setNonFieldError] = useState<string | null>(null);
 
   async function onSubmit(values: SignUpFormData) {
     setNonFieldError(null);
@@ -40,168 +33,99 @@ export default function SignUpForm() {
     const res = (await signUpAction(values)) as SignUpActionResult | void;
     if (!res) return;
     if (!res.success) {
-      if (res.fieldErrors) {
-        if (res.fieldErrors.email)
-          setError("email", { type: "manual", message: res.fieldErrors.email });
-        if (res.fieldErrors.nickname)
-          setError("nickname", {
-            type: "manual",
-            message: res.fieldErrors.nickname,
-          });
-      }
+      if (res.fieldErrors?.email)
+        setError("email", { type: "manual", message: res.fieldErrors.email });
+      if (res.fieldErrors?.nickname)
+        setError("nickname", { type: "manual", message: res.fieldErrors.nickname });
       if (res.message) setNonFieldError(res.message);
     }
   }
-  const isSubmitDisabled =
-    isSubmitting || !isValid || Object.keys(errors).length > 0;
+
+  const isSubmitDisabled = isSubmitting || !isValid || Object.keys(errors).length > 0;
 
   return (
-    <div className="w-full max-w-md mx-auto">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-200 dark:border-gray-700">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+    <div className="w-full max-w-[420px]">
+      {/* Glass card */}
+      <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] backdrop-blur-sm p-8 shadow-[0_0_60px_rgba(0,0,0,0.5)]">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-2xl font-orbitron font-bold text-white mb-2 tracking-tight">
             Create Account
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Join the Mafia game and start playing!
-          </p>
+          <p className="text-gray-500 font-sans text-sm">Join the game and pick your alias</p>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          {/* Non-field error */}
           {nonFieldError && (
-            <div className="text-sm text-red-600 dark:text-red-400">
-              {nonFieldError}
+            <div className="flex items-start gap-2.5 rounded-xl border border-red-500/20 bg-red-500/[0.08] px-4 py-3">
+              <span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+              <p className="text-sm text-red-400 font-sans">{nonFieldError}</p>
             </div>
           )}
-          <div>
-            <label
-              htmlFor="nickname"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Nickname
-            </label>
-            <Controller
-              name="nickname"
-              control={control}
-              render={({ field }) => (
-                <input
-                  id="nickname"
-                  type="text"
-                  {...field}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
-                  placeholder="Enter your nickname"
-                  required
-                />
-              )}
-            />
-            {errors.nickname && (
-              <p className="mt-2 text-xs text-red-600 dark:text-red-400">
-                {errors.nickname.message as string}
-              </p>
-            )}
-          </div>
 
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Email
-            </label>
-            <Controller
-              name="email"
-              control={control}
-              render={({ field }) => (
-                <input
-                  id="email"
-                  type="email"
-                  {...field}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
-                  placeholder="Enter your email"
-                  required
-                />
-              )}
-            />
-            {errors.email && (
-              <p className="mt-2 text-xs text-red-600 dark:text-red-400">
-                {errors.email.message as string}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Password
-            </label>
-            <div className="relative">
-              <input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                {...register("password")}
-                className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
-                placeholder="Enter your password"
-                required
+          {/* Nickname */}
+          <Controller
+            name="nickname"
+            control={control}
+            render={({ field }) => (
+              <AuthInput
+                id="nickname"
+                label="Nickname"
+                type="text"
+                placeholder="Your in-game alias"
+                error={errors.nickname?.message as string | undefined}
+                {...field}
               />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-              >
-                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-              </button>
-            </div>
-            {errors.password && (
-              <p className="mt-2 text-xs text-red-600 dark:text-red-400">
-                {errors.password.message as string}
-              </p>
             )}
-          </div>
+          />
 
-          <div>
-            <label
-              htmlFor="confirmPassword"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Confirm Password
-            </label>
-            <div className="relative">
-              <input
-                id="confirmPassword"
-                type={showConfirmPassword ? "text" : "password"}
-                {...register("confirmPassword")}
-                className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
-                placeholder="Confirm your password"
-                required
+          {/* Email */}
+          <Controller
+            name="email"
+            control={control}
+            render={({ field }) => (
+              <AuthInput
+                id="email"
+                label="Email"
+                type="email"
+                placeholder="you@example.com"
+                error={errors.email?.message as string | undefined}
+                {...field}
               />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-              >
-                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-              </button>
-            </div>
-            {errors.confirmPassword && (
-              <p className="mt-2 text-xs text-red-600 dark:text-red-400">
-                {errors.confirmPassword.message as string}
-              </p>
             )}
-          </div>
+          />
 
+          {/* Password */}
+          <AuthInput
+            id="password"
+            label="Password"
+            isPassword
+            placeholder="Create a password"
+            error={errors.password?.message as string | undefined}
+            {...register("password")}
+          />
+
+          {/* Confirm Password */}
+          <AuthInput
+            id="confirmPassword"
+            label="Confirm Password"
+            isPassword
+            placeholder="Repeat your password"
+            error={errors.confirmPassword?.message as string | undefined}
+            {...register("confirmPassword")}
+          />
+
+          {/* Submit */}
           <button
             type="submit"
             disabled={isSubmitDisabled}
-            className={`w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center ${
-              isSubmitDisabled ? "opacity-50 cursor-not-allowed" : ""
-            }`}
+            className="w-full relative py-3.5 px-4 rounded-xl bg-gradient-to-r from-red-600 via-red-500 to-red-600 text-white font-semibold font-sans text-sm shadow-[0_0_25px_rgba(220,38,38,0.35)] hover:shadow-[0_0_40px_rgba(220,38,38,0.55)] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2"
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5" />
-                Creating Account...
+                <Loader2 className="animate-spin w-4 h-4" />
+                Creating Account…
               </>
             ) : (
               "Create Account"
@@ -209,18 +133,25 @@ export default function SignUpForm() {
           </button>
         </form>
 
-        <div className="mt-6 text-center">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            Already have an account?{" "}
-            <Link
-              href="/auth/signin"
-              className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
-            >
-              Sign In
-            </Link>
-          </p>
+        {/* Divider */}
+        <div className="my-6 flex items-center gap-3">
+          <div className="flex-1 h-px bg-white/[0.06]" />
+          <span className="text-gray-700 font-sans text-xs uppercase tracking-widest">or</span>
+          <div className="flex-1 h-px bg-white/[0.06]" />
         </div>
+
+        {/* Switch to Sign In */}
+        <p className="text-center text-gray-500 font-sans text-sm">
+          Already have an account?{" "}
+          <Link
+            href="/auth/signin"
+            className="text-red-400 hover:text-red-300 font-medium transition-colors"
+          >
+            Sign In
+          </Link>
+        </p>
       </div>
+
     </div>
   );
 }

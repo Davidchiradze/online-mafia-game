@@ -21,7 +21,7 @@ const orbitron = Orbitron({
 });
 
 export const metadata: Metadata = {
-  title: "Mafia Online — Trust No One. Survive the Night.",
+  title: "Mafia Online",
   description:
     "The ultimate social deduction game. Outsmart your friends with live voice chat, hidden roles, and ruthless strategy.",
 };
