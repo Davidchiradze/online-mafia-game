@@ -6,6 +6,7 @@ import { useGameRoom } from "@/lib/context/gameRoomContext";
 import {
   grantFarewellTime,
   markDeadAndAdvance,
+  advanceFromFarewell,
 } from "@/lib/farewellSpeech/actions";
 import PhaseButton from "@/components/ui/PhaseButton";
 
@@ -55,6 +56,12 @@ export default function FarewellSpeechControls({ gameSessionState }: Props) {
   // Check if speaker is actively speaking (has been granted time)
   const speakerIsActive = currentSpeaker !== null && speakerStartedAt !== null;
 
+  // All speeches finished — waiting for host to advance
+  const allDone =
+    currentSpeaker === null &&
+    remainingSpeakers.length === 0 &&
+    speakingOrder.length > 0;
+
   // Get the next speaker who needs time granted
   const nextSpeakerToGrant = remainingSpeakers[0];
 
@@ -84,6 +91,19 @@ export default function FarewellSpeechControls({ gameSessionState }: Props) {
     }
   }, [gameId, isLoading]);
 
+  const handleAdvance = useCallback(async () => {
+    if (isLoading) return;
+    setIsLoading(true);
+    try {
+      const result = await advanceFromFarewell(gameId);
+      if (!result.ok) {
+        console.error("Failed to advance from farewell:", result.message);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }, [gameId, isLoading]);
+
   if (speakingOrder.length === 0) {
     return (
       <div className="text-sm text-white/50">No farewell speeches needed</div>
@@ -107,8 +127,8 @@ export default function FarewellSpeechControls({ gameSessionState }: Props) {
                     ? "bg-emerald-500/20 text-emerald-300 border-emerald-500 ring-2 ring-emerald-500/30 animate-pulse"
                     : "bg-emerald-500/10 text-emerald-400 border-emerald-500/50"
                   : isCompleted
-                  ? "bg-white/5 text-white/30 border-white/10 line-through"
-                  : "bg-white/5 text-white/60 border-white/20"
+                    ? "bg-white/5 text-white/30 border-white/10 line-through"
+                    : "bg-white/5 text-white/60 border-white/20"
               }`}
               title={
                 isCurrent
@@ -116,8 +136,8 @@ export default function FarewellSpeechControls({ gameSessionState }: Props) {
                     ? "Currently speaking"
                     : "Waiting for time"
                   : isCompleted
-                  ? "Farewell completed (dead)"
-                  : "Waiting"
+                    ? "Farewell completed (dead)"
+                    : "Waiting"
               }
             >
               {seat}
@@ -145,6 +165,9 @@ export default function FarewellSpeechControls({ gameSessionState }: Props) {
             </span>
           </>
         )}
+        {allDone && (
+          <span className="text-white/50">All farewell speeches completed</span>
+        )}
       </div>
 
       {/* Control buttons */}
@@ -159,6 +182,12 @@ export default function FarewellSpeechControls({ gameSessionState }: Props) {
           onClick={handleMarkDead}
           isLoading={isLoading}
           label="Finish"
+        />
+      ) : allDone ? (
+        <PhaseButton
+          onClick={handleAdvance}
+          isLoading={isLoading}
+          label="Advance to Next Phase"
         />
       ) : null}
     </div>

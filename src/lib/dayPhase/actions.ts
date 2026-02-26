@@ -796,7 +796,7 @@ export async function giveFoul(
     }
 
     // Delete any active voting session
-    await adminClient.from("voting_sessions").delete().eq("game_id", gameId);
+    // await adminClient.from("voting_sessions").delete().eq("game_id", gameId);
 
     return { ok: true, playerEliminated: true };
   }
