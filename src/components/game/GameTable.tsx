@@ -1,96 +1,106 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { GameRoom } from "@/types/game/type";
-import GameTableRow from "./GameTableRow";
-import GameCard from "./GameCard";
+import GameRoomRow from "./GameRoomRow";
 
 type Props = {
-  data: GameRoom[];
-  onRowClick?: (session: GameRoom) => void;
-  userId?: string;
-  onRoomDeleted?: (gameId: string) => void;
+  rooms: GameRoom[];
 };
 
-export default function GameTable({
-  data,
-  onRowClick,
-  userId,
-  onRoomDeleted,
-}: Props) {
+const COL_HEADERS = [
+  { label: "Room Name", className: "w-[28%]" },
+  { label: "Mode", className: "w-[14%]" },
+  { label: "Players", className: "w-[16%]" },
+  { label: "Spectators", className: "w-[16%]" },
+  { label: "Status", className: "w-[14%]" },
+  { label: "Action", className: "w-[12%] text-right" },
+];
+
+export default function GameTable({ rooms }: Props) {
+  const router = useRouter();
+
+  const navigateToRoom = (roomId: string) => {
+    router.push(`/game/${roomId}`);
+  };
+
   return (
-    <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm bg-white dark:bg-gray-900">
-      {/* Mobile: grid of cards */}
-      <div className="p-4 md:hidden">
-        {data.length === 0 ? (
-          <div className="px-2 py-8 text-center text-gray-500 dark:text-gray-400">
-            No games yet
-          </div>
+    <div
+      className="rounded-2xl border border-white/10 overflow-hidden backdrop-blur-md"
+      style={{
+        background:
+          "linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)",
+        boxShadow:
+          "0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1)",
+      }}
+    >
+      {/* Mobile */}
+      <div className="p-4 lg:hidden">
+        {rooms.length === 0 ? (
+          <EmptyState />
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {data.map((session) => {
-              return (
-                <GameCard
-                  key={session.id}
-                  session={session}
-                  onClick={onRowClick}
-                />
-              );
-            })}
+          <div className="space-y-3">
+            {rooms.map((room) => (
+              <GameRoomRow
+                key={room.id}
+                room={room}
+                variant="mobile"
+                onNavigate={navigateToRoom}
+              />
+            ))}
           </div>
         )}
       </div>
 
-      {/* Desktop: table */}
-      <div className="min-w-full overflow-x-auto hidden md:block">
+      {/* Desktop */}
+      <div className="hidden lg:block min-w-full overflow-x-auto">
         <table className="min-w-full">
-          <thead className="bg-gray-50 dark:bg-gray-800/60">
-            <tr>
-              <th className="text-left px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                Name
-              </th>
-              <th className="text-left px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                Type
-              </th>
-              <th className="text-left px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                Players
-              </th>
-              <th className="text-left px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                Status
-              </th>
-              <th className="text-left px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                Spectators
-              </th>
-              <th className="text-left px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                Actions
-              </th>
+          <thead>
+            <tr
+              className="border-b border-white/10"
+              style={{ background: "rgba(0,0,0,0.3)" }}
+            >
+              {COL_HEADERS.map(({ label, className }) => (
+                <th
+                  key={label}
+                  className={`px-6 py-4 text-left font-orbitron font-semibold text-gray-400 uppercase tracking-wider text-[0.7rem] ${className}`}
+                >
+                  {label}
+                </th>
+              ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
-            {data.length === 0 ? (
+          <tbody className="divide-y divide-white/[0.05]">
+            {rooms.length === 0 ? (
               <tr>
-                <td
-                  colSpan={6}
-                  className="px-6 py-10 text-center text-gray-500 dark:text-gray-400"
-                >
-                  No games yet
+                <td colSpan={6}>
+                  <EmptyState />
                 </td>
               </tr>
             ) : (
-              data.map((session) => {
-                return (
-                  <GameTableRow
-                    key={session.id}
-                    session={session}
-                    onRowClick={onRowClick}
-                    userId={userId}
-                    onRoomDeleted={onRoomDeleted}
-                  />
-                );
-              })
+              rooms.map((room) => (
+                <GameRoomRow
+                  key={room.id}
+                  room={room}
+                  variant="desktop"
+                  onNavigate={navigateToRoom}
+                />
+              ))
             )}
           </tbody>
         </table>
       </div>
+    </div>
+  );
+}
+
+function EmptyState() {
+  return (
+    <div className="flex flex-col items-center justify-center py-16 gap-3">
+      <div className="w-12 h-12 rounded-xl border border-white/10 bg-white/[0.03] flex items-center justify-center">
+        <span className="text-gray-600 font-orbitron font-bold text-lg">?</span>
+      </div>
+      <p className="text-gray-600 font-sans text-sm">No rooms found</p>
     </div>
   );
 }

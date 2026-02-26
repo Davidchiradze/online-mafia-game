@@ -78,7 +78,12 @@ export default function ClickableTooltip({
           align={align}
           sideOffset={sideOffset}
           collisionPadding={collisionPadding}
-          className={`z-50 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm shadow-xl border border-gray-200 dark:border-gray-700 p-0 min-w-[180px] max-w-[280px] overflow-hidden animate-in fade-in-0 zoom-in-95 ${className}`}
+          className={`z-50 rounded-xl text-white text-sm p-0 min-w-[220px] max-w-[280px] overflow-hidden animate-in fade-in-0 zoom-in-95 ${className}`}
+          style={{
+            background: "linear-gradient(135deg, rgba(20,20,30,0.97) 0%, rgba(10,10,18,0.97) 100%)",
+            border: "1px solid rgba(255,255,255,0.12)",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.07), 0 0 0 1px rgba(220,38,38,0.15)",
+          }}
           onMouseEnter={handleOpen}
           onMouseLeave={handleDelayedClose}
           onOpenAutoFocus={(e: Event) => e.preventDefault()}
@@ -86,7 +91,7 @@ export default function ClickableTooltip({
         >
           {content}
           <PopoverPrimitive.Arrow
-            className="fill-white dark:fill-gray-800"
+            className="fill-[rgba(20,20,30,0.97)]"
             width={10}
             height={5}
           />

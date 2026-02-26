@@ -15,7 +15,7 @@ export enum JOIN_REQUEST_STATUSES {
 export const GAME_TYPE_LABEL: Record<(typeof GAME_TYPES)[number], string> = {
   traditional: "Traditional",
   city_mafia: "City mafia",
-  japanese_mafia: "Japanese mafia",
+  japanese_mafia: "Japanese",
 };
 
 export const GAME_STATUS_LABEL: Record<(typeof GAME_STATUSES)[number], string> =

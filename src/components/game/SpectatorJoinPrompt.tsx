@@ -3,10 +3,10 @@
 import { Suspense, useState } from "react";
 import { useRouter } from "next/navigation";
 import { joinAsSpectator } from "@/lib/spectators/actions";
-import { SPECTATOR } from "@/lib/constants/game";
 import { GameRoomProvider } from "@/lib/context/gameRoomContext";
 import Room from "@/components/game/Room";
 import type { GameRoom } from "@/types/game/type";
+import { Eye, ArrowLeft, Loader2 } from "lucide-react";
 
 type Props = {
   gameId: string;
@@ -15,11 +15,6 @@ type Props = {
   currentSpectatorCount: number;
 };
 
-/**
- * Prompt shown when a user navigates to a game that's already in progress.
- * Allows them to join as a spectator (view-only mode).
- * After joining, renders GameRoomProvider directly (no page refresh needed).
- */
 export default function SpectatorJoinPrompt({ gameId, userId, game }: Props) {
   const router = useRouter();
   const [isJoining, setIsJoining] = useState(false);
@@ -28,30 +23,20 @@ export default function SpectatorJoinPrompt({ gameId, userId, game }: Props) {
 
   const handleJoinAsSpectator = async () => {
     if (isJoining) return;
-
     setIsJoining(true);
     setError(null);
-
     try {
       const result = await joinAsSpectator(gameId);
-
       if (!result.ok) {
         setError(result.message);
         setIsJoining(false);
         return;
       }
-
       setHasJoined(true);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to join as spectator",
-      );
+      setError(err instanceof Error ? err.message : "Failed to join as spectator");
       setIsJoining(false);
     }
-  };
-
-  const handleGoBack = () => {
-    router.push("/lobby");
   };
 
   if (hasJoined) {
@@ -67,92 +52,92 @@ export default function SpectatorJoinPrompt({ gameId, userId, game }: Props) {
   }
 
   return (
-    <div className="flex h-full items-center justify-center">
-      <div className="max-w-md w-full mx-4 bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-200 dark:border-gray-700">
-        <div className="text-center">
-          {/* Icon */}
-          <div className="mx-auto w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mb-6">
-            <svg
-              className="w-8 h-8 text-blue-600 dark:text-blue-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-              />
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-              />
-            </svg>
+    <div className="w-full max-w-md mx-auto">
+      {/* Glass card */}
+      <div
+        className="rounded-2xl border border-white/10 p-8 text-center"
+        style={{
+          background: "linear-gradient(135deg, rgba(20,20,32,0.96) 0%, rgba(10,10,18,0.96) 100%)",
+          boxShadow:
+            "0 24px 64px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.07), 0 0 0 1px rgba(59,130,246,0.12)",
+        }}
+      >
+        {/* Icon */}
+        <div
+          className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-900 flex items-center justify-center mx-auto mb-6"
+          style={{ boxShadow: "0 0 30px rgba(59,130,246,0.35)" }}
+        >
+          <Eye className="w-7 h-7 text-white" />
+        </div>
+
+        {/* Title */}
+        <h2 className="text-white font-orbitron font-bold text-xl tracking-tight mb-2">
+          Game in Progress
+        </h2>
+        <p className="text-gray-500 font-sans text-sm leading-relaxed mb-7">
+          <span className="text-white font-medium">{game.name}</span> has already
+          started. Join as a spectator to watch the action unfold.
+        </p>
+
+        {/* Error */}
+        {error && (
+          <div className="flex items-start gap-2.5 rounded-xl border border-red-500/20 bg-red-500/[0.08] px-4 py-3 mb-6 text-left">
+            <span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+            <p className="text-sm text-red-400 font-sans">{error}</p>
           </div>
+        )}
 
-          {/* Title */}
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-            Game in Progress
-          </h2>
-
-          {/* Description */}
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
-            This game has already started. Would you like to join as a
-            spectator?
+        {/* Spectator rules card */}
+        <div
+          className="rounded-xl border border-white/[0.06] p-4 mb-7 text-left space-y-2.5"
+          style={{ background: "rgba(255,255,255,0.03)" }}
+        >
+          <p className="text-gray-500 font-sans text-xs uppercase tracking-wider mb-3">
+            As a spectator you will
           </p>
-
-          {/* Error message */}
-          {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg px-4 py-3 mb-6 text-sm">
-              {error}
+          {[
+            { icon: "✓", color: "text-green-400", text: "Watch all day phase activities" },
+            { icon: "✓", color: "text-green-400", text: "See player discussions and voting" },
+            { icon: "○", color: "text-amber-400", text: "Night phases hidden (like dead players)" },
+            { icon: "✗", color: "text-red-400",   text: "Cannot participate or interact" },
+          ].map(({ icon, color, text }) => (
+            <div key={text} className="flex items-center gap-3">
+              <span className={`font-bold text-sm ${color} w-4 shrink-0`}>{icon}</span>
+              <span className="text-gray-400 font-sans text-sm">{text}</span>
             </div>
-          )}
+          ))}
+        </div>
 
-          {/* Spectator info */}
-          <div className="text-left bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4 mb-6">
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-              As a spectator, you will:
-            </p>
-            <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-              <li className="flex items-center gap-2">
-                <span className="text-green-500">✓</span>
-                Watch all day phase activities
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="text-green-500">✓</span>
-                See player discussions and voting
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="text-yellow-500">○</span>
-                Night phases will be hidden (like dead players)
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="text-red-500">✗</span>
-                Cannot participate or interact
-              </li>
-            </ul>
-          </div>
+        {/* Divider */}
+        <div className="h-px bg-white/[0.06] mb-6" />
 
-          {/* Buttons */}
-          <div className="flex gap-3">
-            <button
-              onClick={handleGoBack}
-              disabled={isJoining}
-              className="flex-1 px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
-            >
-              Back to Lobby
-            </button>
-            <button
-              onClick={handleJoinAsSpectator}
-              disabled={isJoining}
-              className="flex-1 px-4 py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isJoining ? "Joining..." : "Join as Spectator"}
-            </button>
-          </div>
+        {/* Buttons */}
+        <div className="flex gap-3">
+          <button
+            onClick={() => router.push("/lobby")}
+            disabled={isJoining}
+            className="flex-1 py-3 rounded-xl border border-white/10 text-gray-400 hover:text-white hover:border-white/20 font-sans text-sm font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back
+          </button>
+          <button
+            onClick={handleJoinAsSpectator}
+            disabled={isJoining}
+            className="flex-1 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-sans text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_30px_rgba(59,130,246,0.5)]"
+          >
+            {isJoining ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Joining…
+              </>
+            ) : (
+              <>
+                <Eye className="w-4 h-4" />
+                Watch Game
+              </>
+            )}
+          </button>
         </div>
       </div>
     </div>
