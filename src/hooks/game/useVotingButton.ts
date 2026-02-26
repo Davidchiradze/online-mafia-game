@@ -81,7 +81,10 @@ export function useVotingButton({
       if (isBothLeaveMode) {
         await castBothLeaveVote(gameId);
       } else {
-        await castVote(gameId);
+        const result = await castVote(gameId);
+        if (!result.ok) {
+          alert(result.message);
+        }
       }
     } catch (e) {
       console.error("Vote failed:", e);

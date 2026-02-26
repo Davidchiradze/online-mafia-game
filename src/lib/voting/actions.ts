@@ -408,10 +408,23 @@ export async function castVote(gameId: string): Promise<ActionResult> {
   } = await supabase.auth.getUser();
   if (userError || !user) return { ok: false, message: "Not authenticated" };
 
-  // Get voter's seat number
-  const voterSeat = await getPlayerSeat(gameId, user.id);
-  if (voterSeat === null) {
+  // return { ok: false, message: "Testing faul voting" };
+  // Get voter info (seat number + alive status) in a single query
+  const { data: voter } = await adminClient
+    .from("game_players")
+    .select("seat_number, is_alive")
+    .eq("game_id", gameId)
+    .eq("player_id", user.id)
+    .single();
+
+  if (!voter || voter.seat_number === null) {
     return { ok: false, message: "Player not found in game" };
+  }
+
+  const voterSeat = voter.seat_number;
+
+  if (!voter.is_alive) {
+    return { ok: false, message: "Dead players cannot vote" };
   }
 
   // Get voting session
@@ -423,23 +436,6 @@ export async function castVote(gameId: string): Promise<ActionResult> {
 
   if (sessionErr || !votingSession) {
     return { ok: false, message: "Voting session not found" };
-  }
-
-  // // Check if voting is active
-  // if (!votingSession.voting_active) {
-  //   return { ok: false, message: "Voting is not currently active" };
-  // }
-
-  // Check if player is alive
-  const { data: player } = await adminClient
-    .from("game_players")
-    .select("is_alive")
-    .eq("game_id", gameId)
-    .eq("seat_number", voterSeat)
-    .single();
-
-  if (!player || player.is_alive === false) {
-    return { ok: false, message: "Dead players cannot vote" };
   }
 
   // Get current candidate
