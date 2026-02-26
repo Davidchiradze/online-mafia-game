@@ -1,35 +1,28 @@
-"use client";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { LandingNavbar } from "@/components/landing/LandingNavbar";
+import { LandingHero } from "@/components/landing/LandingHero";
+import { LandingFeatures } from "@/components/landing/LandingFeatures";
+import { LandingHowItWorks } from "@/components/landing/LandingHowItWorks";
+import { LandingFooter } from "@/components/landing/LandingFooter";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
+export default async function Home() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-export default function Home() {
-  const router = useRouter();
-  const supabase = createClient();
-
-  useEffect(() => {
-    const checkUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (user) {
-        // User is authenticated, redirect to lobby
-        router.push("/lobby");
-      } else {
-        // User is not authenticated, redirect to auth
-        router.push("/auth");
-      }
-    };
-
-    checkUser();
-  }, [router, supabase.auth]);
+  if (user) {
+    redirect("/lobby");
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
-      <LoadingSpinner message="Loading..." />
+    <div className="min-h-screen bg-[#0a0a12] text-white">
+      <LandingNavbar />
+      <LandingHero />
+      <LandingFeatures />
+      <LandingHowItWorks />
+      <LandingFooter />
     </div>
   );
 }
