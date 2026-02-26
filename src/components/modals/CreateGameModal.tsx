@@ -2,9 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { GAME_TYPES, GAME_TYPE_LABEL } from "@/lib/constants/game";
-import Modal from "@/components/ui/Modal";
 import { createGameRoom } from "@/lib/gameRoom/actions";
 import { GameRoom } from "@/types/game/type";
+import { Loader2 } from "lucide-react";
+import Modal from "@/components/ui/Modal";
 
 type Props = {
   open: boolean;
@@ -14,13 +15,10 @@ type Props = {
 
 export default function CreateGameModal({ open, onClose, onCreated }: Props) {
   const [name, setName] = useState("");
-  const [type, setType] =
-    useState<(typeof GAME_TYPES)[number]>("japanese_mafia");
+  const [type, setType] = useState<(typeof GAME_TYPES)[number]>("japanese_mafia");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const canCreate = useMemo(() => name.trim().length > 0, [name]);
-
-  if (!open) return null;
 
   const handleCreate = async () => {
     if (!canCreate || loading) return;
@@ -43,56 +41,66 @@ export default function CreateGameModal({ open, onClose, onCreated }: Props) {
     <Modal
       open={open}
       onClose={onClose}
-      title="Create Game"
-      size="md"
+      title="Create Room"
+      variant="dark"
       footer={
         <>
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+            className="px-5 py-2.5 rounded-xl border border-white/10 text-gray-400 hover:text-white hover:border-white/20 font-sans text-sm font-medium transition-all cursor-pointer"
           >
             Cancel
           </button>
           <button
             onClick={handleCreate}
             disabled={!canCreate || loading}
-            className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+            className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-sans text-sm font-semibold shadow-[0_0_20px_rgba(220,38,38,0.3)] hover:shadow-[0_0_30px_rgba(220,38,38,0.5)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all flex items-center gap-2"
           >
-            {loading ? "Creating..." : "Create"}
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Creating…
+              </>
+            ) : (
+              "Create Room"
+            )}
           </button>
         </>
       }
     >
-      <div className="flex flex-col gap-4">
-        {error ? (
-          <div className="text-sm text-red-600 dark:text-red-400">{error}</div>
-        ) : null}
-        <div className="flex flex-col gap-2">
-          <label className="text-sm text-gray-600 dark:text-gray-400">
-            Name of the game
+      <div className="space-y-5">
+        {error && (
+          <div className="flex items-start gap-2.5 rounded-xl border border-red-500/20 bg-red-500/[0.08] px-4 py-3">
+            <span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+            <p className="text-sm text-red-400 font-sans">{error}</p>
+          </div>
+        )}
+
+        <div className="space-y-1.5">
+          <label className="block text-sm font-medium text-gray-400 font-sans">
+            Room Name
           </label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Enter game name"
-            className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:bg-gray-800 dark:text-white"
+            onKeyDown={(e) => e.key === "Enter" && handleCreate()}
+            placeholder="Enter room name…"
+            autoFocus
+            className="w-full px-4 py-3 rounded-xl bg-white/[0.05] border border-white/[0.08] text-white placeholder-gray-600 font-sans text-sm focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 transition-all"
           />
         </div>
-        <div className="flex flex-col gap-2">
-          <label className="text-sm text-gray-600 dark:text-gray-400">
-            Type of the game
+
+        <div className="space-y-1.5">
+          <label className="block text-sm font-medium text-gray-400 font-sans">
+            Game Mode
           </label>
           <select
             value={type}
-            onChange={(e) =>
-              setType(e.target.value as (typeof GAME_TYPES)[number])
-            }
-            className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:bg-gray-800 dark:text-white"
+            onChange={(e) => setType(e.target.value as (typeof GAME_TYPES)[number])}
+            className="w-full px-4 py-3 rounded-xl bg-white/[0.05] border border-white/[0.08] text-white font-sans text-sm focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 transition-all appearance-none cursor-pointer"
           >
-            {GAME_TYPES.filter(
-              (gt) => gt !== "traditional" && gt !== "city_mafia"
-            ).map((gt) => (
-              <option key={gt} value={gt}>
+            {GAME_TYPES.filter((gt) => gt !== "traditional" && gt !== "city_mafia").map((gt) => (
+              <option key={gt} value={gt} className="bg-[#0f0f1a]">
                 {GAME_TYPE_LABEL[gt]}
               </option>
             ))}

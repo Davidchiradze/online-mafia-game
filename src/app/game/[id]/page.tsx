@@ -41,22 +41,20 @@ export default async function GamePage({ params }: PageProps) {
 
   if (shouldShowSpectatorPrompt) {
     return (
-      <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-black h-[100vh]">
-        <div className="mx-auto px-4 sm:px-6 lg:px-8 py-6 h-full flex items-center justify-center">
-          <SpectatorJoinPrompt
-            gameId={id}
-            userId={userId!}
-            game={game}
-            currentSpectatorCount={game.spectators?.length ?? 0}
-          />
-        </div>
+      <div className="bg-[#0a0a12] h-[100vh] flex items-center justify-center px-4">
+        <SpectatorJoinPrompt
+          gameId={id}
+          userId={userId!}
+          game={game}
+          currentSpectatorCount={game.spectators?.length ?? 0}
+        />
       </div>
     );
   }
 
   // Normal flow: User is player or host
   return (
-    <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-black h-[100vh]">
+    <div className="bg-[#0a0a12] h-[100vh]">
       <div className="mx-auto px-4 sm:px-6 lg:px-8 py-6 h-full flex items-center justify-center">
         <div className="flex flex-col gap-6 h-full w-full sm:w-[80%] md:w-[90%] lg:w-[90%]">
           {!userId || !game ? (

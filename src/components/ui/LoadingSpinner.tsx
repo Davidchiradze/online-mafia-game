@@ -6,9 +6,20 @@ interface LoadingSpinnerProps {
 
 export default function LoadingSpinner({ message = "" }: LoadingSpinnerProps) {
   return (
-    <div className="text-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-      <p className="text-gray-600 dark:text-gray-400">{message}</p>
+    <div className="flex flex-col items-center gap-5">
+      <div className="relative w-12 h-12">
+        <div className="absolute inset-0 rounded-full border-2 border-white/10" />
+        <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-red-500 animate-spin" />
+        <div
+          className="absolute inset-0 rounded-full"
+          style={{ boxShadow: "0 0 20px rgba(220,38,38,0.25)" }}
+        />
+      </div>
+      {message && (
+        <p className="text-gray-500 font-sans text-sm tracking-wide">
+          {message}
+        </p>
+      )}
     </div>
   );
 }
