@@ -43,6 +43,8 @@ type GameRoomContextValue = {
   isHost: boolean;
   /** True if user is a spectator (view-only mode, validated server-side via database) */
   isSpectator: boolean;
+  /** Original game data (name, game_type, etc.) from the database */
+  gameData: GameRoom;
   room: LiveKitRoom;
   maxPlayers: number | null;
   livekitToken: string | null;
@@ -158,11 +160,12 @@ export function GameRoomProvider({
     },
   );
 
-  // Redirect back to lobby on disconnect by default
+  // Redirect back to lobby on disconnect, but not when rejected
+  // (rejected users get disconnected intentionally and see the rejected UI)
   useLivekitRoom(
     room,
     {
-      redirectOnDisconnect: true,
+      redirectOnDisconnect: joinStatus !== JOIN_REQUEST_STATUSES.REJECTED,
       redirectPath: "/lobby",
     },
     isSpectator || hasPlayerRecord,
@@ -239,6 +242,7 @@ export function GameRoomProvider({
       hostUserId: currentHostId,
       isHost,
       isSpectator,
+      gameData: game,
       room,
       livekitToken,
       joinStatus,
@@ -274,6 +278,7 @@ export function GameRoomProvider({
       currentHostId,
       isHost,
       isSpectator,
+      game,
       room,
       livekitToken,
       maxPlayers,

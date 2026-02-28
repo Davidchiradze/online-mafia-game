@@ -61,35 +61,30 @@ export default function Room() {
     );
   }
 
-  return (
-    <>
-      {joinStatus !== undefined &&
-        joinStatus !== JOIN_REQUEST_STATUSES.ACCEPTED &&
-        !isHost && (
-          <WaitingRoom
-            status={joinStatus ?? undefined}
-            gameId={gameId}
-            userId={userId}
-          />
-        )}
+  if (
+    joinStatus !== undefined &&
+    joinStatus !== JOIN_REQUEST_STATUSES.ACCEPTED &&
+    !isHost
+  ) {
+    return <WaitingRoom status={joinStatus} gameId={gameId} userId={userId} />;
+  }
 
-      {((joinStatus !== undefined &&
-        joinStatus === JOIN_REQUEST_STATUSES.ACCEPTED) ||
-        isHost) && (
-        <LiveKitTestComponent
-          gameId={gameId}
-          room={room}
-          hostUserId={hostUserId}
-          token={livekitToken ?? ""}
-          isHost={isHost}
-          userId={userId}
-        />
-      )}
-      {joinStatus === JOIN_REQUEST_STATUSES.REJECTED && (
-        <div className="flex h-full items-center justify-center text-red-500">
-          You have been rejected from the game.
-        </div>
-      )}
-    </>
-  );
+  if (
+    (joinStatus !== undefined &&
+      joinStatus === JOIN_REQUEST_STATUSES.ACCEPTED) ||
+    isHost
+  ) {
+    return (
+      <LiveKitTestComponent
+        gameId={gameId}
+        room={room}
+        hostUserId={hostUserId}
+        token={livekitToken ?? ""}
+        isHost={isHost}
+        userId={userId}
+      />
+    );
+  }
+
+  return null;
 }
