@@ -300,6 +300,21 @@ export async function checkOrRequestJoin(gameId: string): Promise<{
       status: JOIN_REQUEST_STATUSES.PENDING,
     } as const;
 
+  // 5.5) If there is a rejected request, return it (don't allow re-join)
+  const { data: existingRejected } = await supabase
+    .from("join_requests")
+    .select("*")
+    .eq("game_id", gameId)
+    .eq("requester_id", user.id)
+    .eq("status", JOIN_REQUEST_STATUSES.REJECTED)
+    .maybeSingle<Tables<"join_requests">>();
+  if (existingRejected)
+    return {
+      ok: true,
+      allowed: false,
+      status: JOIN_REQUEST_STATUSES.REJECTED,
+    } as const;
+
   // 6) Otherwise create a new pending request
   const { data: inserted, error: insertError } = await supabase
     .from("join_requests")
