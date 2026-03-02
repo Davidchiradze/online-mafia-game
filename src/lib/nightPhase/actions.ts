@@ -814,3 +814,21 @@ export async function fetchCurrentNightSession(
   const data = await getCurrentNightPhaseSession(gameId);
   return { ok: true, data };
 }
+
+/**
+ * Fetch all healed player seat numbers across all nights for this game.
+ * Used by the Doctor "heal once per game" rule.
+ */
+export async function fetchAllHealedPlayers(
+  gameId: string
+): Promise<{ ok: true; healedPlayers: number[] } | { ok: false; message: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  if (userError || !user) return { ok: false, message: "Not authenticated" };
+
+  const healedPlayers = await getAllHealedPlayers(gameId);
+  return { ok: true, healedPlayers };
+}
