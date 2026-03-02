@@ -1306,7 +1306,7 @@ export async function startVotingFarewell(
     data: { user },
     error: userError,
   } = await supabase.auth.getUser();
-  if (userError || !user) return { ok: false, message: "Not authenticated" };
+  if (userError || !user) return { ok: false, message: userError?.message ?? JSON.stringify(user) ?? "Not authenticated" };
 
   const hostCheck = await verifyHost(gameId, user.id);
   if (!hostCheck.ok) return hostCheck;
