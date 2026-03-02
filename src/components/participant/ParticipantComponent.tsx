@@ -74,7 +74,7 @@ export default function ParticipantComponent({
   } = useParticipantReady(gameId, participantId, trackRef);
 
   // Visibility state
-  const { visibilityState, coverMessage, isTargetDead } =
+  const { visibilityState, isTargetDead } =
     useParticipantVisibility(trackRef, player);
 
   // Menu actions (kick, make host)
@@ -222,7 +222,6 @@ export default function ParticipantComponent({
       {/* Video / Cover layer */}
       <ParticipantOverlay
         visibilityState={visibilityState}
-        coverMessage={coverMessage}
         trackRef={trackRef}
       />
 

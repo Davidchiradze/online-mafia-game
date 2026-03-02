@@ -11,17 +11,21 @@ export type GamePhase = (typeof GAME_PHASES)[number];
 export type Role = (typeof JAPANESE_MAFIA_ROLES)[number] | null;
 
 /**
- * Visibility state for a participant
- * - VISIBLE: Full visibility (video shown normally)
- * - DIMMED: Visible but blurred/dimmed (for host seeing sleeping players)
- * - COVERED: Completely hidden behind a cover
- * - DEAD: Player is dead (permanent state, shown with dead overlay)
+ * Visibility state for a participant — the single source of truth
+ * for how a participant tile should be rendered.
+ *
+ * - VISIBLE: Full video shown normally
+ * - DIMMED: Video shown with blur overlay (host or awake role sees sleeping players)
+ * - COVERED: Hidden behind a sleeping cover (💤)
+ * - DEAD: Permanent dead overlay (💀)
+ * - DISCONNECTED: No video track available (connection lost)
  */
 export enum VisibilityState {
   VISIBLE = "visible",
   DIMMED = "dimmed",
   COVERED = "covered",
   DEAD = "dead",
+  DISCONNECTED = "disconnected",
 }
 
 /**
@@ -273,10 +277,10 @@ export function isNightActivityPhase(gamePhase: GamePhase): boolean {
 /**
  * Determines the visibility state for a participant
  *
- * This is an enhanced version of canSeeParticipant that returns three states:
+ * Enhanced version of canSeeParticipant that returns granular visibility states:
  * - VISIBLE: Full visibility
- * - DIMMED: Visible but blurred (for host seeing sleeping players during night phases)
- * - COVERED: Completely hidden
+ * - DIMMED: Visible but blurred (host or awake role seeing sleeping players)
+ * - COVERED: Completely hidden behind a sleeping cover
  *
  * @param viewerRole - The role of the person viewing
  * @param targetRole - The role of the person being viewed (or null if host)
@@ -306,8 +310,8 @@ export function getVisibilityState(
     return VisibilityState.COVERED;
   }
 
-  // If viewer is host and we're in a night activity phase, check if target is "awake"
-  if (isViewerHost && gamePhase && isNightActivityPhase(gamePhase)) {
+  // During night phases, dim sleeping players for both the host and the awake role
+  if (gamePhase && isNightActivityPhase(gamePhase)) {
     // Host always sees host tile as visible
     if (isTargetHost) {
       return VisibilityState.VISIBLE;
@@ -332,44 +336,6 @@ export function getVisibilityState(
 
   // Default: fully visible
   return VisibilityState.VISIBLE;
-}
-
-/**
- * Gets a user-friendly message to show when a participant is covered
- */
-export function getCoverMessage(gamePhase: GamePhase | null): string {
-  if (gamePhase === "game_session_started") {
-    return "⏳"; // Waiting/loading
-  }
-
-  if (gamePhase === "picking_roles") {
-    return "🎭"; // Role mask
-  }
-
-  if (gamePhase === "night_phase") {
-    return "💤"; // Sleeping
-  }
-
-  // For specific role phases, just show sleep
-  const nightPhases = [
-    "mafia_meet",
-    "don_chooses_right_hand",
-    "yakuda_shogun_meet",
-    "detective_meet",
-    "doctor_meet",
-    "mafia_chooses_target",
-    "don_checks_for_detective",
-    "right_hand_checks_for_yakuza",
-    "yakuza_and_shogun_chooses_target",
-    "detective_checks_for_mafia",
-    "doctor_heals_player",
-  ];
-
-  if (nightPhases.includes(gamePhase as string)) {
-    return "💤";
-  }
-
-  return "";
 }
 
 /**
