@@ -12,8 +12,9 @@ interface YakuzaKillButtonProps {
 }
 
 /**
- * YakuzaKillButton - Button shown to the Yakuza (not Shogun)
+ * YakuzaKillButton - Button shown to the Yakuza team member with kill authority
  * during the yakuza_and_shogun_chooses_target phase.
+ * Authority: SHOGUN (if YAKUZA alive) > YAKUZA (if SHOGUN dead).
  *
  * Displayed in the center of each alive non-Yakuza-team player's tile.
  * Uses a purple/violet theme to distinguish from Mafia's red theme.

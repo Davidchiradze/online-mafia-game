@@ -15,7 +15,7 @@ export interface YakuzaTargetSelectionResult {
 
 /**
  * Hook to determine Yakuza target selection state and visibility.
- * Only YAKUZA can kill (SHOGUN cannot).
+ * Kill authority: SHOGUN (if YAKUZA alive) > YAKUZA (if SHOGUN dead).
  *
  * Security model:
  * - Host: sees target via nightPhaseSession from context

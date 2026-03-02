@@ -304,16 +304,19 @@ export async function clearMafiaTarget(gameId: string): Promise<ActionResult> {
 // ============================================================================
 
 /**
- * Get the Yakuza member who has kill authority
- * Only YAKUZA can kill (SHOGUN cannot kill)
+ * Get the Yakuza team member who has kill authority.
+ *
+ * Priority: SHOGUN > YAKUZA, but SHOGUN only has authority while YAKUZA is alive.
+ * - Both alive  → SHOGUN kills
+ * - SHOGUN dead → YAKUZA kills
+ * - YAKUZA dead → nobody can kill (SHOGUN alone cannot kill)
  *
  * @param gameId - The game ID
- * @returns The player_id of the Yakuza with kill authority, or null if none alive
+ * @returns The player with kill authority, or null if no one can kill
  */
 async function getYakuzaKillAuthority(
   gameId: string
 ): Promise<{ playerId: string; role: string } | null> {
-  // Get all game players with their roles
   const { data: players, error: playersErr } = await adminClient
     .from("game_players")
     .select("player_id, is_alive")
@@ -321,7 +324,6 @@ async function getYakuzaKillAuthority(
 
   if (playersErr || !players) return null;
 
-  // Get roles for all players
   const { data: roles, error: rolesErr } = await adminClient
     .from("game_player_roles")
     .select("player_id, role")
@@ -329,23 +331,25 @@ async function getYakuzaKillAuthority(
 
   if (rolesErr || !roles) return null;
 
-  // Create a map of player_id to role
   const roleMap = new Map<string, string>();
   for (const r of roles) {
     roleMap.set(r.player_id, r.role);
   }
 
-  // Find alive Yakuza (only YAKUZA can kill, not SHOGUN)
+  let aliveYakuza: { playerId: string; role: string } | null = null;
+  let aliveShogun: { playerId: string; role: string } | null = null;
+
   for (const p of players) {
     if (p.is_alive && p.player_id) {
       const role = roleMap.get(p.player_id);
-      if (role === "YAKUZA") {
-        return { playerId: p.player_id, role };
-      }
+      if (role === "YAKUZA") aliveYakuza = { playerId: p.player_id, role };
+      if (role === "SHOGUN") aliveShogun = { playerId: p.player_id, role };
     }
   }
 
-  return null;
+  if (!aliveYakuza) return null;
+  if (aliveShogun) return aliveShogun;
+  return aliveYakuza;
 }
 
 /**
@@ -377,8 +381,8 @@ export async function checkYakuzaKillAuthority(
 }
 
 /**
- * Yakuza selects a target to kill during yakuza_and_shogun_chooses_target phase.
- * Only YAKUZA can select a target (SHOGUN cannot kill).
+ * Yakuza team selects a target to kill during yakuza_and_shogun_chooses_target phase.
+ * Authority: SHOGUN (if YAKUZA alive) > YAKUZA (if SHOGUN dead).
  * The target is stored in night_phase_sessions.yakuza_target.
  *
  * @param gameId - The game ID

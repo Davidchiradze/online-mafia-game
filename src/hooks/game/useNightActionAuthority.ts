@@ -25,7 +25,7 @@ const MAFIA_KILL_PRIORITY = ["DON", "MAFIA_RIGHT_HAND", "MAFIA"] as const;
  *
  * Authority rules:
  * - Mafia kill: DON > MAFIA_RIGHT_HAND > MAFIA (highest alive gets authority)
- * - Yakuza kill: only YAKUZA (SHOGUN cannot kill)
+ * - Yakuza kill: SHOGUN (if YAKUZA alive) > YAKUZA (if SHOGUN dead). SHOGUN alone cannot kill.
  * - Doctor heal: only DOCTOR
  * - Host never has action authority (observes only)
  */
@@ -76,14 +76,16 @@ export function useNightActionAuthority(): NightActionAuthority {
     )
       return false;
 
-    // Only YAKUZA can kill (SHOGUN cannot)
-    if (viewerRole !== "YAKUZA") return false;
+    const aliveYakuza = players.find(
+      (p) => p.is_alive && p.player_id && playerRolesMap.get(p.player_id) === "YAKUZA",
+    );
+    const aliveShogun = players.find(
+      (p) => p.is_alive && p.player_id && playerRolesMap.get(p.player_id) === "SHOGUN",
+    );
 
-    const yakuzaPlayer = players.find((p) => {
-      if (!p.is_alive || !p.player_id) return false;
-      return playerRolesMap.get(p.player_id) === "YAKUZA";
-    });
-    return yakuzaPlayer?.player_id === userId;
+    if (!aliveYakuza) return false;
+    if (aliveShogun) return aliveShogun.player_id === userId;
+    return aliveYakuza.player_id === userId;
   }, [isYakuzaPhase, isHost, viewerRole, players, playerRolesMap, userId]);
 
   const hasDoctorHealAuthority = useMemo(() => {
