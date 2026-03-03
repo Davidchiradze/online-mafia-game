@@ -2,7 +2,6 @@
 
 import { useMemo } from "react";
 import { GameSessionState } from "@/types/game/type";
-import { useDoctorHealAuthority } from "./useDoctorHealAuthority";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 
 export interface DoctorHealSelectionResult {
@@ -23,31 +22,33 @@ export interface DoctorHealSelectionResult {
  * Hook to determine Doctor heal selection state and visibility.
  * Doctor can only heal each player ONCE per game.
  * Once a heal is selected for the current night, buttons disappear (cannot change decision).
+ *
+ * @param gameSessionState - Current game session state
+ * @param seatNumber - Seat number of the target player being rendered
+ * @param isViewerHost - Whether the viewer is the host
+ * @param isTargetHost - Whether the target player is the host
+ * @param isPlayerAlive - Whether the target player is alive
+ * @param hasDoctorHealAuthority - Pre-computed authority from useNightActionAuthority
+ * @param isDoctorPhase - Pre-computed phase check from useNightActionAuthority
+ * @param healedPlayers - Seat numbers already healed (from context, fetched once)
  */
 export function useDoctorHealSelection(
   gameSessionState: GameSessionState | null,
   seatNumber: number | null,
   isViewerHost: boolean,
   isTargetHost: boolean,
-  isPlayerAlive: boolean
+  isPlayerAlive: boolean,
+  hasDoctorHealAuthority: boolean,
+  isDoctorPhase: boolean,
+  healedPlayers: number[]
 ): DoctorHealSelectionResult {
-  // Get night phase session from context
   const { nightPhaseSession } = useGameRoom();
 
-  // Doctor heal authority - for doctor_heals_player phase
-  const {
-    hasAuthority: hasDoctorHealAuthority,
-    isDoctorPhase,
-    healedPlayers,
-  } = useDoctorHealAuthority();
-
-  // Check if this player has already been healed (cannot heal same player twice in the game)
   const isAlreadyHealed = useMemo(() => {
     if (seatNumber === null) return false;
     return healedPlayers.includes(seatNumber);
   }, [healedPlayers, seatNumber]);
 
-  // Check if a heal has been selected this night (cannot change decision)
   const isHealSelectedThisNight = useMemo(() => {
     return (
       nightPhaseSession?.healed_player !== null &&
@@ -55,14 +56,12 @@ export function useDoctorHealSelection(
     );
   }, [nightPhaseSession?.healed_player]);
 
-  // Check if this specific target is the healed player this night
   const isDoctorHealSelected = useMemo(() => {
     if (!gameSessionState || seatNumber === null) return false;
     const isInDoctorPhase =
       gameSessionState.game_phase === "doctor_heals_player";
     if (!isInDoctorPhase) return false;
 
-    // Check if this seat is the healed player
     if (nightPhaseSession) {
       return nightPhaseSession.healed_player === seatNumber;
     }
@@ -70,21 +69,16 @@ export function useDoctorHealSelection(
     return false;
   }, [gameSessionState, seatNumber, nightPhaseSession]);
 
-  // Should show the heal indicator - visible to doctor and host
   const shouldShowDoctorHealIndicator = useMemo(() => {
     if (!isDoctorHealSelected) return false;
-    // Show to host or doctor with heal authority
     return isViewerHost || hasDoctorHealAuthority;
   }, [isDoctorHealSelected, isViewerHost, hasDoctorHealAuthority]);
 
-  // Can show Doctor heal button: during Doctor phase, viewer has authority, target is alive, not host,
-  // not already healed in a previous night, and no heal selected this night yet
   const canShowDoctorHealButton = useMemo(() => {
     if (!isDoctorPhase || !hasDoctorHealAuthority) return false;
-    if (isTargetHost) return false; // Can't target host
-    if (isPlayerAlive === false) return false; // Can't heal dead players
+    if (isTargetHost) return false;
+    if (isPlayerAlive === false) return false;
     // if (isAlreadyHealed) return false; // Can't heal same player twice in the game
-    // Hide if a heal has already been selected this night (cannot change decision)
     if (isHealSelectedThisNight) return false;
     return true;
   }, [

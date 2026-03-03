@@ -13,8 +13,6 @@ import { useMemo } from "react";
 import type { TrackReferenceOrPlaceholder } from "@livekit/components-react";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import {
-  canSeeParticipant,
-  getCoverMessage,
   getVisibilityStateWithDeath,
   VisibilityState,
 } from "@/lib/game/visibility";
@@ -22,19 +20,10 @@ import type { GamePhase, Role } from "@/lib/game/visibility";
 import type { Tables } from "@/db/supabase/database.types";
 
 interface UseParticipantVisibilityResult {
-  /** Whether the participant's video should be visible */
-  isVisible: boolean;
-  /** Visibility state: "visible", "dimmed", "covered", or "dead" */
   visibilityState: VisibilityState;
-  /** Message to show on the cover if not visible */
-  coverMessage: string;
-  /** The viewer's role */
   viewerRole: Role;
-  /** The target participant's role */
   targetRole: Role;
-  /** Whether the target player is dead */
   isTargetDead: boolean;
-  /** Whether the viewer is dead */
   isViewerDead: boolean;
 }
 
@@ -107,7 +96,6 @@ export function useParticipantVisibility(
   // Check if game is finished (reveal phase)
   const isGameFinished = Boolean(gameSessionState?.is_finished);
 
-  // Calculate visibility state (visible, dimmed, covered, or dead)
   const visibilityState = useMemo(() => {
     return getVisibilityStateWithDeath(
       viewerRole,
@@ -121,27 +109,8 @@ export function useParticipantVisibility(
     );
   }, [viewerRole, targetRole, gamePhase, isViewerHost, isTargetHost, viewerIsAlive, targetIsAlive, isGameFinished]);
 
-  // Calculate basic visibility (for backwards compatibility)
-  const isVisible = useMemo(() => {
-    // If dead, not visible in the traditional sense
-    if (visibilityState === VisibilityState.DEAD) return false;
-    return canSeeParticipant(
-      viewerRole,
-      targetRole,
-      gamePhase,
-      isViewerHost,
-      isTargetHost
-    );
-  }, [viewerRole, targetRole, gamePhase, isViewerHost, isTargetHost, visibilityState]);
-
-  const coverMessage = useMemo(() => {
-    return getCoverMessage(gamePhase);
-  }, [gamePhase]);
-
   return {
-    isVisible,
     visibilityState,
-    coverMessage,
     viewerRole,
     targetRole,
     isTargetDead: !targetIsAlive,

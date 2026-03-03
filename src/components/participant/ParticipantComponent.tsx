@@ -24,6 +24,7 @@ import {
   useMafiaTargetSelection,
   useYakuzaTargetSelection,
   useDoctorHealSelection,
+  useNightActionAuthority,
   useVoteIndicator,
 } from "@/hooks/game";
 
@@ -74,7 +75,7 @@ export default function ParticipantComponent({
   } = useParticipantReady(gameId, participantId, trackRef);
 
   // Visibility state
-  const { visibilityState, coverMessage, isTargetDead } =
+  const { visibilityState, isTargetDead } =
     useParticipantVisibility(trackRef, player);
 
   // Menu actions (kick, make host)
@@ -148,6 +149,18 @@ export default function ParticipantComponent({
     isViewerHost,
   });
 
+  // Night action authority (synchronous, derived from context)
+  const {
+    hasMafiaKillAuthority,
+    isMafiaPhase,
+    hasYakuzaKillAuthority,
+    isYakuzaPhase,
+    hasDoctorHealAuthority,
+    isDoctorPhase,
+  } = useNightActionAuthority();
+
+  const { healedPlayers } = useGameRoom();
+
   // Mafia target selection
   const {
     isMafiaTargetSelected,
@@ -159,6 +172,8 @@ export default function ParticipantComponent({
     isViewerHost,
     isTargetHost,
     player.is_alive !== false,
+    hasMafiaKillAuthority,
+    isMafiaPhase,
   );
 
   // Yakuza target selection
@@ -172,6 +187,8 @@ export default function ParticipantComponent({
     isViewerHost,
     isTargetHost,
     player.is_alive !== false,
+    hasYakuzaKillAuthority,
+    isYakuzaPhase,
   );
 
   // Doctor heal selection
@@ -186,6 +203,9 @@ export default function ParticipantComponent({
     isViewerHost,
     isTargetHost,
     player.is_alive !== false,
+    hasDoctorHealAuthority,
+    isDoctorPhase,
+    healedPlayers,
   );
 
   // Vote indicator (voting phase)
@@ -222,7 +242,6 @@ export default function ParticipantComponent({
       {/* Video / Cover layer */}
       <ParticipantOverlay
         visibilityState={visibilityState}
-        coverMessage={coverMessage}
         trackRef={trackRef}
       />
 

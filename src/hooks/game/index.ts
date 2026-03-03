@@ -9,18 +9,22 @@ export { useNomination } from "./useNomination";
 export { useFoulSpeak } from "./useFoulSpeak";
 export { useSpeakingProgress } from "./useSpeakingState";
 
+// Night action authority (synchronous, replaces async authority hooks)
+export { useNightActionAuthority } from "./useNightActionAuthority";
+export type { NightActionAuthority } from "./useNightActionAuthority";
+
+// Healed players (single fetch per game, not per participant)
+export { useHealedPlayers } from "./useHealedPlayers";
+
 // Mafia night kill
-export { useMafiaKillAuthority } from "./useMafiaKillAuthority";
 export { useMafiaTargetSelection } from "./useMafiaTargetSelection";
 export type { MafiaTargetSelectionResult } from "./useMafiaTargetSelection";
 
 // Yakuza night kill
-export { useYakuzaKillAuthority } from "./useYakuzaKillAuthority";
 export { useYakuzaTargetSelection } from "./useYakuzaTargetSelection";
 export type { YakuzaTargetSelectionResult } from "./useYakuzaTargetSelection";
 
 // Doctor heal
-export { useDoctorHealAuthority } from "./useDoctorHealAuthority";
 export { useDoctorHealSelection } from "./useDoctorHealSelection";
 export type { DoctorHealSelectionResult } from "./useDoctorHealSelection";
 

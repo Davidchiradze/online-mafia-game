@@ -22,7 +22,12 @@ import {
   useJoinPermissionListener,
   useLiveKitVotingListener,
 } from "@/hooks/livekit";
-import { useGameSession, useGamePlayers, usePlayerRoles } from "@/hooks/game";
+import {
+  useGameSession,
+  useGamePlayers,
+  usePlayerRoles,
+  useHealedPlayers,
+} from "@/hooks/game";
 import {
   useMyJoinRequestStatus,
   useGameHostSubscription,
@@ -70,6 +75,8 @@ type GameRoomContextValue = {
   setVotingSession: (session: VotingSession | null) => void;
   /** Vote data aggregated from vote table - real-time vote counts */
   voteData: VoteData;
+  /** Seat numbers of players healed across all nights (single fetch, not per-participant) */
+  healedPlayers: number[];
 };
 
 const GameRoomContext = createContext<GameRoomContextValue | null>(null);
@@ -139,6 +146,13 @@ export function GameRoomProvider({
   const isReady = isSpectator || hasPlayerRecord;
   const { currentNightSession: nightPhaseSession } =
     useNightPhaseSessionListener(gameId, isReady && !!gameSessionState);
+
+  // Healed players across all nights (single fetch, re-fetches on new night)
+  const { healedPlayers } = useHealedPlayers(
+    gameId,
+    nightPhaseSession?.night_number,
+    isReady && !!gameSessionState,
+  );
 
   // Voting session subscription via LiveKit Data Channels - only during voting phase
   // Uses reliable delivery for guaranteed real-time updates
@@ -271,6 +285,7 @@ export function GameRoomProvider({
       votingSession,
       setVotingSession,
       voteData,
+      healedPlayers,
     }),
     [
       gameId,
@@ -297,6 +312,7 @@ export function GameRoomProvider({
       votingSession,
       setVotingSession,
       voteData,
+      healedPlayers,
     ],
   );
 

@@ -45,7 +45,6 @@ export function useRoleAssignmentNotification(
   useEffect(() => {
     // Role changed from null/undefined to a value - first assignment
     if (viewerRole && !previousRoleRef.current && !hasShownModalRef.current) {
-      console.log("🎭 Role assigned:", viewerRole);
       setAssignedRole(viewerRole);
       setShowRoleModal(true);
       hasShownModalRef.current = true;

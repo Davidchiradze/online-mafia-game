@@ -59,18 +59,21 @@ Visibility rules determine who can see whom during each phase. See `src/lib/game
 - **Team meetings**: Only team members see each other
 - **Day phases**: Everyone sees everyone
 - **Role-specific phases**: Only that role (and host) can see
+- **Sleeping players appear dimmed**: During night phases, both the host and the awake role see sleeping players with a blur overlay — this signals to the active player that others are asleep
 
-### Visibility Function
+### Visibility States
 
-```typescript
-canSeeParticipant(
-  viewerRole: Role,
-  targetRole: Role,
-  gamePhase: GamePhase | null,
-  isViewerHost: boolean,
-  isTargetHost: boolean
-): boolean
-```
+Participant tiles are driven by a single `VisibilityState` enum:
+
+| State | Meaning |
+|---|---|
+| `VISIBLE` | Full video shown |
+| `DIMMED` | Video with blur overlay (💤) — host or awake role viewing sleeping players |
+| `COVERED` | Video replaced with sleeping cover (💤) — player cannot see this target |
+| `DEAD` | Permanent dead overlay (💀) |
+| `DISCONNECTED` | No video track / connection lost |
+
+The primary function is `getVisibilityStateWithDeath()` which accounts for game phase, roles, alive status, and game-finished state. See `src/lib/game/visibility.ts` for the full implementation.
 
 ## Game Flow
 

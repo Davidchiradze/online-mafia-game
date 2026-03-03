@@ -62,7 +62,7 @@ export function usePlayerRoles(
     if (!gameId || !userId || gameId === "" || userId === "" || !enabled) {
       return;
     }
-
+    console.log("🚀 ~ fetchRoles ~ gameId: fetch roles");
     setIsLoading(true);
     try {
       // Fetch filtered roles (roles user is allowed to see based on team relationships)
