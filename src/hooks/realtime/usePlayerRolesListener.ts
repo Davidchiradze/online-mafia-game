@@ -27,7 +27,6 @@ export function usePlayerRolesListener(
           filter: `game_id=eq.${gameId}`,
         },
         () => {
-          console.log("🚀 ~ usePlayerRolesListener ~ roles changed");
           // When roles change, trigger a refetch to get filtered roles
           refetchRoles();
         }
