@@ -9,6 +9,7 @@ import { Tables } from "@/db/supabase/database.types";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import NominatedPlayersDisplay from "./NominatedPlayersDisplay";
 import VotingDisplay from "./VotingDisplay";
+import { EmptySeat } from "@/components/participant/playerStates";
 
 // 4x5 grid placement for 12 players around a centered host (spanning 2 rows)
 // Player indices are 1..12 (clockwise-ish around the host)
@@ -92,7 +93,10 @@ export default function PlayerCircle({
           <div
             key={`seat-${String(key)}`}
             className={
-              "relative rounded-xl bg-black/40 backdrop-blur-sm border border-white/10 " +
+              "relative rounded-xl backdrop-blur-sm overflow-hidden " +
+              (player
+                ? "bg-black/40 border border-white/10 "
+                : "bg-white/[0.03] border border-dashed border-white/20 ") +
               (isHostIndex ? "transform translate-y-1/2" : "")
             }
             style={{ gridColumn: pos.gridColumn, gridRow: pos.gridRow }}
@@ -107,9 +111,7 @@ export default function PlayerCircle({
                 playerIndex={key}
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-xs text-gray-300/70">
-                {isHostIndex ? "Host" : `${key} Empty`}
-              </div>
+              <EmptySeat seatIndex={key} />
             )}
           </div>
         );
