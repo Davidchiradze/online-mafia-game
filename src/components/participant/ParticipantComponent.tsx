@@ -75,8 +75,10 @@ export default function ParticipantComponent({
   } = useParticipantReady(gameId, participantId, trackRef);
 
   // Visibility state
-  const { visibilityState, isTargetDead } =
-    useParticipantVisibility(trackRef, player);
+  const { visibilityState, isTargetDead } = useParticipantVisibility(
+    trackRef,
+    player,
+  );
 
   // Menu actions (kick, make host)
   const { menuOpen, setMenuOpen, canShowLobbyMenu, onKick, onMakeHost } =
@@ -114,14 +116,15 @@ export default function ParticipantComponent({
   }, [gameSessionState?.game_phase]);
 
   // Speaking state
-  const { isSpeaking, isParticipantFoulSpeaking, boxShadowClass } = useParticipantSpeaking(
-    gameSessionState,
-    player.seat_number,
-    isMicEnabled,
-    isFoulAllowedPhase,
-    isTargetHost,
-    isTargetDead,
-  );
+  const { isSpeaking, isParticipantFoulSpeaking, boxShadowClass } =
+    useParticipantSpeaking(
+      gameSessionState,
+      player.seat_number,
+      isMicEnabled,
+      isFoulAllowedPhase,
+      isTargetHost,
+      isTargetDead,
+    );
 
   // Speaking progress (uses different durations based on phase)
   const speakingProgress = useSpeakingProgress(

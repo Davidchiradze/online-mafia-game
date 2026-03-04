@@ -39,18 +39,13 @@ export function useParticipantSpeaking(
     !isTargetDead &&
     !!gameSessionState;
 
-  // Determine box shadow based on speaking state (not for dead players)
   const boxShadowClass = useMemo(() => {
-    if (isTargetDead) {
-      return ""; // No glow for dead players
-    }
+    if (isTargetDead) return "";
     if (isParticipantFoulSpeaking) {
-      // Red glow for foul speaking (visible to everyone)
-      return "shadow-[0_0_20px_4px_rgba(239,68,68,0.7)]";
+      return "shadow-[0_0_35px_rgba(220,38,38,0.8)] ";
     }
     if (isSpeaking) {
-      // Emerald glow for active speaker
-      return "shadow-[0_0_20px_4px_rgba(16,185,129,0.7)]";
+      return "shadow-[0_0_30px_rgba(34,197,94,0.7)] ";
     }
     return "";
   }, [isParticipantFoulSpeaking, isSpeaking, isTargetDead]);
