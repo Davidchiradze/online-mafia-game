@@ -114,7 +114,7 @@ export default function ParticipantComponent({
   }, [gameSessionState?.game_phase]);
 
   // Speaking state
-  const { isSpeaking, boxShadowClass } = useParticipantSpeaking(
+  const { isSpeaking, isParticipantFoulSpeaking, boxShadowClass } = useParticipantSpeaking(
     gameSessionState,
     player.seat_number,
     isMicEnabled,
@@ -233,6 +233,11 @@ export default function ParticipantComponent({
     }
   }, [room, player.player_id]);
 
+  const handleToggleMic = useCallback(() => {
+    if (!room) return;
+    void room.localParticipant.setMicrophoneEnabled(!isMicEnabled);
+  }, [room, isMicEnabled]);
+
   return (
     <div
       className={`relative w-full h-full flex flex-col items-stretch justify-stretch text-sm text-gray-200 group transition-shadow duration-300 overflow-hidden rounded-xl ${boxShadowClass}`}
@@ -254,11 +259,14 @@ export default function ParticipantComponent({
         isLocal={isLocal}
         isTargetHost={isTargetHost}
         isMicEnabled={isMicEnabled}
+        isSpeaking={isSpeaking}
+        isFoulSpeaking={isParticipantFoulSpeaking}
         playerIndex={playerIndex}
         displayName={displayName}
         showNominationEffect={showNominationEffect}
         playerId={player.player_id || ""}
         isViewerHost={isViewerHost}
+        onToggleMic={handleToggleMic}
       />
 
       {/* Lobby menu - kick/make host */}
