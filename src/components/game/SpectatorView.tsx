@@ -44,7 +44,9 @@ export default function SpectatorView({
 
   // Get display label for the current game phase
   const gamePhaseLabel = gameSessionState?.game_phase
-    ? GAME_PHASE_LABELS[gameSessionState.game_phase as keyof typeof GAME_PHASE_LABELS] ?? gameSessionState.game_phase
+    ? (GAME_PHASE_LABELS[
+        gameSessionState.game_phase as keyof typeof GAME_PHASE_LABELS
+      ] ?? gameSessionState.game_phase)
     : null;
 
   return (
@@ -101,7 +103,7 @@ function SpectatorVideoConference({
 }) {
   const tracks = useTracks(
     [{ source: Track.Source.Camera, withPlaceholder: true }],
-    { onlySubscribed: false }
+    { onlySubscribed: false },
   );
 
   // Spectators don't publish, so we don't wait for own track
@@ -109,7 +111,7 @@ function SpectatorVideoConference({
   const hasAnyTracks = tracks.length > 0;
 
   return (
-    <div className="w-full h-full flex items-center justify-center">
+    <div className="w-full h-full flex items-center justify-center p-5">
       {!hasAnyTracks && <LoadingSpinner message="Waiting for players..." />}
       {hasAnyTracks && (
         <PlayerCircle

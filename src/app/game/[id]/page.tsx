@@ -32,8 +32,6 @@ export default async function GamePage({ params }: PageProps) {
   const isHost = game.host_id === userId;
 
   // Non-players/hosts see the spectator prompt for in-progress games.
-  // A fresh game_spectators row is created each time they click join,
-  // and the webhook cleans it up on disconnect. No stale-row race conditions.
   const shouldShowSpectatorPrompt =
     (game.game_status === "playing" || game.game_status === "finished") &&
     !isPlayer &&
@@ -41,7 +39,7 @@ export default async function GamePage({ params }: PageProps) {
 
   if (shouldShowSpectatorPrompt) {
     return (
-      <div className="bg-[#0a0a12] h-[100vh] flex items-center justify-center px-4">
+      <div className="h-screen flex items-center justify-center px-4">
         <SpectatorJoinPrompt
           gameId={id}
           userId={userId!}
@@ -52,9 +50,8 @@ export default async function GamePage({ params }: PageProps) {
     );
   }
 
-  // Normal flow: User is player or host
   return (
-    <div className="bg-[#0a0a12] h-[100vh]">
+    <div className="h-screen">
       <div className="mx-auto px-4 sm:px-6 lg:px-8 py-6 h-full flex items-center justify-center">
         <div className="flex flex-col gap-6 h-full w-full sm:w-[80%] md:w-[90%] lg:w-[90%]">
           {!userId || !game ? (

@@ -47,7 +47,7 @@ export default function LiveKitTestComponent({
   // Disable microphone and camera for dead players
   // Dead players cannot speak or show video for the rest of the game
   // When game is finished (gameSessionState.is_finished), all cameras are enabled for role reveal
-  const isGameFinished = Boolean(gameSessionState?.is_finished)
+  const isGameFinished = Boolean(gameSessionState?.is_finished);
   useDeadPlayerMute(room, players, userId, isGameFinished);
 
   return (
@@ -100,11 +100,11 @@ function MyVideoConference({
 }) {
   const tracks = useTracks(
     [{ source: Track.Source.Camera, withPlaceholder: true }],
-    { onlySubscribed: false }
+    { onlySubscribed: false },
   );
   const track = tracks.find((t) => t.participant.identity === userId);
   return (
-    <div className="w-full h-full flex items-center justify-center">
+    <div className="w-full h-full flex items-center justify-center p-5">
       {!track && <LoadingSpinner message="Loading..." />}
       {track && (
         <PlayerCircle
