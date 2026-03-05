@@ -42,10 +42,10 @@ export function useParticipantSpeaking(
   const boxShadowClass = useMemo(() => {
     if (isTargetDead) return "";
     if (isParticipantFoulSpeaking) {
-      return "shadow-[0_0_35px_rgba(220,38,38,0.8)] ";
+      return "shadow-[0_0_35px_rgba(220,38,38,0.8)]";
     }
     if (isSpeaking) {
-      return "shadow-[0_0_30px_rgba(34,197,94,0.7)] ";
+      return "shadow-[0_0_30px_rgba(34,197,94,0.7)]";
     }
     return "";
   }, [isParticipantFoulSpeaking, isSpeaking, isTargetDead]);

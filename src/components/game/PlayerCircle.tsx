@@ -87,13 +87,13 @@ export default function PlayerCircle({
         const pos = gridPositionForPlayerIndex(key);
         const isHostIndex = key === maxPlayers + 1;
         const player = players.find(
-          (p) => p.seat_number === key
+          (p) => p.seat_number === key,
         ) as Tables<"game_players">;
         return (
           <div
             key={`seat-${String(key)}`}
             className={
-              "relative rounded-xl backdrop-blur-sm overflow-hidden " +
+              "relative rounded-xl backdrop-blur-sm" +
               (player
                 ? "bg-black/40 border border-white/10 "
                 : "bg-white/[0.03] border border-dashed border-white/20 ") +
@@ -117,7 +117,7 @@ export default function PlayerCircle({
         );
       })}
       <div style={{ gridColumn: 3, gridRow: 2, position: "relative" }}>
-      {(isHost || gameSessionState?.game_phase === "voting") && (
+        {(isHost || gameSessionState?.game_phase === "voting") && (
           <div className="absolute top-0 left-0 w-full h-[200%] flex flex-col items-center justify-center gap-2">
             <div className="w-full h-[50%] flex flex-col items-center justify-center gap-3 px-4 py-3 rounded-2xl bg-black/50 backdrop-blur-md border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.4)] ring-1 ring-inset ring-white/[0.05]">
               {isHost ? (

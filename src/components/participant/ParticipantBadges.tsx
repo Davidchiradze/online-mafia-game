@@ -25,9 +25,11 @@ const MAFIA_ROLE_SET = new Set<string>(MAFIA_TEAM_ROLES);
 const YAKUZA_ROLE_SET = new Set<string>(YAKUZA_TEAM_ROLES);
 
 function getRoleColorClass(role: string): string {
-  if (MAFIA_ROLE_SET.has(role)) return "text-red-400/80";
-  if (YAKUZA_ROLE_SET.has(role)) return "text-purple-400/80";
-  return "text-blue-400/80";
+  if (MAFIA_ROLE_SET.has(role))
+    return "text-red-300 bg-red-950/60 ring-1 ring-red-500/30";
+  if (YAKUZA_ROLE_SET.has(role))
+    return "text-purple-300 bg-purple-950/60 ring-1 ring-purple-500/30";
+  return "text-sky-300 bg-sky-950/60 ring-1 ring-sky-500/30";
 }
 
 function formatRole(role: string): string {
@@ -171,7 +173,7 @@ export default function ParticipantBadges({
             {/* Role label — colour-coded by faction */}
             {playerRole && (
               <span
-                className={`font-inter text-[9px] lg:text-[11px] font-normal shrink-0 ${getRoleColorClass(playerRole)}`}
+                className={`font-inter text-[9px] lg:text-[11px] font-medium shrink-0 px-1.5 py-0.5 rounded ${getRoleColorClass(playerRole)}`}
               >
                 {formatRole(playerRole)}
               </span>
