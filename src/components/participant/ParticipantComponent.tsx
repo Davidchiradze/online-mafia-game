@@ -242,7 +242,7 @@ export default function ParticipantComponent({
 
   return (
     <div
-      className={`relative w-full h-full flex flex-col items-stretch justify-stretch text-sm text-gray-200 group transition-shadow duration-300  rounded-xl ${boxShadowClass}`}
+      className={`relative w-full h-full flex flex-col items-stretch justify-stretch text-sm text-gray-200 group transition-shadow duration-300 rounded-xl overflow-hidden ${boxShadowClass}`}
       onMouseLeave={() => setMenuOpen(false)}
       onClick={handleTileClick}
     >

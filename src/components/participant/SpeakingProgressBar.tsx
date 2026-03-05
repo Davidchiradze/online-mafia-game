@@ -8,7 +8,7 @@ export default function SpeakingProgressBar({
   progress,
 }: SpeakingProgressBarProps) {
   return (
-    <div className="absolute bottom-0 left-0 right-0 h-1.5 overflow-hidden z-30">
+    <div className="absolute bottom-0 left-0 right-0 h-1 overflow-hidden z-30">
       <div
         className="h-full relative overflow-hidden"
         style={{
