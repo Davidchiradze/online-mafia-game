@@ -25,10 +25,10 @@ const YAKUZA_ROLE_SET = new Set<string>(YAKUZA_TEAM_ROLES);
 
 function getRoleColorClass(role: string): string {
   if (MAFIA_ROLE_SET.has(role))
-    return "text-red-300 bg-red-950/60 ring-1 ring-red-500/30";
+    return "text-white font-semibold bg-black ring-1 ring-white/30 shadow-[0_0_8px_rgba(255,255,255,0.15)]";
   if (YAKUZA_ROLE_SET.has(role))
-    return "text-purple-300 bg-purple-950/60 ring-1 ring-purple-500/30";
-  return "text-sky-300 bg-sky-950/60 ring-1 ring-sky-500/30";
+    return "text-white font-semibold bg-purple-600 ring-1 ring-purple-400/50 shadow-[0_0_8px_rgba(168,85,247,0.4)]";
+  return "text-white font-semibold bg-red-600 ring-1 ring-red-400/50 shadow-[0_0_8px_rgba(239,68,68,0.4)]";
 }
 
 function formatRole(role: string): string {
