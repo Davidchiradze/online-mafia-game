@@ -272,7 +272,6 @@ export default function ParticipantComponent({
         showNominationEffect={showNominationEffect}
         playerId={player.player_id || ""}
         isViewerHost={isViewerHost}
-        currentFouls={currentFouls}
         onToggleMic={handleToggleMic}
       />
 

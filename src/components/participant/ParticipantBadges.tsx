@@ -1,6 +1,6 @@
 "use client";
 
-import { FoulXIcon, MicOffIcon, MicOnIcon } from "@/assets/icons";
+import { MicOffIcon, MicOnIcon } from "@/assets/icons";
 import { Tables } from "@/db/supabase/database.types";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { MAFIA_TEAM_ROLES, YAKUZA_TEAM_ROLES } from "@/lib/constants/game";
@@ -17,7 +17,6 @@ interface ParticipantBadgesProps {
   showNominationEffect: boolean;
   playerId: string;
   isViewerHost: boolean;
-  currentFouls: number;
   onToggleMic?: () => void;
 }
 
@@ -55,7 +54,6 @@ export default function ParticipantBadges({
   showNominationEffect,
   playerId,
   isViewerHost,
-  currentFouls,
   onToggleMic,
 }: ParticipantBadgesProps) {
   const { getRoleForUser, playerRolesMap, maxPlayers } = useGameRoom();
@@ -175,19 +173,6 @@ export default function ParticipantBadges({
                 {playerIndex === (maxPlayers ?? 13) + 1 ? "H" : playerIndex}
               </span>
             </div>
-
-            {isLocal && currentFouls > 0 && (
-              <div className="flex items-center gap-0.5 shrink-0">
-                {Array.from({ length: currentFouls }).map((_, i) => (
-                  <FoulXIcon
-                    key={i}
-                    width="10"
-                    height="10"
-                    className="drop-shadow-[0_0_3px_rgba(239,68,68,0.8)]"
-                  />
-                ))}
-              </div>
-            )}
 
             <div className="flex-1" />
 

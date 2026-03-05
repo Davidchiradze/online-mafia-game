@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 import { giveFoul } from "@/lib/dayPhase/actions";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { FOULS } from "@/lib/constants/game";
-import { FoulXIcon } from "@/assets/icons";
+import { FoulAlertIcon } from "@/assets/icons";
 import FoulEliminationModal from "./FoulEliminationModal";
 
 type FoulButtonProps = {
@@ -75,7 +75,7 @@ export default function FoulButton({
         title={getButtonTitle()}
         className={`
           relative w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center
-          transition-all duration-200 shadow-lg bg-black/50 border border-white/20 hover:bg-red-600/70 hover:border-red-400
+          transition-all duration-200 shadow-lg bg-black/50 border border-white/20 text-white/80 hover:bg-red-600/80 hover:border-red-400 hover:text-white
           ${
             isLoading || isAlreadyEliminated
               ? "opacity-50 cursor-not-allowed"
@@ -106,11 +106,7 @@ export default function FoulButton({
             />
           </svg>
         ) : (
-          <FoulXIcon
-            width="14"
-            height="14"
-            className="drop-shadow-[0_0_4px_rgba(239,68,68,0.8)]"
-          />
+          <FoulAlertIcon width="16" height="16" />
         )}
         {currentFouls > 0 && !isLoading && (
           <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-600 text-white text-[9px] font-bold flex items-center justify-center shadow-sm">

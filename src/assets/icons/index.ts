@@ -1,4 +1,5 @@
 export { default as EyeIcon } from "./Eye";
+export { default as FoulAlertIcon } from "./FoulAlert";
 export { default as FoulXIcon } from "./FoulX";
 export { default as FullscreenEnterIcon } from "./FullscreenEnter";
 export { default as FullscreenExitIcon } from "./FullscreenExit";

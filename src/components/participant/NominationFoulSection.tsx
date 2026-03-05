@@ -68,6 +68,7 @@ export default function NominationFoulSection({
             isFoulSpeaking={isFoulSpeaking}
             foulSpeakTimeLeft={foulSpeakTimeLeft}
             canFoulSpeak={canFoulSpeak}
+            currentFouls={currentFouls}
           />
         </div>
       )}
