@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { giveFoul } from "@/lib/dayPhase/actions";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { FOULS } from "@/lib/constants/game";
+import { FoulXIcon } from "@/assets/icons";
 import FoulEliminationModal from "./FoulEliminationModal";
 
 type FoulButtonProps = {
@@ -73,8 +74,8 @@ export default function FoulButton({
         aria-label="Give foul"
         title={getButtonTitle()}
         className={`
-          w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center
-          transition-all duration-200 shadow-lg font-bold text-sm bg-black/50 border-white/20 text-gray-300 hover:bg-amber-500/80 hover:border-amber-400 hover:text-white
+          relative w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center
+          transition-all duration-200 shadow-lg bg-black/50 border border-white/20 hover:bg-red-600/70 hover:border-red-400
           ${
             isLoading || isAlreadyEliminated
               ? "opacity-50 cursor-not-allowed"
@@ -85,7 +86,7 @@ export default function FoulButton({
       >
         {isLoading ? (
           <svg
-            className="animate-spin h-4 w-4"
+            className="animate-spin h-4 w-4 text-gray-300"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -105,7 +106,16 @@ export default function FoulButton({
             />
           </svg>
         ) : (
-          <span>!</span>
+          <FoulXIcon
+            width="14"
+            height="14"
+            className="drop-shadow-[0_0_4px_rgba(239,68,68,0.8)]"
+          />
+        )}
+        {currentFouls > 0 && !isLoading && (
+          <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-600 text-white text-[9px] font-bold flex items-center justify-center shadow-sm">
+            {currentFouls}
+          </span>
         )}
       </button>
 

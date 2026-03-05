@@ -7,6 +7,7 @@ export type { PlayerSlotDescriptor } from "./usePlayerSlots";
 
 export { useNomination } from "./useNomination";
 export { useFoulSpeak } from "./useFoulSpeak";
+export { useFoulNotification } from "./useFoulNotification";
 export { useSpeakingProgress } from "./useSpeakingState";
 
 // Night action authority (synchronous, replaces async authority hooks)

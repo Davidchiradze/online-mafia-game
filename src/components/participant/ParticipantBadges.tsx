@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { MicOffIcon, MicOnIcon } from "@/assets/icons";
+import { FoulXIcon, MicOffIcon, MicOnIcon } from "@/assets/icons";
 import { Tables } from "@/db/supabase/database.types";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { MAFIA_TEAM_ROLES, YAKUZA_TEAM_ROLES } from "@/lib/constants/game";
@@ -18,6 +17,7 @@ interface ParticipantBadgesProps {
   showNominationEffect: boolean;
   playerId: string;
   isViewerHost: boolean;
+  currentFouls: number;
   onToggleMic?: () => void;
 }
 
@@ -40,7 +40,8 @@ function formatRole(role: string): string {
 }
 
 /**
- * ParticipantBadges - Displays microphone indicator and seat number/name badge.
+ * ParticipantBadges - Displays microphone indicator, player name tooltip,
+ * seat number badge, foul indicators, and role label.
  */
 export default function ParticipantBadges({
   gameSessionState,
@@ -54,10 +55,10 @@ export default function ParticipantBadges({
   showNominationEffect,
   playerId,
   isViewerHost,
+  currentFouls,
   onToggleMic,
 }: ParticipantBadgesProps) {
   const { getRoleForUser, playerRolesMap, maxPlayers } = useGameRoom();
-  const [showName, setShowName] = useState(false);
 
   const playerRole = playerRolesMap.size > 0 ? getRoleForUser(playerId) : null;
 
@@ -139,14 +140,30 @@ export default function ParticipantBadges({
         </div>
       )}
 
+      {/* Player name — top center, hidden during game, revealed on hover (desktop) or tap/focus (mobile) */}
+      <div
+        className={`absolute top-0 left-0 right-0 z-20 flex justify-center pointer-events-none transition-all duration-300 ${
+          isGameActive
+            ? "opacity-0 -translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 group-focus-within:opacity-100 group-focus-within:translate-y-0"
+            : "opacity-100"
+        }`}
+      >
+        <div className="px-3 py-1 rounded-b-lg backdrop-blur-md bg-black/60 border border-white/10 border-t-0 shadow-lg max-w-[80%]">
+          <span
+            className={`font-inter text-[0.65rem] lg:text-[0.75rem] truncate block text-center ${
+              isSpeaking
+                ? "text-white font-semibold"
+                : "text-white/90 font-medium"
+            }`}
+          >
+            {resolvedName}
+          </span>
+        </div>
+      </div>
+
       {/* Bottom info bar */}
       <div className="absolute bottom-0 left-0 right-0 z-20">
-        <div
-          className="px-2 py-1.5 lg:px-3 lg:py-2 group cursor-pointer bg-gradient-to-t from-black/50 to-transparent shadow-[inset_0_-4px_8px_-2px_rgba(0,0,0,0.4)]"
-          onMouseEnter={() => isGameActive && setShowName(true)}
-          onMouseLeave={() => isGameActive && setShowName(false)}
-          onClick={() => isGameActive && setShowName((v) => !v)}
-        >
+        <div className="px-2 py-1.5 lg:px-3 lg:py-2 bg-gradient-to-t from-black/50 to-transparent shadow-[inset_0_-4px_8px_-2px_rgba(0,0,0,0.4)]">
           <div className="flex items-center gap-1.5 lg:gap-2">
             {/* Seat number badge */}
             <div
@@ -159,18 +176,22 @@ export default function ParticipantBadges({
               </span>
             </div>
 
-            {/* Player name — always visible when game is not active; reveal on hover/tap during game */}
-            <span
-              className={`font-inter flex-1 truncate text-[0.7rem] lg:text-[0.8rem] transition-all duration-200 ${
-                isSpeaking
-                  ? "text-white font-semibold"
-                  : "text-white/95 font-medium"
-              } ${isGameActive && !showName ? "opacity-0 w-0 overflow-hidden" : "opacity-100"}`}
-            >
-              {resolvedName}
-            </span>
+            {isLocal && currentFouls > 0 && (
+              <div className="flex items-center gap-0.5 shrink-0">
+                {Array.from({ length: currentFouls }).map((_, i) => (
+                  <FoulXIcon
+                    key={i}
+                    width="10"
+                    height="10"
+                    className="drop-shadow-[0_0_3px_rgba(239,68,68,0.8)]"
+                  />
+                ))}
+              </div>
+            )}
 
-            {/* Role label — colour-coded by faction */}
+            <div className="flex-1" />
+
+            {/* Role label — colour-coded by faction, pushed to the right */}
             {playerRole && (
               <span
                 className={`font-inter text-[9px] lg:text-[11px] font-medium shrink-0 px-1.5 py-0.5 rounded ${getRoleColorClass(playerRole)}`}

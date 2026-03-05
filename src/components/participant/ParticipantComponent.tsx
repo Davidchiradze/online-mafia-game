@@ -27,6 +27,7 @@ import {
   useNightActionAuthority,
   useVoteIndicator,
 } from "@/hooks/game";
+import { useFoulNotification } from "@/hooks/game/useFoulNotification";
 
 // Components
 import ReadyButton from "@/components/ui/ReadyButton";
@@ -151,6 +152,8 @@ export default function ParticipantComponent({
     isViewerHost,
   });
 
+  const showFoulNotification = useFoulNotification(currentFouls);
+
   // Night action authority (synchronous, derived from context)
   const {
     hasMafiaKillAuthority,
@@ -242,7 +245,8 @@ export default function ParticipantComponent({
 
   return (
     <div
-      className={`relative w-full h-full flex flex-col items-stretch justify-stretch text-sm text-gray-200 group transition-shadow duration-300 rounded-xl overflow-hidden ${boxShadowClass}`}
+      tabIndex={0}
+      className={`relative w-full h-full flex flex-col items-stretch justify-stretch text-sm text-gray-200 group transition-shadow duration-300 rounded-xl overflow-hidden outline-none ${boxShadowClass}`}
       onMouseLeave={() => setMenuOpen(false)}
       onClick={handleTileClick}
     >
@@ -268,6 +272,7 @@ export default function ParticipantComponent({
         showNominationEffect={showNominationEffect}
         playerId={player.player_id || ""}
         isViewerHost={isViewerHost}
+        currentFouls={currentFouls}
         onToggleMic={handleToggleMic}
       />
 
@@ -305,6 +310,7 @@ export default function ParticipantComponent({
         isNominated={isNominated}
         canShowFoulButton={canShowFoulButton}
         currentFouls={currentFouls}
+        showFoulNotification={showFoulNotification}
         canShowFoulSpeakButton={canShowFoulSpeakButton}
         isFoulSpeaking={isFoulSpeaking}
         foulSpeakTimeLeft={foulSpeakTimeLeft}

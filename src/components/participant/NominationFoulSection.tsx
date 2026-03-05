@@ -2,7 +2,7 @@
 
 import NominationButton from "@/components/game/NominationButton";
 import FoulButton from "@/components/game/FoulButton";
-import FoulDisplay from "@/components/game/FoulDisplay";
+import FoulNotification from "@/components/game/FoulNotification";
 import FoulSpeakButton from "@/components/game/FoulSpeakButton";
 
 interface NominationFoulSectionProps {
@@ -14,6 +14,7 @@ interface NominationFoulSectionProps {
   // Foul
   canShowFoulButton: boolean;
   currentFouls: number;
+  showFoulNotification: boolean;
   // Foul speak
   canShowFoulSpeakButton: boolean;
   isFoulSpeaking: boolean;
@@ -33,6 +34,7 @@ export default function NominationFoulSection({
   isNominated,
   canShowFoulButton,
   currentFouls,
+  showFoulNotification,
   canShowFoulSpeakButton,
   isFoulSpeaking,
   foulSpeakTimeLeft,
@@ -55,8 +57,8 @@ export default function NominationFoulSection({
         </div>
       )}
 
-      {/* Foul display */}
-      {!isTargetDead && <FoulDisplay foulCount={currentFouls} />}
+      {/* Temporary foul notification - visible to everyone when a foul is given */}
+      {!isTargetDead && showFoulNotification && <FoulNotification />}
 
       {/* Foul speak button */}
       {canShowFoulSpeakButton && !isTargetDead && (

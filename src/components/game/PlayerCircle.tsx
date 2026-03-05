@@ -95,7 +95,7 @@ export default function PlayerCircle({
             className={
               "relative rounded-xl backdrop-blur-sm" +
               (player
-                ? "bg-black/40 border border-white/10 "
+                ? "bg-black/40 border border-white/10"
                 : "bg-white/[0.03] border border-dashed border-white/20 ") +
               (isHostIndex ? "transform translate-y-1/2" : "")
             }
