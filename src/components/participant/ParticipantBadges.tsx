@@ -54,7 +54,7 @@ export default function ParticipantBadges({
   isViewerHost,
   onToggleMic,
 }: ParticipantBadgesProps) {
-  const { getRoleForUser, playerRolesMap } = useGameRoom();
+  const { getRoleForUser, playerRolesMap, maxPlayers } = useGameRoom();
   const [showName, setShowName] = useState(false);
 
   const playerRole = playerRolesMap.size > 0 ? getRoleForUser(playerId) : null;
@@ -140,7 +140,7 @@ export default function ParticipantBadges({
       {/* Bottom info bar */}
       <div className="absolute bottom-0 left-0 right-0 z-20">
         <div
-          className="px-2 py-1.5 lg:px-3 lg:py-2 group cursor-pointer"
+          className="px-2 py-1.5 lg:px-3 lg:py-2 group cursor-pointer bg-gradient-to-t from-black/50 to-transparent shadow-[inset_0_-4px_8px_-2px_rgba(0,0,0,0.4)]"
           onMouseEnter={() => isGameActive && setShowName(true)}
           onMouseLeave={() => isGameActive && setShowName(false)}
           onClick={() => isGameActive && setShowName((v) => !v)}
@@ -151,15 +151,15 @@ export default function ParticipantBadges({
               className={`p-1 lg:w-6 lg:h-6 rounded-md flex items-center justify-center shrink-0 transition-all border ${seatBadgeClass}`}
             >
               <span
-                className={`font-orbitron text-[0.6rem] lg:text-[0.7rem] font-bold text-shadow-sm ${seatNumberClass}`}
+                className={`font-orbitron text-[0.6rem] lg:text-[0.7rem] font-bold ${seatNumberClass}`}
               >
-                {playerIndex === 13 ? "H" : playerIndex}
+                {playerIndex === (maxPlayers ?? 13) + 1 ? "H" : playerIndex}
               </span>
             </div>
 
             {/* Player name — always visible when game is not active; reveal on hover/tap during game */}
             <span
-              className={`font-inter flex-1 truncate text-[0.7rem] lg:text-[0.8rem] text-shadow-md transition-all duration-200 ${
+              className={`font-inter flex-1 truncate text-[0.7rem] lg:text-[0.8rem] transition-all duration-200 ${
                 isSpeaking
                   ? "text-white font-semibold"
                   : "text-white/95 font-medium"
@@ -171,7 +171,7 @@ export default function ParticipantBadges({
             {/* Role label — colour-coded by faction */}
             {playerRole && (
               <span
-                className={`font-inter text-[9px] lg:text-[11px] font-normal shrink-0 text-shadow-sm ${getRoleColorClass(playerRole)}`}
+                className={`font-inter text-[9px] lg:text-[11px] font-normal shrink-0 ${getRoleColorClass(playerRole)}`}
               >
                 {formatRole(playerRole)}
               </span>

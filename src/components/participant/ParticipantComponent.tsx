@@ -125,7 +125,6 @@ export default function ParticipantComponent({
       isTargetHost,
       isTargetDead,
     );
-
   // Speaking progress (uses different durations based on phase)
   const speakingProgress = useSpeakingProgress(
     gameSessionState?.speaker_started_at,
@@ -243,7 +242,7 @@ export default function ParticipantComponent({
 
   return (
     <div
-      className={`relative w-full h-full flex flex-col items-stretch justify-stretch text-sm text-gray-200 group transition-shadow duration-300 overflow-hidden rounded-xl ${boxShadowClass}`}
+      className={`relative w-full h-full flex flex-col items-stretch justify-stretch text-sm text-gray-200 group transition-shadow duration-300  rounded-xl ${boxShadowClass}`}
       onMouseLeave={() => setMenuOpen(false)}
       onClick={handleTileClick}
     >

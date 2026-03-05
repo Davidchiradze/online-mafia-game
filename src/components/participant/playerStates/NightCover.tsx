@@ -1,4 +1,29 @@
-import { STARS, RAIN_A, RAIN_B } from "./constants";
+const PARTICLES = [
+  { x: 12, y: 25, size: 2.5, delay: "0s", dur: "4s", color: "rgba(140,120,255,0.5)" },
+  { x: 45, y: 60, size: 1.8, delay: "1.2s", dur: "5s", color: "rgba(180,160,255,0.4)" },
+  { x: 78, y: 15, size: 2, delay: "0.5s", dur: "4.5s", color: "rgba(120,200,255,0.45)" },
+  { x: 130, y: 45, size: 3, delay: "2s", dur: "6s", color: "rgba(160,130,255,0.35)" },
+  { x: 195, y: 30, size: 1.5, delay: "0.8s", dur: "3.5s", color: "rgba(100,180,255,0.5)" },
+  { x: 230, y: 70, size: 2.2, delay: "1.5s", dur: "5.5s", color: "rgba(170,140,255,0.4)" },
+  { x: 260, y: 20, size: 1.8, delay: "2.5s", dur: "4s", color: "rgba(130,160,255,0.45)" },
+  { x: 55, y: 85, size: 2, delay: "3s", dur: "5s", color: "rgba(150,120,255,0.35)" },
+  { x: 160, y: 80, size: 1.5, delay: "0.3s", dur: "4.2s", color: "rgba(120,170,255,0.4)" },
+  { x: 100, y: 100, size: 2.5, delay: "1.8s", dur: "5.8s", color: "rgba(140,100,255,0.3)" },
+  { x: 210, y: 110, size: 1.8, delay: "0.7s", dur: "3.8s", color: "rgba(180,150,255,0.35)" },
+  { x: 35, y: 120, size: 2, delay: "2.2s", dur: "4.5s", color: "rgba(110,160,255,0.4)" },
+];
+
+const STARS = [
+  { x: 14, y: 14, size: 1, delay: "0s", warm: false },
+  { x: 40, y: 22, size: 1.3, delay: "1.1s", warm: true },
+  { x: 65, y: 8, size: 0.9, delay: "0.6s", warm: false },
+  { x: 95, y: 18, size: 1.1, delay: "1.8s", warm: true },
+  { x: 120, y: 6, size: 1.3, delay: "0.3s", warm: false },
+  { x: 150, y: 16, size: 0.8, delay: "2.2s", warm: true },
+  { x: 180, y: 10, size: 1.1, delay: "0.9s", warm: false },
+  { x: 210, y: 22, size: 1.2, delay: "1.5s", warm: true },
+  { x: 245, y: 14, size: 0.9, delay: "0.4s", warm: false },
+];
 
 interface NightCoverProps {
   className?: string;
@@ -7,147 +32,160 @@ interface NightCoverProps {
 export default function NightCover({ className = "" }: NightCoverProps) {
   return (
     <div className={`absolute inset-0 z-10 ${className}`}>
-      {/* Deep oppressive night sky */}
-      <div className="absolute inset-0 bg-night-sky" />
-
-      {/* Blood-moon ambient bleed */}
+      {/* Deep indigo/midnight gradient */}
       <div
-        className="absolute -top-5 -right-2.5 w-[100px] h-[100px] bg-moon-ambient blur-[12px]"
+        className="absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(160deg, rgba(8,6,30,0.98) 0%, rgba(15,10,45,0.96) 30%, rgba(20,12,55,0.95) 55%, rgba(10,8,35,0.98) 100%)",
+        }}
       />
 
-      {/* Rain streaks */}
-      <div className="absolute inset-0 overflow-hidden opacity-[0.18]">
-        <svg width="100%" height="100%" viewBox="0 0 280 200" preserveAspectRatio="none">
-          {RAIN_A.map((x, i) => (
-            <line key={i} x1={x} y1={-5 + (i % 3) * 8} x2={x - 4} y2={40 + (i % 4) * 15} stroke="rgba(160,170,210,0.6)" strokeWidth="0.5" />
-          ))}
-          {RAIN_B.map((x, i) => (
-            <line key={`b${i}`} x1={x} y1={50 + (i % 3) * 10} x2={x - 4} y2={100 + (i % 4) * 18} stroke="rgba(140,150,190,0.4)" strokeWidth="0.4" />
-          ))}
+      {/* Purple ambient glow from center */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse at 50% 60%, rgba(80,40,140,0.12) 0%, rgba(50,25,100,0.06) 40%, transparent 70%)",
+        }}
+      />
+
+      {/* Floating luminous particles */}
+      {PARTICLES.map((p, i) => (
+        <div
+          key={i}
+          className="absolute rounded-full animate-pulse"
+          style={{
+            left: `${p.x}px`,
+            top: `${p.y}px`,
+            width: `${p.size}px`,
+            height: `${p.size}px`,
+            background: p.color,
+            boxShadow: `0 0 ${p.size * 3}px ${p.color}, 0 0 ${p.size * 6}px ${p.color.replace(/[\d.]+\)$/, "0.15)")}`,
+            animationDelay: p.delay,
+            animationDuration: p.dur,
+          }}
+        />
+      ))}
+
+      {/* Silver crescent moon */}
+      <div className="absolute" style={{ top: "8px", right: "18px" }}>
+        <div
+          className="absolute animate-pulse"
+          style={{
+            inset: "-10px",
+            background: "radial-gradient(circle, rgba(140,160,255,0.15) 0%, transparent 65%)",
+            borderRadius: "50%",
+            filter: "blur(5px)",
+            animationDuration: "4s",
+          }}
+        />
+        <svg width="24" height="24" viewBox="0 0 40 40" fill="none">
+          <circle cx="20" cy="20" r="10" fill="rgba(180,190,230,0.4)" stroke="rgba(200,210,255,0.5)" strokeWidth="0.8" />
+          <circle cx="26" cy="17" r="9" fill="rgba(8,6,30,0.95)" />
         </svg>
       </div>
 
-      {/* City skyline */}
-      <div className="absolute bottom-0 left-0 right-0 h-20">
-        <svg width="100%" height="80" viewBox="0 0 280 80" preserveAspectRatio="none">
-          <rect x="0" y="52" width="20" height="28" fill="rgba(5,4,10,0.98)" />
-          <rect x="4" y="44" width="12" height="9" fill="rgba(5,4,10,0.98)" />
-          <rect x="20" y="56" width="16" height="24" fill="rgba(6,4,12,0.97)" />
-          <rect x="36" y="36" width="14" height="44" fill="rgba(4,3,9,0.99)" />
-          <rect x="39" y="30" width="3" height="7" fill="rgba(4,3,9,0.99)" />
-          <circle cx="40" cy="29" r="1.2" fill="rgba(200,40,40,0.7)" />
-          <rect x="50" y="44" width="22" height="36" fill="rgba(6,4,11,0.98)" />
-          <rect x="54" y="37" width="14" height="8" fill="rgba(6,4,11,0.98)" />
-          <rect x="72" y="55" width="12" height="25" fill="rgba(5,4,10,0.97)" />
-          <rect x="84" y="38" width="18" height="42" fill="rgba(5,3,10,0.99)" />
-          <rect x="87" y="31" width="4" height="8" fill="rgba(5,3,10,0.99)" />
-          <circle cx="89" cy="30" r="1.2" fill="rgba(180,30,30,0.65)" />
-          <rect x="102" y="48" width="14" height="32" fill="rgba(4,3,9,0.98)" />
-          <rect x="116" y="40" width="20" height="40" fill="rgba(5,4,11,0.99)" />
-          <rect x="119" y="32" width="5" height="9" fill="rgba(5,4,11,0.99)" />
-          <rect x="136" y="55" width="16" height="25" fill="rgba(6,4,10,0.97)" />
-          <rect x="152" y="42" width="12" height="38" fill="rgba(5,3,9,0.98)" />
-          <rect x="164" y="35" width="24" height="45" fill="rgba(4,3,10,0.99)" />
-          <rect x="168" y="27" width="6" height="9" fill="rgba(4,3,10,0.99)" />
-          <circle cx="171" cy="26" r="1.2" fill="rgba(200,35,35,0.7)" />
-          <rect x="188" y="50" width="18" height="30" fill="rgba(5,4,11,0.97)" />
-          <rect x="206" y="38" width="14" height="42" fill="rgba(4,3,9,0.99)" />
-          <rect x="220" y="45" width="16" height="35" fill="rgba(6,4,12,0.98)" />
-          <rect x="236" y="32" width="20" height="48" fill="rgba(5,3,10,0.99)" />
-          <rect x="239" y="24" width="5" height="9" fill="rgba(5,3,10,0.99)" />
-          <circle cx="241" cy="23" r="1.2" fill="rgba(190,30,30,0.65)" />
-          <rect x="256" y="46" width="14" height="34" fill="rgba(4,3,9,0.98)" />
-          <rect x="266" y="40" width="14" height="40" fill="rgba(5,4,11,0.97)" />
-          {/* Dim windows */}
-          <rect x="55" y="47" width="3" height="2" fill="rgba(255,200,80,0.22)" />
-          <rect x="61" y="47" width="3" height="2" fill="rgba(220,60,60,0.2)" />
-          <rect x="87" y="41" width="3" height="2" fill="rgba(255,200,80,0.2)" />
-          <rect x="87" y="47" width="3" height="2" fill="rgba(220,60,60,0.18)" />
-          <rect x="117" y="44" width="3" height="2" fill="rgba(255,190,70,0.22)" />
-          <rect x="166" y="39" width="3" height="2" fill="rgba(255,200,80,0.2)" />
-          <rect x="172" y="45" width="3" height="2" fill="rgba(220,50,50,0.22)" />
-          <rect x="237" y="36" width="3" height="2" fill="rgba(255,200,80,0.2)" />
-          {/* Ground */}
-          <rect x="0" y="74" width="280" height="6" fill="rgba(12,8,18,0.9)" />
-          <rect x="0" y="76" width="280" height="2" fill="rgba(80,30,40,0.15)" />
-        </svg>
-      </div>
-
-      {/* Ground fog */}
-      <div className="absolute bottom-0 left-0 right-0 h-16 bg-night-fog" />
-
-      {/* Blood moon */}
-      <div className="absolute top-2.5 right-5">
-        <div className="absolute -inset-3 animate-pulse duration-3000 bg-night-moon-glow rounded-full blur-[6px]" />
-        <svg width="28" height="28" viewBox="0 0 40 40" fill="none">
-          <circle cx="20" cy="20" r="10" fill="rgba(90,15,15,0.6)" stroke="rgba(180,40,40,0.5)" strokeWidth="0.8" />
-          <circle cx="25" cy="17" r="8" fill="rgba(8,3,5,0.85)" />
-          <circle cx="14" cy="22" r="1.5" fill="rgba(60,10,10,0.5)" />
-          <circle cx="18" cy="17" r="1" fill="rgba(60,10,10,0.4)" />
-        </svg>
-      </div>
-
-      {/* Stars */}
+      {/* Twinkling stars */}
       {STARS.map((star, i) => (
         <div
           key={i}
-          className="absolute rounded-full animate-pulse duration-3000"
+          className="absolute rounded-full animate-pulse"
           style={{
             left: `${star.x}px`,
             top: `${star.y}px`,
             width: `${star.size}px`,
             height: `${star.size}px`,
-            background: i % 3 === 0 ? "rgba(255,160,160,0.6)" : "rgba(200,210,240,0.55)",
-            boxShadow: i % 3 === 0 ? "0 0 3px rgba(200,80,80,0.4)" : "0 0 2px rgba(160,180,220,0.4)",
+            background: star.warm ? "rgba(200,180,255,0.6)" : "rgba(180,200,255,0.7)",
+            boxShadow: star.warm ? "0 0 3px rgba(180,160,255,0.4)" : "0 0 3px rgba(160,190,255,0.5)",
             animationDelay: star.delay,
+            animationDuration: "3s",
           }}
         />
       ))}
 
-      {/* Armed hitman silhouette */}
-      <div className="absolute bottom-[54px] left-1/2 -translate-x-1/2">
+      {/* Mysterious masked figure silhouette */}
+      <div className="absolute" style={{ bottom: "48px", left: "50%", transform: "translateX(-50%)" }}>
         <svg
-          width="58"
-          height="62"
-          viewBox="0 0 58 62"
+          width="54"
+          height="58"
+          viewBox="0 0 54 58"
           fill="none"
-          className="opacity-85 drop-shadow-[0_0_8px_rgba(180,20,20,0.35)]"
+          style={{
+            filter:
+              "drop-shadow(0 0 12px rgba(80,50,160,0.4)) drop-shadow(0 2px 6px rgba(0,0,0,0.8))",
+            opacity: 0.8,
+          }}
         >
-          <ellipse cx="26" cy="59" rx="14" ry="2.5" fill="rgba(5,2,5,0.7)" />
-          <path d="M18 42 L14 58 L18 58 L20 48 Z" fill="rgba(8,5,12,0.98)" />
-          <path d="M28 42 L30 58 L34 58 L30 48 Z" fill="rgba(8,5,12,0.98)" />
-          <rect x="12" y="55" width="8" height="4" rx="1.5" fill="rgba(5,3,8,0.99)" />
-          <rect x="29" y="55" width="8" height="4" rx="1.5" fill="rgba(5,3,8,0.99)" />
-          <path d="M14 24 L10 44 L20 44 L22 34 L24 44 L34 44 L32 28 Q26 32 20 32 Q16 30 14 24Z" fill="rgba(8,5,12,0.98)" />
-          <path d="M10 30 L6 44 L12 44 L14 32Z" fill="rgba(10,6,14,0.9)" />
-          <rect x="16" y="20" width="16" height="13" rx="2" fill="rgba(9,6,13,0.99)" />
-          <path d="M16 20 L20 24 L24 20" stroke="rgba(30,15,35,0.8)" strokeWidth="1.5" fill="none" />
-          <rect x="20" y="14" width="7" height="7" rx="1" fill="rgba(9,6,13,0.98)" />
-          <ellipse cx="23" cy="11" rx="7" ry="6" fill="rgba(8,5,12,0.99)" />
-          <ellipse cx="23" cy="7" rx="10" ry="2.5" fill="rgba(5,3,8,0.99)" stroke="rgba(40,20,50,0.5)" strokeWidth="0.5" />
-          <rect x="14" y="4" width="18" height="5" rx="1.5" fill="rgba(5,3,8,0.99)" />
-          <rect x="14" y="7.5" width="18" height="1" fill="rgba(80,20,20,0.6)" />
-          <path d="M32 22 L44 14 L42 12 L30 20Z" fill="rgba(8,5,12,0.97)" />
-          <rect x="40" y="9" width="14" height="5" rx="1" fill="rgba(6,4,10,0.99)" stroke="rgba(50,20,20,0.4)" strokeWidth="0.5" />
-          <rect x="52" y="10.5" width="5" height="2" rx="0.5" fill="rgba(5,3,8,0.99)" />
-          <circle cx="57" cy="11.5" r="1.5" fill="rgba(255,140,20,0.25)" />
-          <path d="M16 24 L8 32 L10 34 L18 27Z" fill="rgba(8,5,12,0.95)" />
-          <circle cx="25" cy="12" r="1" fill="rgba(180,30,30,0.7)" />
+          {/* Ground shadow */}
+          <ellipse cx="27" cy="56" rx="16" ry="2" fill="rgba(20,15,50,0.6)" />
+          {/* Body — trench coat */}
+          <path d="M17 38 L13 55 L17 55 L19 44 Z" fill="rgba(12,8,30,0.98)" />
+          <path d="M30 38 L33 55 L37 55 L33 44 Z" fill="rgba(12,8,30,0.98)" />
+          <path
+            d="M13 22 L9 42 L19 42 L21 32 L23 42 L35 42 L33 26 Q27 30 21 30 Q16 28 13 22Z"
+            fill="rgba(12,8,30,0.98)"
+          />
+          {/* Collar */}
+          <path d="M13 22 L18 28 L21 23" stroke="rgba(50,35,90,0.5)" strokeWidth="1" fill="none" />
+          <path d="M33 26 L28 30 L25 25" stroke="rgba(50,35,90,0.5)" strokeWidth="1" fill="none" />
+          {/* Head */}
+          <ellipse cx="23" cy="12" rx="7" ry="6.5" fill="rgba(10,7,25,0.99)" />
+          {/* Fedora */}
+          <ellipse cx="23" cy="7" rx="11" ry="2.5" fill="rgba(8,5,22,0.99)" stroke="rgba(60,40,120,0.4)" strokeWidth="0.5" />
+          <rect x="14" y="4" width="18" height="5" rx="1.5" fill="rgba(8,5,22,0.99)" />
+          <rect x="14" y="7.5" width="18" height="1" fill="rgba(100,60,180,0.4)" />
+          {/* Glowing eyes — eerie purple */}
+          <circle cx="20" cy="12" r="1.2" fill="rgba(140,80,255,0.8)" />
+          <circle cx="26" cy="12" r="1.2" fill="rgba(140,80,255,0.8)" />
+          <circle cx="20" cy="12" r="2.5" fill="none" stroke="rgba(140,80,255,0.2)" strokeWidth="0.5" />
+          <circle cx="26" cy="12" r="2.5" fill="none" stroke="rgba(140,80,255,0.2)" strokeWidth="0.5" />
         </svg>
       </div>
 
-      {/* Ground puddle reflection */}
-      <div className="absolute bottom-[50px] left-1/2 -translate-x-1/2 w-[50px] h-2 bg-night-puddle blur-[3px]" />
+      {/* Smoke wisps — indigo mist rising from bottom */}
+      <div className="absolute bottom-0 left-0 right-0" style={{ height: "70px" }}>
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(0deg, rgba(15,10,40,0.8) 0%, rgba(20,15,50,0.4) 40%, rgba(25,18,60,0.15) 70%, transparent 100%)",
+          }}
+        />
+        <svg width="100%" height="70" viewBox="0 0 280 70" preserveAspectRatio="none" style={{ opacity: 0.3 }}>
+          <path
+            d="M0 65 Q30 55 60 60 Q90 50 120 58 Q150 48 180 55 Q210 45 240 52 Q260 48 280 55 L280 70 L0 70Z"
+            fill="rgba(60,40,120,0.3)"
+          />
+          <path
+            d="M0 60 Q40 50 80 55 Q120 42 160 50 Q200 40 240 48 Q260 44 280 50 L280 70 L0 70Z"
+            fill="rgba(40,25,80,0.25)"
+          />
+        </svg>
+      </div>
 
-      {/* NIGHT FALLS label */}
-      <div className="absolute top-3 left-2.5">
-        <span className="block font-orbitron text-[0.48rem] font-bold tracking-[0.2em] text-red-800/55 text-shadow-night">
+      {/* NIGHT FALLS label — cool indigo */}
+      <div className="absolute" style={{ top: "12px", left: "10px" }}>
+        <span
+          style={{
+            fontFamily: "Orbitron, sans-serif",
+            fontSize: "0.48rem",
+            fontWeight: 700,
+            letterSpacing: "0.2em",
+            color: "rgba(140,130,220,0.6)",
+            textShadow: "0 0 10px rgba(100,80,200,0.5)",
+            display: "block",
+          }}
+        >
           NIGHT FALLS
         </span>
       </div>
 
       {/* Top vignette */}
-      <div className="absolute top-0 left-0 right-0 h-14 bg-night-vignette" />
+      <div
+        className="absolute top-0 left-0 right-0 h-14"
+        style={{ background: "linear-gradient(180deg, rgba(8,6,28,0.7) 0%, transparent 100%)" }}
+      />
     </div>
   );
 }
