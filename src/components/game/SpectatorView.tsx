@@ -111,7 +111,7 @@ function SpectatorVideoConference({
   const hasAnyTracks = tracks.length > 0;
 
   return (
-    <div className="w-full h-full flex items-center justify-center py-[90px] px-0 md:py-5 md:px-16">
+    <div className="w-full h-full flex items-center justify-center py-5 px-10">
       {!hasAnyTracks && <LoadingSpinner message="Waiting for players..." />}
       {hasAnyTracks && (
         <PlayerCircle
