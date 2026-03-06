@@ -26,20 +26,7 @@ type UseFoulSpeakReturn = {
 };
 
 /**
- * Hook that manages all foul-related functionality:
- * - Foul speaking (5-second unmute)
- * - Foul display UI
- * - Foul button visibility
- *
- * @param options - Configuration object
- * @returns Object with:
- *   - isFoulSpeaking: Whether the player is currently in foul speaking mode
- *   - foulSpeakTimeLeft: Seconds remaining in foul speaking mode
- *   - startFoulSpeak: Function to start foul speaking
- *   - canFoulSpeak: Whether the player can start foul speaking
- *   - currentFouls: Current number of fouls
- *   - canShowFoulButton: Whether to show the foul button (host only)
- *   - FoulDisplay: React component to display fouls
+ * Hook that manages foul speaking and foul button visibility.
  */
 export function useFoulSpeak({
   room,
