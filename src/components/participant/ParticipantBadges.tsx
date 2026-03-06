@@ -165,10 +165,10 @@ export default function ParticipantBadges({
           <div className="flex items-center gap-1.5 lg:gap-2">
             {/* Seat number badge */}
             <div
-              className={`p-1 lg:w-6 lg:h-6 rounded-md flex items-center justify-center shrink-0 transition-all border ${seatBadgeClass}`}
+              className={`w-5 h-5 lg:w-6 lg:h-6 aspect-square rounded-md flex items-center justify-center shrink-0 transition-all border ${seatBadgeClass}`}
             >
               <span
-                className={`font-orbitron text-[0.6rem] lg:text-[0.7rem] font-bold ${seatNumberClass}`}
+                className={`font-orbitron text-[0.55rem] lg:text-[0.7rem] font-bold leading-none ${seatNumberClass}`}
               >
                 {playerIndex === (maxPlayers ?? 13) + 1 ? "H" : playerIndex}
               </span>
