@@ -1,16 +1,15 @@
 "use client";
 
+import { VoteIndicatorIcon } from "@/assets/icons";
+
 /**
- * Vote indicator overlay - shows big thumbs up when player voted for current candidate.
- * Displays in the center of ParticipantComponent.
+ * Vote indicator overlay - shows voted badge when player voted for current candidate.
+ * Responsive: scales down on small screens to avoid overflow.
  */
 export default function VoteIndicator() {
   return (
     <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none">
-      <div className="text-6xl md:text-7xl animate-bounce drop-shadow-lg">
-        👍
-      </div>
+      <VoteIndicatorIcon className="w-[60%] h-[60%] max-w-[124px] max-h-[124px]" />
     </div>
   );
 }
-
