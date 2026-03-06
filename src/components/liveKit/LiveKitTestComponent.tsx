@@ -104,7 +104,7 @@ function MyVideoConference({
   );
   const track = tracks.find((t) => t.participant.identity === userId);
   return (
-    <div className="w-full h-full flex items-center justify-center p-y-5 p-x-10">
+    <div className="w-full h-full flex items-center justify-center py-[90px] px-0 md:py-5 md:px-16">
       {!track && <LoadingSpinner message="Loading..." />}
       {track && (
         <PlayerCircle

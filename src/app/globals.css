@@ -247,3 +247,29 @@
 .bg-dim-moon {
   background: radial-gradient(circle, rgba(160,20,20,0.35) 0%, transparent 70%);
 }
+
+/* ── Disconnected cover utilities ── */
+.bg-disconnected-overlay {
+  background: linear-gradient(160deg, rgba(6,8,14,0.94) 0%, rgba(10,12,20,0.90) 40%, rgba(6,8,14,0.95) 100%);
+}
+.bg-disconnected-scanlines {
+  background-image: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.22) 3px, rgba(0,0,0,0.22) 4px);
+}
+.bg-disconnected-glow {
+  background: radial-gradient(ellipse at 50% 44%, rgba(180,100,0,0.10) 0%, transparent 60%);
+}
+.bg-disconnected-glitch-top {
+  background: linear-gradient(90deg, transparent 5%, rgba(245,158,11,0.12) 20%, rgba(245,158,11,0.18) 55%, rgba(245,158,11,0.08) 80%, transparent 95%);
+}
+.bg-disconnected-glitch-mid {
+  background: linear-gradient(90deg, transparent 15%, rgba(245,158,11,0.1) 40%, rgba(245,158,11,0.14) 65%, transparent 90%);
+}
+.bg-disconnected-bottom-fade {
+  background: linear-gradient(0deg, rgba(6,8,14,0.85) 0%, transparent 100%);
+}
+
+/* ── Disconnected cover animation durations ── */
+.duration-1400 { animation-duration: 1.4s; }
+.duration-2400 { animation-duration: 2.4s; }
+.duration-3100 { animation-duration: 3.1s; }
+.delay-600 { animation-delay: 0.6s; }
