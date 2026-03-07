@@ -3,20 +3,13 @@
 import { useState, useCallback } from "react";
 import { selectMafiaTarget } from "@/lib/nightPhase/actions";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
+import Skull from "@/assets/icons/Skull";
 
 interface MafiaKillButtonProps {
-  /** The seat number of the target player */
   seatNumber: number;
-  /** Whether this target is already selected */
   isSelected: boolean;
 }
 
-/**
- * MafiaKillButton - Button shown to the mafia member with kill authority
- * during the mafia_chooses_target phase.
- *
- * Displayed in the center of each alive non-mafia player's tile.
- */
 export default function MafiaKillButton({
   seatNumber,
   isSelected,
@@ -30,9 +23,7 @@ export default function MafiaKillButton({
     setIsLoading(true);
     try {
       const result = await selectMafiaTarget(gameId, seatNumber);
-      if (result.ok) {
-        // Update local state so the mafia player sees their selection immediately
-      } else {
+      if (!result.ok) {
         console.error("Failed to select target:", result.message);
       }
     } catch (error) {
@@ -48,29 +39,40 @@ export default function MafiaKillButton({
       onClick={handleSelectTarget}
       disabled={isLoading || isSelected}
       className={`
-        flex items-center justify-center
-        w-12 h-12 md:w-16 md:h-16
-        rounded-full
-        font-bold text-lg md:text-xl
+        relative overflow-hidden
+        flex items-center justify-center gap-1.5
+        px-4 py-1.5 lg:px-5 lg:py-2
+        rounded-t-lg
+        text-[0.6rem] lg:text-[0.7rem]
+        font-semibold uppercase tracking-widest
         transition-all duration-200
-        shadow-lg
+        border border-b-0
         ${
           isSelected
-            ? "bg-red-600 text-white ring-4 ring-red-400 ring-opacity-50 cursor-default"
-            : "bg-red-500/80 hover:bg-red-600 text-white hover:scale-110 cursor-pointer"
+            ? "bg-white/10 backdrop-blur-md border-white/20 text-white shadow-[0_0_16px_rgba(255,255,255,0.15)]"
+            : "bg-black/60 backdrop-blur-md border-white/10 text-white/80 hover:text-white hover:border-white/20 hover:bg-black/70 cursor-pointer active:scale-95"
         }
         ${isLoading ? "opacity-50 cursor-wait" : ""}
-        backdrop-blur-sm
       `}
       aria-label={isSelected ? "Target selected" : "Select as target"}
     >
       {isLoading ? (
-        <span className="animate-spin">⏳</span>
+        <span className="w-3 h-3 border-[1.5px] border-white/20 border-t-white rounded-full animate-spin" />
       ) : isSelected ? (
-        <span>💀</span>
+        <>
+          <Skull size={11} className="text-white/90" />
+          <span>Target</span>
+        </>
       ) : (
-        <span>🎯</span>
+        <span>Kill</span>
       )}
+      <div
+        className={`absolute bottom-0 left-0 right-0 h-[2px] ${
+          isSelected
+            ? "bg-white shadow-[0_0_6px_rgba(255,255,255,0.5)]"
+            : "bg-white/30"
+        }`}
+      />
     </button>
   );
 }

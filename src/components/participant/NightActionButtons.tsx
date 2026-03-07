@@ -9,24 +9,17 @@ import DoctorHealIndicator from "./DoctorHealIndicator";
 
 interface NightActionButtonsProps {
   seatNumber: number | null;
-  // Mafia
   canShowMafiaKillButton: boolean;
   isMafiaTargetSelected: boolean;
   shouldShowMafiaTargetIndicator: boolean;
-  // Yakuza
   canShowYakuzaKillButton: boolean;
   isYakuzaTargetSelected: boolean;
   shouldShowYakuzaTargetIndicator: boolean;
-  // Doctor
   canShowDoctorHealButton: boolean;
   isAlreadyHealed: boolean;
   shouldShowDoctorHealIndicator: boolean;
 }
 
-/**
- * NightActionButtons - Consolidated component for all night phase action buttons.
- * Includes Mafia kill, Yakuza kill, and Doctor heal buttons with their indicators.
- */
 export default function NightActionButtons({
   seatNumber,
   canShowMafiaKillButton,
@@ -43,53 +36,41 @@ export default function NightActionButtons({
 
   return (
     <>
-      {/* Mafia kill button */}
       {canShowMafiaKillButton && (
-        <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
-          <div className="pointer-events-auto">
-            <MafiaKillButton
-              seatNumber={seatNumber}
-              isSelected={isMafiaTargetSelected}
-            />
-          </div>
-        </div>
+        <NightActionWrapper isSelected={isMafiaTargetSelected}>
+          <MafiaKillButton
+            seatNumber={seatNumber}
+            isSelected={isMafiaTargetSelected}
+          />
+        </NightActionWrapper>
       )}
 
-      {/* Mafia target indicator for host */}
       {shouldShowMafiaTargetIndicator && !canShowMafiaKillButton && (
         <MafiaTargetIndicator />
       )}
 
-      {/* Yakuza kill button */}
       {canShowYakuzaKillButton && (
-        <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
-          <div className="pointer-events-auto">
-            <YakuzaKillButton
-              seatNumber={seatNumber}
-              isSelected={isYakuzaTargetSelected}
-            />
-          </div>
-        </div>
+        <NightActionWrapper isSelected={isYakuzaTargetSelected}>
+          <YakuzaKillButton
+            seatNumber={seatNumber}
+            isSelected={isYakuzaTargetSelected}
+          />
+        </NightActionWrapper>
       )}
 
-      {/* Yakuza target indicator for host */}
       {shouldShowYakuzaTargetIndicator && !canShowYakuzaKillButton && (
         <YakuzaTargetIndicator />
       )}
 
-      {/* Doctor heal button */}
       {canShowDoctorHealButton && (
-        <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
-          <div className="pointer-events-auto">
-            <DoctorHealButton
-              seatNumber={seatNumber}
-              isAlreadyHealed={isAlreadyHealed}
-            />
-          </div>
-        </div>
+        <NightActionWrapper isSelected={false}>
+          <DoctorHealButton
+            seatNumber={seatNumber}
+            isAlreadyHealed={isAlreadyHealed}
+          />
+        </NightActionWrapper>
       )}
 
-      {/* Doctor heal indicator for host and doctor */}
       {shouldShowDoctorHealIndicator && !canShowDoctorHealButton && (
         <DoctorHealIndicator />
       )}
@@ -97,3 +78,27 @@ export default function NightActionButtons({
   );
 }
 
+/**
+ * Positions the action button at bottom-center of the tile.
+ * Uses display:none by default, display:flex on group hover/focus.
+ * When `isSelected` is true, stays visible permanently.
+ */
+function NightActionWrapper({
+  children,
+  isSelected,
+}: {
+  children: React.ReactNode;
+  isSelected: boolean;
+}) {
+  return (
+    <div
+      className={`absolute bottom-0 left-0 right-0 z-30 justify-center ${
+        isSelected
+          ? "flex"
+          : "hidden group-hover:flex group-focus-within:flex"
+      }`}
+    >
+      {children}
+    </div>
+  );
+}
