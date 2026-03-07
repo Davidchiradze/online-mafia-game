@@ -225,9 +225,6 @@ export default function ParticipantComponent({
     await markUnready();
   }, [markUnready]);
 
-  // Suppress unused variable warning - used for future features
-  void isDoctorHealSelected;
-
   const handleMutePlayer = useCallback(async () => {
     if (!room || !player?.player_id) return;
 

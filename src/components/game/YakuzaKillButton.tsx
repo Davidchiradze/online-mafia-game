@@ -3,21 +3,16 @@
 import { useState, useCallback } from "react";
 import { selectYakuzaTarget } from "@/lib/nightPhase/actions";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
+import Skull from "@/assets/icons/Skull";
 
 interface YakuzaKillButtonProps {
-  /** The seat number of the target player */
   seatNumber: number;
-  /** Whether this target is already selected */
   isSelected: boolean;
 }
 
 /**
- * YakuzaKillButton - Button shown to the Yakuza team member with kill authority
- * during the yakuza_and_shogun_chooses_target phase.
+ * YakuzaKillButton — purple-accented glass tab for yakuza target selection.
  * Authority: SHOGUN (if YAKUZA alive) > YAKUZA (if SHOGUN dead).
- *
- * Displayed in the center of each alive non-Yakuza-team player's tile.
- * Uses a purple/violet theme to distinguish from Mafia's red theme.
  */
 export default function YakuzaKillButton({
   seatNumber,
@@ -48,29 +43,40 @@ export default function YakuzaKillButton({
       onClick={handleSelectTarget}
       disabled={isLoading || isSelected}
       className={`
-        flex items-center justify-center
-        w-12 h-12 md:w-16 md:h-16
-        rounded-full
-        font-bold text-lg md:text-xl
+        relative overflow-hidden
+        flex items-center justify-center gap-1.5
+        px-4 py-1.5 lg:px-5 lg:py-2
+        rounded-t-lg
+        text-[0.6rem] lg:text-[0.7rem]
+        font-semibold uppercase tracking-widest
         transition-all duration-200
-        shadow-lg
+        border border-b-0
         ${
           isSelected
-            ? "bg-violet-600 text-white ring-4 ring-violet-400 ring-opacity-50 cursor-default"
-            : "bg-violet-500/80 hover:bg-violet-600 text-white hover:scale-110 cursor-pointer"
+            ? "bg-purple-500/15 backdrop-blur-md border-purple-400/30 text-purple-100 shadow-[0_0_16px_rgba(168,85,247,0.2)]"
+            : "bg-black/60 backdrop-blur-md border-purple-400/15 text-purple-200/70 hover:text-purple-100 hover:border-purple-400/30 hover:bg-black/70 cursor-pointer active:scale-95"
         }
         ${isLoading ? "opacity-50 cursor-wait" : ""}
-        backdrop-blur-sm
       `}
       aria-label={isSelected ? "Target selected" : "Select as target"}
     >
       {isLoading ? (
-        <span className="animate-spin">⏳</span>
+        <span className="w-3 h-3 border-[1.5px] border-purple-300/20 border-t-purple-300 rounded-full animate-spin" />
       ) : isSelected ? (
-        <span>⚔️</span>
+        <>
+          <Skull size={11} className="text-purple-200" />
+          <span>Target</span>
+        </>
       ) : (
-        <span>🗡️</span>
+        <span>Kill</span>
       )}
+      <div
+        className={`absolute bottom-0 left-0 right-0 h-[2px] ${
+          isSelected
+            ? "bg-purple-400 shadow-[0_0_6px_rgba(168,85,247,0.6)]"
+            : "bg-purple-400/30"
+        }`}
+      />
     </button>
   );
 }
