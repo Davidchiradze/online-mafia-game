@@ -74,7 +74,7 @@ export default function DoctorHealButton({
       ) : hasHealed ? (
         <span>Healed</span>
       ) : isAlreadyHealed ? (
-        <span>--</span>
+        <span>Already healed</span>
       ) : (
         <span>Heal</span>
       )}
