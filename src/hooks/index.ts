@@ -12,6 +12,3 @@ export * from "./livekit";
 
 // Realtime subscription hooks
 export * from "./realtime";
-
-// Authentication hooks
-export * from "./auth";
