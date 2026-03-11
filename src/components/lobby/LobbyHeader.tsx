@@ -2,31 +2,24 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useQuery } from "convex/react";
+import { useAuthActions } from "@convex-dev/auth/react";
+import { authProfiles } from "@convex/refs/lobby";
 import { LogOut, User, ChevronDown } from "lucide-react";
 import { LandingLogo } from "@/components/landing/LandingLogo";
 
-type LobbyUser = {
-  id: string;
-  email?: string | null;
-  nickname?: string | null;
-};
-
-type Props = {
-  user: LobbyUser;
-};
-
-export default function LobbyHeader({ user }: Props) {
+export default function LobbyHeader() {
   const router = useRouter();
-  const supabase = createClient();
+  const { signOut } = useAuthActions();
+  const profile = useQuery(authProfiles.currentProfile);
   const [menuOpen, setMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    await signOut();
     router.push("/auth");
   };
 
-  const displayName = user.nickname || user.email || "Player";
+  const displayName = profile?.nickname ?? "Player";
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-black/30 border-b border-white/5">

@@ -2,14 +2,17 @@
 
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { GameRoom } from "@/types/game/type";
+import { useMutation } from "convex/react";
+import { Id } from "@convex/_generated/dataModel";
+import { lobbyGames } from "@convex/refs/lobby";
+import { deleteLivekitRoom } from "@/lib/liveKit/actions";
+import { LobbyGame } from "@/components/lobby/LobbyContent";
 import PopupMenu from "@/components/ui/PopupMenu";
 import Modal from "@/components/ui/Modal";
 import MoreVerticalIcon from "@/assets/icons/MoreVertical";
-import { deleteGameRoom } from "@/lib/gameRoom/actions";
 
 type Props = {
-  session: GameRoom;
+  session: LobbyGame;
   userId?: string;
   onRoomDeleted?: (gameId: string) => void;
 };
@@ -27,7 +30,8 @@ export default function GameTableRowActions({
     left: number;
   } | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const isHost = userId && session.host_id === userId;
+  const removeGame = useMutation(lobbyGames.remove);
+  const isHost = userId && session.hostId === userId;
 
   const handleMenuClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -51,12 +55,6 @@ export default function GameTableRowActions({
     }
   }, [menuOpen]);
 
-  // const handleEdit = () => {
-  //   setMenuOpen(false);
-  //   // TODO: Implement edit functionality
-  //   console.log("Edit room:", session.id);
-  // };
-
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     setMenuOpen(false);
@@ -65,13 +63,15 @@ export default function GameTableRowActions({
 
   const handleConfirmDelete = async () => {
     setIsDeleting(true);
-    const result = await deleteGameRoom(session.id);
-    setIsDeleting(false);
-    if (result.ok) {
+    try {
+      await removeGame({ gameId: session._id as Id<"games"> });
+      await deleteLivekitRoom(session._id);
       setDeleteModalOpen(false);
-      onRoomDeleted?.(session.id);
-    } else {
-      alert(result.message || "Failed to delete room");
+      onRoomDeleted?.(session._id);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to delete room");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -105,10 +105,6 @@ export default function GameTableRowActions({
               open={menuOpen}
               onClose={() => setMenuOpen(false)}
               items={[
-                // {
-                //   label: "Edit",
-                //   onClick: handleEdit,
-                // },
                 {
                   label: "Delete",
                   onClick: handleDeleteClick,

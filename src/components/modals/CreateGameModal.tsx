@@ -1,16 +1,17 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useMutation } from "convex/react";
+import { lobbyGames } from "@convex/refs/lobby";
+import { createLivekitRoom } from "@/lib/liveKit/actions";
 import { GAME_TYPES, GAME_TYPE_LABEL } from "@/lib/constants/game";
-import { createGameRoom } from "@/lib/gameRoom/actions";
-import { GameRoom } from "@/types/game/type";
 import { Loader2 } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 
 type Props = {
   open: boolean;
   onClose: () => void;
-  onCreated?: (session: GameRoom) => void;
+  onCreated?: (gameId: string) => void;
 };
 
 export default function CreateGameModal({ open, onClose, onCreated }: Props) {
@@ -19,22 +20,24 @@ export default function CreateGameModal({ open, onClose, onCreated }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const canCreate = useMemo(() => name.trim().length > 0, [name]);
+  const createGame = useMutation(lobbyGames.create);
 
   const handleCreate = async () => {
     if (!canCreate || loading) return;
     setLoading(true);
     setError(null);
-    const res = await createGameRoom({ name: name.trim(), type });
-    if (!res.ok) {
-      setError(res.message);
+    try {
+      const gameId = await createGame({ name: name.trim(), gameType: type });
+      await createLivekitRoom(gameId);
+      onCreated?.(gameId);
+      setName("");
+      setType("japanese_mafia");
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create game");
+    } finally {
       setLoading(false);
-      return;
     }
-    onCreated?.(res.data);
-    setName("");
-    setType("japanese_mafia");
-    setLoading(false);
-    onClose();
   };
 
   return (
