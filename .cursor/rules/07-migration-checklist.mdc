@@ -1,0 +1,165 @@
+---
+description: Migration checklist and patterns for converting Supabase code to Convex. Reference during any migration work.
+globs:
+  - "convex/**"
+  - "src/**"
+---
+
+# Migration Checklist: Supabase -> Convex
+
+## Code Conversion Reference
+
+### Imports to Replace
+
+```typescript
+// REMOVE these imports
+import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/client";
+import { adminClient } from "@/lib/supabase/admin";
+import { Tables } from "@/db/supabase/database.types";
+
+// REPLACE with
+import { useQuery, useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { Doc, Id } from "@/convex/_generated/dataModel";
+```
+
+### Type Conversions
+
+| Supabase | Convex |
+|---|---|
+| `Tables<"games">` | `Doc<"games">` |
+| `Tables<"game_players">` | `Doc<"gamePlayers">` |
+| `Tables<"game_sessions">` | `Doc<"gameSessions">` |
+| `Tables<"join_requests">` | `Doc<"joinRequests">` |
+| `Tables<"night_phase_sessions">` | `Doc<"nightPhaseSessions">` |
+| `Tables<"voting_sessions">` | `Doc<"votingSessions">` |
+| `Tables<"votes">` | `Doc<"votes">` |
+| `Tables<"game_player_roles">` | `Doc<"gamePlayerRoles">` |
+| `Tables<"game_spectators">` | `Doc<"gameSpectators">` |
+| `Tables<"profiles">` | `Doc<"profiles">` |
+| `string` (UUID) | `Id<"games">`, `Id<"users">`, etc. |
+
+### Field Name Conversions (snake_case -> camelCase)
+
+| Supabase | Convex |
+|---|---|
+| `game_id` | `gameId` |
+| `host_id` | `hostId` |
+| `player_id` | `playerId` |
+| `seat_number` | `seatNumber` |
+| `is_alive` | `isAlive` |
+| `game_status` | `gameStatus` |
+| `game_type` | `gameType` |
+| `max_players` | `maxPlayers` |
+| `game_phase` | `gamePhase` |
+| `speaking_order` | `speakingOrder` |
+| `current_speaker_index` | `currentSpeakerIndex` |
+| `nominated_players` | `nominatedPlayers` |
+| `current_night_number` | `currentNightNumber` |
+| `day_round_opener_index` | `dayRoundOpenerIndex` |
+| `speaker_started_at` | `speakerStartedAt` |
+| `is_finished` | `isFinished` |
+| `foul_elimination_occurred` | `foulEliminationOccurred` |
+| `mafia_target` | `mafiaTarget` |
+| `yakuza_target` | `yakuzaTarget` |
+| `healed_player` | `healedPlayer` |
+| `night_number` | `nightNumber` |
+| `requester_id` | `requesterId` |
+| `requester_nickname` | `requesterNickname` |
+| `voting_active` | `votingActive` |
+| `voting_started_at` | `votingStartedAt` |
+| `current_candidate_index` | `currentCandidateIndex` |
+| `round_number` | `roundNumber` |
+| `is_tie_break` | `isTieBreak` |
+| `tie_break_round` | `tieBreakRound` |
+| `previous_tied_candidates` | `previousTiedCandidates` |
+| `both_leave_vote_active` | `bothLeaveVoteActive` |
+| `players_who_voted` | `playersWhoVoted` |
+| `voter_seat` | `voterSeat` |
+| `is_auto_vote` | `isAutoVote` |
+| `is_both_leave` | `isBothLeave` |
+| `created_at` | `_creationTime` (automatic) |
+| `foul_speak_started_at` | `foulSpeakStartedAt` |
+
+### Database Operation Conversions
+
+```typescript
+// SELECT single
+// Old: await supabase.from("games").select("*").eq("id", gameId).single()
+// New:
+await ctx.db.get(gameId);
+
+// SELECT with filter
+// Old: await adminClient.from("game_players").select("*").eq("game_id", gameId)
+// New:
+await ctx.db.query("gamePlayers").withIndex("by_gameId", q => q.eq("gameId", gameId)).collect();
+
+// INSERT
+// Old: await adminClient.from("game_sessions").insert({ game_id: gameId, ... })
+// New:
+await ctx.db.insert("gameSessions", { gameId, ... });
+
+// UPDATE
+// Old: await adminClient.from("games").update({ game_status: "playing" }).eq("id", gameId)
+// New:
+await ctx.db.patch(gameId, { gameStatus: "playing" });
+
+// DELETE
+// Old: await adminClient.from("join_requests").delete().eq("id", requestId)
+// New:
+await ctx.db.delete(requestId);
+```
+
+### Server Action -> Mutation Conversion
+
+```typescript
+// Old: "use server" function called directly
+// src/lib/gameRoom/actions.ts
+"use server";
+export async function createGameRoom(input) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  // ...
+}
+
+// New: Convex mutation called via useMutation
+// convex/games.ts
+export const create = mutation({
+  args: { name: v.string(), type: v.string() },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    // ...
+  },
+});
+
+// Frontend:
+const createGame = useMutation(api.games.create);
+await createGame({ name: "My Game", type: "japanese_mafia" });
+```
+
+## Files to DELETE After Full Migration
+
+- `src/lib/supabase/` (entire folder)
+- `src/db/supabase/` (entire folder)
+- `src/hooks/realtime/` (entire folder)
+- `src/lib/auth/actions.ts` (replaced by Convex auth)
+- `src/app/api/auth/confirm/route.ts` (replaced by Convex OTP)
+- All `"use server"` action files in `src/lib/*/actions.ts` (replaced by `convex/*.ts`)
+
+## Files to KEEP (unchanged or minimal changes)
+
+- `src/lib/constants/game.ts` (game constants)
+- `src/lib/game/visibility.ts` (pure visibility logic)
+- `src/lib/utils/` (utility functions)
+- `src/lib/liveKit/messageTypes.ts` (LiveKit message types)
+- `src/components/ui/` (UI primitives)
+- `src/hooks/livekit/` (LiveKit hooks - mostly unchanged)
+- `src/hooks/participant/` (participant hooks - mostly unchanged)
+
+## Verification After Each Migration Phase
+
+1. Run `npx convex dev` to verify schema and functions deploy
+2. Run `npx tsc` to verify TypeScript compiles
+3. Test the migrated feature in the browser
+4. Verify real-time updates work (change data, confirm UI updates)

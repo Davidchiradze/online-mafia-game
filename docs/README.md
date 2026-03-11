@@ -1,6 +1,7 @@
 # Online Mafia Game - Documentation
 
-> **⚠️ IMPORTANT: Always read this documentation before implementing features or fixing bugs.**
+> **Always read this documentation before implementing features or fixing bugs.**
+> **Also read `.cursor/rules/` for Convex-specific patterns and migration guides.**
 
 This documentation describes the architecture, patterns, and conventions used in the Online Mafia Game codebase. All AI agents and developers should consult these docs before making changes.
 
@@ -11,22 +12,23 @@ This documentation describes the architecture, patterns, and conventions used in
 3. **Working with real-time updates?** Read [realtime.md](./realtime.md)
 4. **Understanding game logic?** See [game-design.md](./game-design.md)
 5. **Making architectural decisions?** Review [decisions.md](./decisions.md)
+6. **Convex-specific patterns?** See `.cursor/rules/` for detailed guides
 
 ## Documentation Structure
 
 - **[architecture.md](./architecture.md)** - Stack overview, system boundaries, data flow
-- **[realtime.md](./realtime.md)** - Supabase real-time subscriptions and patterns
+- **[realtime.md](./realtime.md)** - Convex reactive queries (real-time updates)
 - **[game-design.md](./game-design.md)** - Mafia game rules, phases, role visibility
 - **[frontend.md](./frontend.md)** - React conventions, component patterns, UI guidelines
-- **[backend.md](./backend.md)** - Server actions, API routes, database patterns
+- **[backend.md](./backend.md)** - Convex mutations, queries, database patterns
 - **[decisions.md](./decisions.md)** - Architectural Decision Records (ADRs)
 - **[livekit-server.md](./livekit-server.md)** - Self-hosted LiveKit server (VPS setup, monitoring, maintenance)
 
 ## Core Principles
 
-1. **Server-side authority**: All game logic runs server-side via Next.js Server Actions
-2. **Real-time via Supabase**: Use Supabase `postgres_changes` subscriptions for real-time updates
-3. **Type safety**: Always use `database.types.ts` for database types, avoid hardcoded types
+1. **Server-side authority**: All game logic runs in Convex mutations (server-side functions)
+2. **Reactive real-time**: Convex `useQuery` auto-syncs UI with database -- guaranteed consistency
+3. **Type safety**: Use `Doc<"tableName">` from `convex/_generated/dataModel` for all types
 4. **Component composition**: Break down UIs into small, reusable components
 5. **Custom hooks**: Extract data fetching and side effects into hooks under `src/hooks`
 6. **Role-based visibility**: Game phase and role determine what players can see (video/UI)
@@ -34,26 +36,29 @@ This documentation describes the architecture, patterns, and conventions used in
 ## Technology Stack
 
 - **Framework**: Next.js 15 (App Router)
-- **Database & Auth**: Supabase (PostgreSQL + Auth)
-- **Real-time**: Supabase Realtime (postgres_changes subscriptions)
+- **Database & Backend**: Convex (document DB + server functions)
+- **Authentication**: Convex Auth (`@convex-dev/auth` with Password + Resend OTP)
+- **Real-time**: Convex reactive queries (`useQuery` auto-updates)
 - **Video/Audio**: LiveKit (WebRTC)
 - **Styling**: TailwindCSS + shadcn/ui
-- **Validation**: Zod
+- **Validation**: Zod (client-side), Convex validators (server-side)
 - **Language**: TypeScript (strict mode)
 
 ## Key Files to Know
 
-- `src/db/supabase/database.types.ts` - Generated database types (always use these)
+- `convex/schema.ts` - Database schema (all tables, indexes, types)
+- `convex/_generated/dataModel.d.ts` - Auto-generated types (`Doc<>`, `Id<>`)
+- `convex/_generated/api.d.ts` - Auto-generated API (`api.games.create`, etc.)
 - `src/lib/constants/game.ts` - Game phases, roles, statuses
 - `src/lib/game/visibility.ts` - Role-based visibility logic
-- `src/lib/gameSession/actions.ts` - Game session server actions
-- `src/hooks/useGameSessionListener.ts` - Real-time game session subscription
-- `src/hooks/useGamePlayerListener.ts` - Real-time player updates subscription
+- `src/lib/context/gameRoomContext.tsx` - Central game room React context
+- `src/components/providers/ConvexClientProvider.tsx` - Convex client provider
 
 ## Before You Code
 
-1. ✅ Read the relevant documentation file
-2. ✅ Check existing patterns in similar features
-3. ✅ Use `database.types.ts` types, don't create new ones
-4. ✅ Run `npx tsc` after changes to catch type errors
-5. ✅ Follow component and hook patterns from existing code
+1. Read the relevant documentation file
+2. Check `.cursor/rules/` for Convex-specific patterns
+3. Check existing patterns in similar features
+4. Use `Doc<"tableName">` types, don't create new ones
+5. Run `npx tsc` after changes to catch type errors
+6. Follow component and hook patterns from existing code

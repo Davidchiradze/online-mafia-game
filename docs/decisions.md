@@ -2,173 +2,148 @@
 
 This document records important architectural decisions, including what was chosen and why, and what was rejected.
 
-## ADR-001: Real-time Communication - Supabase Realtime over Socket.IO
+## ADR-001: Real-time Communication - Convex Reactive Queries
 
-**Status**: ✅ Accepted
+**Status**: Superseded (was Supabase Realtime, now Convex)
 
-**Decision**: Use Supabase Realtime (postgres_changes subscriptions) instead of Socket.IO for real-time updates.
+**Decision**: Use Convex reactive queries (`useQuery`) for all real-time updates.
 
 **Context**:
 
 - Need real-time game state synchronization
-- Need to broadcast updates to all connected clients
+- Need guaranteed delivery (no missed events)
 - Need to handle player joins, phase changes, voting, etc.
+- Supabase Realtime (`postgres_changes`) was dropping events under load, during reconnection, and when tabs were backgrounded
 
 **Options Considered**:
 
-1. **Socket.IO** - Custom WebSocket server
-2. **Supabase Realtime** - Built-in PostgreSQL change subscriptions
-3. **Redis Pub/Sub** - External message broker
+1. **Supabase Realtime** - PostgreSQL change subscriptions (original choice)
+2. **Socket.IO** - Custom WebSocket server
+3. **Ably** - Pub/sub messaging service
+4. **Convex** - Reactive queries with guaranteed consistency
 
 **Decision**:
 
-- Chose **Supabase Realtime** because:
-  - Already using Supabase for database
-  - No additional infrastructure needed
-  - Automatic reconnection handling
-  - Built-in filtering and security
-  - Simpler architecture (one less service)
+- Chose **Convex reactive queries** because:
+  - Guaranteed consistency (queries return current state, not change events)
+  - Automatic reconnection with full state catch-up
+  - No manual subscription setup or cleanup
+  - Single `useQuery` call replaces fetch + subscribe pattern
+  - Simpler code (no `useEffect`, no channel management)
 
 **Consequences**:
 
-- ✅ Simpler deployment (no Socket.IO server to manage)
-- ✅ Automatic reconnection and error handling
-- ✅ Database changes automatically trigger updates
-- ⚠️ Tied to Supabase (vendor lock-in)
-- ⚠️ Less control over WebSocket behavior
+- All 7 Supabase realtime hooks replaced by `useQuery` calls
+- No more missed events or stale state
+- Simpler codebase (removed ~500 lines of subscription code)
+- Vendor change from Supabase to Convex
 
 **Rejected**:
 
-- **Socket.IO**: Would require custom server setup, more infrastructure
-- **Redis Pub/Sub**: Additional service to manage, more complexity
+- **Supabase Realtime**: Events could be dropped (the problem that triggered this migration)
+- **Socket.IO**: Would require custom server, still event-based (same missed-event risk)
+- **Ably**: Pub/sub only, still needs separate DB + reconciliation logic
 
 ---
 
 ## ADR-002: State Management - No Global Store
 
-**Status**: ✅ Accepted
+**Status**: Accepted
 
 **Decision**: Do not use Redux, Zustand, or any global state management library.
 
 **Context**:
 
 - Need to manage game state, player data, UI state
-- Need real-time updates from Supabase
+- Need real-time updates
 - Want to keep architecture simple
-
-**Options Considered**:
-
-1. **Redux Toolkit** - Global store with actions/reducers
-2. **Zustand** - Lightweight global store
-3. **React Context** - Feature-scoped state
-4. **Local state + Subscriptions** - Component state + Supabase subscriptions
 
 **Decision**:
 
-- Chose **Local state + Subscriptions** because:
-  - Real-time data comes from Supabase subscriptions
-  - No need for global store when data is always fresh from database
+- Chose **Convex reactive queries + local state** because:
+  - `useQuery` provides always-fresh server data
+  - No need for global store when data is always in sync with database
   - Simpler mental model
   - Less boilerplate
 
 **Consequences**:
 
-- ✅ Simpler codebase (no store setup)
-- ✅ Data always in sync with database
-- ✅ Less state management complexity
-- ⚠️ More prop drilling in some cases (mitigated with Context)
-- ⚠️ No offline state management
+- Simpler codebase (no store setup)
+- Data always in sync with database
+- Some prop drilling (mitigated with React Context)
 
 **Rejected**:
 
-- **Redux Toolkit**: Too much boilerplate for our use case
-- **Zustand**: Not needed when data comes from subscriptions
+- **Redux Toolkit**: Too much boilerplate
+- **Zustand**: Not needed when data comes from reactive queries
 
 ---
 
-## ADR-003: Server Actions over API Routes
+## ADR-003: Convex Mutations over Server Actions
 
-**Status**: ✅ Accepted
+**Status**: Superseded (was Next.js Server Actions, now Convex mutations)
 
-**Decision**: Use Next.js Server Actions for all game logic instead of REST API routes.
+**Decision**: Use Convex mutations for all game logic instead of Next.js Server Actions.
 
 **Context**:
 
 - Need to handle game state transitions
 - Need to validate permissions
-- Need to update database
-
-**Options Considered**:
-
-1. **API Routes** - REST endpoints (`/api/*`)
-2. **Server Actions** - Next.js server functions (`"use server"`)
+- Need atomic transactions
+- Server Actions required separate `adminClient` for writes and had no built-in transactions
 
 **Decision**:
 
-- Chose **Server Actions** because:
-  - Type-safe (TypeScript)
-  - Simpler (no route handlers)
-  - Better integration with React components
-  - Automatic request/response handling
+- Chose **Convex mutations** because:
+  - Atomic transactions (all writes succeed or all rollback)
+  - Single `ctx.db` for all operations (no separate admin client)
+  - Type-safe with auto-generated API (`api.games.create`)
+  - Mutations automatically trigger reactive query updates
+  - Built-in auth via `getAuthUserId(ctx)`
 
 **Consequences**:
 
-- ✅ Type-safe function calls
-- ✅ Simpler code (no route handlers)
-- ✅ Better developer experience
-- ⚠️ Less control over HTTP methods/status codes
-- ⚠️ Not suitable for webhooks (still use API routes for those)
+- All `"use server"` action files replaced by `convex/*.ts` files
+- Frontend uses `useMutation(api.x.y)` instead of importing server actions
+- Error handling via try/catch instead of `{ ok, message }` pattern
+- Transactions are automatic (no manual error checking between operations)
 
 **Rejected**:
 
-- **API Routes only**: More boilerplate, less type-safe
+- **Next.js Server Actions**: No built-in transactions, required separate admin client, `{ ok, message }` pattern was verbose
 
 ---
 
-## ADR-004: Database Types - Generated Types Only
+## ADR-004: Database Types - Convex Auto-Generated
 
-**Status**: ✅ Accepted
+**Status**: Superseded (was Supabase generated types, now Convex generated types)
 
-**Decision**: Always use generated types from `database.types.ts`, never create duplicate types.
+**Decision**: Use auto-generated types from `convex/_generated/dataModel`.
 
 **Context**:
 
 - Need type safety for database operations
-- Database schema changes frequently
+- Schema defined in `convex/schema.ts`
 - Want single source of truth
-
-**Options Considered**:
-
-1. **Manual types** - Define types manually
-2. **Generated types** - Use `supabase gen types`
-3. **Mixed** - Some manual, some generated
 
 **Decision**:
 
-- Chose **Generated types only** because:
-  - Single source of truth (database schema)
-  - Automatic updates when schema changes
-  - Type safety guaranteed
-  - Less maintenance
+- Chose **Convex auto-generated types** because:
+  - `Doc<"tableName">` and `Id<"tableName">` are always in sync with schema
+  - No manual regeneration needed (auto-generated on `npx convex dev`)
+  - Type-safe validators (`v.id("games")`) in function args
 
 **Consequences**:
 
-- ✅ Always in sync with database
-- ✅ Type safety
-- ✅ Less maintenance
-- ⚠️ Must regenerate types after schema changes
-- ⚠️ Generated types can be verbose
-
-**Rejected**:
-
-- **Manual types**: Would get out of sync with database
-- **Mixed approach**: Confusing, inconsistent
+- `Tables<"games">` replaced by `Doc<"games">`
+- `string` UUIDs replaced by `Id<"games">`
+- `database.types.ts` deleted (replaced by `convex/_generated/dataModel.d.ts`)
 
 ---
 
 ## ADR-005: Video/Audio - LiveKit over Custom WebRTC
 
-**Status**: ✅ Accepted
+**Status**: Accepted (unchanged)
 
 **Decision**: Use LiveKit for video/audio streaming instead of custom WebRTC implementation.
 
@@ -178,64 +153,65 @@ This document records important architectural decisions, including what was chos
 - Need role-based visibility control
 - Need connection management
 
-**Options Considered**:
-
-1. **Custom WebRTC** - Build WebRTC implementation from scratch
-2. **LiveKit** - Managed WebRTC service
-3. **Agora** - Alternative managed service
-4. **Twilio Video** - Alternative managed service
-
 **Decision**:
 
 - Chose **LiveKit** because:
   - Good React integration
   - Role-based visibility support (hidden participants)
   - Good documentation
-  - Reasonable pricing
+  - Self-hostable
 
 **Consequences**:
 
-- ✅ Managed service (less infrastructure)
-- ✅ Good React components
-- ✅ Role-based visibility built-in
-- ⚠️ External dependency
-- ⚠️ Additional cost
+- Managed/self-hosted service (less custom infrastructure)
+- Good React components
+- Role-based visibility built-in
+- External dependency
 
 **Rejected**:
 
-- **Custom WebRTC**: Too complex, would take too long to build
+- **Custom WebRTC**: Too complex
 - **Agora/Twilio**: Less suitable for our use case
 
 ---
 
-## ADR-006: No Redis for Real-time Updates
+## ADR-006: Authentication - Convex Auth
 
-**Status**: ✅ Rejected (Not Used)
+**Status**: Superseded (was Supabase Auth, now Convex Auth)
 
-**Decision**: Do not use Redis for real-time game state synchronization.
+**Decision**: Use Convex Auth (`@convex-dev/auth`) with Password provider and Resend OTP.
 
 **Context**:
 
-- Originally considered Redis for pub/sub
-- Need to broadcast updates across server instances
+- Migrating from Supabase to Convex
+- Need email/password authentication with email verification
+- Need route protection via middleware
 
-**Why Rejected**:
+**Decision**:
 
-- Supabase Realtime handles this automatically
-- No need for additional infrastructure
-- Simpler architecture
+- Chose **Convex Auth** because:
+  - Integrated with Convex (same platform as database)
+  - `getAuthUserId(ctx)` in Convex functions (no separate auth check)
+  - `convexAuthNextjsMiddleware` for route protection
+  - Password provider with Resend OTP for email verification
 
-**Current Approach**:
+**Consequences**:
 
-- Supabase Realtime subscriptions handle all real-time updates
-- Database changes automatically trigger subscriptions
-- No Redis needed
+- `supabase.auth.getUser()` replaced by `getAuthUserId(ctx)`
+- Supabase Auth UI replaced by custom forms using `useAuthActions()`
+- `user.id` (UUID string) replaced by `Id<"users">`
+- Profile data stored in separate `profiles` table (not in auth metadata)
+
+**Rejected**:
+
+- **Supabase Auth**: Tied to Supabase (which we're migrating away from)
+- **NextAuth/Auth.js standalone**: Would add another service; Convex Auth is simpler
 
 ---
 
 ## ADR-007: Component Organization - Feature-based
 
-**Status**: ✅ Accepted
+**Status**: Accepted (unchanged)
 
 **Decision**: Organize components by feature/domain, not by type.
 
@@ -256,17 +232,13 @@ components/
 - Better code organization
 - Clearer boundaries
 
-**Rejected**:
-
-- **Type-based** (components/buttons, components/forms): Harder to find feature code
-
 ---
 
 ## ADR-008: Role Filtering - Server-side Only
 
-**Status**: ✅ Accepted
+**Status**: Accepted (updated for Convex)
 
-**Decision**: Filter role information server-side, never send all roles to client.
+**Decision**: Filter role information server-side in Convex queries, never send all roles to client.
 
 **Context**:
 
@@ -275,41 +247,70 @@ components/
 
 **Implementation**:
 
-- Roles stored in separate `game_player_roles` table (not in `game_players`)
-- `getFilteredPlayerRoles()` server action in `src/lib/gamePlayerRoles/actions.ts`
-- `usePlayerRoles` hook fetched ONCE at `GameRoomContext` level (not per participant)
-- `usePlayerRolesListener` subscribes to role changes in real-time
+- Roles stored in `gamePlayerRoles` table (separate from `gamePlayers`)
+- `getFiltered` query in `convex/gamePlayerRoles.ts` filters by team visibility
+- `useQuery(api.gamePlayerRoles.getFiltered, { gameId })` at `GameRoomContext` level
 - Teammates can see each other's roles:
   - Mafia team (DON, MAFIA, MAFIA_RIGHT_HAND) see each other
   - Yakuza team (YAKUZA, SHOGUN) see each other
 - Host can see all roles
-- Others cannot see roles (returned as `null`)
+- Others see `null` for role field
 
 **Consequences**:
 
-- ✅ Security (roles never leaked)
-- ✅ Game integrity maintained
-- ✅ Efficient (roles fetched once, not per participant)
-- ✅ Real-time updates via Supabase subscription
-- ⚠️ More server-side logic
-- ⚠️ Must remember to filter in all queries
+- Security (roles never leaked)
+- Game integrity maintained
+- Efficient (single reactive query, not per participant)
+- Real-time updates via Convex reactive query
+
+---
+
+## ADR-009: Database - Convex over Supabase
+
+**Status**: Accepted
+
+**Decision**: Migrate from Supabase (PostgreSQL) to Convex (document database) for the entire data layer.
+
+**Context**:
+
+- Supabase Realtime was unreliable (missed events)
+- Need guaranteed real-time sync for a multiplayer game
+- Evaluated Convex and Ably as alternatives
+
+**Decision**:
+
+- Chose **Convex** because:
+  - Reactive queries guarantee frontend is always in sync with DB
+  - All-in-one platform (database + server functions + auth + real-time)
+  - Atomic transactions (Supabase had no built-in transactions)
+  - Simpler architecture (no separate admin client, no RLS, no subscription cleanup)
+  - Document model works well for game state (nested objects, arrays)
+
+**Consequences**:
+
+- Relational schema converted to document schema (foreign keys become `v.id()` references)
+- snake_case fields converted to camelCase
+- No JOINs (use multiple queries or denormalization)
+- `_creationTime` replaces `created_at`
+- All Supabase code removed (clients, types, subscriptions)
 
 **Rejected**:
 
-- **Client-side filtering**: Security risk, roles could be exposed
-- **Per-participant role fetching**: Inefficient (N calls instead of 1)
+- **Ably**: Pub/sub only, would still need Supabase for DB + custom reconciliation
+- **Keeping Supabase**: Fundamental reliability issue with `postgres_changes`
 
 ---
 
 ## Summary
 
-| Decision         | Status      | Key Technology              |
-| ---------------- | ----------- | --------------------------- |
-| Real-time        | ✅ Accepted | Supabase Realtime           |
-| State Management | ✅ Accepted | Local state + Subscriptions |
-| Server Actions   | ✅ Accepted | Next.js Server Actions      |
-| Database Types   | ✅ Accepted | Generated types only        |
-| Video/Audio      | ✅ Accepted | LiveKit                     |
-| Redis            | ❌ Rejected | Not needed                  |
-| Component Org    | ✅ Accepted | Feature-based               |
-| Role Filtering   | ✅ Accepted | Server-side only            |
+| Decision | Status | Key Technology |
+|---|---|---|
+| Real-time | Superseded | Convex reactive queries |
+| State Management | Accepted | Convex queries + local state |
+| Server Logic | Superseded | Convex mutations |
+| Database Types | Superseded | Convex auto-generated (`Doc<>`) |
+| Video/Audio | Accepted | LiveKit |
+| Authentication | Superseded | Convex Auth |
+| Component Org | Accepted | Feature-based |
+| Role Filtering | Accepted | Server-side (Convex queries) |
+| Database | Accepted | Convex (document DB) |

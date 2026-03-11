@@ -7,25 +7,34 @@
 ```typescript
 "use client"; // Only if component uses hooks or browser APIs
 
-import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { useState } from "react";
 
-export default function MyComponent() {
-  // 1. Hooks
-  const [state, setState] = useState(null);
+export default function MyComponent({ gameId }: { gameId: Id<"games"> }) {
+  // 1. Convex queries (reactive, real-time)
+  const gameSession = useQuery(api.gameSessions.getByGame, { gameId });
 
-  // 2. Effects
-  useEffect(() => {
-    // Side effects
-  }, [dependencies]);
+  // 2. Convex mutations
+  const startGame = useMutation(api.gameSessions.start);
 
-  // 3. Event handlers
-  const handleClick = () => {
-    // Handler logic
+  // 3. Local state
+  const [isOpen, setIsOpen] = useState(false);
+
+  // 4. Event handlers
+  const handleStart = async () => {
+    try {
+      await startGame({ gameId });
+    } catch (error) {
+      console.error(error);
+    }
   };
 
-  // 4. Render
-  return <div>...</div>;
+  // 5. Loading state
+  if (gameSession === undefined) return <LoadingSpinner />;
+
+  // 6. Render
+  return <div>Phase: {gameSession?.gamePhase}</div>;
 }
 ```
 
@@ -37,49 +46,50 @@ export default function MyComponent() {
 
 **Naming**: `use` prefix (e.g., `useGameSession`, `useLivekitRoom`)
 
-**Pattern**:
+**Pattern with Convex**:
 
 ```typescript
 "use client";
-import { useEffect } from "react";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 
-export function useMyHook(
-  param: string,
-  setter: React.Dispatch<React.SetStateAction<State>>,
-  enabled: boolean = true
-) {
-  useEffect(() => {
-    if (!enabled) return;
-    // Hook logic
-    return () => {
-      // Cleanup
-    };
-  }, [param, enabled, setter]);
+export function useGameSession(gameId: Id<"games">) {
+  const session = useQuery(api.gameSessions.getByGame, { gameId });
+  const start = useMutation(api.gameSessions.start);
+
+  return { session, start };
 }
 ```
 
-**✅ DO**:
+**DO**:
 
-- Extract data fetching into hooks
-- Extract subscriptions into hooks
-- Extract complex state logic into hooks
-- Return cleanup functions from hooks
+- Use `useQuery` for reactive data (no `useEffect` needed)
+- Use `useMutation` for write operations
+- Use `"skip"` for conditional queries
+- Extract complex query combinations into hooks
 
-**❌ DON'T**:
+**DON'T**:
 
-- Put business logic directly in components
-- Create hooks that only wrap useState
-- Forget to clean up subscriptions/effects
+- Use `useEffect` for data subscriptions (Convex handles this)
+- Create manual WebSocket/channel subscriptions
+- Forget to handle `undefined` (loading) state from `useQuery`
 
 ### Component Organization
 
 ```
 src/components/
+├── providers/       # ConvexClientProvider
 ├── ui/              # Reusable UI primitives (buttons, modals, etc.)
 ├── game/            # Game-specific components
+├── gameSession/     # Phase-specific host controls
 ├── auth/            # Authentication components
 ├── liveKit/         # LiveKit video components
-└── modals/          # Modal dialogs
+├── participant/     # Participant video/state components
+├── lobby/           # Lobby components
+├── host-controls/   # Host-only UI
+├── modals/          # Modal dialogs
+└── video/           # Video-related components
 ```
 
 ### UI Components (shadcn/ui)
@@ -97,13 +107,23 @@ Located in `src/components/ui/`:
 
 ## State Management
 
+### Convex Reactive Queries (Primary)
+
+All server data comes from `useQuery` -- reactive, always in sync:
+
+```typescript
+const game = useQuery(api.games.getById, { gameId });
+const players = useQuery(api.gamePlayers.listByGame, { gameId });
+const session = useQuery(api.gameSessions.getByGame, { gameId });
+```
+
 ### Local State (useState)
 
-Use `useState` for component-local state:
+Use `useState` for UI-only state:
 
 ```typescript
 const [isOpen, setIsOpen] = useState(false);
-const [count, setCount] = useState(0);
+const [selectedSeat, setSelectedSeat] = useState<number | null>(null);
 ```
 
 ### Context (useContext)
@@ -111,8 +131,7 @@ const [count, setCount] = useState(0);
 Use React Context for shared state within a feature:
 
 ```typescript
-// Example: GameRoomContext
-const { game, userId } = useGameRoom();
+const { gameId, userId, isHost, gameSessionState } = useGameRoom();
 ```
 
 **Location**: `src/lib/context/`
@@ -123,9 +142,9 @@ const { game, userId } = useGameRoom();
 
 State is managed via:
 
-- Local component state (`useState`)
-- React Context (for feature-scoped state)
-- Supabase subscriptions (for real-time data)
+- Convex reactive queries (`useQuery` for server data)
+- Local component state (`useState` for UI state)
+- React Context (for feature-scoped shared state)
 
 ## Styling
 
@@ -163,30 +182,32 @@ className = "w-full sm:w-1/2 md:w-1/3 lg:w-1/4";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 const schema = z.object({
   name: z.string().min(1, "Name is required"),
-  email: z.string().email("Invalid email"),
 });
 
-export function MyForm() {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm({
+export function CreateGameForm() {
+  const createGame = useMutation(api.games.create);
+  const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: zodResolver(schema),
   });
 
   const onSubmit = async (data) => {
-    // Call server action
+    try {
+      await createGame({ name: data.name, type: "japanese_mafia" });
+    } catch (error) {
+      // Handle error
+    }
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <input {...register("name")} />
       {errors.name && <span>{errors.name.message}</span>}
-      <button type="submit">Submit</button>
+      <button type="submit">Create</button>
     </form>
   );
 }
@@ -194,40 +215,51 @@ export function MyForm() {
 
 ## Data Fetching
 
-### Server Actions
-
-Call server actions from client components:
+### Reactive Queries (Real-Time Data)
 
 ```typescript
 "use client";
-import { startGame } from "@/lib/gameSession/actions";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
-export function StartGameButton({ gameId }: { gameId: string }) {
+export function GameComponent({ gameId }: { gameId: Id<"games"> }) {
+  const gameSession = useQuery(api.gameSessions.getByGame, { gameId });
+
+  if (gameSession === undefined) return <LoadingSpinner />;
+
+  return <div>Phase: {gameSession?.gamePhase}</div>;
+}
+```
+
+### Conditional Queries
+
+```typescript
+// Only query when condition is met
+const nightSession = useQuery(
+  api.nightPhaseSessions.getCurrent,
+  isNightPhase ? { gameId } : "skip"
+);
+```
+
+### Mutations (Write Operations)
+
+```typescript
+"use client";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+
+export function StartGameButton({ gameId }: { gameId: Id<"games"> }) {
+  const startGame = useMutation(api.gameSessions.start);
+
   const handleClick = async () => {
-    const result = await startGame(gameId);
-    if (!result.ok) {
-      console.error(result.message);
+    try {
+      await startGame({ gameId });
+    } catch (error) {
+      console.error(error instanceof Error ? error.message : "Failed");
     }
   };
 
   return <button onClick={handleClick}>Start Game</button>;
-}
-```
-
-### Real-time Subscriptions
-
-Use custom hooks for subscriptions:
-
-```typescript
-"use client";
-import { useGameSessionListener } from "@/hooks/useGameSessionListener";
-
-export function GameComponent({ gameId }: { gameId: string }) {
-  const [gameSession, setGameSession] = useState(null);
-
-  useGameSessionListener(gameId, setGameSession, true);
-
-  return <div>{gameSession?.game_phase}</div>;
 }
 ```
 
@@ -242,75 +274,30 @@ export function GameComponent({ gameId }: { gameId: string }) {
 
 ### Utility Functions
 
-**Location**: `src/lib/utils/` or `src/utils.ts`
+**Location**: `src/lib/utils/`
 
 **Pattern**: Named exports, pure functions
 
 ```typescript
-// src/lib/utils/debounce.ts
-export function debounce<T>(fn: T, delay: number) {
-  // Implementation
-}
-```
-
-**❌ DON'T**: Define helper functions inside React components
-
-```typescript
-// ❌ BAD
-export function MyComponent() {
-  const formatDate = (date: Date) => {
-    // Helper function inside component
-  };
-  return <div>{formatDate(new Date())}</div>;
-}
-
-// ✅ GOOD
 // src/lib/utils/date.ts
 export function formatDate(date: Date): string {
   // Implementation
 }
-
-// Component
-import { formatDate } from "@/lib/utils/date";
-export function MyComponent() {
-  return <div>{formatDate(new Date())}</div>;
-}
 ```
 
-## Assets
-
-### Icons
-
-**Location**: `src/assets/icons/`
-
-**Pattern**: Export as React components
-
-```typescript
-// src/assets/icons/MicOn.tsx
-export function MicOn() {
-  return <svg>...</svg>;
-}
-
-// src/assets/icons/index.ts
-export { MicOn } from "./MicOn";
-export { MicOff } from "./MicOff";
-```
-
-**❌ DON'T**: Inline SVG markup in components
-
-### Images
-
-**Location**: `public/` for static images
+**DON'T**: Define helper functions inside React components. Extract them to `src/lib/utils/`.
 
 ## TypeScript
 
 ### Type Imports
 
-Always use `database.types.ts` for database types:
+Use Convex generated types:
 
 ```typescript
-import { Tables } from "@/db/supabase/database.types";
-const game: Tables<"games"> = ...;
+import { Doc, Id } from "@/convex/_generated/dataModel";
+
+const game: Doc<"games"> = ...;
+const gameId: Id<"games"> = ...;
 ```
 
 ### Type Safety
@@ -323,16 +310,39 @@ const game: Tables<"games"> = ...;
 ### Component Props
 
 ```typescript
-// ✅ DO: Explicit prop types
+import { Id } from "@/convex/_generated/dataModel";
+
 interface MyComponentProps {
-  gameId: string;
-  userId: string;
+  gameId: Id<"games">;
+  userId: Id<"users">;
   onComplete?: () => void;
 }
 
 export function MyComponent({ gameId, userId, onComplete }: MyComponentProps) {
   // ...
 }
+```
+
+## Auth Components
+
+### Sign In / Sign Up
+
+Use `useAuthActions()` from `@convex-dev/auth/react`:
+
+```typescript
+import { useAuthActions } from "@convex-dev/auth/react";
+
+const { signIn, signOut } = useAuthActions();
+```
+
+### Auth State
+
+```typescript
+import { Authenticated, Unauthenticated, AuthLoading } from "convex/react";
+
+<AuthLoading>Loading...</AuthLoading>
+<Unauthenticated>Please sign in</Unauthenticated>
+<Authenticated>Welcome!</Authenticated>
 ```
 
 ## Performance
@@ -342,13 +352,8 @@ export function MyComponent({ gameId, userId, onComplete }: MyComponentProps) {
 Use `useMemo` and `useCallback` sparingly (only when needed):
 
 ```typescript
-const expensiveValue = useMemo(() => {
-  return computeExpensiveValue(data);
-}, [data]);
-
-const handleClick = useCallback(() => {
-  doSomething();
-}, [dependencies]);
+const expensiveValue = useMemo(() => computeExpensiveValue(data), [data]);
+const handleClick = useCallback(() => doSomething(), [dependencies]);
 ```
 
 ### Code Splitting
@@ -357,7 +362,6 @@ Next.js App Router handles code splitting automatically. Use dynamic imports for
 
 ```typescript
 import dynamic from "next/dynamic";
-
 const HeavyComponent = dynamic(() => import("./HeavyComponent"), {
   loading: () => <LoadingSpinner />,
 });
@@ -367,9 +371,9 @@ const HeavyComponent = dynamic(() => import("./HeavyComponent"), {
 
 1. **Keep components small** - Break down large components
 2. **Extract logic to hooks** - Don't put business logic in components
-3. **Use TypeScript strictly** - Avoid `any`, use proper types
+3. **Use TypeScript strictly** - Avoid `any`, use `Doc<>` and `Id<>` types
 4. **Support dark mode** - Always include dark mode styles
-5. **Handle loading states** - Show loading indicators
-6. **Handle errors** - Display error messages to users
-7. **Clean up subscriptions** - Always return cleanup from useEffect
-8. **Use server actions** - Don't call Supabase directly from client (except subscriptions)
+5. **Handle loading states** - `useQuery` returns `undefined` while loading
+6. **Handle errors** - Wrap `useMutation` calls in try/catch
+7. **Use `"skip"` for conditional queries** - Not `enabled` flags
+8. **Don't use `useEffect` for data** - Convex `useQuery` handles subscriptions

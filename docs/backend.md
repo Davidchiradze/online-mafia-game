@@ -1,264 +1,245 @@
 # Backend Patterns
 
-## Server Actions
+## Convex Functions
 
-All game logic and database operations happen via **Next.js Server Actions**.
+All game logic and database operations happen via **Convex mutations and queries** defined in the `convex/` folder.
 
-### Pattern
+### Mutation Pattern (Write Operations)
 
 ```typescript
-"use server";
-import { createClient } from "@/lib/supabase/server";
-import { adminClient } from "@/lib/supabase/admin";
-import { Tables } from "@/db/supabase/database.types";
+// convex/games.ts
+import { getAuthUserId } from "@convex-dev/auth/server";
+import { mutation } from "./_generated/server";
+import { v } from "convex/values";
 
-export async function myAction(
-  gameId: string
-): Promise<{ ok: true } | { ok: false; message: string }> {
-  // 1. Authenticate user
-  const supabase = await createClient();
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-  if (userError || !user) {
-    return { ok: false, message: "Not authenticated" };
-  }
+export const create = mutation({
+  args: {
+    name: v.string(),
+    type: v.union(v.literal("traditional"), v.literal("city_mafia"), v.literal("japanese_mafia")),
+  },
+  handler: async (ctx, args) => {
+    // 1. Authenticate user
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
 
-  // 2. Validate permissions (e.g., check if user is host)
-  const { data: game, error: gameError } = await supabase
-    .from("games")
-    .select("host_id")
-    .eq("id", gameId)
-    .single<Tables<"games">>();
+    // 2. Perform database operation
+    const gameId = await ctx.db.insert("games", {
+      name: args.name,
+      code: generateGameCode(),
+      hostId: userId,
+      gameStatus: "not_started",
+      gameType: args.type,
+      maxPlayers: 12,
+    });
 
-  if (gameError || !game) {
-    return { ok: false, message: "Game not found" };
-  }
+    return gameId;
+  },
+});
+```
 
-  if (game.host_id !== user.id) {
-    return { ok: false, message: "Forbidden" };
-  }
+### Query Pattern (Read Operations)
 
-  // 3. Perform database operation (use adminClient for writes)
-  const { error: updateError } = await adminClient
-    .from("games")
-    .update({ game_status: "playing" })
-    .eq("id", gameId);
+```typescript
+// convex/gameSessions.ts
+import { query } from "./_generated/server";
+import { v } from "convex/values";
 
-  if (updateError) {
-    return { ok: false, message: updateError.message };
-  }
-
-  // 4. Return success
-  return { ok: true };
-}
+export const getByGame = query({
+  args: { gameId: v.id("games") },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("gameSessions")
+      .withIndex("by_gameId", (q) => q.eq("gameId", args.gameId))
+      .unique();
+  },
+});
 ```
 
 ### Key Points
 
-1. **Always use `"use server"`** directive at the top
-2. **Authenticate first** - Check user with `supabase.auth.getUser()`
-3. **Validate permissions** - Check if user has permission (e.g., is host)
-4. **Use adminClient for writes** - Use `adminClient` from `@/lib/supabase/admin` for database writes
-5. **Return consistent format** - `{ ok: true }` or `{ ok: false; message: string }`
-6. **Handle errors** - Always check for errors and return appropriate messages
+1. **Authenticate first** - Call `getAuthUserId(ctx)` at the start of mutations/queries
+2. **Validate permissions** - Check if user has permission (e.g., is host)
+3. **Use `ctx.db` for all operations** - No separate admin client needed
+4. **Throw errors on failure** - Caught by `useMutation` on frontend
+5. **Mutations are transactional** - All writes succeed or all rollback
+6. **Queries are reactive** - `useQuery` auto-updates when data changes
 
-## Supabase Clients
+## Function Types
 
-### Server Client (`createClient` from `@/lib/supabase/server`)
-
-**Use for**:
-
-- Reading data (SELECT queries)
-- Authentication checks
-- Row Level Security (RLS) applies
-
-```typescript
-const supabase = await createClient();
-const { data, error } = await supabase
-  .from("games")
-  .select("*")
-  .eq("id", gameId)
-  .single();
-```
-
-### Admin Client (`adminClient` from `@/lib/supabase/admin`)
-
-**Use for**:
-
-- Writing data (INSERT, UPDATE, DELETE)
-- Bypassing RLS when needed
-- Bulk operations
-
-```typescript
-import { adminClient } from "@/lib/supabase/admin";
-
-const { error } = await adminClient
-  .from("games")
-  .update({ game_status: "playing" })
-  .eq("id", gameId);
-```
-
-**⚠️ Important**: Only use adminClient when you've already validated permissions server-side.
-
-## API Routes
-
-API routes are used for:
-
-- Webhooks (e.g., LiveKit webhooks)
-- Auth callbacks (e.g., email confirmation)
-- External integrations
-
-**Location**: `src/app/api/`
-
-### Pattern
-
-```typescript
-import { NextRequest, NextResponse } from "next/server";
-
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    // Process webhook/callback
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
-  }
-}
-```
+| Type | Use For | DB Access | External APIs |
+|---|---|---|---|
+| `query` | Reading data (reactive, real-time) | Read only | No |
+| `mutation` | Writing data (transactional) | Read + Write | No |
+| `action` | External API calls | Via `ctx.runQuery`/`ctx.runMutation` | Yes |
+| `internalAction` | Internal-only external calls (e.g., LiveKit) | Via helpers | Yes |
+| `httpAction` | HTTP endpoints (webhooks) | Via helpers | Yes |
 
 ## Database Operations
 
 ### Reading Data
 
 ```typescript
-// Single record
-const { data, error } = await supabase
-  .from("games")
-  .select("*")
-  .eq("id", gameId)
-  .single<Tables<"games">>();
+// Get by ID
+const game = await ctx.db.get(gameId);
 
-// Multiple records
-const { data, error } = await supabase
-  .from("game_players")
-  .select("*")
-  .eq("game_id", gameId)
-  .order("seat_number", { ascending: true });
+// Query with index (single result)
+const session = await ctx.db
+  .query("gameSessions")
+  .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
+  .unique();
+
+// Query with index (multiple results)
+const players = await ctx.db
+  .query("gamePlayers")
+  .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
+  .collect();
+
+// Query with compound index
+const player = await ctx.db
+  .query("gamePlayers")
+  .withIndex("by_gameId_playerId", (q) =>
+    q.eq("gameId", gameId).eq("playerId", userId)
+  )
+  .unique();
+
+// Query with filter (when no index exists)
+const alive = await ctx.db
+  .query("gamePlayers")
+  .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
+  .filter((q) => q.eq(q.field("isAlive"), true))
+  .collect();
 ```
 
 ### Writing Data
 
 ```typescript
-// Insert
-const { error } = await adminClient.from("game_sessions").insert({
-  game_id: gameId,
-  game_phase: "game_session_started",
+// Insert (returns the new document ID)
+const id = await ctx.db.insert("gameSessions", {
+  gameId,
+  gamePhase: "game_session_started",
+  speakingOrder: [],
+  nominatedPlayers: [],
+  currentNightNumber: 0,
+  isFinished: false,
 });
 
-// Update
-const { error } = await adminClient
-  .from("games")
-  .update({ game_status: "playing" })
-  .eq("id", gameId);
+// Update (partial patch)
+await ctx.db.patch(gameId, { gameStatus: "playing" });
 
 // Delete
-const { error } = await adminClient
-  .from("join_requests")
-  .delete()
-  .eq("id", requestId);
+await ctx.db.delete(requestId);
 ```
 
 ### Transactions
 
-For multiple related operations, perform them sequentially and check errors:
+Convex mutations are automatically transactional. All writes in a single mutation either succeed together or rollback together:
 
 ```typescript
-// Update game status
-const { error: gameError } = await adminClient
-  .from("games")
-  .update({ game_status: "playing" })
-  .eq("id", gameId);
+export const startGame = mutation({
+  handler: async (ctx, args) => {
+    // These all happen atomically
+    await ctx.db.patch(args.gameId, { gameStatus: "playing" });
+    await ctx.db.insert("gameSessions", {
+      gameId: args.gameId,
+      gamePhase: "game_session_started",
+      // ...
+    });
+    // If the insert fails, the patch is also rolled back
+  },
+});
+```
 
-if (gameError) {
-  return { ok: false, message: gameError.message };
+## API Routes
+
+API routes are only used for **webhooks** that receive external HTTP requests:
+
+**Location**: `src/app/api/`
+
+### LiveKit Webhook
+
+```typescript
+// src/app/api/livekit/webhook/route.ts
+import { NextRequest, NextResponse } from "next/server";
+
+export async function POST(request: NextRequest) {
+  // Verify webhook signature
+  // Process participant_joined, participant_left events
+  // Call Convex mutations to update player state
 }
-
-// Create game session
-const { error: sessionError } = await adminClient
-  .from("game_sessions")
-  .insert({ game_id: gameId, game_phase: "game_session_started" });
-
-if (sessionError) {
-  return { ok: false, message: sessionError.message };
-}
-
-return { ok: true };
 ```
 
 ## Type Safety
 
-### Use Database Types
-
-Always use types from `database.types.ts`:
+### Use Convex Generated Types
 
 ```typescript
-import { Tables } from "@/db/supabase/database.types";
+import { Doc, Id } from "@/convex/_generated/dataModel";
 
-// ✅ DO: Use database types
-const game: Tables<"games"> = ...;
-const player: Tables<"game_players"> = ...;
+// Document type (full row)
+const game: Doc<"games"> = ...;
 
-// ❌ DON'T: Create duplicate types
-type Game = { id: string; name: string; ... };
+// ID type
+const gameId: Id<"games"> = ...;
+
+// In function args, use validators
+args: { gameId: v.id("games") }
 ```
 
-### Type Queries
-
-Type your queries for better type safety:
+### Validators
 
 ```typescript
-const { data } = await supabase
-  .from("games")
-  .select("id, host_id, game_status")
-  .eq("id", gameId)
-  .single<Pick<Tables<"games">, "id" | "host_id" | "game_status">>();
+import { v } from "convex/values";
+
+v.string()                                    // string
+v.number()                                    // number
+v.boolean()                                   // boolean
+v.id("games")                                 // Id<"games">
+v.array(v.number())                           // number[]
+v.object({ key: v.string() })                 // { key: string }
+v.optional(v.string())                        // string | undefined
+v.union(v.literal("a"), v.literal("b"))       // "a" | "b"
 ```
 
 ## Error Handling
 
-### Consistent Error Format
+### In Convex Functions
 
-All server actions return:
+Throw errors in mutations/queries. The error message is available on the frontend:
 
 ```typescript
-type ActionResult = { ok: true } | { ok: false; message: string };
+export const start = mutation({
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    const game = await ctx.db.get(args.gameId);
+    if (!game) throw new Error("Game not found");
+    if (game.hostId !== userId) throw new Error("Only host can start the game");
+  },
+});
 ```
 
-### Error Messages
+### On Frontend
 
-- **Authentication errors**: "Not authenticated"
-- **Permission errors**: "Forbidden" or "Only host can perform this action"
-- **Not found errors**: "Game not found" or "Player not found"
-- **Validation errors**: Specific validation message
-- **Database errors**: `error.message` from Supabase
+```typescript
+const startGame = useMutation(api.gameSessions.start);
+
+try {
+  await startGame({ gameId });
+} catch (error) {
+  toast.error(error instanceof Error ? error.message : "Something went wrong");
+}
+```
 
 ## Security
 
 ### Authentication
 
-Always authenticate in server actions:
+Always authenticate in Convex functions:
 
 ```typescript
-const supabase = await createClient();
-const {
-  data: { user },
-  error,
-} = await supabase.auth.getUser();
-if (error || !user) {
-  return { ok: false, message: "Not authenticated" };
-}
+const userId = await getAuthUserId(ctx);
+if (!userId) throw new Error("Not authenticated");
 ```
 
 ### Authorization
@@ -266,121 +247,96 @@ if (error || !user) {
 Check permissions before operations:
 
 ```typescript
-// Check if user is host
-if (game.host_id !== user.id) {
-  return { ok: false, message: "Forbidden" };
-}
-
-// Check if user is player in game
-const { data: player } = await supabase
-  .from("game_players")
-  .select("id")
-  .eq("game_id", gameId)
-  .eq("player_id", user.id)
-  .single();
-
-if (!player) {
-  return { ok: false, message: "Not a player in this game" };
-}
+const game = await ctx.db.get(args.gameId);
+if (game?.hostId !== userId) throw new Error("Forbidden");
 ```
 
 ### Role Filtering
 
-Filter sensitive data (like roles) based on team relationships:
+Filter sensitive data in Convex queries:
 
 ```typescript
-import { filterPlayerRoles } from "@/lib/utils/filterPlayerRoles";
-
-const filteredPlayers = filterPlayerRoles({
-  allPlayers,
-  requestingUserId: user.id,
-  requestingRole: playerData.role,
-  isHost: game.host_id === user.id,
-});
+// convex/gamePlayerRoles.ts - getFiltered query
+// Host sees all roles
+// Teammates see each other's roles
+// Others see null for role field
 ```
 
 ## LiveKit Integration
 
-### Server Actions for LiveKit
+### Token Generation (Convex Internal Action)
 
-LiveKit operations happen via server actions:
-
-```typescript
-"use server";
-import { RoomServiceClient } from "livekit-server-sdk";
-
-export async function createLivekitRoom(roomId: string) {
-  const roomService = new RoomServiceClient(
-    process.env.NEXT_PUBLIC_LIVEKIT_URL!,
-    process.env.LIVEKIT_API_KEY!,
-    process.env.LIVEKIT_API_SECRET!
-  );
-
-  await roomService.createRoom({
-    name: roomId,
-    emptyTimeout: 10 * 60,
-    maxParticipants: 20,
-  });
-}
-```
-
-### Access Tokens
-
-Generate access tokens for clients:
+LiveKit operations use `internalAction` since they call external APIs:
 
 ```typescript
-import { AccessToken, VideoGrant } from "livekit-server-sdk";
+// convex/livekit.ts
+import { internalAction } from "./_generated/server";
+import { AccessToken } from "livekit-server-sdk";
 
-export async function generateLivekitAccessToken(
-  roomId: string,
-  participantId: string,
-  permissions: { hidden: boolean; roomAdmin: boolean }
-) {
-  const at = new AccessToken(
-    process.env.LIVEKIT_API_KEY!,
-    process.env.LIVEKIT_API_SECRET!,
-    { identity: participantId }
-  );
-
-  const grant: VideoGrant = {
-    room: roomId,
-    roomJoin: true,
-    canPublish: true,
-    canSubscribe: true,
-    hidden: permissions.hidden,
-    roomAdmin: permissions.roomAdmin,
-  };
-
-  at.addGrant(grant);
-  return await at.toJwt();
-}
+export const generateToken = internalAction({
+  args: { roomId: v.string(), participantId: v.string(), isHost: v.boolean() },
+  handler: async (ctx, args) => {
+    const at = new AccessToken(
+      process.env.LIVEKIT_API_KEY!,
+      process.env.LIVEKIT_API_SECRET!,
+      { identity: args.participantId }
+    );
+    at.addGrant({
+      room: args.roomId,
+      roomJoin: true,
+      canPublish: true,
+      canSubscribe: true,
+      hidden: args.isHost,
+      roomAdmin: args.isHost,
+    });
+    return await at.toJwt();
+  },
+});
 ```
 
 ## Environment Variables
 
-Required environment variables:
-
 ```env
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL=...
-NEXT_PUBLIC_SUPABASE_ANON_KEY=...
-SUPABASE_SERVICE_ROLE_KEY=...  # For adminClient
+# Convex
+NEXT_PUBLIC_CONVEX_URL=https://your-project.convex.cloud
+CONVEX_SITE_URL=https://your-project.convex.site
+
+# Auth (Resend for email OTP)
+AUTH_RESEND_KEY=re_xxxx
 
 # LiveKit
-NEXT_PUBLIC_LIVEKIT_URL=...
+NEXT_PUBLIC_LIVEKIT_URL=wss://your-livekit-server
 LIVEKIT_API_KEY=...
 LIVEKIT_API_SECRET=...
 ```
 
+## File Organization
+
+One file per domain in `convex/`:
+
+| File | Purpose |
+|---|---|
+| `games.ts` | Game room CRUD (create, list, delete, update status) |
+| `gamePlayers.ts` | Player join/leave/kill/update |
+| `gamePlayerRoles.ts` | Role assignment and filtered visibility |
+| `gameSessions.ts` | Game session state machine (phase transitions) |
+| `joinRequests.ts` | Join request create/accept/reject |
+| `nightPhaseSessions.ts` | Night phase actions (mafia/yakuza target, doctor heal) |
+| `dayPhase.ts` | Day phase speaking (advance speaker, nominate, fouls) |
+| `votingSessions.ts` | Voting session management |
+| `votes.ts` | Individual vote casting |
+| `spectators.ts` | Spectator join/leave |
+| `farewellSpeech.ts` | Farewell speech flow |
+| `livekit.ts` | LiveKit token generation |
+| `users.ts` | User/profile queries |
+
 ## Best Practices
 
-1. **Always authenticate** - Check user in every server action
+1. **Always authenticate** - `getAuthUserId(ctx)` in every function
 2. **Validate permissions** - Check if user can perform the action
-3. **Use adminClient for writes** - Use admin client for database writes
-4. **Return consistent format** - Use `{ ok: true }` or `{ ok: false; message }`
-5. **Handle all errors** - Check for errors and return appropriate messages
-6. **Use database types** - Always use types from `database.types.ts`
-7. **Filter sensitive data** - Filter roles and other sensitive data server-side
-8. **Keep actions focused** - One action per operation
-9. **Validate input** - Validate and sanitize input data
-10. **Log errors** - Log errors for debugging (but don't expose to client)
+3. **Use indexes** - Always query with `.withIndex()` for performance
+4. **Throw descriptive errors** - Clear error messages for the frontend
+5. **Keep mutations focused** - One logical operation per mutation
+6. **Filter sensitive data** - Roles and other sensitive data filtered in queries
+7. **Use validators** - Define `args` with `v.*` validators for type safety
+8. **Leverage transactions** - Group related writes in a single mutation

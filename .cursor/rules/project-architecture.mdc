@@ -1,0 +1,94 @@
+---
+description: Project architecture, folder structure, and naming conventions for the real-time chat app
+alwaysApply: true
+---
+
+# Project Architecture
+
+This is a real-time chat application built with **Next.js 16 (App Router)**, **Convex** (backend/database), **React 19**, **Tailwind CSS 4**, and **TypeScript 5**.
+
+## Enforced Folder Structure
+
+```
+online-mafia-v2/
+├── app/                          # Next.js App Router (pages & layouts ONLY)
+│   ├── layout.tsx                # Root layout with ConvexClientProvider
+│   ├── page.tsx                  # Landing / home page
+│   ├── (auth)/                   # Auth route group
+│   │   ├── sign-in/page.tsx
+│   │   └── sign-up/page.tsx
+│   ├── chat/                     # Chat feature routes
+│   │   ├── layout.tsx
+│   │   ├── page.tsx              # Chat list
+│   │   └── [conversationId]/     # Dynamic conversation route
+│   │       └── page.tsx
+│   └── globals.css               # Global styles (Tailwind)
+├── components/                   # ALL React components live here
+│   ├── ui/                       # Primitives: Button, Input, Avatar, Badge, etc.
+│   ├── chat/                     # Chat feature components
+│   ├── auth/                     # Auth feature components
+│   ├── layout/                   # Sidebar, Header, MobileNav, etc.
+│   └── providers/                # ConvexClientProvider, ThemeProvider, etc.
+├── hooks/                        # Custom React hooks
+├── lib/                          # Utilities, helpers, constants
+│   ├── utils.ts                  # Generic utility functions
+│   └── constants.ts              # App-wide constants
+├── types/                        # Shared TypeScript types/interfaces
+├── convex/                       # Convex backend (see convex rule)
+│   ├── schema.ts                 # Database schema (single source of truth)
+│   ├── _generated/               # Auto-generated (NEVER edit)
+│   ├── messages.ts               # Message queries/mutations
+│   ├── conversations.ts          # Conversation queries/mutations
+│   ├── users.ts                  # User queries/mutations
+│   └── lib/                      # Shared server-side helpers
+├── public/                       # Static assets
+└── middleware.ts                  # Root-level middleware
+```
+
+## Strict Rules
+
+1. **No component code in `app/`** — `app/` contains ONLY `page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`, and `not-found.tsx`. All UI components are imported from `components/`.
+2. **No business logic in components** — Components render UI. Logic lives in `hooks/` or `convex/`.
+3. **Feature-based grouping** — Group components by feature (`components/chat/`, `components/auth/`), not by type.
+4. **One component per file** — Each file exports exactly one component as the default export.
+5. **Index files for barrels** — Each feature folder in `components/` may have an `index.ts` barrel export.
+
+## Naming Conventions
+
+| Item | Convention | Example |
+|------|-----------|---------|
+| Component files | PascalCase | `MessageBubble.tsx` |
+| Hook files | camelCase with `use` prefix | `useMessages.ts` |
+| Utility files | camelCase | `formatDate.ts` |
+| Convex functions | camelCase | `messages.ts` |
+| Types/interfaces | PascalCase with no `I` prefix | `Message`, `User` |
+| Constants | UPPER_SNAKE_CASE | `MAX_MESSAGE_LENGTH` |
+| CSS classes | Tailwind utilities only | No custom CSS unless absolutely necessary |
+| Route folders | kebab-case | `sign-in/`, `chat/` |
+| Route groups | parentheses | `(auth)/` |
+
+## Import Order (enforced)
+
+```typescript
+// 1. React/Next.js
+import { useState } from "react";
+import Link from "next/link";
+
+// 2. Third-party libraries
+import { useQuery } from "convex/react";
+
+// 3. Convex API
+import { api } from "@/convex/_generated/api";
+
+// 4. Components
+import { Button } from "@/components/ui/Button";
+
+// 5. Hooks
+import { useMessages } from "@/hooks/useMessages";
+
+// 6. Utils / types / constants
+import { formatDate } from "@/lib/utils";
+import type { Message } from "@/types";
+```
+
+Always use the `@/` path alias. Never use relative imports that go more than one level up (`../../`).

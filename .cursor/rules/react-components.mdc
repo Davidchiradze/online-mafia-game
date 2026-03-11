@@ -1,0 +1,91 @@
+---
+description: React component patterns and hooks for clean, reusable UI
+globs: "**/*.tsx"
+alwaysApply: false
+---
+
+# React Component Rules
+
+## Server vs Client Components
+
+- Components are **Server Components by default** — do NOT add `"use client"` unless required.
+- Add `"use client"` ONLY when the component uses: React hooks (`useState`, `useEffect`, etc.), browser APIs, event handlers (`onClick`, `onChange`), or Convex hooks (`useQuery`, `useMutation`).
+- Place `"use client"` at the very first line of the file.
+
+## Component Structure
+
+Every component file follows this exact order:
+
+```tsx
+"use client"; // only if needed
+
+import { useState } from "react";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { Button } from "@/components/ui/Button";
+import type { Message } from "@/types";
+
+interface MessageBubbleProps {
+  message: Message;
+  isOwn: boolean;
+}
+
+export default function MessageBubble({ message, isOwn }: MessageBubbleProps) {
+  return (
+    <div className={isOwn ? "ml-auto" : "mr-auto"}>
+      <p>{message.body}</p>
+    </div>
+  );
+}
+```
+
+## Strict Patterns
+
+1. **Functional components only** — no class components.
+2. **Props interface above the component** — named `{ComponentName}Props`. Inline props only if 1-2 simple props.
+3. **Default export** — one component per file, always `export default function`.
+4. **No inline styles** — use Tailwind classes exclusively.
+5. **Destructure props** — always destructure in the function signature.
+6. **No `any` types** — every prop, state, and variable must be typed.
+
+## Hooks
+
+- Extract reusable logic into custom hooks in `hooks/`.
+- Custom hooks MUST start with `use` prefix.
+- Convex data fetching should be wrapped in custom hooks when used in multiple components.
+
+```tsx
+// hooks/useMessages.ts
+"use client";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
+
+export function useMessages(conversationId: Id<"conversations">) {
+  const messages = useQuery(api.messages.list, { conversationId });
+  const sendMessage = useMutation(api.messages.send);
+  return { messages, sendMessage };
+}
+```
+
+## UI Primitives (`components/ui/`)
+
+- Small, reusable, stateless components: `Button`, `Input`, `Avatar`, `Badge`, `Card`.
+- Accept className prop for composition: `className?: string`.
+- Use `cn()` utility (clsx + twMerge) for conditional classes.
+
+## Conditional Rendering
+
+```tsx
+// ✅ GOOD — early return for loading/error
+if (messages === undefined) return <LoadingSkeleton />;
+if (messages.length === 0) return <EmptyState />;
+
+// ❌ BAD — nested ternaries
+{messages ? (messages.length > 0 ? <List /> : <Empty />) : <Loading />}
+```
+
+## Event Handlers
+
+- Prefix with `handle`: `handleSubmit`, `handleClick`, `handleChange`.
+- Define handlers inside the component, above the return statement.

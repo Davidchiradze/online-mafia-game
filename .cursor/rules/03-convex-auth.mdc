@@ -1,0 +1,226 @@
+---
+description: Convex Auth patterns for the Online Mafia project. Reference when working on authentication, sign-in, sign-up, or protected routes.
+globs:
+  - "convex/auth.ts"
+  - "convex/auth.config.ts"
+  - "convex/http.ts"
+  - "convex/ResendOTP.ts"
+  - "convex/ResendOTPPasswordReset.ts"
+  - "convex/users.ts"
+  - "src/components/auth/**"
+  - "src/app/(auth)/**"
+  - "src/middleware.ts"
+  - "src/components/providers/**"
+  - "src/app/layout.tsx"
+---
+
+# Convex Auth - Online Mafia
+
+## Auth Stack
+
+- **Provider**: `@convex-dev/auth` with Password provider
+- **Email verification**: Resend OTP (8-digit code)
+- **Password reset**: Resend OTP
+- **Session management**: Convex Auth (cookie-based, 30-day expiry)
+- **Middleware**: `convexAuthNextjsMiddleware` for route protection
+
+## Reference Project
+
+The auth setup follows the pattern from `/Users/david/Desktop/Online mafia bag/online-mafia-v2/`. Use that project as reference for auth implementation.
+
+## Convex Auth Files
+
+### `convex/auth.ts`
+```typescript
+import { Password } from "@convex-dev/auth/providers/Password";
+import { convexAuth } from "@convex-dev/auth/server";
+import { ResendOTP } from "./ResendOTP";
+import { ResendOTPPasswordReset } from "./ResendOTPPasswordReset";
+
+export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
+  providers: [Password({ verify: ResendOTP, reset: ResendOTPPasswordReset })],
+});
+```
+
+### `convex/auth.config.ts`
+```typescript
+export default {
+  providers: [
+    {
+      domain: process.env.CONVEX_SITE_URL,
+      applicationID: "convex",
+    },
+  ],
+};
+```
+
+### `convex/http.ts`
+```typescript
+import { httpRouter } from "convex/server";
+import { auth } from "./auth";
+
+const http = httpRouter();
+auth.addHttpRoutes(http);
+export default http;
+```
+
+## Frontend Auth Setup
+
+### Provider hierarchy in `src/app/layout.tsx`
+```typescript
+import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
+import ConvexClientProvider from "@/components/providers/ConvexClientProvider";
+
+export default function RootLayout({ children }) {
+  return (
+    <ConvexAuthNextjsServerProvider>
+      <html lang="en">
+        <body>
+          <ConvexClientProvider>{children}</ConvexClientProvider>
+        </body>
+      </html>
+    </ConvexAuthNextjsServerProvider>
+  );
+}
+```
+
+### `src/components/providers/ConvexClientProvider.tsx`
+```typescript
+"use client";
+import { ConvexAuthNextjsProvider } from "@convex-dev/auth/nextjs";
+import { ConvexReactClient } from "convex/react";
+import { ReactNode } from "react";
+
+const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+
+export default function ConvexClientProvider({ children }: { children: ReactNode }) {
+  return (
+    <ConvexAuthNextjsProvider client={convex}>
+      {children}
+    </ConvexAuthNextjsProvider>
+  );
+}
+```
+
+### `src/middleware.ts`
+```typescript
+import {
+  convexAuthNextjsMiddleware,
+  createRouteMatcher,
+  nextjsMiddlewareRedirect,
+} from "@convex-dev/auth/nextjs/server";
+
+const isAuthPage = createRouteMatcher(["/sign-in", "/sign-up"]);
+const isProtectedRoute = createRouteMatcher(["/lobby(.*)", "/game(.*)"]);
+
+export default convexAuthNextjsMiddleware(
+  async (request, { convexAuth }) => {
+    if (isAuthPage(request) && (await convexAuth.isAuthenticated())) {
+      return nextjsMiddlewareRedirect(request, "/lobby");
+    }
+    if (isProtectedRoute(request) && !(await convexAuth.isAuthenticated())) {
+      return nextjsMiddlewareRedirect(request, "/sign-in");
+    }
+  },
+  { cookieConfig: { maxAge: 60 * 60 * 24 * 30 } },
+);
+
+export const config = {
+  matcher: ["/((?!.*\\..*|_next).*)", "/", "/(api|trpc)(.*)"],
+};
+```
+
+## Auth in Convex Functions
+
+### Authenticate in mutations/queries
+```typescript
+import { getAuthUserId } from "@convex-dev/auth/server";
+
+export const myMutation = mutation({
+  args: { ... },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+    // userId is Id<"users">
+  },
+});
+```
+
+### Get current user on frontend
+```typescript
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+
+const currentUser = useQuery(api.users.currentUser);
+```
+
+### Sign in / Sign out on frontend
+```typescript
+import { useAuthActions } from "@convex-dev/auth/react";
+
+const { signIn, signOut } = useAuthActions();
+
+// Sign in
+const formData = new FormData();
+formData.set("email", email);
+formData.set("password", password);
+formData.set("flow", "signIn");
+await signIn("password", formData);
+
+// Sign up (triggers OTP email)
+formData.set("flow", "signUp");
+await signIn("password", formData);
+
+// Verify OTP
+formData.set("flow", "email-verification");
+formData.set("code", otpCode);
+await signIn("password", formData);
+
+// Sign out
+await signOut();
+```
+
+### Auth state components
+```typescript
+import { Authenticated, Unauthenticated, AuthLoading } from "convex/react";
+
+<AuthLoading>Loading...</AuthLoading>
+<Unauthenticated>Please sign in</Unauthenticated>
+<Authenticated>Welcome!</Authenticated>
+```
+
+## Profiles
+
+Convex Auth creates a `users` table automatically. We extend it with a `profiles` table for game-specific data (nickname):
+
+```typescript
+// convex/schema.ts
+profiles: defineTable({
+  userId: v.id("users"),
+  email: v.string(),
+  nickname: v.string(),
+}).index("by_userId", ["userId"])
+  .index("by_email", ["email"])
+  .index("by_nickname", ["nickname"])
+```
+
+## Environment Variables
+
+```env
+NEXT_PUBLIC_CONVEX_URL=https://your-project.convex.cloud
+CONVEX_SITE_URL=https://your-project.convex.site
+AUTH_RESEND_KEY=re_xxxx
+```
+
+## Migration from Supabase Auth
+
+| Supabase | Convex |
+|---|---|
+| `supabase.auth.getUser()` | `getAuthUserId(ctx)` in Convex functions |
+| `supabase.auth.signInWithPassword()` | `signIn("password", formData)` |
+| `supabase.auth.signUp()` | `signIn("password", formData)` with `flow: "signUp"` |
+| `user.id` (UUID string) | `userId` (`Id<"users">`) |
+| `user.user_metadata.nickname` | Query `profiles` table by `userId` |
+| Supabase middleware | `convexAuthNextjsMiddleware` |
+| `createClient()` / `createServerClient()` | Not needed (Convex handles connection) |
+| `adminClient` | Not needed (`ctx.db` has full access in mutations) |

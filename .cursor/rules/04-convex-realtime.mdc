@@ -1,0 +1,141 @@
+---
+description: Convex real-time patterns replacing Supabase subscriptions. Reference when working on any real-time data or subscriptions.
+globs:
+  - "src/hooks/**"
+  - "src/lib/context/**"
+  - "src/components/**"
+---
+
+# Convex Real-time Patterns
+
+## Core Concept
+
+Convex `useQuery` is reactive by default. When the underlying data changes, the query re-runs and the component re-renders with fresh data. There is:
+
+- No `useEffect` for subscriptions
+- No manual channel setup or cleanup
+- No event listeners (`INSERT`, `UPDATE`, `DELETE`)
+- No channel naming
+- No `removeChannel` cleanup
+- No missed events (guaranteed consistency)
+
+## Before vs After
+
+### OLD (Supabase) - Do NOT use this pattern
+```typescript
+// REMOVED: useEffect + postgres_changes subscription
+useEffect(() => {
+  const supabase = createClient();
+  const channel = supabase
+    .channel(`game_session_${gameId}`)
+    .on("postgres_changes", { event: "*", table: "game_sessions", filter: `game_id=eq.${gameId}` },
+      (payload) => setState(payload.new)
+    )
+    .subscribe();
+  return () => supabase.removeChannel(channel);
+}, [gameId]);
+```
+
+### NEW (Convex) - Use this pattern
+```typescript
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+
+// Single line. Auto-subscribes. Auto-updates. Auto-cleans up.
+const gameSession = useQuery(api.gameSessions.getByGame, { gameId });
+```
+
+## Subscription Replacements
+
+Every old Supabase realtime hook is replaced by a `useQuery` call:
+
+| Old Hook (DELETED) | New Pattern |
+|---|---|
+| `useGameSessionListener` | `useQuery(api.gameSessions.getByGame, { gameId })` |
+| `useGamePlayerListener` | `useQuery(api.gamePlayers.listByGame, { gameId })` |
+| `useGameHostSubscription` | `useQuery(api.games.getById, { gameId })` then read `hostId` |
+| `useNightPhaseSessionListener` | `useQuery(api.nightPhaseSessions.getCurrent, { gameId })` |
+| `usePlayerRolesListener` | `useQuery(api.gamePlayerRoles.getFiltered, { gameId })` |
+| `useMyJoinRequestStatus` | `useQuery(api.joinRequests.getMyStatus, { gameId })` |
+| `usePendingJoinRequests` | `useQuery(api.joinRequests.listPending, { gameId })` |
+| `useLobbySubscription` | `useQuery(api.games.listAll)` |
+
+## Conditional Queries
+
+Use `"skip"` to conditionally disable a query (replaces `enabled` flag):
+
+```typescript
+// Only subscribe when gameId is available
+const session = useQuery(
+  api.gameSessions.getByGame,
+  gameId ? { gameId } : "skip"
+);
+```
+
+## Loading States
+
+`useQuery` returns `undefined` while loading:
+
+```typescript
+const gameSession = useQuery(api.gameSessions.getByGame, { gameId });
+
+if (gameSession === undefined) {
+  return <LoadingSpinner />;
+}
+
+// gameSession is now the actual data (or null if not found)
+```
+
+## Combining Multiple Queries
+
+Call multiple `useQuery` hooks in the same component. Each subscribes independently:
+
+```typescript
+function GameRoom({ gameId }) {
+  const game = useQuery(api.games.getById, { gameId });
+  const session = useQuery(api.gameSessions.getByGame, { gameId });
+  const players = useQuery(api.gamePlayers.listByGame, { gameId });
+  const nightSession = useQuery(
+    api.nightPhaseSessions.getCurrent,
+    session?.gamePhase === "night_phase" ? { gameId } : "skip"
+  );
+
+  // All four queries auto-update independently when their data changes
+}
+```
+
+## Writing Data (Mutations)
+
+Mutations trigger reactive query updates automatically:
+
+```typescript
+const castVote = useMutation(api.votes.cast);
+
+// When this mutation completes, any useQuery watching the votes table
+// will automatically re-run and update the UI
+await castVote({ votingSessionId, voterSeat: 3, seatNumber: 5 });
+```
+
+## No Separate Fetch + Subscribe
+
+The old pattern of "fetch initial data then subscribe" is eliminated:
+
+```typescript
+// OLD (Supabase) - fetch + subscribe
+useEffect(() => {
+  fetchInitialData().then(setState);
+  const channel = supabase.channel(...).subscribe();
+  return () => supabase.removeChannel(channel);
+}, []);
+
+// NEW (Convex) - single useQuery does both
+const data = useQuery(api.myTable.get, { id });
+```
+
+## Performance Notes
+
+- Convex queries only re-run when the specific data they read changes
+- No need to filter at the database level (Convex handles this efficiently)
+- No need to debounce (Convex batches updates)
+- No need to limit subscriptions (Convex manages connections)
+- Convex automatically handles reconnection and catch-up after network issues

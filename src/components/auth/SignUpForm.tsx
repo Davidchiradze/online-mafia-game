@@ -1,128 +1,140 @@
 "use client";
 
-import { Controller, useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useAuthActions } from "@convex-dev/auth/react";
+import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
-import { SignUpFormData, signUpSchema } from "@/lib/auth/schemas";
-import { signUpAction, type SignUpActionResult } from "@/lib/auth/actions";
 import { AuthInput } from "./AuthInput";
+import EmailVerification from "./EmailVerification";
 
 export default function SignUpForm() {
-  const [nonFieldError, setNonFieldError] = useState<string | null>(null);
+  const { signIn } = useAuthActions();
+  const [step, setStep] = useState<"signUp" | { email: string }>("signUp");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const {
-    control,
-    register,
-    handleSubmit,
-    setError,
-    clearErrors,
-    formState: { errors, isValid, isSubmitting },
-  } = useForm<SignUpFormData>({
-    resolver: zodResolver(signUpSchema),
-    defaultValues: { email: "", password: "", confirmPassword: "", nickname: "" },
-    mode: "onChange",
-    criteriaMode: "all",
-    reValidateMode: "onChange",
-  });
-
-  async function onSubmit(values: SignUpFormData) {
-    setNonFieldError(null);
-    clearErrors();
-    const res = (await signUpAction(values)) as SignUpActionResult | void;
-    if (!res) return;
-    if (!res.success) {
-      if (res.fieldErrors?.email)
-        setError("email", { type: "manual", message: res.fieldErrors.email });
-      if (res.fieldErrors?.nickname)
-        setError("nickname", { type: "manual", message: res.fieldErrors.nickname });
-      if (res.message) setNonFieldError(res.message);
-    }
+  if (step !== "signUp") {
+    return (
+      <div className="w-full max-w-[420px]">
+        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] backdrop-blur-sm p-8 shadow-[0_0_60px_rgba(0,0,0,0.5)]">
+          <div className="mb-6">
+            <h1 className="text-2xl font-orbitron font-bold text-white mb-2 tracking-tight">
+              Verify Your Email
+            </h1>
+            <p className="text-gray-500 font-sans text-sm">
+              Enter the code we sent to complete sign up
+            </p>
+          </div>
+          <EmailVerification
+            email={step.email}
+            onCancel={() => setStep("signUp")}
+          />
+        </div>
+      </div>
+    );
   }
 
-  const isSubmitDisabled = isSubmitting || !isValid || Object.keys(errors).length > 0;
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError("");
+
+    const formData = new FormData(event.currentTarget);
+    const password = formData.get("password") as string;
+    const confirmPassword = formData.get("confirmPassword") as string;
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    setLoading(true);
+    const email = formData.get("email") as string;
+
+    formData.delete("confirmPassword");
+
+    signIn("password", formData)
+      .then(() => {
+        setStep({ email });
+      })
+      .catch(() => {
+        setError("Could not create account. The email may already be in use.");
+      })
+      .finally(() => setLoading(false));
+  }
 
   return (
     <div className="w-full max-w-[420px]">
-      {/* Glass card */}
       <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] backdrop-blur-sm p-8 shadow-[0_0_60px_rgba(0,0,0,0.5)]">
-        {/* Header */}
         <div className="mb-8">
           <h1 className="text-2xl font-orbitron font-bold text-white mb-2 tracking-tight">
             Create Account
           </h1>
-          <p className="text-gray-500 font-sans text-sm">Join the game and pick your alias</p>
+          <p className="text-gray-500 font-sans text-sm">
+            Join the game and pick your alias
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-          {/* Non-field error */}
-          {nonFieldError && (
-            <div className="flex items-start gap-2.5 rounded-xl border border-red-500/20 bg-red-500/[0.08] px-4 py-3">
-              <span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
-              <p className="text-sm text-red-400 font-sans">{nonFieldError}</p>
-            </div>
-          )}
-
-          {/* Nickname */}
-          <Controller
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <AuthInput
+            id="nickname"
             name="nickname"
-            control={control}
-            render={({ field }) => (
-              <AuthInput
-                id="nickname"
-                label="Nickname"
-                type="text"
-                placeholder="Your in-game alias"
-                error={errors.nickname?.message as string | undefined}
-                {...field}
-              />
-            )}
+            label="Nickname"
+            type="text"
+            placeholder="Your in-game alias"
+            required
+            minLength={2}
+            maxLength={20}
+            pattern="^[a-zA-Z0-9_\-\.]+$"
+            title="Letters, numbers, _ - . only"
           />
 
-          {/* Email */}
-          <Controller
+          <AuthInput
+            id="email"
             name="email"
-            control={control}
-            render={({ field }) => (
-              <AuthInput
-                id="email"
-                label="Email"
-                type="email"
-                placeholder="you@example.com"
-                error={errors.email?.message as string | undefined}
-                {...field}
-              />
-            )}
+            label="Email"
+            type="email"
+            placeholder="you@example.com"
+            required
+            autoComplete="email"
           />
 
-          {/* Password */}
           <AuthInput
             id="password"
+            name="password"
             label="Password"
             isPassword
             placeholder="Create a password"
-            error={errors.password?.message as string | undefined}
-            {...register("password")}
+            required
+            minLength={8}
+            autoComplete="new-password"
           />
 
-          {/* Confirm Password */}
           <AuthInput
             id="confirmPassword"
+            name="confirmPassword"
             label="Confirm Password"
             isPassword
             placeholder="Repeat your password"
-            error={errors.confirmPassword?.message as string | undefined}
-            {...register("confirmPassword")}
+            required
+            minLength={8}
+            autoComplete="new-password"
           />
 
-          {/* Submit */}
+          <input name="flow" type="hidden" value="signUp" />
+
+          {error && (
+            <div className="flex items-start gap-2.5 rounded-xl border border-red-500/20 bg-red-500/[0.08] px-4 py-3">
+              <span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+              <p className="text-sm text-red-400 font-sans">{error}</p>
+            </div>
+          )}
+
           <button
             type="submit"
-            disabled={isSubmitDisabled}
+            disabled={loading}
             className="w-full relative py-3.5 px-4 rounded-xl bg-gradient-to-r from-red-600 via-red-500 to-red-600 text-white font-semibold font-sans text-sm shadow-[0_0_25px_rgba(220,38,38,0.35)] hover:shadow-[0_0_40px_rgba(220,38,38,0.55)] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2"
           >
-            {isSubmitting ? (
+            {loading ? (
               <>
                 <Loader2 className="animate-spin w-4 h-4" />
                 Creating Account…
@@ -133,14 +145,14 @@ export default function SignUpForm() {
           </button>
         </form>
 
-        {/* Divider */}
         <div className="my-6 flex items-center gap-3">
           <div className="flex-1 h-px bg-white/[0.06]" />
-          <span className="text-gray-700 font-sans text-xs uppercase tracking-widest">or</span>
+          <span className="text-gray-700 font-sans text-xs uppercase tracking-widest">
+            or
+          </span>
           <div className="flex-1 h-px bg-white/[0.06]" />
         </div>
 
-        {/* Switch to Sign In */}
         <p className="text-center text-gray-500 font-sans text-sm">
           Already have an account?{" "}
           <Link
@@ -151,7 +163,6 @@ export default function SignUpForm() {
           </Link>
         </p>
       </div>
-
     </div>
   );
 }

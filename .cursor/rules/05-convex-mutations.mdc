@@ -1,0 +1,203 @@
+---
+description: Convex mutation and query patterns replacing Supabase server actions. Reference when writing backend logic.
+globs:
+  - "convex/**"
+---
+
+# Convex Backend Patterns
+
+## Function Types
+
+| Type | Purpose | Can read DB | Can write DB | Can call external APIs |
+|---|---|---|---|---|
+| `query` | Read data (reactive) | Yes | No | No |
+| `mutation` | Write data (transactional) | Yes | Yes | No |
+| `action` | External API calls | Via `ctx.runQuery`/`ctx.runMutation` | Via `ctx.runMutation` | Yes |
+| `internalQuery` | Internal-only reads | Yes | No | No |
+| `internalMutation` | Internal-only writes | Yes | Yes | No |
+| `internalAction` | Internal-only external calls | Via helpers | Via helpers | Yes |
+| `httpAction` | HTTP endpoint handler | Via helpers | Via helpers | Yes |
+
+## Mutation Pattern (replaces Server Actions)
+
+### Old (Supabase Server Action)
+```typescript
+"use server";
+import { createClient } from "@/lib/supabase/server";
+import { adminClient } from "@/lib/supabase/admin";
+
+export async function startGame(gameId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, message: "Not authenticated" };
+
+  const { data: game } = await supabase.from("games").select("host_id").eq("id", gameId).single();
+  if (game.host_id !== user.id) return { ok: false, message: "Forbidden" };
+
+  await adminClient.from("games").update({ game_status: "playing" }).eq("id", gameId);
+  return { ok: true };
+}
+```
+
+### New (Convex Mutation)
+```typescript
+import { getAuthUserId } from "@convex-dev/auth/server";
+import { mutation } from "./_generated/server";
+import { v } from "convex/values";
+
+export const start = mutation({
+  args: { gameId: v.id("games") },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    const game = await ctx.db.get(args.gameId);
+    if (!game) throw new Error("Game not found");
+    if (game.hostId !== userId) throw new Error("Forbidden");
+
+    await ctx.db.patch(args.gameId, { gameStatus: "playing" });
+  },
+});
+```
+
+## Query Pattern
+
+```typescript
+import { getAuthUserId } from "@convex-dev/auth/server";
+import { query } from "./_generated/server";
+import { v } from "convex/values";
+
+export const getByGame = query({
+  args: { gameId: v.id("games") },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("gameSessions")
+      .withIndex("by_gameId", (q) => q.eq("gameId", args.gameId))
+      .unique();
+  },
+});
+```
+
+## Action Pattern (for external APIs like LiveKit)
+
+```typescript
+import { internalAction } from "./_generated/server";
+import { v } from "convex/values";
+import { AccessToken } from "livekit-server-sdk";
+
+export const generateToken = internalAction({
+  args: { roomId: v.string(), participantId: v.string() },
+  handler: async (ctx, args) => {
+    const at = new AccessToken(
+      process.env.LIVEKIT_API_KEY!,
+      process.env.LIVEKIT_API_SECRET!,
+      { identity: args.participantId }
+    );
+    at.addGrant({ room: args.roomId, roomJoin: true, canPublish: true, canSubscribe: true });
+    return await at.toJwt();
+  },
+});
+```
+
+## Error Handling
+
+### In mutations: throw errors
+```typescript
+// Convex mutations throw errors (caught by useMutation on frontend)
+if (!game) throw new Error("Game not found");
+if (game.hostId !== userId) throw new Error("Forbidden");
+```
+
+### On frontend: catch errors
+```typescript
+const startGame = useMutation(api.gameSessions.start);
+
+try {
+  await startGame({ gameId });
+} catch (error) {
+  // error.message contains the thrown message
+  toast.error(error instanceof Error ? error.message : "Something went wrong");
+}
+```
+
+## Transactions
+
+Convex mutations are automatically transactional. If any part fails, the entire mutation rolls back:
+
+```typescript
+export const startGame = mutation({
+  handler: async (ctx, args) => {
+    // All of these happen atomically
+    await ctx.db.patch(args.gameId, { gameStatus: "playing" });
+    await ctx.db.insert("gameSessions", { gameId: args.gameId, gamePhase: "game_session_started", ... });
+    // If the insert fails, the patch is also rolled back
+  },
+});
+```
+
+## Calling Frontend
+
+```typescript
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+
+function StartGameButton({ gameId }) {
+  const startGame = useMutation(api.gameSessions.start);
+
+  return (
+    <button onClick={() => startGame({ gameId })}>
+      Start Game
+    </button>
+  );
+}
+```
+
+## File Organization
+
+```
+convex/
+  tables/               # Table definitions (one file per table)
+    index.ts            # Re-exports all tables
+    profiles.ts         # profiles table definition
+    games.ts            # (future) games table definition
+  lib/                  # Shared internal helpers (DB lookups, auth, validation)
+    auth.ts             # getAuthenticatedUserId
+    profiles.ts         # getNicknameOwner, getProfileByUserId
+    players.ts          # (future) getPlayerByGameAndUser, etc.
+  auth/                 # Auth domain — exported queries/mutations only
+    profiles.ts
+    users.ts
+  game/                 # Game domain — exported queries/mutations only
+    players.ts
+    sessions.ts
+  schema.ts             # Imports from tables/ and composes the schema
+  auth.ts               # Convex Auth config
+  auth.config.ts
+  http.ts
+```
+
+### Rules
+
+- **`convex/tables/`** — one file per table definition, re-exported via `index.ts`. `schema.ts` imports and composes them.
+- **`convex/<domain>/`** — only exported Convex functions (`query`, `mutation`, `action`).
+- **`convex/lib/`** — only shared internal helpers (plain async functions, not Convex functions).
+- Domain files import helpers from `lib/`, never define private helpers inline.
+- One file per resource/entity within each domain folder.
+- The auto-generated `api` object provides type-safe access: `api.auth.profiles.createProfile`, `api.game.sessions.start`, etc.
+
+## Validators Reference
+
+```typescript
+import { v } from "convex/values";
+
+v.string()                    // string
+v.number()                    // number
+v.boolean()                   // boolean
+v.null()                      // null
+v.id("games")                 // Id<"games">
+v.array(v.number())           // number[]
+v.object({ key: v.string() }) // { key: string }
+v.optional(v.string())        // string | undefined
+v.union(v.literal("a"), v.literal("b"))  // "a" | "b"
+v.any()                       // any (use sparingly)
+```

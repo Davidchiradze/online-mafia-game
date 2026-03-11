@@ -1,0 +1,84 @@
+---
+description: Next.js 16 App Router conventions for routing, layouts, and data flow
+globs: app/**/*
+alwaysApply: false
+---
+
+# Next.js App Router Rules
+
+## Page Files
+
+- `page.tsx` files are thin wrappers — they import and compose components, nothing else.
+- No business logic, no direct Convex calls, no complex JSX in page files.
+
+```tsx
+// ✅ GOOD - app/chat/page.tsx
+import ChatList from "@/components/chat/ChatList";
+
+export default function ChatPage() {
+  return <ChatList />;
+}
+
+// ❌ BAD - logic and UI mixed in page file
+export default function ChatPage() {
+  const conversations = useQuery(api.conversations.list);
+  return (
+    <div className="flex flex-col gap-4">
+      {conversations?.map((c) => (
+        <div key={c._id}>{c.name}</div>
+      ))}
+    </div>
+  );
+}
+```
+
+## Layout Files
+
+- Root `layout.tsx` wraps the app with providers (`ConvexClientProvider`).
+- Nested layouts handle feature-level chrome (sidebars, headers).
+- Layouts NEVER fetch data — they provide structure only.
+
+## ConvexClientProvider Setup
+
+Place in `components/providers/ConvexClientProvider.tsx`:
+
+```tsx
+"use client";
+import { ConvexProvider, ConvexReactClient } from "convex/react";
+import { ReactNode } from "react";
+
+const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+
+export default function ConvexClientProvider({ children }: { children: ReactNode }) {
+  return <ConvexProvider client={convex}>{children}</ConvexProvider>;
+}
+```
+
+## Loading & Error States
+
+- Every route segment with async data should have `loading.tsx` with a skeleton UI.
+- Every route segment should have `error.tsx` with a user-friendly error boundary.
+- Use `not-found.tsx` for 404 states.
+
+## Route Organization
+
+- Use route groups `(groupName)` for layouts without affecting the URL.
+- Use dynamic segments `[paramName]` for resource-based routes.
+- Keep the route tree shallow — max 3 levels deep.
+
+## Environment Variables
+
+- Client-side Convex URL: `NEXT_PUBLIC_CONVEX_URL` in `.env.local`.
+- NEVER commit `.env.local` — it is in `.gitignore`.
+- NEVER hardcode secrets or URLs in source code.
+
+## Metadata
+
+- Define `metadata` export in each `page.tsx` or `layout.tsx` for SEO.
+
+```tsx
+export const metadata = {
+  title: "Chat | Online Mafia",
+  description: "Real-time chat",
+};
+```
