@@ -3,7 +3,7 @@ import { v } from "convex/values";
 
 export const gamePlayers = defineTable({
   gameId: v.id("games"),
-  playerId: v.id("users"),
+  playerId: v.id("profiles"),
   nickname: v.string(),
   seatNumber: v.optional(v.number()),
   isAlive: v.boolean(),

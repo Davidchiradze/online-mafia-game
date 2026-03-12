@@ -36,11 +36,11 @@ export function BothLeaveVoteControls({
 
   const candidates = votingSession?.candidates ?? [];
   const bothLeaveVotes = voteData.bothLeaveVoters;
-  const isVotingNow = votingSession?.voting_active ?? false;
+  const isVotingNow = votingSession?.votingActive ?? false;
   const isVoting = isLocalVoting || isVotingNow;
 
   const voteEnded =
-    !isVoting && votingSession?.voting_started_at !== null;
+    !isVoting && votingSession?.votingStartedAt !== null;
 
   // Handler to start "both leave" vote
   const handleVoteNow = useCallback(async () => {

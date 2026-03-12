@@ -43,10 +43,10 @@ export default function SpectatorView({
   const { isFullscreen, toggleFullscreen } = useFullscreen(containerRef);
 
   // Get display label for the current game phase
-  const gamePhaseLabel = gameSessionState?.game_phase
+  const gamePhaseLabel = gameSessionState?.gamePhase
     ? (GAME_PHASE_LABELS[
-        gameSessionState.game_phase as keyof typeof GAME_PHASE_LABELS
-      ] ?? gameSessionState.game_phase)
+        gameSessionState.gamePhase as keyof typeof GAME_PHASE_LABELS
+      ] ?? gameSessionState.gamePhase)
     : null;
 
   return (

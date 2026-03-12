@@ -56,7 +56,8 @@ export default function SignUpForm() {
       .then(() => {
         setStep({ email });
       })
-      .catch(() => {
+      .catch((error) => {
+        console.error("Sign up error:", error);
         setError("Could not create account. The email may already be in use.");
       })
       .finally(() => setLoading(false));

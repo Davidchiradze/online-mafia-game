@@ -16,7 +16,7 @@ export const gameStatus = v.union(
 export const games = defineTable({
   code: v.string(),
   name: v.string(),
-  hostId: v.id("users"),
+  hostId: v.id("profiles"),
   gameType,
   gameStatus,
   maxPlayers: v.number(),

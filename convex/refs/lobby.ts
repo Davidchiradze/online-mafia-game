@@ -8,7 +8,7 @@ type GamePlayer = {
   _id: Id<"gamePlayers">;
   _creationTime: number;
   gameId: Id<"games">;
-  playerId: Id<"users">;
+  playerId: Id<"profiles">;
   nickname: string;
   seatNumber?: number;
   isAlive: boolean;
@@ -21,7 +21,7 @@ type GameSpectator = {
   _id: Id<"gameSpectators">;
   _creationTime: number;
   gameId: Id<"games">;
-  userId: Id<"users">;
+  userId: Id<"profiles">;
   nickname: string;
 };
 
@@ -30,7 +30,7 @@ type GameWithRelations = {
   _creationTime: number;
   code: string;
   name: string;
-  hostId: Id<"users">;
+  hostId: Id<"profiles">;
   gameType: GameType;
   gameStatus: GameStatus;
   maxPlayers: number;
@@ -44,9 +44,13 @@ type Profile = {
   userId: Id<"users">;
   email: string;
   nickname: string;
+  verified: boolean;
 } | null;
 
 export const authProfiles = {
+  currentUserId: makeFunctionReference<"query", Record<string, never>, Id<"users"> | null>(
+    "auth/profiles:currentUserId",
+  ),
   currentProfile: makeFunctionReference<"query", Record<string, never>, Profile>(
     "auth/profiles:currentProfile",
   ),
@@ -58,12 +62,25 @@ type JoinRequestDoc = {
   _id: Id<"joinRequests">;
   _creationTime: number;
   gameId: Id<"games">;
-  requesterId: Id<"users">;
+  requesterId: Id<"profiles">;
   requesterNickname: string;
   status: JoinRequestStatus;
 };
 
+type MyJoinStatus = {
+  allowed: boolean;
+  status: "accepted" | "pending" | "rejected" | "none";
+};
+
 export const joinRequests = {
+  myStatus: makeFunctionReference<"query", { gameId: Id<"games"> }, MyJoinStatus>(
+    "lobby/joinRequests:myStatus",
+  ),
+  checkOrRequest: makeFunctionReference<
+    "mutation",
+    { gameId: Id<"games"> },
+    { allowed: boolean; status: string; requestId?: Id<"joinRequests"> }
+  >("lobby/joinRequests:checkOrRequest"),
   listByGame: makeFunctionReference<"query", { gameId: Id<"games"> }, JoinRequestDoc[]>(
     "lobby/joinRequests:listByGame",
   ),
@@ -79,7 +96,7 @@ export const lobbyGames = {
   list: makeFunctionReference<"query", Record<string, never>, GameWithRelations[]>(
     "lobby/games:list",
   ),
-  getById: makeFunctionReference<"query", { gameId: Id<"games"> }, GameWithRelations>(
+  getById: makeFunctionReference<"query", { gameId: Id<"games"> }, GameWithRelations | null>(
     "lobby/games:getById",
   ),
   create: makeFunctionReference<

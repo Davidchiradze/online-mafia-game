@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useCallback, useMemo } from "react";
-import { GameSessionState } from "@/types/game/type";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import {
   grantFarewellTime,
@@ -11,7 +10,7 @@ import {
 import PhaseButton from "@/components/ui/PhaseButton";
 
 type Props = {
-  gameSessionState: GameSessionState;
+  gameSessionState: NonNullable<ReturnType<typeof useGameRoom>["gameSessionState"]>;
 };
 
 /**
@@ -28,9 +27,9 @@ export default function FarewellSpeechControls({ gameSessionState }: Props) {
   const { gameId, players } = useGameRoom();
   const [isLoading, setIsLoading] = useState(false);
 
-  const speakingOrder = gameSessionState.speaking_order ?? [];
-  const currentSpeaker = gameSessionState.current_speaker_index;
-  const speakerStartedAt = gameSessionState.speaker_started_at;
+  const speakingOrder = gameSessionState.speakingOrder ?? [];
+  const currentSpeaker = gameSessionState.currentSpeakerIndex;
+  const speakerStartedAt = gameSessionState.speakerStartedAt;
 
   // Determine which speakers have completed (are dead) and which remain (alive)
   const { completedSpeakers, remainingSpeakers } = useMemo(() => {
@@ -38,8 +37,8 @@ export default function FarewellSpeechControls({ gameSessionState }: Props) {
     const remaining: number[] = [];
 
     for (const seat of speakingOrder) {
-      const player = players?.find((p) => p.seat_number === seat);
-      if (player?.is_alive === false) {
+      const player = players?.find((p) => p.seatNumber === seat);
+      if (player?.isAlive === false) {
         completed.push(seat);
       } else {
         remaining.push(seat);

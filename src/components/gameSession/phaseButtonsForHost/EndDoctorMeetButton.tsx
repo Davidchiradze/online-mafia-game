@@ -1,15 +1,15 @@
 "use client";
 
 import React, { useState } from "react";
-import { updateGameSession } from "@/lib/gameSession/actions";
+import { useMutation } from "convex/react";
+import { gameSessions } from "@convex/refs/game";
 import { resetSpeakingState } from "@/lib/dayPhase/actions";
-import { GameSessionState } from "@/types/game/type";
-import { GAME_PHASES } from "@/lib/constants/game";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
+import { GAME_PHASES } from "@/lib/constants/game";
 import PhaseButton from "@/components/ui/PhaseButton";
 
 type EndDoctorMeetButtonProps = {
-  gameSessionState: GameSessionState;
+  gameSessionState: NonNullable<ReturnType<typeof useGameRoom>["gameSessionState"]>;
 };
 
 /**
@@ -20,19 +20,20 @@ const EndDoctorMeetButton = ({
 }: EndDoctorMeetButtonProps) => {
   const { gameId } = useGameRoom();
   const [isLoading, setIsLoading] = useState(false);
+  const updateSession = useMutation(gameSessions.update);
 
   const handleEndDoctorMeet = async () => {
     if (isLoading) return;
     setIsLoading(true);
     try {
-      const res = await updateGameSession(gameSessionState.id, {
-        game_phase: GAME_PHASES[7], // "introduction_phase"
+      await updateSession({
+        sessionId: gameSessionState._id,
+        updates: {
+          gamePhase: GAME_PHASES[7], // "introduction_phase"
+        },
       });
 
       await resetSpeakingState(gameId);
-      if (!res?.ok) {
-        console.error("Failed to end doctor meeting:", res?.message);
-      }
     } finally {
       setIsLoading(false);
     }

@@ -1,15 +1,15 @@
 "use client";
 
 import React, { useState } from "react";
-import { updateGameSession } from "@/lib/gameSession/actions";
+import { useMutation } from "convex/react";
+import { gameSessions } from "@convex/refs/game";
 import { startNight } from "@/lib/nightPhase/actions";
-import { GameSessionState } from "@/types/game/type";
-import { GAME_PHASES } from "@/lib/constants/game";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
+import { GAME_PHASES } from "@/lib/constants/game";
 import PhaseButton from "@/components/ui/PhaseButton";
 
 type ContinueNextRoundButtonProps = {
-  gameSessionState: GameSessionState;
+  gameSessionState: NonNullable<ReturnType<typeof useGameRoom>["gameSessionState"]>;
 };
 
 /**
@@ -21,6 +21,7 @@ const ContinueNextRoundButton = ({
 }: ContinueNextRoundButtonProps) => {
   const { gameId } = useGameRoom();
   const [isLoading, setIsLoading] = useState(false);
+  const updateSession = useMutation(gameSessions.update);
 
   const handleContinueNextRound = async () => {
     if (isLoading) return;
@@ -32,13 +33,13 @@ const ContinueNextRoundButton = ({
         return;
       }
 
-      const res = await updateGameSession(gameSessionState.id, {
-        game_phase: GAME_PHASES[8], // "night_phase"
-        nominated_players: [], // Reset nominations
+      await updateSession({
+        sessionId: gameSessionState._id,
+        updates: {
+          gamePhase: GAME_PHASES[8], // "night_phase"
+          nominatedPlayers: [], // Reset nominations
+        },
       });
-      if (!res?.ok) {
-        console.error("Failed to continue to next round:", res?.message);
-      }
     } finally {
       setIsLoading(false);
     }

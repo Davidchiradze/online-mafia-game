@@ -1,7 +1,6 @@
 import { v } from "convex/values";
 import { query, mutation } from "../_generated/server";
-import { getAuthenticatedUserId } from "../lib/auth";
-import { getProfileByUserId } from "../lib/profiles";
+import { getAuthenticatedUser } from "../lib/auth";
 import {
   getGameById,
   assertIsHost,
@@ -17,7 +16,7 @@ import {
 export const checkOrRequest = mutation({
   args: { gameId: v.id("games") },
   handler: async (ctx, { gameId }) => {
-    const userId = await getAuthenticatedUserId(ctx);
+    const userId = await getAuthenticatedUser(ctx);
     const game = await getGameById(ctx.db, gameId);
 
     if (game.hostId === userId) {
@@ -37,15 +36,13 @@ export const checkOrRequest = mutation({
       };
     }
 
-    const profile = await getProfileByUserId(ctx.db, userId);
-    if (!profile) {
-      throw new Error("Profile not found. Please set up your profile first.");
-    }
+    const profile = await ctx.db.get(userId);
+    const nickname = profile?.nickname ?? "Player";
 
     const requestId = await ctx.db.insert("joinRequests", {
       gameId,
       requesterId: userId,
-      requesterNickname: profile.nickname,
+      requesterNickname: nickname,
       status: "pending",
     });
 
@@ -64,7 +61,7 @@ export const checkOrRequest = mutation({
 export const request = mutation({
   args: { gameId: v.id("games") },
   handler: async (ctx, { gameId }) => {
-    const userId = await getAuthenticatedUserId(ctx);
+    const userId = await getAuthenticatedUser(ctx);
     await getGameById(ctx.db, gameId);
 
     const existing = await getJoinRequestByRequester(ctx.db, gameId, userId);
@@ -72,10 +69,8 @@ export const request = mutation({
       return { requestId: existing._id, status: existing.status };
     }
 
-    const profile = await getProfileByUserId(ctx.db, userId);
-    if (!profile) {
-      throw new Error("Profile not found. Please set up your profile first.");
-    }
+    const profile = await ctx.db.get(userId);
+    const nickname = profile?.nickname ?? "Player";
 
     if (existing && existing.status === "rejected") {
       throw new Error("Your join request was rejected");
@@ -84,11 +79,42 @@ export const request = mutation({
     const requestId = await ctx.db.insert("joinRequests", {
       gameId,
       requesterId: userId,
-      requesterNickname: profile.nickname,
+      requesterNickname: nickname,
       status: "pending",
     });
 
     return { requestId, status: "pending" as const };
+  },
+});
+
+/**
+ * Reactive query: returns the current user's access status for a game.
+ * Used by the game page to reactively watch for host accept/reject.
+ */
+export const myStatus = query({
+  args: { gameId: v.id("games") },
+  handler: async (ctx, { gameId }) => {
+    const userId = await getAuthenticatedUser(ctx);
+    const game = await getGameById(ctx.db, gameId);
+
+    if (game.hostId === userId) {
+      return { allowed: true, status: "accepted" as const };
+    }
+
+    const existingPlayer = await getPlayerInGame(ctx.db, gameId, userId);
+    if (existingPlayer) {
+      return { allowed: true, status: "accepted" as const };
+    }
+
+    const existing = await getJoinRequestByRequester(ctx.db, gameId, userId);
+    if (existing) {
+      return {
+        allowed: existing.status === "accepted",
+        status: existing.status,
+      };
+    }
+
+    return { allowed: false, status: "none" as const };
   },
 });
 
@@ -111,7 +137,7 @@ export const listByGame = query({
 export const accept = mutation({
   args: { requestId: v.id("joinRequests") },
   handler: async (ctx, { requestId }) => {
-    const userId = await getAuthenticatedUserId(ctx);
+    const userId = await getAuthenticatedUser(ctx);
     const joinRequest = await ctx.db.get(requestId);
     if (!joinRequest) {
       throw new Error("Join request not found");
@@ -133,7 +159,7 @@ export const accept = mutation({
 export const reject = mutation({
   args: { requestId: v.id("joinRequests") },
   handler: async (ctx, { requestId }) => {
-    const userId = await getAuthenticatedUserId(ctx);
+    const userId = await getAuthenticatedUser(ctx);
     const joinRequest = await ctx.db.get(requestId);
     if (!joinRequest) {
       throw new Error("Join request not found");
@@ -155,10 +181,10 @@ export const reject = mutation({
 export const kick = mutation({
   args: {
     gameId: v.id("games"),
-    targetUserId: v.id("users"),
+    targetUserId: v.id("profiles"),
   },
   handler: async (ctx, { gameId, targetUserId }) => {
-    const userId = await getAuthenticatedUserId(ctx);
+    const userId = await getAuthenticatedUser(ctx);
     await assertIsHost(ctx.db, gameId, userId);
 
     if (targetUserId === userId) {

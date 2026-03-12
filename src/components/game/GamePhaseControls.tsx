@@ -128,15 +128,15 @@ const GamePhaseControls = () => {
     );
   }
 
-  const currentPhase = gameSessionState.game_phase;
+  const currentPhase = gameSessionState.gamePhase;
   const title = getPhaseTitle(
     currentPhase,
-    gameSessionState.current_night_number
+    gameSessionState.currentNightNumber
   );
 
   // Calculate subtitle for speaking phases
-  const speakingOrder = gameSessionState.speaking_order ?? [];
-  const currentSpeaker = gameSessionState.current_speaker_index ?? null;
+  const speakingOrder = gameSessionState.speakingOrder ?? [];
+  const currentSpeaker = gameSessionState.currentSpeakerIndex ?? null;
   const isSpeakingPhase =
     (currentPhase === GAME_PHASES[7] || currentPhase === GAME_PHASES[16]) &&
     !isSpeakingComplete(currentSpeaker);
@@ -173,7 +173,7 @@ const GamePhaseControls = () => {
         return <EndDoctorMeetButton gameSessionState={gameSessionState} />;
 
       case GAME_PHASES[7]: // "introduction_phase"
-        if (isSpeakingComplete(gameSessionState.current_speaker_index)) {
+        if (isSpeakingComplete(gameSessionState.currentSpeakerIndex)) {
           return <StartNightPhaseButton gameSessionState={gameSessionState} />;
         }
         return (
@@ -208,7 +208,7 @@ const GamePhaseControls = () => {
         return <FarewellSpeechControls gameSessionState={gameSessionState} />;
 
       case GAME_PHASES[16]: // "day_phase"
-        if (isSpeakingComplete(gameSessionState.current_speaker_index)) {
+        if (isSpeakingComplete(gameSessionState.currentSpeakerIndex)) {
           return (
             <StartNominatedPlayersSpeakButton
               gameSessionState={gameSessionState}

@@ -3,7 +3,7 @@ import { v } from "convex/values";
 
 export const gameSpectators = defineTable({
   gameId: v.id("games"),
-  userId: v.id("users"),
+  userId: v.id("profiles"),
   nickname: v.string(),
 })
   .index("by_gameId", ["gameId"])

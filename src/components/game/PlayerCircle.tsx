@@ -5,7 +5,6 @@ import React from "react";
 import ParticipantComponent from "../participant/ParticipantComponent";
 import { usePlayerSlots } from "@/hooks/game";
 import GamePhaseControls from "./GamePhaseControls";
-import { Tables } from "@/db/supabase/database.types";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import NominatedPlayersDisplay from "./NominatedPlayersDisplay";
 import VotingDisplay from "./VotingDisplay";
@@ -68,6 +67,7 @@ export default function PlayerCircle({
   maxPlayers?: number;
 }) {
   const { players, gameSessionState, isHost } = useGameRoom();
+  console.log("🚀 ~ PlayerCircle ~ players:", players);
   const slotDescriptors = usePlayerSlots({
     tracks,
     hostUserId,
@@ -86,9 +86,7 @@ export default function PlayerCircle({
       {slotDescriptors.map(({ key, track }) => {
         const pos = gridPositionForPlayerIndex(key);
         const isHostIndex = key === maxPlayers + 1;
-        const player = players.find(
-          (p) => p.seat_number === key,
-        ) as Tables<"game_players">;
+        const player = players.find((p) => p.seatNumber === key);
         return (
           <div
             key={`seat-${String(key)}`}
@@ -105,8 +103,8 @@ export default function PlayerCircle({
               <ParticipantComponent
                 player={player}
                 gameId={gameId}
-                hostUserId={hostUserId}
-                currentUserId={userId}
+                hostProfileId={hostUserId}
+                currentProfileId={userId}
                 trackRef={track}
                 playerIndex={key}
               />
@@ -117,12 +115,12 @@ export default function PlayerCircle({
         );
       })}
       <div style={{ gridColumn: 3, gridRow: 2, position: "relative" }}>
-        {(isHost || gameSessionState?.game_phase === "voting") && (
+        {(isHost || gameSessionState?.gamePhase === "voting") && (
           <div className="absolute top-0 left-0 w-full h-[200%] flex flex-col items-center justify-center gap-2">
             <div className="w-full h-[50%] flex flex-col items-center justify-center gap-3 px-4 py-3 rounded-2xl bg-black/50 backdrop-blur-md border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.4)] ring-1 ring-inset ring-white/[0.05]">
               {isHost ? (
                 <NominatedPlayersDisplay
-                  nominatedPlayers={gameSessionState?.nominated_players ?? []}
+                  nominatedPlayers={gameSessionState?.nominatedPlayers ?? []}
                 />
               ) : (
                 <VotingDisplay />

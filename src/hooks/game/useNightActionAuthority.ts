@@ -39,7 +39,7 @@ export function useNightActionAuthority(): NightActionAuthority {
     playerRolesMap,
   } = useGameRoom();
 
-  const currentPhase = gameSessionState?.game_phase ?? null;
+  const currentPhase = gameSessionState?.gamePhase ?? null;
 
   const isMafiaPhase = currentPhase === "mafia_chooses_target";
   const isYakuzaPhase = currentPhase === "yakuza_and_shogun_chooses_target";
@@ -55,13 +55,12 @@ export function useNightActionAuthority(): NightActionAuthority {
     )
       return false;
 
-    // Find the highest-priority alive mafia member from visible roles
     for (const priorityRole of MAFIA_KILL_PRIORITY) {
       const holder = players.find((p) => {
-        if (!p.is_alive || !p.player_id) return false;
-        return playerRolesMap.get(p.player_id) === priorityRole;
+        if (!p.isAlive || !p.playerId) return false;
+        return playerRolesMap.get(p.playerId as string) === priorityRole;
       });
-      if (holder) return holder.player_id === userId;
+      if (holder) return (holder.playerId as string) === userId;
     }
     return false;
   }, [isMafiaPhase, isHost, viewerRole, players, playerRolesMap, userId]);
@@ -77,15 +76,15 @@ export function useNightActionAuthority(): NightActionAuthority {
       return false;
 
     const aliveYakuza = players.find(
-      (p) => p.is_alive && p.player_id && playerRolesMap.get(p.player_id) === "YAKUZA",
+      (p) => p.isAlive && p.playerId && playerRolesMap.get(p.playerId as string) === "YAKUZA",
     );
     const aliveShogun = players.find(
-      (p) => p.is_alive && p.player_id && playerRolesMap.get(p.player_id) === "SHOGUN",
+      (p) => p.isAlive && p.playerId && playerRolesMap.get(p.playerId as string) === "SHOGUN",
     );
 
     if (!aliveYakuza) return false;
-    if (aliveShogun) return aliveShogun.player_id === userId;
-    return aliveYakuza.player_id === userId;
+    if (aliveShogun) return (aliveShogun.playerId as string) === userId;
+    return (aliveYakuza.playerId as string) === userId;
   }, [isYakuzaPhase, isHost, viewerRole, players, playerRolesMap, userId]);
 
   const hasDoctorHealAuthority = useMemo(() => {
@@ -93,8 +92,8 @@ export function useNightActionAuthority(): NightActionAuthority {
     if (viewerRole !== "DOCTOR") return false;
 
     const doctorPlayer = players.find((p) => {
-      if (!p.is_alive || !p.player_id) return false;
-      return p.player_id === userId;
+      if (!p.isAlive || !p.playerId) return false;
+      return (p.playerId as string) === userId;
     });
     return !!doctorPlayer;
   }, [isDoctorPhase, isHost, viewerRole, players, userId]);

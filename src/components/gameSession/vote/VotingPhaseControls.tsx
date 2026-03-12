@@ -2,13 +2,12 @@
 
 import { useState } from "react";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
-import { GameSessionState } from "@/types/game/type";
 import { LoadingSpinner } from "./LoadingSpinner";
 import { BothLeaveVoteControls } from "./BothLeaveVoteControls";
 import { RegularVotingControls } from "./RegularVotingControls";
 
 type Props = {
-  gameSessionState: GameSessionState;
+  gameSessionState: NonNullable<ReturnType<typeof useGameRoom>["gameSessionState"]>;
 };
 
 /**
@@ -31,7 +30,7 @@ export default function VotingPhaseControls({ gameSessionState }: Props) {
     return <LoadingSpinner text="Loading..." />;
   }
 
-  const isBothLeaveMode = votingSession.both_leave_vote_active;
+  const isBothLeaveMode = votingSession.bothLeaveVoteActive;
 
   if (isBothLeaveMode) {
     return (

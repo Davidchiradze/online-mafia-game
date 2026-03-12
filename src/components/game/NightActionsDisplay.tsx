@@ -13,7 +13,7 @@ export default function NightActionsDisplay() {
   // Only show for host during night phases
   if (!isHost || !gameSessionState) return null;
 
-  const currentPhase = gameSessionState.game_phase;
+  const currentPhase = gameSessionState.gamePhase;
 
   // Define which phases should show this display
   const nightPhases: string[] = [
@@ -28,9 +28,9 @@ export default function NightActionsDisplay() {
 
   if (!nightPhases.includes(currentPhase)) return null;
 
-  const mafiaTarget = nightPhaseSession?.mafia_target;
-  const yakuzaTarget = nightPhaseSession?.yakuza_target;
-  const healedPlayer = nightPhaseSession?.healed_player;
+  const mafiaTarget = nightPhaseSession?.mafiaTarget;
+  const yakuzaTarget = nightPhaseSession?.yakuzaTarget;
+  const healedPlayer = nightPhaseSession?.healedPlayer;
 
   return (
     <div className="flex items-center gap-2 text-xs mb-1">

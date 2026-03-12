@@ -4,6 +4,14 @@ import { v } from "convex/values";
 import { getAuthenticatedUserId } from "../lib/auth";
 import { getNicknameOwner, getProfileByUserId } from "../lib/profiles";
 
+export const currentUserId = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    return userId;
+  },
+});
+
 export const currentProfile = query({
   args: {},
   handler: async (ctx) => {
@@ -56,6 +64,7 @@ export const createProfile = mutation({
       userId,
       email: user.email,
       nickname: args.nickname,
+      verified: true,
     });
   },
 });

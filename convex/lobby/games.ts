@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { query, mutation } from "../_generated/server";
-import { getAuthenticatedUserId } from "../lib/auth";
+import { getAuthenticatedUser } from "../lib/auth";
 import {
   getGameById,
   getPlayersByGameId,
@@ -40,7 +40,8 @@ export const list = query({
 export const getById = query({
   args: { gameId: v.id("games") },
   handler: async (ctx, { gameId }) => {
-    const game = await getGameById(ctx.db, gameId);
+    const game = await ctx.db.get(gameId);
+    if (!game) return null;
     const players = await getPlayersByGameId(ctx.db, game._id);
     const spectators = await getSpectatorsByGameId(ctx.db, game._id);
     return { ...game, players, spectators };
@@ -53,7 +54,7 @@ export const create = mutation({
     gameType,
   },
   handler: async (ctx, { name, gameType }) => {
-    const userId = await getAuthenticatedUserId(ctx);
+    const userId = await getAuthenticatedUser(ctx);
 
     const trimmedName = name.trim();
     if (trimmedName.length === 0) {
@@ -90,7 +91,7 @@ export const create = mutation({
 export const remove = mutation({
   args: { gameId: v.id("games") },
   handler: async (ctx, { gameId }) => {
-    const userId = await getAuthenticatedUserId(ctx);
+    const userId = await getAuthenticatedUser(ctx);
     await assertIsHost(ctx.db, gameId, userId);
 
     const players = await getPlayersByGameId(ctx.db, gameId);

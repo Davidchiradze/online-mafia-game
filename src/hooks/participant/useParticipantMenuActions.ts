@@ -3,7 +3,9 @@
 import { useCallback, useMemo, useState } from "react";
 import { kickPlayer, transferHost } from "@/lib/gameRoom/actions";
 import { removeParticipantFromRoom } from "@/lib/liveKit/actions";
-import { GameSessionState } from "@/types/game/type";
+import type { useGameRoom } from "@/lib/context/gameRoomContext";
+
+type GameSessionState = NonNullable<ReturnType<typeof useGameRoom>["gameSessionState"]>;
 
 export interface ParticipantMenuActionsResult {
   menuOpen: boolean;
@@ -29,9 +31,9 @@ export function useParticipantMenuActions(
   const canShowLobbyMenu = useMemo(() => {
     return Boolean(
       isViewerHost &&
-        participantId &&
-        participantId !== hostUserId &&
-        !gameSessionState
+      participantId &&
+      participantId !== hostUserId &&
+      !gameSessionState
     );
   }, [isViewerHost, participantId, hostUserId, gameSessionState]);
 

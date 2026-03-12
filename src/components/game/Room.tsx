@@ -1,6 +1,5 @@
 "use client";
 
-import { JOIN_REQUEST_STATUSES } from "@/lib/constants/game";
 import LiveKitTestComponent from "../liveKit/LiveKitTestComponent";
 import SpectatorView from "./SpectatorView";
 import WaitingRoom from "./WaitingRoom";
@@ -21,9 +20,6 @@ export default function Room() {
     joinError,
   } = useGameRoom();
 
-  // Spectator mode - simplified view without local video
-  // Only rendered when user has a valid spectator record (validated server-side in page.tsx)
-  // The spectator join prompt is shown at the page level before this component mounts
   if (isSpectator) {
     if (!livekitToken) {
       return (
@@ -44,7 +40,6 @@ export default function Room() {
     );
   }
 
-  // Regular player mode
   if (isJoiningGame) {
     return (
       <div className="flex h-full items-center justify-center text-gray-600 dark:text-gray-300">
@@ -61,19 +56,11 @@ export default function Room() {
     );
   }
 
-  if (
-    joinStatus !== undefined &&
-    joinStatus !== JOIN_REQUEST_STATUSES.ACCEPTED &&
-    !isHost
-  ) {
+  if (joinStatus !== "none" && joinStatus !== "accepted" && !isHost) {
     return <WaitingRoom status={joinStatus} gameId={gameId} userId={userId} />;
   }
 
-  if (
-    (joinStatus !== undefined &&
-      joinStatus === JOIN_REQUEST_STATUSES.ACCEPTED) ||
-    isHost
-  ) {
+  if (joinStatus === "accepted" || isHost) {
     return (
       <LiveKitTestComponent
         gameId={gameId}

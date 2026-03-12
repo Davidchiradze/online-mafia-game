@@ -40,25 +40,25 @@ export function RegularVotingControls({
   // const [waitingForSync, setWaitingForSync] = useState(false);
 
   // Clear loading when real-time update confirms the advance
-  // (voting_started_at becomes null after advancing to next candidate)
+  // (votingStartedAt becomes null after advancing to next candidate)
   useEffect(() => {
-    if (votingSession?.voting_started_at === null) {
+    if (votingSession?.votingStartedAt === null) {
       // setWaitingForSync(false);
       setIsLoading(false);
     }
-  }, [ votingSession?.voting_started_at, setIsLoading]);
+  }, [votingSession?.votingStartedAt, setIsLoading]);
 
   const candidates = votingSession?.candidates ?? [];
-  const currentIdx = votingSession?.current_candidate_index ?? 0;
+  const currentIdx = votingSession?.currentCandidateIndex ?? 0;
   const currentCandidate = candidates[currentIdx];
-  const isVotingNow = votingSession?.voting_active ?? false;
+  const isVotingNow = votingSession?.votingActive ?? false;
   const isVoting = isLocalVoting || isVotingNow;
   const allDone = currentIdx >= candidates.length;
   const isLastCandidate = currentIdx === candidates.length - 1 && !allDone;
 
   // Tie-break info
-  const isTieBreak = votingSession?.is_tie_break ?? false;
-  const tieBreakRound = votingSession?.tie_break_round ?? 0;
+  const isTieBreak = votingSession?.isTieBreak ?? false;
+  const tieBreakRound = votingSession?.tieBreakRound ?? 0;
 
   // Vote counts
   const currentVotes = currentCandidate
@@ -67,7 +67,7 @@ export function RegularVotingControls({
 
   // Determine which button to show
   const voteEndedForCurrentCandidate =
-    !isVoting && votingSession?.voting_started_at !== null;
+    !isVoting && votingSession?.votingStartedAt !== null;
   const showTallyButton = allDone || isLastCandidate;
   const showNextCandidateButton = voteEndedForCurrentCandidate && !showTallyButton;
   const showVoteNowButton = !isVoting && !showTallyButton && !showNextCandidateButton;
@@ -94,7 +94,7 @@ export function RegularVotingControls({
     await advanceToNextCandidate(gameId);
     
     // Don't clear loading here - wait for real-time sync
-    // useEffect above will clear it when voting_started_at becomes null
+    // useEffect above will clear it when votingStartedAt becomes null
     // setWaitingForSync(true);
   }, [gameId, isLoading, setIsLoading]);
 

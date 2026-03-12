@@ -11,8 +11,7 @@ export function useVoteIndicator(seatNumber: number | null) {
   const { gameSessionState, votingSession, voteData } = useGameRoom();
 
   return useMemo(() => {
-    // Only show during voting phase
-    if (gameSessionState?.game_phase !== "voting") {
+    if (gameSessionState?.gamePhase !== "voting") {
       return { showVoteIndicator: false };
     }
 
@@ -20,15 +19,13 @@ export function useVoteIndicator(seatNumber: number | null) {
       return { showVoteIndicator: false };
     }
 
-    // "Both leave" vote mode - check both_leave_voters from voteData
-    if (votingSession.both_leave_vote_active) {
+    if (votingSession.bothLeaveVoteActive) {
       const hasVotedBothLeave = voteData.bothLeaveVoters.includes(seatNumber);
       return { showVoteIndicator: hasVotedBothLeave };
     }
 
-    // Regular voting - check votes for current candidate from voteData
     const candidates = votingSession.candidates ?? [];
-    const currentIdx = votingSession.current_candidate_index ?? 0;
+    const currentIdx = votingSession.currentCandidateIndex ?? 0;
     const currentCandidate = candidates[currentIdx];
 
     const votersForCurrent = voteData.votes[String(currentCandidate)] ?? [];
@@ -37,5 +34,5 @@ export function useVoteIndicator(seatNumber: number | null) {
     return {
       showVoteIndicator: hasVotedForCurrent,
     };
-  }, [gameSessionState?.game_phase, votingSession, voteData, seatNumber]);
+  }, [gameSessionState?.gamePhase, votingSession, voteData, seatNumber]);
 }

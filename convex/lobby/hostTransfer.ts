@@ -1,7 +1,6 @@
 import { v } from "convex/values";
 import { mutation } from "../_generated/server";
-import { getAuthenticatedUserId } from "../lib/auth";
-import { getProfileByUserId } from "../lib/profiles";
+import { getAuthenticatedUser } from "../lib/auth";
 import {
   assertIsHost,
   getPlayerInGame,
@@ -11,17 +10,17 @@ import {
 export const transfer = mutation({
   args: {
     gameId: v.id("games"),
-    newHostId: v.id("users"),
+    newHostId: v.id("profiles"),
   },
   handler: async (ctx, { gameId, newHostId }) => {
-    const userId = await getAuthenticatedUserId(ctx);
+    const userId = await getAuthenticatedUser(ctx);
     const game = await assertIsHost(ctx.db, gameId, userId);
 
     if (newHostId === userId) {
       throw new Error("You are already the host");
     }
 
-    const newHostProfile = await getProfileByUserId(ctx.db, newHostId);
+    const newHostProfile = await ctx.db.get(newHostId);
     if (!newHostProfile) {
       throw new Error("New host user not found");
     }
@@ -47,7 +46,7 @@ export const transfer = mutation({
       await ctx.db.delete(newHostRequest._id);
     }
 
-    const prevHostProfile = await getProfileByUserId(ctx.db, previousHostId);
+    const prevHostProfile = await ctx.db.get(previousHostId);
     if (!prevHostProfile) {
       throw new Error("Previous host profile not found");
     }

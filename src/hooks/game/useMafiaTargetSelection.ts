@@ -1,9 +1,12 @@
 "use client";
 
 import { useMemo } from "react";
-import { GameSessionState } from "@/types/game/type";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { MAFIA_TEAM_ROLES } from "@/lib/constants/game";
+
+type GameSessionState = NonNullable<
+  ReturnType<typeof useGameRoom>["gameSessionState"]
+>;
 
 export interface MafiaTargetSelectionResult {
   hasMafiaKillAuthority: boolean;
@@ -50,11 +53,11 @@ export function useMafiaTargetSelection(
   const isMafiaTargetSelected = useMemo(() => {
     if (!gameSessionState || seatNumber === null) return false;
     const isInMafiaPhase =
-      gameSessionState.game_phase === "mafia_chooses_target";
+      gameSessionState.gamePhase === "mafia_chooses_target";
     if (!isInMafiaPhase) return false;
 
     if ((isViewerHost || isViewerOnMafiaTeam) && nightPhaseSession) {
-      return nightPhaseSession.mafia_target === seatNumber;
+      return nightPhaseSession.mafiaTarget === seatNumber;
     }
 
     return false;
@@ -75,10 +78,10 @@ export function useMafiaTargetSelection(
     if (!isMafiaPhase || !hasMafiaKillAuthority) return false;
     if (isTargetHost) return false;
     if (isPlayerAlive === false) return false;
-    if (nightPhaseSession?.night_number === 1) return false;
+    if (nightPhaseSession?.nightNumber === 1) return false;
     if (
-      nightPhaseSession?.mafia_target !== null &&
-      nightPhaseSession?.mafia_target !== undefined
+      nightPhaseSession?.mafiaTarget !== null &&
+      nightPhaseSession?.mafiaTarget !== undefined
     )
       return false;
     return true;
@@ -87,8 +90,8 @@ export function useMafiaTargetSelection(
     hasMafiaKillAuthority,
     isTargetHost,
     isPlayerAlive,
-    nightPhaseSession?.night_number,
-    nightPhaseSession?.mafia_target,
+    nightPhaseSession?.nightNumber,
+    nightPhaseSession?.mafiaTarget,
   ]);
 
   return {

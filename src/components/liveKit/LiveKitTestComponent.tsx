@@ -41,13 +41,13 @@ export default function LiveKitTestComponent({
     useRoleAssignmentNotification(viewerRole);
 
   // Auto mute/unmute based on speaking round state
-  // Players listen to current_speaker_index and mute/unmute themselves
+  // Players listen to currentSpeakerIndex and mute/unmute themselves
   useSpeakingAutoMute(room, gameSessionState, players, userId, isHost);
 
   // Disable microphone and camera for dead players
   // Dead players cannot speak or show video for the rest of the game
-  // When game is finished (gameSessionState.is_finished), all cameras are enabled for role reveal
-  const isGameFinished = Boolean(gameSessionState?.is_finished);
+  // When game is finished (gameSessionState.isFinished), all cameras are enabled for role reveal
+  const isGameFinished = Boolean(gameSessionState?.isFinished);
   useDeadPlayerMute(room, players, userId, isGameFinished);
 
   return (

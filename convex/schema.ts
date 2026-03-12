@@ -6,6 +6,11 @@ import {
   gamePlayers,
   gameSpectators,
   joinRequests,
+  gameSessions,
+  gamePlayerRoles,
+  nightPhaseSessions,
+  votingSessions,
+  votes,
 } from "./tables";
 
 const schema = defineSchema({
@@ -15,6 +20,11 @@ const schema = defineSchema({
   gamePlayers,
   gameSpectators,
   joinRequests,
+  gameSessions,
+  gamePlayerRoles,
+  nightPhaseSessions,
+  votingSessions,
+  votes,
 });
 
 export default schema;

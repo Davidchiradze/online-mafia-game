@@ -2,7 +2,6 @@
 
 import { TrackReferenceOrPlaceholder } from "@livekit/components-react";
 import { useCallback, useMemo } from "react";
-import { Tables } from "@/db/supabase/database.types";
 import { FOULS } from "@/lib/constants/game";
 
 // Context
@@ -42,18 +41,18 @@ import { muteParticipantMicrophone } from "@/lib/liveKit/actions";
 
 export default function ParticipantComponent({
   gameId,
-  hostUserId,
-  currentUserId,
+  hostProfileId,
+  currentProfileId,
   trackRef,
   playerIndex,
   player,
 }: {
   gameId: string;
-  hostUserId: string | null;
-  currentUserId: string;
+  hostProfileId: string | null;
+  currentProfileId: string;
   trackRef: TrackReferenceOrPlaceholder | undefined;
   playerIndex: number;
-  player: Tables<"game_players">;
+  player: NonNullable<ReturnType<typeof useGameRoom>["players"]>[number];
 }) {
   const { gameSessionState, room } = useGameRoom();
 
@@ -65,7 +64,7 @@ export default function ParticipantComponent({
     participantId,
     isViewerHost,
     isTargetHost,
-  } = useParticipantState(trackRef, player, currentUserId, hostUserId);
+  } = useParticipantState(trackRef, player, currentProfileId, hostProfileId);
 
   // Ready state
   const {
@@ -86,7 +85,7 @@ export default function ParticipantComponent({
     useParticipantMenuActions(
       gameId,
       participantId,
-      hostUserId,
+      hostProfileId,
       isViewerHost,
       gameSessionState,
     );
@@ -104,23 +103,23 @@ export default function ParticipantComponent({
     canShowNominationButton,
     isDayPhase,
   } = useNomination({
-    seatNumber: player.seat_number,
+    seatNumber: player.seatNumber ?? null,
     isViewerHost,
     isTargetHost,
   });
 
   // Check if current phase allows fouls (needed for speaking state)
   const isFoulAllowedPhase = useMemo(() => {
-    const currentPhase = gameSessionState?.game_phase;
+    const currentPhase = gameSessionState?.gamePhase;
     if (!currentPhase) return false;
     return (FOULS.ALLOWED_PHASES as readonly string[]).includes(currentPhase);
-  }, [gameSessionState?.game_phase]);
+  }, [gameSessionState?.gamePhase]);
 
   // Speaking state
   const { isSpeaking, isParticipantFoulSpeaking, boxShadowClass } =
     useParticipantSpeaking(
       gameSessionState,
-      player.seat_number,
+      player.seatNumber ?? null,
       isMicEnabled,
       isFoulAllowedPhase,
       isTargetHost,
@@ -128,9 +127,9 @@ export default function ParticipantComponent({
     );
   // Speaking progress (uses different durations based on phase)
   const speakingProgress = useSpeakingProgress(
-    gameSessionState?.speaker_started_at,
+    gameSessionState?.speakerStartedAt,
     isSpeaking,
-    gameSessionState?.game_phase,
+    gameSessionState?.gamePhase,
   );
 
   // Foul-related functionality
@@ -173,10 +172,10 @@ export default function ParticipantComponent({
     canShowMafiaKillButton,
   } = useMafiaTargetSelection(
     gameSessionState,
-    player.seat_number,
+    player.seatNumber ?? null,
     isViewerHost,
     isTargetHost,
-    player.is_alive !== false,
+    player.isAlive !== false,
     hasMafiaKillAuthority,
     isMafiaPhase,
   );
@@ -188,10 +187,10 @@ export default function ParticipantComponent({
     canShowYakuzaKillButton,
   } = useYakuzaTargetSelection(
     gameSessionState,
-    player.seat_number,
+    player.seatNumber ?? null,
     isViewerHost,
     isTargetHost,
-    player.is_alive !== false,
+    player.isAlive !== false,
     hasYakuzaKillAuthority,
     isYakuzaPhase,
   );
@@ -204,17 +203,17 @@ export default function ParticipantComponent({
     shouldShowDoctorHealIndicator,
   } = useDoctorHealSelection(
     gameSessionState,
-    player.seat_number,
+    player.seatNumber ?? null,
     isViewerHost,
     isTargetHost,
-    player.is_alive !== false,
+    player.isAlive !== false,
     hasDoctorHealAuthority,
     isDoctorPhase,
     healedPlayers,
   );
 
   // Vote indicator (voting phase)
-  const { showVoteIndicator } = useVoteIndicator(player.seat_number);
+  const { showVoteIndicator } = useVoteIndicator(player.seatNumber ?? null);
 
   // Ready button handlers
   const onReady = useCallback(async () => {
@@ -226,14 +225,14 @@ export default function ParticipantComponent({
   }, [markUnready]);
 
   const handleMutePlayer = useCallback(async () => {
-    if (!room || !player?.player_id) return;
+    if (!room || !player?.playerId) return;
 
     try {
-      await muteParticipantMicrophone(room.name, player.player_id, true);
+      await muteParticipantMicrophone(room.name, player.playerId as string, true);
     } catch (error) {
       console.error("Failed to mute participant:", error);
     }
-  }, [room, player.player_id]);
+  }, [room, player.playerId]);
 
   const handleToggleMic = useCallback(() => {
     if (!room) return;
@@ -267,7 +266,7 @@ export default function ParticipantComponent({
         playerIndex={playerIndex}
         displayName={displayName}
         showNominationEffect={showNominationEffect}
-        playerId={player.player_id || ""}
+        playerId={(player.playerId as string) || ""}
         isViewerHost={isViewerHost}
         onToggleMic={handleToggleMic}
       />
@@ -300,7 +299,7 @@ export default function ParticipantComponent({
 
       {/* Nomination and foul section */}
       <NominationFoulSection
-        seatNumber={player.seat_number}
+        seatNumber={player.seatNumber ?? null}
         isTargetDead={isTargetDead}
         canShowNominationButton={canShowNominationButton}
         isNominated={isNominated}
@@ -316,7 +315,7 @@ export default function ParticipantComponent({
 
       {/* Night action buttons (Mafia kill, Yakuza kill, Doctor heal) */}
       <NightActionButtons
-        seatNumber={player.seat_number}
+        seatNumber={player.seatNumber ?? null}
         canShowMafiaKillButton={canShowMafiaKillButton}
         isMafiaTargetSelected={isMafiaTargetSelected}
         shouldShowMafiaTargetIndicator={shouldShowMafiaTargetIndicator}

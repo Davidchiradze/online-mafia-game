@@ -113,7 +113,7 @@ export default function GameTableRowActions({
               ]}
             />
           </div>,
-          document.body
+          document.body,
         )}
 
       <Modal

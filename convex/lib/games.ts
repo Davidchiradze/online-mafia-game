@@ -12,7 +12,7 @@ export async function getGameById(db: DatabaseReader, gameId: Id<"games">) {
 export async function assertIsHost(
   db: DatabaseReader,
   gameId: Id<"games">,
-  userId: Id<"users">,
+  userId: Id<"profiles">,
 ) {
   const game = await getGameById(db, gameId);
   if (game.hostId !== userId) {
@@ -63,7 +63,7 @@ export async function isCodeTaken(db: DatabaseReader, code: string) {
 export async function getJoinRequestByRequester(
   db: DatabaseReader,
   gameId: Id<"games">,
-  requesterId: Id<"users">,
+  requesterId: Id<"profiles">,
 ) {
   return await db
     .query("joinRequests")
@@ -76,7 +76,7 @@ export async function getJoinRequestByRequester(
 export async function getPlayerInGame(
   db: DatabaseReader,
   gameId: Id<"games">,
-  playerId: Id<"users">,
+  playerId: Id<"profiles">,
 ) {
   return await db
     .query("gamePlayers")

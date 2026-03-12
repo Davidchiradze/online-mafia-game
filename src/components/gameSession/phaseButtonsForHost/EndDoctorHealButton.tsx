@@ -1,13 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
-import { GameSessionState } from "@/types/game/type";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { startFarewellSpeech } from "@/lib/farewellSpeech/actions";
 import PhaseButton from "@/components/ui/PhaseButton";
 
 type EndDoctorHealButtonProps = {
-  gameSessionState: GameSessionState;
+  gameSessionState: NonNullable<ReturnType<typeof useGameRoom>["gameSessionState"]>;
 };
 
 /**

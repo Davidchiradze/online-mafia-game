@@ -1,40 +1,48 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { joinAsSpectator } from "@/lib/spectators/actions";
+import { useMutation } from "convex/react";
+import { gameSpectators } from "@convex/refs/game";
 import { GameRoomProvider } from "@/lib/context/gameRoomContext";
 import Room from "@/components/game/Room";
-import type { GameRoom } from "@/types/game/type";
 import { Eye, ArrowLeft, Loader2 } from "lucide-react";
+import type { Id } from "@convex/_generated/dataModel";
+
+type GameSummary = {
+  _id: Id<"games">;
+  name: string;
+  hostId: Id<"profiles">;
+  gameType: string;
+  gameStatus: string;
+  maxPlayers: number;
+};
 
 type Props = {
   gameId: string;
-  userId: string;
-  game: GameRoom;
+  game: GameSummary;
   currentSpectatorCount: number;
 };
 
-export default function SpectatorJoinPrompt({ gameId, userId, game }: Props) {
+export default function SpectatorJoinPrompt({ gameId, game }: Props) {
   const router = useRouter();
   const [isJoining, setIsJoining] = useState(false);
   const [hasJoined, setHasJoined] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const joinSpectator = useMutation(gameSpectators.join);
 
   const handleJoinAsSpectator = async () => {
     if (isJoining) return;
     setIsJoining(true);
     setError(null);
     try {
-      const result = await joinAsSpectator(gameId);
-      if (!result.ok) {
-        setError(result.message);
-        setIsJoining(false);
-        return;
-      }
+      await joinSpectator({ gameId: gameId as Id<"games"> });
       setHasJoined(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to join as spectator");
+      setError(
+        err instanceof Error ? err.message : "Failed to join as spectator",
+      );
       setIsJoining(false);
     }
   };
@@ -42,11 +50,9 @@ export default function SpectatorJoinPrompt({ gameId, userId, game }: Props) {
   if (hasJoined) {
     return (
       <div className="flex flex-col gap-6 h-full w-full sm:w-[80%] md:w-[90%] lg:w-[90%]">
-        <Suspense>
-          <GameRoomProvider userId={userId} game={game} isSpectator>
-            <Room />
-          </GameRoomProvider>
-        </Suspense>
+        <GameRoomProvider gameId={gameId as Id<"games">} isSpectator>
+          <Room />
+        </GameRoomProvider>
       </div>
     );
   }
@@ -57,7 +63,8 @@ export default function SpectatorJoinPrompt({ gameId, userId, game }: Props) {
       <div
         className="rounded-2xl border border-white/10 p-8 text-center"
         style={{
-          background: "linear-gradient(135deg, rgba(20,20,32,0.96) 0%, rgba(10,10,18,0.96) 100%)",
+          background:
+            "linear-gradient(135deg, rgba(20,20,32,0.96) 0%, rgba(10,10,18,0.96) 100%)",
           boxShadow:
             "0 24px 64px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.07), 0 0 0 1px rgba(59,130,246,0.12)",
         }}
@@ -75,8 +82,8 @@ export default function SpectatorJoinPrompt({ gameId, userId, game }: Props) {
           Game in Progress
         </h2>
         <p className="text-gray-500 font-sans text-sm leading-relaxed mb-7">
-          <span className="text-white font-medium">{game.name}</span> has already
-          started. Join as a spectator to watch the action unfold.
+          <span className="text-white font-medium">{game.name}</span> has
+          already started. Join as a spectator to watch the action unfold.
         </p>
 
         {/* Error */}
@@ -96,13 +103,31 @@ export default function SpectatorJoinPrompt({ gameId, userId, game }: Props) {
             As a spectator you will
           </p>
           {[
-            { icon: "✓", color: "text-green-400", text: "Watch all day phase activities" },
-            { icon: "✓", color: "text-green-400", text: "See player discussions and voting" },
-            { icon: "○", color: "text-amber-400", text: "Night phases hidden (like dead players)" },
-            { icon: "✗", color: "text-red-400",   text: "Cannot participate or interact" },
+            {
+              icon: "✓",
+              color: "text-green-400",
+              text: "Watch all day phase activities",
+            },
+            {
+              icon: "✓",
+              color: "text-green-400",
+              text: "See player discussions and voting",
+            },
+            {
+              icon: "○",
+              color: "text-amber-400",
+              text: "Night phases hidden (like dead players)",
+            },
+            {
+              icon: "✗",
+              color: "text-red-400",
+              text: "Cannot participate or interact",
+            },
           ].map(({ icon, color, text }) => (
             <div key={text} className="flex items-center gap-3">
-              <span className={`font-bold text-sm ${color} w-4 shrink-0`}>{icon}</span>
+              <span className={`font-bold text-sm ${color} w-4 shrink-0`}>
+                {icon}
+              </span>
               <span className="text-gray-400 font-sans text-sm">{text}</span>
             </div>
           ))}

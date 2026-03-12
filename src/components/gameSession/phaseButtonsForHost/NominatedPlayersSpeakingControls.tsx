@@ -1,17 +1,16 @@
 "use client";
 
 import React, { useState, useCallback } from "react";
-import { GameSessionState } from "@/types/game/type";
+import { useGameRoom } from "@/lib/context/gameRoomContext";
 import {
   advanceToNextNominatedSpeaker,
   finishCurrentNominatedSpeaker,
 } from "@/lib/dayPhase/actions";
-import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { SPEAKING_STATE } from "@/lib/constants/game";
 import PhaseButton from "@/components/ui/PhaseButton";
 
 type Props = {
-  gameSessionState: GameSessionState;
+  gameSessionState: NonNullable<ReturnType<typeof useGameRoom>["gameSessionState"]>;
 };
 
 /**
@@ -28,25 +27,20 @@ export default function NominatedPlayersSpeakingControls({
   const { gameId } = useGameRoom();
   const [isLoading, setIsLoading] = useState(false);
 
-  const speakingOrder = gameSessionState.speaking_order ?? [];
-  const currentSpeaker = gameSessionState.current_speaker_index ?? null;
-  const nominatedPlayers = gameSessionState.nominated_players ?? [];
+  const speakingOrder = gameSessionState.speakingOrder ?? [];
+  const currentSpeaker = gameSessionState.currentSpeakerIndex ?? null;
+  const nominatedPlayers = gameSessionState.nominatedPlayers ?? [];
 
-  // Check if foul elimination occurred this round
   const foulEliminationOccurred =
-    (
-      gameSessionState as unknown as { foul_elimination_occurred?: boolean }
-    ).foul_elimination_occurred ?? false;
+    gameSessionState.foulEliminationOccurred ?? false;
 
   const isPaused = SPEAKING_STATE.isPaused(currentSpeaker);
 
-  // Get the actual speaker seat (decode from paused state if needed)
   const lastSpeakerSeat = isPaused
     ? SPEAKING_STATE.getLastSpeakerFromPaused(currentSpeaker!)
     : null;
   const activeSpeakerSeat = !isPaused ? currentSpeaker : null;
 
-  // Calculate next speaker when paused
   const lastSpeakerIndex = lastSpeakerSeat
     ? speakingOrder.indexOf(lastSpeakerSeat)
     : -1;
@@ -55,7 +49,6 @@ export default function NominatedPlayersSpeakingControls({
       ? speakingOrder[lastSpeakerIndex + 1]
       : null;
 
-  // Calculate position in speaking order
   const currentPosition = isPaused
     ? lastSpeakerIndex + 1
     : activeSpeakerSeat !== null

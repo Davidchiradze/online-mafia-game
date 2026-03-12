@@ -9,7 +9,7 @@ export const joinRequestStatus = v.union(
 
 export const joinRequests = defineTable({
   gameId: v.id("games"),
-  requesterId: v.id("users"),
+  requesterId: v.id("profiles"),
   requesterNickname: v.string(),
   status: joinRequestStatus,
 })

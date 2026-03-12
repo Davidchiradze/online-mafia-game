@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useCallback } from "react";
-import { GameSessionState } from "@/types/game/type";
+import { useGameRoom } from "@/lib/context/gameRoomContext";
 import {
   startDayPhaseSpeaking,
   advanceToNextSpeaker,
@@ -12,7 +12,7 @@ import PhaseButton from "@/components/ui/PhaseButton";
 
 type Props = {
   gameId: string;
-  gameSessionState: GameSessionState;
+  gameSessionState: NonNullable<ReturnType<typeof useGameRoom>["gameSessionState"]>;
 };
 
 /**
@@ -27,8 +27,8 @@ export default function DayPhaseSpeakingControls({
 }: Props) {
   const [isLoading, setIsLoading] = useState(false);
 
-  const speakingOrder = gameSessionState.speaking_order ?? [];
-  const currentSpeaker = gameSessionState.current_speaker_index ?? null;
+  const speakingOrder = gameSessionState.speakingOrder ?? [];
+  const currentSpeaker = gameSessionState.currentSpeakerIndex ?? null;
 
   const isNotStarted = speakingOrder.length === 0 || currentSpeaker === null;
   const isPaused = SPEAKING_STATE.isPaused(currentSpeaker);
@@ -64,21 +64,18 @@ export default function DayPhaseSpeakingControls({
     }
   }, [gameId, isLoading]);
 
-  // Not started yet or completed
   if (isNotStarted || isCompleted) {
     return (
       <PhaseButton onClick={handleStart} isLoading={isLoading} label="Start" />
     );
   }
 
-  // Paused state - show Start button (to start next speaker)
   if (isPaused) {
     return (
       <PhaseButton onClick={handleNext} isLoading={isLoading} label="Start" />
     );
   }
 
-  // Active speaker - show Finish button
   return (
     <PhaseButton onClick={handleFinish} isLoading={isLoading} label="Finish" />
   );
