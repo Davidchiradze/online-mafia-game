@@ -11,7 +11,6 @@ import "@livekit/components-styles";
 import PlayerCircle from "@/components/game/PlayerCircle";
 import { useRef } from "react";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
-import { useFullscreen } from "@/hooks/ui";
 import { GAME_PHASE_LABELS } from "@/lib/constants/game";
 import { EyeIcon } from "@/assets/icons";
 import FloatingOptions from "@/components/liveKit/FloatingOptions";
@@ -40,7 +39,6 @@ export default function SpectatorView({
 }: SpectatorViewProps) {
   const { disconnect, gameSessionState } = useGameRoom();
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const { isFullscreen, toggleFullscreen } = useFullscreen(containerRef);
 
   // Get display label for the current game phase
   const gamePhaseLabel = gameSessionState?.gamePhase
@@ -73,9 +71,7 @@ export default function SpectatorView({
         <FloatingOptions
           gameId={gameId}
           isHost={false}
-          isFullscreen={isFullscreen}
           canFinishGame={false}
-          onToggleFullscreen={toggleFullscreen}
           onLeaveRoom={disconnect}
           leaveLabel="Stop spectating"
         />

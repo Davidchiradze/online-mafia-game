@@ -13,7 +13,6 @@ import { useRef } from "react";
 import FloatingOptions from "./FloatingOptions";
 import { useRoleAssignmentNotification } from "@/hooks/game";
 import { useSpeakingAutoMute, useDeadPlayerMute } from "@/hooks/livekit";
-import { useFullscreen } from "@/hooks/ui";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import RoleRevealModal from "@/components/modals/RoleRevealModal";
@@ -34,7 +33,6 @@ export default function LiveKitTestComponent({
 }) {
   const { disconnect, viewerRole, gameSessionState, players } = useGameRoom();
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const { isFullscreen, toggleFullscreen } = useFullscreen(containerRef);
 
   // Role assignment notification - triggers modal when role is first assigned
   const { showRoleModal, role, description, closeRoleModal } =
@@ -60,9 +58,7 @@ export default function LiveKitTestComponent({
         <FloatingOptions
           gameId={gameId}
           isHost={isHost}
-          isFullscreen={isFullscreen}
           canFinishGame={isHost && !isGameFinished}
-          onToggleFullscreen={toggleFullscreen}
           onLeaveRoom={disconnect}
         />
 

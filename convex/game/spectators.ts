@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { query, mutation } from "../_generated/server";
+import { query, mutation, internalMutation } from "../_generated/server";
 import { getAuthenticatedUser } from "../lib/auth";
 import { getGameById, getPlayerInGame } from "../lib/games";
 import { SPECTATOR } from "../lib/constants";
@@ -86,6 +86,16 @@ export const leave = mutation({
 });
 
 export const leaveAdmin = mutation({
+  args: {
+    gameId: v.id("games"),
+    userId: v.id("profiles"),
+  },
+  handler: async (ctx, { gameId, userId }) => {
+    await leaveByUserId(ctx.db, gameId, userId);
+  },
+});
+
+export const leaveAdminInternal = internalMutation({
   args: {
     gameId: v.id("games"),
     userId: v.id("profiles"),

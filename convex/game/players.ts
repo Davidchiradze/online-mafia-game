@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { query, mutation } from "../_generated/server";
+import { query, mutation, internalMutation } from "../_generated/server";
 import { getAuthenticatedUser } from "../lib/auth";
 import { getGameById, assertIsHost, getPlayerInGame } from "../lib/games";
 
@@ -95,6 +95,23 @@ export const leaveAdmin = mutation({
   },
   handler: async (ctx, { gameId, userId }) => {
     await leaveByUserId(ctx, gameId, userId);
+  },
+});
+
+export const leaveAdminInternal = internalMutation({
+  args: {
+    gameId: v.id("games"),
+    userId: v.id("profiles"),
+  },
+  handler: async (ctx, { gameId, userId }) => {
+    const player = await getPlayerInGame(ctx.db, gameId, userId);
+    if (!player) return;
+    const game = await getGameById(ctx.db, gameId);
+    if (!isGameStarted(game.gameStatus)) {
+      await ctx.db.delete(player._id);
+    } else {
+      await ctx.db.patch(player._id, { state: "disconnected" });
+    }
   },
 });
 

@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { query, mutation } from "../_generated/server";
+import { query, mutation, internalMutation } from "../_generated/server";
 import { getAuthenticatedUser } from "../lib/auth";
 import {
   getGameById,
@@ -94,24 +94,40 @@ export const remove = mutation({
     const userId = await getAuthenticatedUser(ctx);
     await assertIsHost(ctx.db, gameId, userId);
 
-    const players = await getPlayersByGameId(ctx.db, gameId);
-    for (const player of players) {
-      await ctx.db.delete(player._id);
-    }
-
-    const spectators = await getSpectatorsByGameId(ctx.db, gameId);
-    for (const spectator of spectators) {
-      await ctx.db.delete(spectator._id);
-    }
-
-    const joinRequests = await ctx.db
-      .query("joinRequests")
-      .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
-      .collect();
-    for (const request of joinRequests) {
-      await ctx.db.delete(request._id);
-    }
-
-    await ctx.db.delete(gameId);
+    await deleteGameAndRelations(ctx.db, gameId);
   },
 });
+
+export const removeInternal = internalMutation({
+  args: { gameId: v.id("games") },
+  handler: async (ctx, { gameId }) => {
+    const game = await ctx.db.get(gameId);
+    if (!game) return;
+    await deleteGameAndRelations(ctx.db, gameId);
+  },
+});
+
+async function deleteGameAndRelations(
+  db: import("../_generated/server").DatabaseWriter,
+  gameId: import("../_generated/dataModel").Id<"games">,
+) {
+  const players = await getPlayersByGameId(db, gameId);
+  for (const player of players) {
+    await db.delete(player._id);
+  }
+
+  const spectators = await getSpectatorsByGameId(db, gameId);
+  for (const spectator of spectators) {
+    await db.delete(spectator._id);
+  }
+
+  const joinRequests = await db
+    .query("joinRequests")
+    .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
+    .collect();
+  for (const request of joinRequests) {
+    await db.delete(request._id);
+  }
+
+  await db.delete(gameId);
+}

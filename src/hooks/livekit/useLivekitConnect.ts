@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 import { Room as LiveKitRoom } from "livekit-client";
-import { JoinRequest } from "@/types/game/type";
 import { JOIN_REQUEST_STATUSES } from "@/lib/constants/game";
 import { generateLivekitAccessToken } from "@/lib/liveKit/actions";
 
@@ -10,7 +9,7 @@ type Params = {
   gameId: string;
   userId: string;
   isHost: boolean;
-  joinStatus: JoinRequest["status"] | undefined;
+  joinStatus: string | undefined;
   isJoiningGame: boolean;
   hasPlayerRecord: boolean;
   joinError: string | null;
