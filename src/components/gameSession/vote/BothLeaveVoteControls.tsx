@@ -1,13 +1,10 @@
 "use client";
 
 import { useCallback } from "react";
+import { useMutation } from "convex/react";
+import { voting } from "@convex/refs/game";
+import type { Id } from "@convex/_generated/dataModel";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
-import {
-  startBothLeaveVote,
-  processBothLeaveResult,
-  startBothLeaveFarewell,
-  skipToNightAfterTie,
-} from "@/lib/voting/actions";
 import { useVotingTimer } from "./useVotingTimer";
 import { CandidateDots } from "./CandidateDots";
 import { VotingTimer } from "./VotingTimer";
@@ -34,13 +31,18 @@ export function BothLeaveVoteControls({
   const { gameId, votingSession, voteData } = useGameRoom();
   const { timeLeft, isLocalVoting, startLocalVoting, stopLocalVoting } = useVotingTimer();
 
+  const startBothLeaveVoteMutation = useMutation(voting.startBothLeaveVote);
+  const processBothLeaveResultMutation = useMutation(voting.processBothLeaveResult);
+  const startBothLeaveFarewellMutation = useMutation(voting.startBothLeaveFarewell);
+  const skipToNightAfterTieMutation = useMutation(voting.skipToNightAfterTie);
+
   const candidates = votingSession?.candidates ?? [];
   const bothLeaveVotes = voteData.bothLeaveVoters;
   const isVotingNow = votingSession?.votingActive ?? false;
   const isVoting = isLocalVoting || isVotingNow;
 
   const voteEnded =
-    !isVoting && votingSession?.votingStartedAt !== null;
+    !isVoting && !!votingSession?.votingStartedAt;
 
   // Handler to start "both leave" vote
   const handleVoteNow = useCallback(async () => {
@@ -50,32 +52,39 @@ export function BothLeaveVoteControls({
     setIsLoading(true);
     setResultMessage(null);
 
-    await startBothLeaveVote(gameId);
-
-    stopLocalVoting();
-    setIsLoading(false);
-  }, [gameId, isLoading, isVoting, startLocalVoting, stopLocalVoting, setIsLoading, setResultMessage]);
+    try {
+      await startBothLeaveVoteMutation({ gameId: gameId as Id<"games"> });
+    } finally {
+      stopLocalVoting();
+      setIsLoading(false);
+    }
+  }, [gameId, isLoading, isVoting, startLocalVoting, stopLocalVoting, setIsLoading, setResultMessage, startBothLeaveVoteMutation]);
 
   // Handler to process "both leave" result
   const handleSeeResult = useCallback(async () => {
     if (isLoading) return;
     setIsLoading(true);
 
-    const result = await processBothLeaveResult(gameId);
-    if (result.ok) {
+    try {
+      const result = await processBothLeaveResultMutation({ gameId: gameId as Id<"games"> });
       if (result.allLeave) {
-        await startBothLeaveFarewell(gameId, result.candidates);
+        await startBothLeaveFarewellMutation({
+          gameId: gameId as Id<"games">,
+          candidates: result.candidates,
+        });
         setResultMessage(`All ${result.candidates.length} players farewell...`);
       } else {
-        await skipToNightAfterTie(gameId);
+        await skipToNightAfterTieMutation({ gameId: gameId as Id<"games"> });
         setResultMessage(
           `Vote failed (${result.voteCount}/${result.totalVoters}). Night...`
         );
       }
+    } catch (e) {
+      console.error("Failed to process both leave result:", e);
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
-  }, [gameId, isLoading, setIsLoading, setResultMessage]);
+  }, [gameId, isLoading, setIsLoading, setResultMessage, processBothLeaveResultMutation, startBothLeaveFarewellMutation, skipToNightAfterTieMutation]);
 
   const actionState = getBothLeaveActionState({ isLoading, isVoting, voteEnded });
 
@@ -124,4 +133,3 @@ export function BothLeaveVoteControls({
     </div>
   );
 }
-

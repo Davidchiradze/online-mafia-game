@@ -1,11 +1,10 @@
 "use client";
 
 import React, { useState, useCallback } from "react";
+import { useMutation } from "convex/react";
+import { dayPhase } from "@convex/refs/game";
+import type { Id } from "@convex/_generated/dataModel";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
-import {
-  advanceToNextNominatedSpeaker,
-  finishCurrentNominatedSpeaker,
-} from "@/lib/dayPhase/actions";
 import { SPEAKING_STATE } from "@/lib/constants/game";
 import PhaseButton from "@/components/ui/PhaseButton";
 
@@ -26,6 +25,8 @@ export default function NominatedPlayersSpeakingControls({
 }: Props) {
   const { gameId } = useGameRoom();
   const [isLoading, setIsLoading] = useState(false);
+  const advanceNominatedSpeaker = useMutation(dayPhase.advanceNominatedSpeaker);
+  const finishCurrentNominatedSpeaker = useMutation(dayPhase.finishCurrentNominatedSpeaker);
 
   const speakingOrder = gameSessionState.speakingOrder ?? [];
   const currentSpeaker = gameSessionState.currentSpeakerIndex ?? null;
@@ -61,21 +62,21 @@ export default function NominatedPlayersSpeakingControls({
     if (isLoading) return;
     setIsLoading(true);
     try {
-      await finishCurrentNominatedSpeaker(gameId);
+      await finishCurrentNominatedSpeaker({ gameId: gameId as Id<"games"> });
     } finally {
       setIsLoading(false);
     }
-  }, [gameId, isLoading]);
+  }, [gameId, isLoading, finishCurrentNominatedSpeaker]);
 
   const handleNext = useCallback(async () => {
     if (isLoading) return;
     setIsLoading(true);
     try {
-      await advanceToNextNominatedSpeaker(gameId);
+      await advanceNominatedSpeaker({ gameId: gameId as Id<"games"> });
     } finally {
       setIsLoading(false);
     }
-  }, [gameId, isLoading]);
+  }, [gameId, isLoading, advanceNominatedSpeaker]);
 
   if (currentSpeaker === null || speakingOrder.length === 0) {
     return (

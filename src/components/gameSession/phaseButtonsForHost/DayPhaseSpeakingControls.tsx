@@ -1,12 +1,10 @@
 "use client";
 
 import React, { useState, useCallback } from "react";
+import { useMutation } from "convex/react";
+import { dayPhase } from "@convex/refs/game";
+import type { Id } from "@convex/_generated/dataModel";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
-import {
-  startDayPhaseSpeaking,
-  advanceToNextSpeaker,
-  finishCurrentSpeaker,
-} from "@/lib/dayPhase/actions";
 import { SPEAKING_STATE } from "@/lib/constants/game";
 import PhaseButton from "@/components/ui/PhaseButton";
 
@@ -26,6 +24,9 @@ export default function DayPhaseSpeakingControls({
   gameSessionState,
 }: Props) {
   const [isLoading, setIsLoading] = useState(false);
+  const startSpeaking = useMutation(dayPhase.startDaySpeaking);
+  const advanceSpeaker = useMutation(dayPhase.advanceSpeaker);
+  const finishSpeaker = useMutation(dayPhase.finishCurrentSpeaker);
 
   const speakingOrder = gameSessionState.speakingOrder ?? [];
   const currentSpeaker = gameSessionState.currentSpeakerIndex ?? null;
@@ -38,31 +39,31 @@ export default function DayPhaseSpeakingControls({
     if (isLoading) return;
     setIsLoading(true);
     try {
-      await startDayPhaseSpeaking(gameId);
+      await startSpeaking({ gameId: gameId as Id<"games"> });
     } finally {
       setIsLoading(false);
     }
-  }, [gameId, isLoading]);
+  }, [gameId, isLoading, startSpeaking]);
 
   const handleFinish = useCallback(async () => {
     if (isLoading) return;
     setIsLoading(true);
     try {
-      await finishCurrentSpeaker(gameId);
+      await finishSpeaker({ gameId: gameId as Id<"games"> });
     } finally {
       setIsLoading(false);
     }
-  }, [gameId, isLoading]);
+  }, [gameId, isLoading, finishSpeaker]);
 
   const handleNext = useCallback(async () => {
     if (isLoading) return;
     setIsLoading(true);
     try {
-      await advanceToNextSpeaker(gameId);
+      await advanceSpeaker({ gameId: gameId as Id<"games"> });
     } finally {
       setIsLoading(false);
     }
-  }, [gameId, isLoading]);
+  }, [gameId, isLoading, advanceSpeaker]);
 
   if (isNotStarted || isCompleted) {
     return (

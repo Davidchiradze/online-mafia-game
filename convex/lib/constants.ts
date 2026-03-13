@@ -48,3 +48,25 @@ export const VOTING = {
 export const SPECTATOR = {
   MAX_SPECTATORS_PER_GAME: 7,
 } as const;
+
+export const SPEAKING_STATE = {
+  COMPLETED: -99,
+  isPaused: (value: number | null): boolean =>
+    value !== null && value < 0 && value !== -99,
+  isActive: (value: number | null): boolean => value !== null && value >= 1,
+  isCompleted: (value: number | null): boolean => value === -99,
+  getLastSpeakerFromPaused: (value: number): number => Math.abs(value),
+  toPausedValue: (seatNumber: number): number => -seatNumber,
+} as const;
+
+export const FOULS = {
+  MAX_FOULS: 3,
+  ELIMINATION_THRESHOLD: 4,
+  ALLOWED_PHASES: [
+    "introduction_phase",
+    "farewell_speech",
+    "day_phase",
+    "nominated_players_speak",
+    "voting",
+  ] as const,
+} as const;

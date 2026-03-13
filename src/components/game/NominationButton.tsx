@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { nominatePlayer } from "@/lib/dayPhase/actions";
+import { useMutation } from "convex/react";
+import { dayPhase } from "@convex/refs/game";
+import type { Id } from "@convex/_generated/dataModel";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 
 type NominationButtonProps = {
@@ -19,6 +21,7 @@ export default function NominationButton({
 }: NominationButtonProps) {
   const { gameId } = useGameRoom();
   const [isLoading, setIsLoading] = useState(false);
+  const nominateMutation = useMutation(dayPhase.nominatePlayer);
 
   const handleClick = useCallback(
     async (e: React.MouseEvent) => {
@@ -26,12 +29,12 @@ export default function NominationButton({
       if (isLoading) return;
       setIsLoading(true);
       try {
-        await nominatePlayer(gameId, seatNumber);
+        await nominateMutation({ gameId: gameId as Id<"games">, seatNumber });
       } finally {
         setIsLoading(false);
       }
     },
-    [gameId, seatNumber, isLoading]
+    [gameId, seatNumber, isLoading, nominateMutation]
   );
 
   return (

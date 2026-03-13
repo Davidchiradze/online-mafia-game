@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { castVote, castBothLeaveVote } from "@/lib/voting/actions";
+import { useMutation } from "convex/react";
+import { voting } from "@convex/refs/game";
+import type { Id } from "@convex/_generated/dataModel";
 import { VOTING } from "@/lib/constants/game";
 import type { useGameRoom } from "@/lib/context/gameRoomContext";
 
@@ -25,6 +27,9 @@ export function useVotingButton({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number>(VOTING.VOTE_WINDOW_SECONDS);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const castVoteMutation = useMutation(voting.castVote);
+  const castBothLeaveMutation = useMutation(voting.castBothLeaveVote);
 
   // Check if this is "both leave" vote mode
   const isBothLeaveMode = votingSession?.bothLeaveVoteActive ?? false;
@@ -79,19 +84,16 @@ export function useVotingButton({
     setIsSubmitting(true);
     try {
       if (isBothLeaveMode) {
-        await castBothLeaveVote(gameId);
+        await castBothLeaveMutation({ gameId: gameId as Id<"games"> });
       } else {
-        const result = await castVote(gameId);
-        if (!result.ok) {
-          alert(result.message);
-        }
+        await castVoteMutation({ gameId: gameId as Id<"games"> });
       }
     } catch (e) {
       console.error("Vote failed:", e);
     } finally {
       setIsSubmitting(false);
     }
-  }, [gameId, isEnabled, isBothLeaveMode]);
+  }, [gameId, isEnabled, isBothLeaveMode, castVoteMutation, castBothLeaveMutation]);
 
   return {
     isEnabled,

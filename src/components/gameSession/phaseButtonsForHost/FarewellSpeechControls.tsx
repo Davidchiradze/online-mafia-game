@@ -1,16 +1,16 @@
 "use client";
 
 import React, { useState, useCallback, useMemo } from "react";
+import { useMutation } from "convex/react";
+import { farewellSpeech } from "@convex/refs/game";
+import type { Id } from "@convex/_generated/dataModel";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
-import {
-  grantFarewellTime,
-  markDeadAndAdvance,
-  advanceFromFarewell,
-} from "@/lib/farewellSpeech/actions";
 import PhaseButton from "@/components/ui/PhaseButton";
 
 type Props = {
-  gameSessionState: NonNullable<ReturnType<typeof useGameRoom>["gameSessionState"]>;
+  gameSessionState: NonNullable<
+    ReturnType<typeof useGameRoom>["gameSessionState"]
+  >;
 };
 
 /**
@@ -27,9 +27,19 @@ export default function FarewellSpeechControls({ gameSessionState }: Props) {
   const { gameId, players } = useGameRoom();
   const [isLoading, setIsLoading] = useState(false);
 
+  const grantFarewellTimeMutation = useMutation(
+    farewellSpeech.grantFarewellTime,
+  );
+  const markDeadAndAdvanceMutation = useMutation(
+    farewellSpeech.markDeadAndAdvance,
+  );
+  const advanceFromFarewellMutation = useMutation(
+    farewellSpeech.advanceFromFarewell,
+  );
+
   const speakingOrder = gameSessionState.speakingOrder ?? [];
-  const currentSpeaker = gameSessionState.currentSpeakerIndex;
-  const speakerStartedAt = gameSessionState.speakerStartedAt;
+  const currentSpeaker = gameSessionState.currentSpeakerIndex ?? null;
+  const speakerStartedAt = gameSessionState.speakerStartedAt ?? null;
 
   // Determine which speakers have completed (are dead) and which remain (alive)
   const { completedSpeakers, remainingSpeakers } = useMemo(() => {
@@ -68,40 +78,37 @@ export default function FarewellSpeechControls({ gameSessionState }: Props) {
     if (isLoading) return;
     setIsLoading(true);
     try {
-      const result = await grantFarewellTime(gameId);
-      if (!result.ok) {
-        console.error("Failed to grant farewell time:", result.message);
-      }
+      await grantFarewellTimeMutation({ gameId: gameId as Id<"games"> });
+    } catch (e) {
+      console.error("Failed to grant farewell time:", e);
     } finally {
       setIsLoading(false);
     }
-  }, [gameId, isLoading]);
+  }, [gameId, isLoading, grantFarewellTimeMutation]);
 
   const handleMarkDead = useCallback(async () => {
     if (isLoading) return;
     setIsLoading(true);
     try {
-      const result = await markDeadAndAdvance(gameId);
-      if (!result.ok) {
-        console.error("Failed to mark dead:", result.message);
-      }
+      await markDeadAndAdvanceMutation({ gameId: gameId as Id<"games"> });
+    } catch (e) {
+      console.error("Failed to mark dead:", e);
     } finally {
       setIsLoading(false);
     }
-  }, [gameId, isLoading]);
+  }, [gameId, isLoading, markDeadAndAdvanceMutation]);
 
   const handleAdvance = useCallback(async () => {
     if (isLoading) return;
     setIsLoading(true);
     try {
-      const result = await advanceFromFarewell(gameId);
-      if (!result.ok) {
-        console.error("Failed to advance from farewell:", result.message);
-      }
+      await advanceFromFarewellMutation({ gameId: gameId as Id<"games"> });
+    } catch (e) {
+      console.error("Failed to advance from farewell:", e);
     } finally {
       setIsLoading(false);
     }
-  }, [gameId, isLoading]);
+  }, [gameId, isLoading, advanceFromFarewellMutation]);
 
   if (speakingOrder.length === 0) {
     return (

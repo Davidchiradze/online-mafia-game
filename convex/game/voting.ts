@@ -1,7 +1,8 @@
 import { v } from "convex/values";
-import { query, mutation } from "../_generated/server";
+import { query, mutation, internalMutation } from "../_generated/server";
 import { getAuthenticatedUser } from "../lib/auth";
 import { assertIsHost, getPlayerInGame } from "../lib/games";
+import { voting as votingRefs } from "../refs/game";
 import { VOTING } from "../lib/constants";
 import type { Id } from "../_generated/dataModel";
 import type { DatabaseReader, DatabaseWriter } from "../_generated/server";
@@ -174,6 +175,22 @@ export const startVoteWindow = mutation({
       votingActive: true,
       votingStartedAt: new Date().toISOString(),
     });
+
+    await ctx.scheduler.runAfter(
+      VOTING.VOTE_WINDOW_MS,
+      votingRefs.endVoteWindowInternal,
+      { gameId },
+    );
+  },
+});
+
+export const endVoteWindowInternal = internalMutation({
+  args: { gameId: v.id("games") },
+  handler: async (ctx, { gameId }) => {
+    const session = await getVotingSessionByGameId(ctx.db, gameId);
+    if (session?.votingActive) {
+      await ctx.db.patch(session._id, { votingActive: false });
+    }
   },
 });
 
@@ -440,6 +457,22 @@ export const startBothLeaveVote = mutation({
       votingActive: true,
       votingStartedAt: new Date().toISOString(),
     });
+
+    await ctx.scheduler.runAfter(
+      VOTING.VOTE_WINDOW_MS,
+      votingRefs.endBothLeaveVoteInternal,
+      { gameId },
+    );
+  },
+});
+
+export const endBothLeaveVoteInternal = internalMutation({
+  args: { gameId: v.id("games") },
+  handler: async (ctx, { gameId }) => {
+    const session = await getVotingSessionByGameId(ctx.db, gameId);
+    if (session?.votingActive) {
+      await ctx.db.patch(session._id, { votingActive: false });
+    }
   },
 });
 

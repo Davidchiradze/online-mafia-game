@@ -79,11 +79,7 @@ export function useMafiaTargetSelection(
     if (isTargetHost) return false;
     if (isPlayerAlive === false) return false;
     if (nightPhaseSession?.nightNumber === 1) return false;
-    if (
-      nightPhaseSession?.mafiaTarget !== null &&
-      nightPhaseSession?.mafiaTarget !== undefined
-    )
-      return false;
+    if (nightPhaseSession?.mafiaTarget !== undefined) return false;
     return true;
   }, [
     isMafiaPhase,

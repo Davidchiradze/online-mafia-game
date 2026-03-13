@@ -53,10 +53,7 @@ export function useDoctorHealSelection(
   }, [healedPlayers, seatNumber]);
 
   const isHealSelectedThisNight = useMemo(() => {
-    return (
-      nightPhaseSession?.healedPlayer !== null &&
-      nightPhaseSession?.healedPlayer !== undefined
-    );
+    return nightPhaseSession?.healedPlayer !== undefined;
   }, [nightPhaseSession?.healedPlayer]);
 
   const isDoctorHealSelected = useMemo(() => {

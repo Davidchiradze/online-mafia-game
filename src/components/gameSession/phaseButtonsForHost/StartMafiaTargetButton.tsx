@@ -2,8 +2,8 @@
 
 import React, { useState } from "react";
 import { useMutation } from "convex/react";
-import { gameSessions } from "@convex/refs/game";
-import { startNight } from "@/lib/nightPhase/actions";
+import { gameSessions, nightPhase } from "@convex/refs/game";
+import type { Id } from "@convex/_generated/dataModel";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { GAME_PHASES } from "@/lib/constants/game";
 import PhaseButton from "@/components/ui/PhaseButton";
@@ -23,6 +23,7 @@ const StartMafiaTargetButton = ({
   const { gameId } = useGameRoom();
   const [isLoading, setIsLoading] = useState(false);
   const updateSession = useMutation(gameSessions.update);
+  const startNightMutation = useMutation(nightPhase.startNight);
 
   const handleStartMafiaTarget = async () => {
     if (isLoading) return;
@@ -32,11 +33,7 @@ const StartMafiaTargetButton = ({
         !gameSessionState.currentNightNumber ||
         gameSessionState.currentNightNumber === 0
       ) {
-        const nightRes = await startNight(gameId);
-        if (!nightRes.ok) {
-          console.error("Failed to start night:", nightRes.message);
-          return;
-        }
+        await startNightMutation({ gameId: gameId as Id<"games"> });
       }
 
       await updateSession({
@@ -45,6 +42,8 @@ const StartMafiaTargetButton = ({
           gamePhase: GAME_PHASES[9], // "mafia_chooses_target"
         },
       });
+    } catch (error) {
+      console.error("Failed to start mafia target:", error);
     } finally {
       setIsLoading(false);
     }

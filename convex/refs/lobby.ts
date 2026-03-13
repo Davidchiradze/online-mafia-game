@@ -90,6 +90,19 @@ export const joinRequests = {
   reject: makeFunctionReference<"mutation", { requestId: Id<"joinRequests"> }, null>(
     "lobby/joinRequests:reject",
   ),
+  kick: makeFunctionReference<
+    "mutation",
+    { gameId: Id<"games">; targetUserId: Id<"profiles"> },
+    null
+  >("lobby/joinRequests:kick"),
+};
+
+export const hostTransfer = {
+  transfer: makeFunctionReference<
+    "mutation",
+    { gameId: Id<"games">; newHostId: Id<"profiles"> },
+    null
+  >("lobby/hostTransfer:transfer"),
 };
 
 export const lobbyGames = {

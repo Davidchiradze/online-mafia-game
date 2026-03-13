@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { startGame, createGameSession } from "@/lib/gameSession/actions";
+import { useMutation } from "convex/react";
+import { gameSessions } from "@convex/refs/game";
+import type { Id } from "@convex/_generated/dataModel";
 import { useTracks } from "@livekit/components-react";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { Track } from "livekit-client";
@@ -20,6 +22,7 @@ const StartGameButton = () => {
   );
   const maxPlayers = 2;
   const { gameId } = useGameRoom();
+  const startGameMutation = useMutation(gameSessions.startGame);
 
   const [isLoading, setIsLoading] = useState(false);
   const { readyCount, allReady } = useMemo(() => {
@@ -45,17 +48,9 @@ const StartGameButton = () => {
     if (isLoading) return;
     setIsLoading(true);
     try {
-      const res = await startGame(gameId);
-      if (!res?.ok) {
-        console.error("Failed to start game:", res?.message);
-        return;
-      }
-
-      const sessionRes = await createGameSession(gameId);
-      if (!sessionRes?.ok) {
-        console.error("Failed to create game session:", sessionRes?.message);
-        return;
-      }
+      await startGameMutation({ gameId: gameId as Id<"games"> });
+    } catch (error) {
+      console.error("Failed to start game:", error);
     } finally {
       setIsLoading(false);
     }

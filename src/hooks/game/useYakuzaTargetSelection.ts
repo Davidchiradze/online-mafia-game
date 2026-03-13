@@ -79,11 +79,7 @@ export function useYakuzaTargetSelection(
     if (!isYakuzaPhase || !hasYakuzaKillAuthority) return false;
     if (isTargetHost) return false;
     if (isPlayerAlive === false) return false;
-    if (
-      nightPhaseSession?.yakuzaTarget !== null &&
-      nightPhaseSession?.yakuzaTarget !== undefined
-    )
-      return false;
+    if (nightPhaseSession?.yakuzaTarget !== undefined) return false;
     return true;
   }, [
     isYakuzaPhase,

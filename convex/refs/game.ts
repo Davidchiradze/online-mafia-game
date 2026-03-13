@@ -139,6 +139,9 @@ export const gameSessions = {
   finishGame: makeFunctionReference<"mutation", { gameId: Id<"games"> }, null>(
     "game/sessions:finishGame",
   ),
+  assignRandomRoles: makeFunctionReference<"mutation", { gameId: Id<"games"> }, null>(
+    "game/sessions:assignRandomRoles",
+  ),
 };
 
 // ============================================================================
@@ -323,5 +326,84 @@ export const voting = {
   ),
   deleteSession: makeFunctionReference<"mutation", { gameId: Id<"games"> }, null>(
     "game/voting:deleteSession",
+  ),
+  endVoteWindowInternal: makeFunctionReference<"mutation", { gameId: Id<"games"> }, null>(
+    "game/voting:endVoteWindowInternal",
+  ),
+  endBothLeaveVoteInternal: makeFunctionReference<"mutation", { gameId: Id<"games"> }, null>(
+    "game/voting:endBothLeaveVoteInternal",
+  ),
+};
+
+// ============================================================================
+// DAY PHASE
+// ============================================================================
+
+export const dayPhase = {
+  startDaySpeaking: makeFunctionReference<"mutation", { gameId: Id<"games"> }, null>(
+    "game/dayPhase:startDaySpeaking",
+  ),
+  advanceSpeaker: makeFunctionReference<"mutation", { gameId: Id<"games"> }, null>(
+    "game/dayPhase:advanceSpeaker",
+  ),
+  finishCurrentSpeaker: makeFunctionReference<"mutation", { gameId: Id<"games"> }, null>(
+    "game/dayPhase:finishCurrentSpeaker",
+  ),
+  resetSpeakingState: makeFunctionReference<"mutation", { gameId: Id<"games"> }, null>(
+    "game/dayPhase:resetSpeakingState",
+  ),
+  nominatePlayer: makeFunctionReference<
+    "mutation",
+    { gameId: Id<"games">; seatNumber: number },
+    null
+  >("game/dayPhase:nominatePlayer"),
+  clearNominations: makeFunctionReference<"mutation", { gameId: Id<"games"> }, null>(
+    "game/dayPhase:clearNominations",
+  ),
+  startNominatedPlayersSpeaking: makeFunctionReference<"mutation", { gameId: Id<"games"> }, null>(
+    "game/dayPhase:startNominatedPlayersSpeaking",
+  ),
+  advanceNominatedSpeaker: makeFunctionReference<"mutation", { gameId: Id<"games"> }, null>(
+    "game/dayPhase:advanceNominatedSpeaker",
+  ),
+  finishCurrentNominatedSpeaker: makeFunctionReference<"mutation", { gameId: Id<"games"> }, null>(
+    "game/dayPhase:finishCurrentNominatedSpeaker",
+  ),
+  giveFoul: makeFunctionReference<
+    "mutation",
+    { gameId: Id<"games">; seatNumber: number },
+    { playerEliminated: boolean }
+  >("game/dayPhase:giveFoul"),
+};
+
+// ============================================================================
+// FAREWELL SPEECH
+// ============================================================================
+
+type FarewellState = {
+  speakingOrder: number[];
+  currentSpeaker: number | null;
+  speakerStartedAt: string | null;
+  completedSpeakers: number[];
+  remainingSpeakers: number[];
+} | null;
+
+export const farewellSpeech = {
+  getState: makeFunctionReference<"query", { gameId: Id<"games"> }, FarewellState>(
+    "game/farewellSpeech:getState",
+  ),
+  startFarewellSpeech: makeFunctionReference<
+    "mutation",
+    { gameId: Id<"games"> },
+    { skipToDay: boolean }
+  >("game/farewellSpeech:startFarewellSpeech"),
+  grantFarewellTime: makeFunctionReference<"mutation", { gameId: Id<"games"> }, null>(
+    "game/farewellSpeech:grantFarewellTime",
+  ),
+  markDeadAndAdvance: makeFunctionReference<"mutation", { gameId: Id<"games"> }, null>(
+    "game/farewellSpeech:markDeadAndAdvance",
+  ),
+  advanceFromFarewell: makeFunctionReference<"mutation", { gameId: Id<"games"> }, null>(
+    "game/farewellSpeech:advanceFromFarewell",
   ),
 };

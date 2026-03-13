@@ -2,8 +2,8 @@
 
 import React, { useState } from "react";
 import { useMutation } from "convex/react";
-import { gameSessions } from "@convex/refs/game";
-import { resetSpeakingState } from "@/lib/dayPhase/actions";
+import { gameSessions, dayPhase } from "@convex/refs/game";
+import type { Id } from "@convex/_generated/dataModel";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { GAME_PHASES } from "@/lib/constants/game";
 import PhaseButton from "@/components/ui/PhaseButton";
@@ -21,6 +21,7 @@ const EndDoctorMeetButton = ({
   const { gameId } = useGameRoom();
   const [isLoading, setIsLoading] = useState(false);
   const updateSession = useMutation(gameSessions.update);
+  const resetSpeakingState = useMutation(dayPhase.resetSpeakingState);
 
   const handleEndDoctorMeet = async () => {
     if (isLoading) return;
@@ -33,7 +34,7 @@ const EndDoctorMeetButton = ({
         },
       });
 
-      await resetSpeakingState(gameId);
+      await resetSpeakingState({ gameId: gameId as Id<"games"> });
     } finally {
       setIsLoading(false);
     }

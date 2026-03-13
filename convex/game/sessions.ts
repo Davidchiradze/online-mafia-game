@@ -76,7 +76,8 @@ export const update = mutation({
 });
 
 /**
- * Start a game: shuffle seats, set status to 'playing', create session, assign roles.
+ * Start a game: shuffle seats, set status to 'playing', create session.
+ * Roles are assigned separately via assignRandomRoles during picking_roles phase.
  */
 export const startGame = mutation({
   args: { gameId: v.id("games") },
@@ -88,7 +89,6 @@ export const startGame = mutation({
     if (players.length === 0) throw new Error("No players joined");
 
     const maxSeats = game.maxPlayers;
-    const hostSeat = maxSeats + 1;
 
     const seatedPlayers = players.filter(
       (p) =>
@@ -116,19 +116,31 @@ export const startGame = mutation({
       .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
       .unique();
 
-    let sessionId: typeof existing extends null ? never : string;
-    if (!existing) {
-      sessionId = await ctx.db.insert("gameSessions", {
-        gameId,
-        gamePhase: GAME_PHASES[0],
-        isFinished: false,
-        currentNightNumber: 0,
-        nominatedPlayers: [],
-        speakingOrder: [],
-      });
-    } else {
-      sessionId = existing._id;
-    }
+    if (existing) return existing._id;
+
+    return await ctx.db.insert("gameSessions", {
+      gameId,
+      gamePhase: GAME_PHASES[0],
+      isFinished: false,
+      currentNightNumber: 0,
+      nominatedPlayers: [],
+      speakingOrder: [],
+    });
+  },
+});
+
+/**
+ * Assign random roles to all non-host players.
+ * Called when transitioning to the picking_roles phase.
+ */
+export const assignRandomRoles = mutation({
+  args: { gameId: v.id("games") },
+  handler: async (ctx, { gameId }) => {
+    const userId = await getAuthenticatedUser(ctx);
+    const game = await assertIsHost(ctx.db, gameId, userId);
+
+    const players = await getPlayersByGameId(ctx.db, gameId);
+    const hostSeat = game.maxPlayers + 1;
 
     const playersWithSeats = players.filter(
       (p) =>
@@ -137,7 +149,7 @@ export const startGame = mutation({
     );
 
     const roles = [...JAPANESE_MAFIA_ROLE_DISTRIBUTION];
-    // Fisher-Yates shuffle roles
+    // Fisher-Yates shuffle
     for (let i = roles.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [roles[i], roles[j]] = [roles[j], roles[i]];
@@ -161,8 +173,6 @@ export const startGame = mutation({
         });
       }
     }
-
-    return sessionId;
   },
 });
 

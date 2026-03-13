@@ -2,8 +2,8 @@
 
 import React, { useState } from "react";
 import { useMutation } from "convex/react";
-import { gameSessions } from "@convex/refs/game";
-import { startNight } from "@/lib/nightPhase/actions";
+import { gameSessions, nightPhase } from "@convex/refs/game";
+import type { Id } from "@convex/_generated/dataModel";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { GAME_PHASES } from "@/lib/constants/game";
 import PhaseButton from "@/components/ui/PhaseButton";
@@ -22,16 +22,13 @@ const ContinueNextRoundButton = ({
   const { gameId } = useGameRoom();
   const [isLoading, setIsLoading] = useState(false);
   const updateSession = useMutation(gameSessions.update);
+  const startNight = useMutation(nightPhase.startNight);
 
   const handleContinueNextRound = async () => {
     if (isLoading) return;
     setIsLoading(true);
     try {
-      const nightRes = await startNight(gameId);
-      if (!nightRes.ok) {
-        console.error("Failed to start night:", nightRes.message);
-        return;
-      }
+      await startNight({ gameId: gameId as Id<"games"> });
 
       await updateSession({
         sessionId: gameSessionState._id,

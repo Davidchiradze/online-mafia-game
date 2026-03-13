@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
+import { useMutation } from "convex/react";
+import { farewellSpeech } from "@convex/refs/game";
+import type { Id } from "@convex/_generated/dataModel";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
-import { startFarewellSpeech } from "@/lib/farewellSpeech/actions";
 import PhaseButton from "@/components/ui/PhaseButton";
 
 type EndDoctorHealButtonProps = {
@@ -24,15 +26,15 @@ const EndDoctorHealButton = ({
   const { gameId } = useGameRoom();
   const [isLoading, setIsLoading] = useState(false);
 
+  const startFarewellSpeechMutation = useMutation(farewellSpeech.startFarewellSpeech);
+
   const handleEndDoctorHeal = async () => {
     if (isLoading) return;
     setIsLoading(true);
     try {
-      const result = await startFarewellSpeech(gameId);
-
-      if (!result.ok) {
-        console.error("Failed to start farewell speech:", result.message);
-      }
+      await startFarewellSpeechMutation({ gameId: gameId as Id<"games"> });
+    } catch (e) {
+      console.error("Failed to start farewell speech:", e);
     } finally {
       setIsLoading(false);
     }
