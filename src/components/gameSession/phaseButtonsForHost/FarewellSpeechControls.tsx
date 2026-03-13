@@ -37,7 +37,10 @@ export default function FarewellSpeechControls({ gameSessionState }: Props) {
     farewellSpeech.advanceFromFarewell,
   );
 
-  const speakingOrder = gameSessionState.speakingOrder ?? [];
+  const speakingOrder = useMemo(
+    () => gameSessionState.speakingOrder ?? [],
+    [gameSessionState.speakingOrder],
+  );
   const currentSpeaker = gameSessionState.currentSpeakerIndex ?? null;
   const speakerStartedAt = gameSessionState.speakerStartedAt ?? null;
 

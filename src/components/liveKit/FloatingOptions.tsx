@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 import {
-  FullscreenEnterIcon,
-  FullscreenExitIcon,
   MoreVerticalIcon,
   UsersIcon,
 } from "@/assets/icons";

@@ -212,15 +212,14 @@ CONVEX_SITE_URL=https://your-project.convex.site
 AUTH_RESEND_KEY=re_xxxx
 ```
 
-## Migration from Supabase Auth
+## Quick Reference
 
-| Supabase | Convex |
+| Task | How |
 |---|---|
-| `supabase.auth.getUser()` | `getAuthUserId(ctx)` in Convex functions |
-| `supabase.auth.signInWithPassword()` | `signIn("password", formData)` |
-| `supabase.auth.signUp()` | `signIn("password", formData)` with `flow: "signUp"` |
-| `user.id` (UUID string) | `userId` (`Id<"users">`) |
-| `user.user_metadata.nickname` | Query `profiles` table by `userId` |
-| Supabase middleware | `convexAuthNextjsMiddleware` |
-| `createClient()` / `createServerClient()` | Not needed (Convex handles connection) |
-| `adminClient` | Not needed (`ctx.db` has full access in mutations) |
+| Get auth user ID in Convex | `getAuthUserId(ctx)` |
+| Sign in (frontend) | `signIn("password", formData)` |
+| Sign up (frontend) | `signIn("password", formData)` with `flow: "signUp"` |
+| User ID type | `Id<"users">` |
+| Get user nickname | Query `profiles` table by `userId` |
+| Route protection | `convexAuthNextjsMiddleware` |
+| DB access in mutations | `ctx.db` (full access, no separate admin client) |

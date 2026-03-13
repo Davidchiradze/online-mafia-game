@@ -1,7 +1,6 @@
 # Online Mafia Game - Cursor Rules
 
 > **Read `/docs/README.md` before implementing features or fixing bugs.**
-> **Read `.cursor/rules/` for detailed Convex patterns and migration guides.**
 
 ## Quick Reference
 
@@ -12,7 +11,6 @@
 - **`/docs/frontend.md`** - React / UI conventions
 - **`/docs/backend.md`** - Server patterns
 - **`/docs/decisions.md`** - Architectural decisions (ADR)
-- **`.cursor/rules/`** - Convex-specific rules and migration guides
 
 ## Core Stack
 
@@ -38,17 +36,15 @@
 
 ## What We Do NOT Use
 
-- Supabase (completely removed)
-- `"use server"` server actions (replaced by Convex mutations)
-- `postgres_changes` subscriptions (replaced by `useQuery`)
-- `useEffect` for data subscriptions
+- `"use server"` server actions for game logic (use Convex mutations)
+- `useEffect` for data subscriptions (use `useQuery`)
 - Redux / Zustand (Convex reactive queries are the state)
 - Socket.IO / Redis
 - Custom WebRTC (use LiveKit)
 
 ## Before Implementing
 
-1. Read relevant documentation in `/docs` and `.cursor/rules/`
+1. Read relevant documentation in `/docs`
 2. Check existing patterns in similar features
 3. Use `Doc<"tableName">` types from `convex/_generated/dataModel`
 4. Run `npx tsc` after changes to catch type errors
@@ -63,7 +59,6 @@
 - `/src/lib` - Utilities, constants, context
 - `/src/lib/constants/game.ts` - Game constants (phases, roles, statuses)
 - `/src/lib/game/visibility.ts` - Visibility logic (pure functions)
-- `/src/types/game/type.ts` - Shared game types
 
 ## Type Safety
 
@@ -79,7 +74,6 @@
 - Use `"skip"` for conditional queries: `useQuery(api.x.y, condition ? { id } : "skip")`
 - `useQuery` returns `undefined` while loading
 - No `useEffect`, no cleanup, no channel management
-- See `.cursor/rules/04-convex-realtime.mdc` for full patterns
 
 ## Convex Functions
 
@@ -88,7 +82,6 @@
 - Use `ctx.db.get()`, `ctx.db.query()`, `ctx.db.insert()`, `ctx.db.patch()`, `ctx.db.delete()`
 - Mutations throw errors on failure (caught by `useMutation` on frontend)
 - Use `internalAction` for external API calls (LiveKit)
-- See `.cursor/rules/05-convex-mutations.mdc` for full patterns
 
 ## Component Patterns
 

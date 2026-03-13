@@ -6,10 +6,6 @@ import { LoadingSpinner } from "./LoadingSpinner";
 import { BothLeaveVoteControls } from "./BothLeaveVoteControls";
 import { RegularVotingControls } from "./RegularVotingControls";
 
-type Props = {
-  gameSessionState: NonNullable<ReturnType<typeof useGameRoom>["gameSessionState"]>;
-};
-
 /**
  * Host controls for voting phase.
  * Routes between regular voting and "both leave" vote modes.
@@ -21,7 +17,7 @@ type Props = {
  * 4. Repeat until all candidates voted
  * 5. Show "Tally Results" button
  */
-export default function VotingPhaseControls({ gameSessionState }: Props) {
+export default function VotingPhaseControls() {
   const { votingSession } = useGameRoom();
   const [isLoading, setIsLoading] = useState(false);
   const [resultMessage, setResultMessage] = useState<string | null>(null);

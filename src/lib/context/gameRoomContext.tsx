@@ -188,7 +188,6 @@ export function GameRoomProvider({
   // ---------------------------------------------------------------------------
   const hostUserId = game?.hostId ?? null;
   const joinStatus: JoinStatus = myStatus?.status ?? "none";
-  const isAllowed = myStatus?.allowed ?? false;
   const isHost =
     !isSpectator && !!currentUserId && !!game && game.hostId === currentUserId;
 
@@ -334,6 +333,7 @@ export function GameRoomProvider({
     room,
     setLivekitToken,
     isSpectator,
+    participantName: currentProfile?.nickname,
   });
 
   // ---------------------------------------------------------------------------

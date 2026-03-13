@@ -7,10 +7,6 @@ import type { Id } from "@convex/_generated/dataModel";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import PhaseButton from "@/components/ui/PhaseButton";
 
-type EndDoctorHealButtonProps = {
-  gameSessionState: NonNullable<ReturnType<typeof useGameRoom>["gameSessionState"]>;
-};
-
 /**
  * Button to end doctor's heal action and transition to farewell speech phase.
  *
@@ -20,9 +16,7 @@ type EndDoctorHealButtonProps = {
  *   - If no one dies, skips directly to day_phase
  *   - Otherwise, transitions to farewell_speech with randomized speaker order
  */
-const EndDoctorHealButton = ({
-  gameSessionState,
-}: EndDoctorHealButtonProps) => {
+const EndDoctorHealButton = () => {
   const { gameId } = useGameRoom();
   const [isLoading, setIsLoading] = useState(false);
 

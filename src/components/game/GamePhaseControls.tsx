@@ -205,7 +205,7 @@ const GamePhaseControls = () => {
         return <EndDetectiveCheckButton gameSessionState={gameSessionState} />;
 
       case GAME_PHASES[14]: // "doctor_heals_player"
-        return <EndDoctorHealButton gameSessionState={gameSessionState} />;
+        return <EndDoctorHealButton />;
 
       case GAME_PHASES[15]: // "farewell_speech"
         return <FarewellSpeechControls gameSessionState={gameSessionState} />;
@@ -233,7 +233,7 @@ const GamePhaseControls = () => {
         );
 
       case GAME_PHASES[18]: // "voting"
-        return <VotingPhaseControls gameSessionState={gameSessionState} />;
+        return <VotingPhaseControls />;
 
       case GAME_PHASES[19]: // "repeat"
         return <ContinueNextRoundButton gameSessionState={gameSessionState} />;

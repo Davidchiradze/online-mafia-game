@@ -19,7 +19,6 @@ interface ParticipantBadgesProps {
   displayName?: string;
   showNominationEffect: boolean;
   playerId: string;
-  isViewerHost: boolean;
   onToggleMic?: () => void;
 }
 
@@ -56,7 +55,6 @@ export default function ParticipantBadges({
   displayName,
   showNominationEffect,
   playerId,
-  isViewerHost,
   onToggleMic,
 }: ParticipantBadgesProps) {
   const { getRoleForUser, playerRolesMap, maxPlayers } = useGameRoom();

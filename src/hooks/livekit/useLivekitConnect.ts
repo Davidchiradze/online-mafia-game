@@ -15,8 +15,8 @@ type Params = {
   joinError: string | null;
   room: LiveKitRoom;
   setLivekitToken: (token: string | null) => void;
-  /** If true, connect as spectator (view-only, no publish) */
   isSpectator?: boolean;
+  participantName?: string;
 };
 
 /**
@@ -34,6 +34,7 @@ export function useLivekitConnect({
   room,
   setLivekitToken,
   isSpectator = false,
+  participantName,
 }: Params) {
   useEffect(() => {
     async function connectIfNeeded() {
@@ -45,10 +46,10 @@ export function useLivekitConnect({
         if (isJoiningGame) return;
 
         const token = await generateLivekitAccessToken(gameId, userId, {
-          hidden: true, // Spectators are hidden from other participants
+          hidden: true,
           roomAdmin: false,
           isSpectator: true,
-        });
+        }, participantName);
 
         setLivekitToken(token ?? null);
         await room.connect(process.env.NEXT_PUBLIC_LIVEKIT_URL!, token || "");
@@ -65,7 +66,7 @@ export function useLivekitConnect({
       const token = await generateLivekitAccessToken(gameId, userId, {
         hidden: false,
         roomAdmin: isHost,
-      });
+      }, participantName);
 
       setLivekitToken(token ?? null);
       await room.connect(process.env.NEXT_PUBLIC_LIVEKIT_URL!, token || "");
@@ -85,5 +86,6 @@ export function useLivekitConnect({
     joinError,
     room,
     isSpectator,
+    participantName,
   ]);
 }

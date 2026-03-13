@@ -101,7 +101,6 @@ export default function ParticipantComponent({
     isNominated,
     showNominationEffect,
     canShowNominationButton,
-    isDayPhase,
   } = useNomination({
     seatNumber: player.seatNumber ?? null,
     isViewerHost,
@@ -199,7 +198,6 @@ export default function ParticipantComponent({
   const {
     canShowDoctorHealButton,
     isAlreadyHealed,
-    isDoctorHealSelected,
     shouldShowDoctorHealIndicator,
   } = useDoctorHealSelection(
     gameSessionState,
@@ -267,7 +265,6 @@ export default function ParticipantComponent({
         displayName={displayName}
         showNominationEffect={showNominationEffect}
         playerId={(player.playerId as string) || ""}
-        isViewerHost={isViewerHost}
         onToggleMic={handleToggleMic}
       />
 

@@ -7,7 +7,6 @@ This application uses **Convex reactive queries** for all real-time updates. Con
 **What we use**: Convex `useQuery` (reactive, guaranteed consistency)
 
 **What we do NOT use**:
-- Supabase Realtime / `postgres_changes` (removed -- events could be missed)
 - Socket.IO / Redis Pub/Sub
 - Manual `useEffect` subscriptions with cleanup
 
@@ -46,7 +45,7 @@ This application uses **Convex reactive queries** for all real-time updates. Con
 └──────────────────────────┘
 ```
 
-The key difference from the old Supabase approach: Convex does not send "change events" that can be missed. Instead, it re-runs the query and pushes the **current state** to every subscribed client. If a client disconnects and reconnects, it gets the current state immediately.
+Convex does not send "change events" that can be missed. Instead, it re-runs the query and pushes the **current state** to every subscribed client. If a client disconnects and reconnects, it gets the current state immediately.
 
 ## Reactive Query Pattern
 
@@ -204,11 +203,7 @@ if (session === undefined) {
 // DO: Single useQuery call
 const players = useQuery(api.gamePlayers.listByGame, { gameId });
 
-// DON'T: useEffect with manual subscription (old Supabase pattern)
-// useEffect(() => {
-//   const channel = supabase.channel(...).subscribe();
-//   return () => supabase.removeChannel(channel);
-// }, []);
+// DON'T: useEffect with manual subscription
 ```
 
 ### 2. Use "skip" Instead of Enabled Flags
@@ -216,9 +211,6 @@ const players = useQuery(api.gamePlayers.listByGame, { gameId });
 ```typescript
 // DO: Use "skip" for conditional queries
 const data = useQuery(api.myQuery.get, condition ? { id } : "skip");
-
-// DON'T: Use enabled flags (old pattern)
-// useMySubscription(id, setState, enabled);
 ```
 
 ### 3. Combine Queries in Components
@@ -242,17 +234,6 @@ const castVote = useMutation(api.votes.cast);
 // table will automatically re-run and update the UI
 await castVote({ votingSessionId, voterSeat: 3, seatNumber: 5 });
 ```
-
-## Why Convex Over Supabase Realtime
-
-| Issue | Supabase Realtime | Convex |
-|---|---|---|
-| Missed events | Events can be dropped under load or during reconnection | Impossible -- queries return current state |
-| Reconnection | Must re-subscribe; may miss events during gap | Automatic catch-up with current state |
-| Tab backgrounding | Browser throttles WebSocket, events lost | Re-syncs on tab focus |
-| Rapid updates | Intermediate states can be coalesced | Always shows latest state |
-| Initial load + subscribe | Two separate steps (fetch then subscribe) | Single `useQuery` call |
-| Cleanup | Must manually remove channels in useEffect return | Automatic on unmount |
 
 ## Testing Real-time Updates
 

@@ -138,7 +138,7 @@ The primary function is `getVisibilityStateWithDeath()` which accounts for game 
 - `_id` - Convex auto-generated ID
 - `code` - Unique game code (6 chars)
 - `name` - Game name
-- `hostId` - Reference to `users` table
+- `hostId` - Reference to `profiles` table
 - `gameStatus` - `"not_started"` | `"playing"` | `"finished"`
 - `gameType` - `"traditional"` | `"city_mafia"` | `"japanese_mafia"`
 - `maxPlayers` - Maximum players (10 or 12)
@@ -147,7 +147,7 @@ The primary function is `getVisibilityStateWithDeath()` which accounts for game 
 
 - `_id` - Convex auto-generated ID
 - `gameId` - Reference to `games`
-- `playerId` - Reference to `users`
+- `playerId` - Reference to `profiles`
 - `isAlive` - Whether player is alive
 - `seatNumber` - Seat position (1-12)
 - `state` - Player connection state (optional)
@@ -158,7 +158,7 @@ The primary function is `getVisibilityStateWithDeath()` which accounts for game 
 
 - `_id` - Convex auto-generated ID
 - `gameId` - Reference to `games`
-- `playerId` - Reference to `users`
+- `playerId` - Reference to `profiles`
 - `role` - Player's role string
 
 ### Game Sessions Table (`gameSessions`)
@@ -237,6 +237,6 @@ Example:
 1. **Server-side authority**: All phase transitions happen via Convex mutations
 2. **Real-time updates**: Phase changes automatically update all clients via reactive queries
 3. **Visibility logic**: Centralized in `src/lib/game/visibility.ts` (pure functions, no DB dependency)
-4. **Role assignment**: Random shuffle in `convex/gameSessions.ts`
-5. **Seat shuffling**: Implemented in `src/lib/game/shuffleSeats.ts`
+4. **Role assignment**: Random shuffle in `convex/game/sessions.ts` (`assignRandomRoles`)
+5. **Seat shuffling**: Implemented in `convex/game/sessions.ts` (`startGame`)
 6. **Atomic transitions**: Convex mutations ensure phase transitions are transactional

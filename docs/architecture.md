@@ -93,24 +93,18 @@
 convex/                          # All backend logic (deployed to Convex)
 ├── _generated/                  # Auto-generated types and API (DO NOT EDIT)
 ├── schema.ts                    # Database schema (tables, indexes)
+├── tables/                      # Table definitions (imported by schema.ts)
 ├── auth.ts                      # Convex Auth configuration
 ├── auth.config.ts               # Auth provider config
 ├── http.ts                      # HTTP routes (auth endpoints)
 ├── ResendOTP.ts                 # Email OTP verification
 ├── ResendOTPPasswordReset.ts    # Password reset OTP
-├── users.ts                     # User/profile queries
-├── games.ts                     # Game room CRUD
-├── gamePlayers.ts               # Player management
-├── gamePlayerRoles.ts           # Role assignment and visibility
-├── gameSessions.ts              # Game session state machine
-├── joinRequests.ts              # Join request flow
-├── nightPhaseSessions.ts        # Night phase actions
-├── dayPhase.ts                  # Day phase speaking logic
-├── votingSessions.ts            # Voting session management
-├── votes.ts                     # Individual vote casting
-├── spectators.ts                # Spectator management
-├── farewellSpeech.ts            # Farewell speech logic
-└── livekit.ts                   # LiveKit token generation (internalAction)
+├── auth/                        # Auth queries/mutations (profiles)
+├── lobby/                       # Lobby: games CRUD, join requests, host transfer
+├── game/                        # Game: players, spectators, roles, sessions,
+│                                #   dayPhase, nightPhase, voting, farewellSpeech
+├── lib/                         # Shared helpers (auth, constants, speakingOrder)
+└── refs/                        # makeFunctionReference wrappers (TS2589 workaround)
 
 src/
 ├── app/                         # Next.js App Router pages
@@ -135,20 +129,14 @@ src/
 ├── hooks/                       # Custom React hooks
 │   ├── game/                    # Game logic hooks
 │   ├── livekit/                 # LiveKit hooks
-│   ├── participant/             # Participant state hooks
-│   ├── ui/                      # UI hooks (fullscreen, etc.)
-│   └── auth/                    # Auth hooks
+│   └── participant/             # Participant state hooks
 │
-├── lib/                         # Utility libraries
-│   ├── constants/               # Game constants (phases, roles)
-│   ├── context/                 # React contexts (GameRoomContext)
-│   ├── game/                    # Game logic (visibility, shuffle)
-│   ├── liveKit/                 # LiveKit message types
-│   └── utils/                   # Utility functions
-│
-└── types/
-    └── game/
-        └── type.ts              # Shared game TypeScript types
+└── lib/                         # Utility libraries
+    ├── constants/               # Game constants (phases, roles)
+    ├── context/                 # React contexts (GameRoomContext)
+    ├── game/                    # Game logic (visibility, speaking order)
+    ├── liveKit/                 # LiveKit server actions (token, room mgmt)
+    └── utils/                   # Utility functions
 ```
 
 ## Key Architectural Patterns

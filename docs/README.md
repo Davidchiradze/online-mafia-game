@@ -1,7 +1,6 @@
 # Online Mafia Game - Documentation
 
 > **Always read this documentation before implementing features or fixing bugs.**
-> **Also read `.cursor/rules/` for Convex-specific patterns and migration guides.**
 
 This documentation describes the architecture, patterns, and conventions used in the Online Mafia Game codebase. All AI agents and developers should consult these docs before making changes.
 
@@ -12,7 +11,6 @@ This documentation describes the architecture, patterns, and conventions used in
 3. **Working with real-time updates?** Read [realtime.md](./realtime.md)
 4. **Understanding game logic?** See [game-design.md](./game-design.md)
 5. **Making architectural decisions?** Review [decisions.md](./decisions.md)
-6. **Convex-specific patterns?** See `.cursor/rules/` for detailed guides
 
 ## Documentation Structure
 
@@ -57,8 +55,7 @@ This documentation describes the architecture, patterns, and conventions used in
 ## Before You Code
 
 1. Read the relevant documentation file
-2. Check `.cursor/rules/` for Convex-specific patterns
-3. Check existing patterns in similar features
-4. Use `Doc<"tableName">` types, don't create new ones
-5. Run `npx tsc` after changes to catch type errors
-6. Follow component and hook patterns from existing code
+2. Check existing patterns in similar features
+3. Use `Doc<"tableName">` types, don't create new ones
+4. Run `npx tsc` after changes to catch type errors
+5. Follow component and hook patterns from existing code

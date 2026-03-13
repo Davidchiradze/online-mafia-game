@@ -312,23 +312,28 @@ LIVEKIT_API_SECRET=...
 
 ## File Organization
 
-One file per domain in `convex/`:
+Organized by domain in `convex/`:
 
-| File | Purpose |
+| Folder / File | Purpose |
 |---|---|
-| `games.ts` | Game room CRUD (create, list, delete, update status) |
-| `gamePlayers.ts` | Player join/leave/kill/update |
-| `gamePlayerRoles.ts` | Role assignment and filtered visibility |
-| `gameSessions.ts` | Game session state machine (phase transitions) |
-| `joinRequests.ts` | Join request create/accept/reject |
-| `nightPhaseSessions.ts` | Night phase actions (mafia/yakuza target, doctor heal) |
-| `dayPhase.ts` | Day phase speaking (advance speaker, nominate, fouls) |
-| `votingSessions.ts` | Voting session management |
-| `votes.ts` | Individual vote casting |
-| `spectators.ts` | Spectator join/leave |
-| `farewellSpeech.ts` | Farewell speech flow |
-| `livekit.ts` | LiveKit token generation |
-| `users.ts` | User/profile queries |
+| `lobby/games.ts` | Game room CRUD (create, list, delete) |
+| `lobby/joinRequests.ts` | Join request create/accept/reject/kick |
+| `lobby/hostTransfer.ts` | Host transfer |
+| `game/players.ts` | Player join/leave/kill |
+| `game/spectators.ts` | Spectator join/leave |
+| `game/roles.ts` | Role assignment and filtered visibility |
+| `game/sessions.ts` | Game session state machine (start, phase transitions) |
+| `game/nightPhase.ts` | Night phase actions (mafia/yakuza target, doctor heal) |
+| `game/dayPhase.ts` | Day phase speaking (advance speaker, nominate, fouls) |
+| `game/voting.ts` | Voting session management and vote casting |
+| `game/farewellSpeech.ts` | Farewell speech flow |
+| `auth/profiles.ts` | Profile queries/mutations |
+| `lib/auth.ts` | Auth helpers (`getAuthenticatedUser`) |
+| `lib/games.ts` | Shared game helpers (host assertion, player lookup) |
+| `lib/constants.ts` | Backend constants (speaking, fouls, voting) |
+| `lib/speakingOrder.ts` | Speaking order computation (pure functions) |
+| `refs/lobby.ts` | Function references for lobby (TS2589 workaround) |
+| `refs/game.ts` | Function references for game (TS2589 workaround) |
 
 ## Best Practices
 

@@ -12,12 +12,11 @@
  * - The opener of each Day Phase is persisted for next round calculation
  */
 
-import type { Tables } from "@/db/supabase/database.types";
-
-export type GamePlayer = Pick<
-  Tables<"game_players">,
-  "seat_number" | "is_alive" | "player_id"
->;
+export type GamePlayer = {
+  seat_number: number | null;
+  is_alive: boolean;
+  player_id: string;
+};
 
 export type SpeakingOrderResult = {
   /** Ordered array of seat numbers for speaking (1-based) */
