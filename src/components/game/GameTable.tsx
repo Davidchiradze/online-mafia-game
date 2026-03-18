@@ -1,11 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { GameRoom } from "@/types/game/type";
+import { LobbyGame } from "@/components/lobby/LobbyContent";
 import GameRoomRow from "./GameRoomRow";
 
 type Props = {
-  rooms: GameRoom[];
+  rooms: LobbyGame[];
 };
 
 const COL_HEADERS = [
@@ -42,7 +42,7 @@ export default function GameTable({ rooms }: Props) {
           <div className="space-y-3">
             {rooms.map((room) => (
               <GameRoomRow
-                key={room.id}
+                key={room._id}
                 room={room}
                 variant="mobile"
                 onNavigate={navigateToRoom}
@@ -80,7 +80,7 @@ export default function GameTable({ rooms }: Props) {
             ) : (
               rooms.map((room) => (
                 <GameRoomRow
-                  key={room.id}
+                  key={room._id}
                   room={room}
                   variant="desktop"
                   onNavigate={navigateToRoom}

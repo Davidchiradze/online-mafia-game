@@ -7,218 +7,205 @@
 - **Framework**: Next.js 15 with App Router
 - **UI Library**: React 19
 - **Styling**: TailwindCSS 4 + shadcn/ui components
-- **State Management**: React hooks + local component state (no Redux/global store)
+- **State Management**: Convex reactive queries + local component state (no Redux/global store)
 - **Forms**: React Hook Form + Zod validation
 - **Icons**: Lucide React
 
 ### Backend
 
-- **Framework**: Next.js API Routes + Server Actions
-- **Database**: Supabase (PostgreSQL)
-- **Authentication**: Supabase Auth
-- **Real-time**: Supabase Realtime (postgres_changes subscriptions)
+- **Database & Server Functions**: Convex (document DB + mutations/queries)
+- **Authentication**: Convex Auth (`@convex-dev/auth` with Password + Resend OTP)
+- **Real-time**: Convex reactive queries (guaranteed consistency)
 - **Video/Audio**: LiveKit (WebRTC via LiveKit Server SDK)
+- **Webhooks**: Next.js API Routes (LiveKit webhooks)
 
 ### Development
 
 - **TypeScript**: Strict mode enabled
 - **Linting**: ESLint with Next.js config
-- **Type Generation**: `supabase gen types` for database types
+- **Type Generation**: Automatic via Convex (`convex/_generated/`)
 
 ## System Boundaries
 
-### Client-Server Boundary
-
-**Client (Browser)**
+### Client (Browser)
 
 - React components and UI rendering
-- Local state management (useState, useEffect)
-- Supabase client subscriptions (real-time listeners)
+- Local state management (`useState`)
+- Convex reactive queries (`useQuery` for real-time data)
+- Convex mutations (`useMutation` for writes)
 - LiveKit client (video/audio streaming)
 - Form handling and validation
 
-**Server (Next.js)**
+### Server (Convex)
 
-- All game logic and state transitions
-- Database operations (via Supabase Admin Client)
-- Authentication checks
-- LiveKit room management
+- All game logic and state transitions (mutations)
+- Database reads with access control (queries)
+- Authentication via `getAuthUserId(ctx)`
 - Role-based data filtering
+- External API calls via `internalAction` (LiveKit token generation)
+
+### Server (Next.js)
+
+- Page routing and SSR
+- Middleware for auth route protection
+- API routes for webhooks (LiveKit)
 
 ### Data Flow
 
 ```
 ┌─────────────┐
-│   Browser   │
-│  (React)    │
-└──────┬──────┘
+│   Browser    │
+│   (React)    │
+└──────┬───────┘
        │
        │ 1. User Action (e.g., vote, start phase)
+       │    calls useMutation(api.gameSessions.start)
        │
        ▼
-┌─────────────────┐
-│  Server Action  │
-│  ("use server") │
-└──────┬──────────┘
+┌──────────────────┐
+│  Convex Mutation  │
+│  (server-side)    │
+└──────┬───────────┘
        │
-       │ 2. Validate & Update Database
-       │
-       ▼
-┌─────────────┐
-│  Supabase   │
-│  PostgreSQL │
-└──────┬──────┘
-       │
-       │ 3. Database Change Event
+       │ 2. Validate auth + permissions, write to DB
+       │    (atomic transaction)
        │
        ▼
-┌──────────────────────┐
-│ Supabase Realtime   │
-│ (postgres_changes)   │
-└──────┬───────────────┘
+┌──────────────────┐
+│    Convex DB     │
+│ (document store)  │
+└──────┬───────────┘
        │
-       │ 4. Real-time Update
+       │ 3. Convex detects which queries read
+       │    the changed data, re-runs them
        │
        ▼
-┌─────────────┐
-│   Browser   │
-│ (Subscription)       │
-└─────────────┘
+┌──────────────────────────┐
+│  All subscribed clients  │
+│  useQuery auto-updates   │
+│  (guaranteed delivery)   │
+└──────────────────────────┘
 ```
 
 ## Directory Structure
 
 ```
+convex/                          # All backend logic (deployed to Convex)
+├── _generated/                  # Auto-generated types and API (DO NOT EDIT)
+├── schema.ts                    # Database schema (tables, indexes)
+├── tables/                      # Table definitions (imported by schema.ts)
+├── auth.ts                      # Convex Auth configuration
+├── auth.config.ts               # Auth provider config
+├── http.ts                      # HTTP routes (auth endpoints)
+├── ResendOTP.ts                 # Email OTP verification
+├── ResendOTPPasswordReset.ts    # Password reset OTP
+├── auth/                        # Auth queries/mutations (profiles)
+├── lobby/                       # Lobby: games CRUD, join requests, host transfer
+├── game/                        # Game: players, spectators, roles, sessions,
+│                                #   dayPhase, nightPhase, voting, farewellSpeech
+├── lib/                         # Shared helpers (auth, constants, speakingOrder)
+└── refs/                        # makeFunctionReference wrappers (TS2589 workaround)
+
 src/
-├── app/                    # Next.js App Router pages
-│   ├── api/               # API routes (webhooks, auth callbacks)
-│   ├── auth/              # Authentication pages
-│   ├── lobby/             # Game lobby
-│   ├── game/[id]/         # Game room page
-│   └── layout.tsx          # Root layout
+├── app/                         # Next.js App Router pages
+│   ├── api/                     # API routes (LiveKit webhook)
+│   ├── (auth)/                  # Authentication pages (sign-in, sign-up)
+│   ├── lobby/                   # Game lobby
+│   ├── game/[id]/               # Game room page
+│   └── layout.tsx               # Root layout (Convex providers)
 │
-├── components/             # React components
-│   ├── auth/              # Auth forms
-│   ├── game/               # Game UI components
-│   ├── gameSession/        # Phase-specific host controls
-│   ├── host-controls/      # Host-only UI
-│   ├── liveKit/            # LiveKit video components
-│   ├── modals/             # Modal dialogs
-│   ├── participant/        # Participant video components
-│   ├── ui/                 # Reusable UI primitives
-│   └── video/              # Video-related components
+├── components/                  # React components
+│   ├── providers/               # ConvexClientProvider
+│   ├── auth/                    # Auth forms (SignInForm, SignUpForm)
+│   ├── game/                    # Game UI components
+│   ├── gameSession/             # Phase-specific host controls
+│   ├── host-controls/           # Host-only UI
+│   ├── liveKit/                 # LiveKit video components
+│   ├── modals/                  # Modal dialogs
+│   ├── participant/             # Participant video components
+│   ├── ui/                      # Reusable UI primitives
+│   └── video/                   # Video-related components
 │
-├── hooks/                  # Custom React hooks
-│   ├── useGameSessionListener.ts    # Real-time game session
-│   ├── useGamePlayerListener.ts      # Real-time player updates
-│   ├── useGameHostSubscription.ts    # Host change listener
-│   ├── useLivekitRoom.ts             # LiveKit room management
-│   └── ...                 # Other hooks
+├── hooks/                       # Custom React hooks
+│   ├── game/                    # Game logic hooks
+│   ├── livekit/                 # LiveKit hooks
+│   └── participant/             # Participant state hooks
 │
-├── lib/                    # Utility libraries
-│   ├── auth/               # Auth actions & schemas
-│   ├── constants/          # Game constants (phases, roles)
-│   ├── context/            # React contexts
-│   ├── game/               # Game logic (visibility, shuffle)
-│   ├── gamePlayers/        # Player-related actions
-│   ├── gameRoom/           # Game room actions
-│   ├── gameSession/        # Game session actions
-│   ├── liveKit/            # LiveKit server actions
-│   ├── supabase/           # Supabase clients (server, client, admin)
-│   └── utils/              # Utility functions
-│
-├── db/
-│   └── supabase/
-│       └── database.types.ts  # Generated database types (DO NOT EDIT)
-│
-└── types/
-    └── game/
-        └── type.ts          # Game-specific TypeScript types
+└── lib/                         # Utility libraries
+    ├── constants/               # Game constants (phases, roles)
+    ├── context/                 # React contexts (GameRoomContext)
+    ├── game/                    # Game logic (visibility, speaking order)
+    ├── liveKit/                 # LiveKit server actions (token, room mgmt)
+    └── utils/                   # Utility functions
 ```
 
 ## Key Architectural Patterns
 
-### 1. Server Actions Pattern
+### 1. Convex Mutations (Server-Side Logic)
 
-All game state changes go through Next.js Server Actions:
+All game state changes go through Convex mutations:
 
 ```typescript
-// ✅ DO: Use server actions
-"use server";
-export async function startGame(gameId: string) {
-  // Validate, update database, return result
-}
+// convex/gameSessions.ts
+export const start = mutation({
+  args: { gameId: v.id("games") },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+    // Validate, update database
+  },
+});
 
-// ❌ DON'T: Direct client-side database writes
+// Frontend: useMutation(api.gameSessions.start)
 ```
 
-### 2. Real-time Subscriptions
+### 2. Reactive Queries (Real-Time)
 
-Use Supabase `postgres_changes` subscriptions for real-time updates:
+Convex `useQuery` provides guaranteed real-time sync:
 
 ```typescript
-// ✅ DO: Subscribe to database changes
-const channel = supabase
-  .channel(`game_session_${gameId}`)
-  .on(
-    "postgres_changes",
-    {
-      event: "UPDATE",
-      schema: "public",
-      table: "game_sessions",
-      filter: `game_id=eq.${gameId}`,
-    },
-    (payload) => {
-      // Handle update
-    }
-  )
-  .subscribe();
+// Single line: fetches, subscribes, auto-updates, auto-cleans up
+const gameSession = useQuery(api.gameSessions.getByGame, { gameId });
 ```
 
 ### 3. Type Safety
 
-Always use generated database types:
+Use auto-generated Convex types:
 
 ```typescript
-// ✅ DO: Use database types
-import { Tables } from "@/db/supabase/database.types";
-const game: Tables<"games"> = ...;
+import { Doc, Id } from "@/convex/_generated/dataModel";
 
-// ❌ DON'T: Create duplicate types
-type Game = { id: string; name: string; ... };
+const game: Doc<"games"> = ...;
+const gameId: Id<"games"> = ...;
 ```
 
 ### 4. Role-Based Data Filtering
 
-Filter sensitive data server-side based on roles:
+Filter sensitive data in Convex queries (server-side):
 
 ```typescript
-// ✅ DO: Filter roles server-side
-const filteredPlayers = filterPlayerRoles({
-  allPlayers,
-  requestingUserId,
-  requestingRole,
-  isHost,
-});
+// convex/gamePlayerRoles.ts - getFiltered query
+// Returns roles filtered by team visibility
+// Host sees all, teammates see each other, others see null
 ```
 
 ## Data Persistence
 
-- **Primary Store**: Supabase PostgreSQL database
-- **Real-time Sync**: Supabase Realtime (postgres_changes)
+- **Primary Store**: Convex document database
+- **Real-time Sync**: Convex reactive queries (guaranteed consistency)
 - **No In-Memory State**: All game state is persisted in the database
-- **No Redis**: Not used in this architecture
+- **Transactions**: Convex mutations are atomic (full success or full rollback)
 
 ## Authentication Flow
 
-1. User signs up/signs in via Supabase Auth
-2. Profile created automatically in `profiles` table
-3. Middleware checks auth on protected routes
-4. Server actions verify user identity via `supabase.auth.getUser()`
+1. User signs up/signs in via Convex Auth (Password + Resend OTP)
+2. Profile created in `profiles` table linked to `users` table
+3. `convexAuthNextjsMiddleware` protects routes in `middleware.ts`
+4. Convex functions authenticate via `getAuthUserId(ctx)`
 
 ## Deployment
 
-- **Platform**: Vercel (Next.js deployment)
-- **Database**: Supabase (hosted PostgreSQL)
-- **Video**: LiveKit (external service)
-- **Environment Variables**: Required for Supabase and LiveKit credentials
+- **Frontend**: Vercel (Next.js deployment)
+- **Backend + Database**: Convex (managed service)
+- **Video**: LiveKit (self-hosted or cloud)
+- **Environment Variables**: `NEXT_PUBLIC_CONVEX_URL`, `AUTH_RESEND_KEY`, LiveKit credentials

@@ -1,12 +1,15 @@
 "use client";
 
 import { MicOffIcon, MicOnIcon } from "@/assets/icons";
-import { Tables } from "@/db/supabase/database.types";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { MAFIA_TEAM_ROLES, YAKUZA_TEAM_ROLES } from "@/lib/constants/game";
 
+type GameSessionState = NonNullable<
+  ReturnType<typeof useGameRoom>["gameSessionState"]
+>;
+
 interface ParticipantBadgesProps {
-  gameSessionState: Tables<"game_sessions"> | null;
+  gameSessionState: GameSessionState | null;
   isLocal: boolean;
   isTargetHost: boolean;
   isMicEnabled: boolean;
@@ -16,7 +19,6 @@ interface ParticipantBadgesProps {
   displayName?: string;
   showNominationEffect: boolean;
   playerId: string;
-  isViewerHost: boolean;
   onToggleMic?: () => void;
 }
 
@@ -53,7 +55,6 @@ export default function ParticipantBadges({
   displayName,
   showNominationEffect,
   playerId,
-  isViewerHost,
   onToggleMic,
 }: ParticipantBadgesProps) {
   const { getRoleForUser, playerRolesMap, maxPlayers } = useGameRoom();
@@ -62,7 +63,7 @@ export default function ParticipantBadges({
 
   const isMuted = !isMicEnabled;
   const isActiveSpeaker = isSpeaking || isFoulSpeaking;
-  const isGameActive = !!gameSessionState && !gameSessionState.is_finished;
+  const isGameActive = !!gameSessionState && !gameSessionState.isFinished;
 
   const micContainerClass = isMuted
     ? "bg-red-950/40 border border-red-500/30"
@@ -78,7 +79,7 @@ export default function ParticipantBadges({
 
   const showMic =
     !gameSessionState ||
-    gameSessionState?.is_finished ||
+    gameSessionState?.isFinished ||
     (isLocal && isTargetHost);
 
   const seatBadgeClass = showNominationEffect
@@ -93,8 +94,7 @@ export default function ParticipantBadges({
       ? "text-yellow-200"
       : "text-white/90";
 
-  const resolvedName =
-    playerIndex === 13 ? "Host" : displayName || `Player ${playerIndex}`;
+  const resolvedName = displayName;
 
   return (
     <>

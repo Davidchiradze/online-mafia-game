@@ -1,30 +1,24 @@
 "use client";
 
-import { GameRoom } from "@/types/game/type";
+type GameStatus = "not_started" | "playing" | "finished";
 
-const STATUS_CONFIG: Record<
-  GameRoom["game_status"],
-  { label: string; className: string }
-> = {
-  not_started: {
-    label: "Ready",
-    className: "bg-green-500/20 border border-green-500/30 text-green-300",
-  },
-  playing: {
-    label: "Playing",
-    className: "bg-amber-500/20 border border-amber-500/30 text-amber-300",
-  },
-  finished: {
-    label: "Ended",
-    className: "bg-gray-500/20 border border-gray-500/30 text-gray-400",
-  },
-};
+const STATUS_CONFIG: Record<GameStatus, { label: string; className: string }> =
+  {
+    not_started: {
+      label: "Ready",
+      className: "bg-green-500/20 border border-green-500/30 text-green-300",
+    },
+    playing: {
+      label: "Playing",
+      className: "bg-amber-500/20 border border-amber-500/30 text-amber-300",
+    },
+    finished: {
+      label: "Ended",
+      className: "bg-gray-500/20 border border-gray-500/30 text-gray-400",
+    },
+  };
 
-export default function GameStatusBadge({
-  status,
-}: {
-  status: GameRoom["game_status"];
-}) {
+export default function GameStatusBadge({ status }: { status: GameStatus }) {
   const config = STATUS_CONFIG[status] ?? STATUS_CONFIG.finished;
   return (
     <span

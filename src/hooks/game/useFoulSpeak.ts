@@ -3,11 +3,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Room as LiveKitRoom } from "livekit-client";
 import { FOULS } from "@/lib/constants/game";
-import { Tables } from "@/db/supabase/database.types";
+import type { useGameRoom } from "@/lib/context/gameRoomContext";
+
+type Player = NonNullable<ReturnType<typeof useGameRoom>["players"]>[number];
 
 type UseFoulSpeakOptions = {
   room: LiveKitRoom | null | undefined;
-  player: Tables<"game_players">;
+  player: Player;
   isLocal: boolean;
   isFoulAllowedPhase: boolean;
   isSpeaking: boolean;
@@ -44,7 +46,7 @@ export function useFoulSpeak({
     isViewerHost &&
     isFoulAllowedPhase &&
     !isTargetHost &&
-    player.seat_number != null;
+    player.seatNumber != null;
 
   // Foul speak - for non-speakers to speak for 5 seconds during foul-allowed phases
   // Only enabled for local player who is NOT the current speaker and NOT the host

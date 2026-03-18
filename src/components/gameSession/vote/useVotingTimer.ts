@@ -35,8 +35,8 @@ export function useVotingTimer(): UseVotingTimerReturn {
 
   useEffect(() => {
     // Determine start time: use local click time for host, or server timestamp
-    const serverStartTime = votingSession?.voting_started_at
-      ? new Date(votingSession.voting_started_at).getTime()
+    const serverStartTime = votingSession?.votingStartedAt
+      ? new Date(votingSession.votingStartedAt).getTime()
       : null;
 
     const startTime =
@@ -44,7 +44,7 @@ export function useVotingTimer(): UseVotingTimerReturn {
         ? localVotingStart // Host: use local click time for instant feedback
         : serverStartTime; // Others: use server timestamp
 
-    const isVotingActive = isLocalVoting || votingSession?.voting_active;
+    const isVotingActive = isLocalVoting || votingSession?.votingActive;
 
     if (isVotingActive && startTime) {
       const tick = () => {
@@ -65,8 +65,8 @@ export function useVotingTimer(): UseVotingTimerReturn {
   }, [
     isLocalVoting,
     localVotingStart,
-    votingSession?.voting_active,
-    votingSession?.voting_started_at,
+    votingSession?.votingActive,
+    votingSession?.votingStartedAt,
   ]);
 
   return { timeLeft, isLocalVoting, startLocalVoting, stopLocalVoting };

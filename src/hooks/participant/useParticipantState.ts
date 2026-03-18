@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo } from "react";
 import { TrackReferenceOrPlaceholder } from "@livekit/components-react";
-import { Tables } from "@/db/supabase/database.types";
-import { revalidatePath } from "next/cache";
+import type { useGameRoom } from "@/lib/context/gameRoomContext";
+
+type Player = NonNullable<ReturnType<typeof useGameRoom>["players"]>[number];
 
 export interface ParticipantStateResult {
   participant: TrackReferenceOrPlaceholder["participant"] | undefined;
@@ -20,14 +20,14 @@ export interface ParticipantStateResult {
  */
 export function useParticipantState(
   trackRef: TrackReferenceOrPlaceholder | undefined,
-  player: Tables<"game_players">,
+  player: Player,
   currentUserId: string,
   hostUserId: string | null
 ): ParticipantStateResult {
   const participant = trackRef?.participant;
   const isLocal = Boolean(participant?.isLocal);
   const isMicEnabled = Boolean(participant?.isMicrophoneEnabled);
-  const displayName = participant?.name || participant?.identity;
+  const displayName = player.nickname || participant?.identity;
   const participantId = participant?.identity;
   const isViewerHost = currentUserId === hostUserId;
   const isTargetHost = participantId === hostUserId;

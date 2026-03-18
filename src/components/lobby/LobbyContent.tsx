@@ -2,68 +2,58 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { GameRoom } from "@/types/game/type";
-import { createLivekitRoom } from "@/lib/liveKit/actions";
+import { Doc } from "@convex/_generated/dataModel";
 import GameTable from "@/components/game/GameTable";
 import CreateGameModal from "@/components/modals/CreateGameModal";
 import LobbyHeader from "./LobbyHeader";
-import { useLobbySubscription } from "@/hooks/lobby/useLobbySubscription";
 import { Search, Plus } from "lucide-react";
 import LobbyStats from "./LobbyStats";
 
-type LobbyUser = {
-  id: string;
-  email?: string | null;
-  nickname?: string | null;
+export type LobbyGame = Doc<"games"> & {
+  players: Doc<"gamePlayers">[];
+  spectators: Doc<"gameSpectators">[];
 };
 
 type Props = {
-  user: LobbyUser;
-  initialSessions: GameRoom[];
+  games: LobbyGame[];
 };
 
-export default function LobbyContent({ user, initialSessions }: Props) {
-  const [sessions, setSessions] = useState<GameRoom[]>(initialSessions);
+export default function LobbyContent({ games }: Props) {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const router = useRouter();
 
-  useLobbySubscription(sessions, setSessions);
-
-  const handleCreated = async (session: GameRoom) => {
-    setSessions((prev) => [session, ...prev]);
-    await createLivekitRoom(session.id);
-    router.push(`/game/${session.id}`);
+  const handleCreated = (gameId: string) => {
+    router.push(`/game/${gameId}`);
   };
 
   const stats = useMemo(() => {
-    const activeRooms = sessions.filter(
-      (s) => s.game_status !== "finished",
+    const activeRooms = games.filter(
+      (s) => s.gameStatus !== "finished",
     ).length;
-    const playing = sessions.filter((s) => s.game_status === "playing").length;
-    const totalPlayers = sessions.reduce(
+    const playing = games.filter((s) => s.gameStatus === "playing").length;
+    const totalPlayers = games.reduce(
       (acc, s) => acc + (s.players?.length ?? 0),
       0,
     );
-    const totalSpectators = sessions.reduce(
+    const totalSpectators = games.reduce(
       (acc, s) => acc + (s.spectators?.length ?? 0),
       0,
     );
     return { activeRooms, playing, totalPlayers, totalSpectators };
-  }, [sessions]);
+  }, [games]);
 
-  // Filtered sessions
   const filtered = useMemo(() => {
-    return sessions.filter((s) => {
+    return games.filter((s) => {
       const matchSearch =
         search.trim() === "" ||
         s.name.toLowerCase().includes(search.toLowerCase());
       const matchStatus =
-        statusFilter === "all" || s.game_status === statusFilter;
+        statusFilter === "all" || s.gameStatus === statusFilter;
       return matchSearch && matchStatus;
     });
-  }, [sessions, search, statusFilter]);
+  }, [games, search, statusFilter]);
 
   return (
     <div
@@ -84,7 +74,7 @@ export default function LobbyContent({ user, initialSessions }: Props) {
         <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black/80" />
       </div>
 
-      <LobbyHeader user={user} />
+      <LobbyHeader />
 
       <main className="relative z-10 pt-28 pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">

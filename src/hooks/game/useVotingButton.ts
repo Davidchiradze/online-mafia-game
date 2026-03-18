@@ -1,15 +1,17 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { castVote, castBothLeaveVote } from "@/lib/voting/actions";
+import { useMutation } from "convex/react";
+import { voting } from "@convex/refs/game";
+import type { Id } from "@convex/_generated/dataModel";
 import { VOTING } from "@/lib/constants/game";
-import type { VotingSession, VoteData } from "@/lib/liveKit/messageTypes";
+import type { useGameRoom } from "@/lib/context/gameRoomContext";
 
 type UseVotingButtonOptions = {
-  votingSession: VotingSession | null;
+  votingSession: ReturnType<typeof useGameRoom>["votingSession"];
   playerSeatNumber: number | null;
   gameId: string;
-  voteData: VoteData;
+  voteData: ReturnType<typeof useGameRoom>["voteData"];
 };
 
 /**
@@ -26,8 +28,11 @@ export function useVotingButton({
   const [timeLeft, setTimeLeft] = useState<number>(VOTING.VOTE_WINDOW_SECONDS);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  const castVoteMutation = useMutation(voting.castVote);
+  const castBothLeaveMutation = useMutation(voting.castBothLeaveVote);
+
   // Check if this is "both leave" vote mode
-  const isBothLeaveMode = votingSession?.both_leave_vote_active ?? false;
+  const isBothLeaveMode = votingSession?.bothLeaveVoteActive ?? false;
 
   // Check if player has already voted - using voteData from vote table
   const hasVoted = (() => {
@@ -39,11 +44,11 @@ export function useVotingButton({
   })();
 
   // Check if voting is active
-  const isVotingActive = votingSession?.voting_active ?? false;
+  const isVotingActive = votingSession?.votingActive ?? false;
 
   // Timer countdown
   useEffect(() => {
-    if (!votingSession?.voting_started_at || !isVotingActive) {
+    if (!votingSession?.votingStartedAt || !isVotingActive) {
       setTimeLeft(VOTING.VOTE_WINDOW_SECONDS);
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
@@ -52,7 +57,7 @@ export function useVotingButton({
       return;
     }
 
-    const startTime = new Date(votingSession.voting_started_at).getTime();
+    const startTime = new Date(votingSession.votingStartedAt!).getTime();
 
     const tick = () => {
       const elapsed = Math.floor((Date.now() - startTime) / 1000);
@@ -68,7 +73,7 @@ export function useVotingButton({
         intervalRef.current = null;
       }
     };
-  }, [votingSession?.voting_started_at, isVotingActive]);
+  }, [votingSession?.votingStartedAt, isVotingActive]);
 
   // Button enabled when voting is active and player hasn't voted
   const isEnabled =
@@ -79,19 +84,16 @@ export function useVotingButton({
     setIsSubmitting(true);
     try {
       if (isBothLeaveMode) {
-        await castBothLeaveVote(gameId);
+        await castBothLeaveMutation({ gameId: gameId as Id<"games"> });
       } else {
-        const result = await castVote(gameId);
-        if (!result.ok) {
-          alert(result.message);
-        }
+        await castVoteMutation({ gameId: gameId as Id<"games"> });
       }
     } catch (e) {
       console.error("Vote failed:", e);
     } finally {
       setIsSubmitting(false);
     }
-  }, [gameId, isEnabled, isBothLeaveMode]);
+  }, [gameId, isEnabled, isBothLeaveMode, castVoteMutation, castBothLeaveMutation]);
 
   return {
     isEnabled,

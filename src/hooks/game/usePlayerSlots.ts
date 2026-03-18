@@ -1,6 +1,8 @@
 import { useMemo } from "react";
 import { TrackReferenceOrPlaceholder } from "@livekit/components-react";
-import { Tables } from "@/db/supabase/database.types";
+import type { useGameRoom } from "@/lib/context/gameRoomContext";
+
+type GamePlayer = ReturnType<typeof useGameRoom>["players"][number];
 
 export type PlayerSlotDescriptor = {
   key: number;
@@ -11,7 +13,7 @@ type UsePlayerSlotsParams = {
   tracks: TrackReferenceOrPlaceholder[];
   hostUserId: string | null;
   maxPlayers: number;
-  players?: Tables<"game_players">[];
+  players?: GamePlayer[];
 };
 
 /**
@@ -41,21 +43,20 @@ export function usePlayerSlots({
     const playerIdToSeat = new Map<string, number>();
     if (players) {
       for (let i = 1; i <= maxPlayers; i++) {
-        const player = players.find((p) => p.seat_number === i);
+        const player = players.find((p) => p.seatNumber === i);
         if (!player) continue;
         if (
-          player.player_id &&
-          player.seat_number !== null &&
-          player.seat_number !== undefined
+          player.playerId &&
+          player.seatNumber !== null &&
+          player.seatNumber !== undefined
         ) {
-          const seatNum = Number(player.seat_number);
-          // Only assign seats 1..maxPlayers (exclude host sentinel seat)
+          const seatNum = Number(player.seatNumber);
           if (
             Number.isInteger(seatNum) &&
             seatNum >= 1 &&
             seatNum <= maxPlayers
           ) {
-            playerIdToSeat.set(player.player_id, seatNum);
+            playerIdToSeat.set(player.playerId as string, seatNum);
           }
         }
       }

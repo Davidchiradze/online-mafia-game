@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
-import { updateGameSession } from "@/lib/gameSession/actions";
-import { GameSessionState } from "@/types/game/type";
+import { useMutation } from "convex/react";
+import { gameSessions } from "@convex/refs/game";
+import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { GAME_PHASES } from "@/lib/constants/game";
 
 type EndVotingButtonProps = {
-  gameSessionState: GameSessionState;
+  gameSessionState: NonNullable<ReturnType<typeof useGameRoom>["gameSessionState"]>;
 };
 
 /**
@@ -14,6 +15,7 @@ type EndVotingButtonProps = {
  */
 const EndVotingButton = ({ gameSessionState }: EndVotingButtonProps) => {
   const [isLoading, setIsLoading] = useState(false);
+  const updateSession = useMutation(gameSessions.update);
 
   const handleEndVoting = async () => {
     if (isLoading) return;
@@ -21,14 +23,13 @@ const EndVotingButton = ({ gameSessionState }: EndVotingButtonProps) => {
     try {
       // TODO: Process voting results and eliminate player
       // TODO: Check win conditions
-      // Update game session to repeat or end_game phase and clear nominations
-      const res = await updateGameSession(gameSessionState.id, {
-        game_phase: GAME_PHASES[19], // "repeat"
-        nominated_players: [], // Clear nominations after voting phase ends
+      await updateSession({
+        sessionId: gameSessionState._id,
+        updates: {
+          gamePhase: GAME_PHASES[19], // "repeat"
+          nominatedPlayers: [], // Clear nominations after voting phase ends
+        },
       });
-      if (!res?.ok) {
-        console.error("Failed to end voting:", res?.message);
-      }
     } finally {
       setIsLoading(false);
     }

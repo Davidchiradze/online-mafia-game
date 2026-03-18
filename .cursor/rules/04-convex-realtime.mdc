@@ -1,0 +1,99 @@
+---
+description: Convex real-time patterns. Reference when working on any real-time data or subscriptions.
+globs:
+  - "src/hooks/**"
+  - "src/lib/context/**"
+  - "src/components/**"
+---
+
+# Convex Real-time Patterns
+
+## Core Concept
+
+Convex `useQuery` is reactive by default. When the underlying data changes, the query re-runs and the component re-renders with fresh data. There is:
+
+- No `useEffect` for subscriptions
+- No manual channel setup or cleanup
+- No event listeners
+- No missed events (guaranteed consistency)
+
+## Pattern
+
+```typescript
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+
+// Single line. Auto-subscribes. Auto-updates. Auto-cleans up.
+const gameSession = useQuery(api.gameSessions.getByGame, { gameId });
+```
+
+## Active Queries
+
+| Data | Query |
+|---|---|
+| Game session (phase, speaking order) | `useQuery(api.gameSessions.getByGame, { gameId })` |
+| Players (seats, alive, fouls) | `useQuery(api.gamePlayers.listByGame, { gameId })` |
+| Game data (host, status) | `useQuery(api.games.getById, { gameId })` |
+| Night phase session | `useQuery(api.nightPhaseSessions.getCurrent, { gameId })` |
+| Player roles (filtered) | `useQuery(api.gamePlayerRoles.getFiltered, { gameId })` |
+| Join request status | `useQuery(api.joinRequests.getMyStatus, { gameId })` |
+| Pending join requests | `useQuery(api.joinRequests.listPending, { gameId })` |
+| Lobby games | `useQuery(api.games.listAll)` |
+
+## Conditional Queries
+
+Use `"skip"` to conditionally disable a query:
+
+```typescript
+const session = useQuery(
+  api.gameSessions.getByGame,
+  gameId ? { gameId } : "skip"
+);
+```
+
+## Loading States
+
+`useQuery` returns `undefined` while loading:
+
+```typescript
+const gameSession = useQuery(api.gameSessions.getByGame, { gameId });
+
+if (gameSession === undefined) {
+  return <LoadingSpinner />;
+}
+
+// gameSession is now the actual data (or null if not found)
+```
+
+## Combining Multiple Queries
+
+Call multiple `useQuery` hooks in the same component. Each subscribes independently:
+
+```typescript
+function GameRoom({ gameId }) {
+  const game = useQuery(api.games.getById, { gameId });
+  const session = useQuery(api.gameSessions.getByGame, { gameId });
+  const players = useQuery(api.gamePlayers.listByGame, { gameId });
+  const nightSession = useQuery(
+    api.nightPhaseSessions.getCurrent,
+    session?.gamePhase === "night_phase" ? { gameId } : "skip"
+  );
+}
+```
+
+## Mutations Trigger Query Updates
+
+```typescript
+const castVote = useMutation(api.votes.cast);
+
+// When this mutation completes, any useQuery watching the votes table
+// will automatically re-run and update the UI
+await castVote({ votingSessionId, voterSeat: 3, seatNumber: 5 });
+```
+
+## Performance Notes
+
+- Convex queries only re-run when the specific data they read changes
+- No need to debounce (Convex batches updates)
+- No need to limit subscriptions (Convex manages connections)
+- Convex automatically handles reconnection and catch-up after network issues

@@ -4,11 +4,10 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Clock, CheckCircle, X, LogOut } from "lucide-react";
 import { JOIN_REQUEST_STATUSES, GAME_TYPE_LABEL } from "@/lib/constants/game";
-import type { JoinRequest } from "@/types/game/type";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 
 type Props = {
-  status: JoinRequest["status"];
+  status: string;
   gameId: string;
   userId: string;
 };
@@ -129,7 +128,9 @@ function RoomHeader({
   isLeaving: boolean;
 }) {
   const { gameData } = useGameRoom();
-  const modeLabel = gameData ? GAME_TYPE_LABEL[gameData.game_type] : null;
+  const modeLabel = gameData
+    ? GAME_TYPE_LABEL[gameData.gameType as keyof typeof GAME_TYPE_LABEL]
+    : null;
   const roomName = gameData?.name ?? `Room #${gameId.slice(0, 6)}`;
 
   return (

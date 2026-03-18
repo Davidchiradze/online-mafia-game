@@ -1,5 +1,9 @@
 import React from "react";
-import { GAME_PHASES, GAME_PHASE_LABELS, SPEAKING_STATE } from "@/lib/constants/game";
+import {
+  GAME_PHASES,
+  GAME_PHASE_LABELS,
+  SPEAKING_STATE,
+} from "@/lib/constants/game";
 import StartGameButton from "../gameSession/phaseButtonsForHost/StartGameButton";
 import StartPickingRolesButton from "../gameSession/phaseButtonsForHost/StartPickingRolesButton";
 import ConfirmRolesButton from "../gameSession/phaseButtonsForHost/ConfirmRolesButton";
@@ -35,7 +39,7 @@ import { useGameRoom } from "@/lib/context/gameRoomContext";
  * - COMPLETED (-99) → speaking round completed
  */
 function isSpeakingComplete(
-  currentSpeakerIndex: number | null | undefined
+  currentSpeakerIndex: number | null | undefined,
 ): boolean {
   return SPEAKING_STATE.isCompleted(currentSpeakerIndex ?? null);
 }
@@ -46,7 +50,7 @@ function isSpeakingComplete(
  */
 function getPhaseTitle(
   phase: string,
-  nightNumber: number | null | undefined
+  nightNumber: number | null | undefined,
 ): string {
   const label =
     GAME_PHASE_LABELS[phase as (typeof GAME_PHASES)[number]] ?? phase;
@@ -88,29 +92,29 @@ function getPhaseTitle(
 function getSpeakingSubtitle(
   speakingOrder: number[],
   currentSpeaker: number | null | undefined,
-  totalSpeakers: number
+  totalSpeakers: number,
 ): string | undefined {
   if (!currentSpeaker) return undefined;
-  
+
   const isPaused = SPEAKING_STATE.isPaused(currentSpeaker);
   const isActive = SPEAKING_STATE.isActive(currentSpeaker);
-  
+
   if (isActive) {
     const position = speakingOrder.indexOf(currentSpeaker) + 1;
     return `Player #${currentSpeaker} speaking (${position}/${totalSpeakers})`;
   }
-  
+
   if (isPaused) {
     const lastSpeaker = SPEAKING_STATE.getLastSpeakerFromPaused(currentSpeaker);
     const lastIndex = speakingOrder.indexOf(lastSpeaker);
-    
+
     if (lastIndex < speakingOrder.length - 1) {
       const nextSpeaker = speakingOrder[lastIndex + 1];
       const position = lastIndex + 2;
       return `Next: Player #${nextSpeaker} (${position}/${totalSpeakers})`;
     }
   }
-  
+
   return undefined;
 }
 
@@ -119,7 +123,6 @@ function getSpeakingSubtitle(
  */
 const GamePhaseControls = () => {
   const { gameSessionState, gameId } = useGameRoom();
-
   if (!gameSessionState) {
     return (
       <div className="w-full h-full flex flex-col items-center justify-center gap-2">
@@ -128,19 +131,19 @@ const GamePhaseControls = () => {
     );
   }
 
-  const currentPhase = gameSessionState.game_phase;
+  const currentPhase = gameSessionState.gamePhase;
   const title = getPhaseTitle(
     currentPhase,
-    gameSessionState.current_night_number
+    gameSessionState.currentNightNumber,
   );
 
   // Calculate subtitle for speaking phases
-  const speakingOrder = gameSessionState.speaking_order ?? [];
-  const currentSpeaker = gameSessionState.current_speaker_index ?? null;
+  const speakingOrder = gameSessionState.speakingOrder ?? [];
+  const currentSpeaker = gameSessionState.currentSpeakerIndex ?? null;
   const isSpeakingPhase =
     (currentPhase === GAME_PHASES[7] || currentPhase === GAME_PHASES[16]) &&
     !isSpeakingComplete(currentSpeaker);
-  
+
   const subtitle = isSpeakingPhase
     ? getSpeakingSubtitle(speakingOrder, currentSpeaker, speakingOrder.length)
     : undefined;
@@ -173,7 +176,7 @@ const GamePhaseControls = () => {
         return <EndDoctorMeetButton gameSessionState={gameSessionState} />;
 
       case GAME_PHASES[7]: // "introduction_phase"
-        if (isSpeakingComplete(gameSessionState.current_speaker_index)) {
+        if (isSpeakingComplete(gameSessionState.currentSpeakerIndex)) {
           return <StartNightPhaseButton gameSessionState={gameSessionState} />;
         }
         return (
@@ -202,13 +205,13 @@ const GamePhaseControls = () => {
         return <EndDetectiveCheckButton gameSessionState={gameSessionState} />;
 
       case GAME_PHASES[14]: // "doctor_heals_player"
-        return <EndDoctorHealButton gameSessionState={gameSessionState} />;
+        return <EndDoctorHealButton />;
 
       case GAME_PHASES[15]: // "farewell_speech"
         return <FarewellSpeechControls gameSessionState={gameSessionState} />;
 
       case GAME_PHASES[16]: // "day_phase"
-        if (isSpeakingComplete(gameSessionState.current_speaker_index)) {
+        if (isSpeakingComplete(gameSessionState.currentSpeakerIndex)) {
           return (
             <StartNominatedPlayersSpeakButton
               gameSessionState={gameSessionState}
@@ -230,7 +233,7 @@ const GamePhaseControls = () => {
         );
 
       case GAME_PHASES[18]: // "voting"
-        return <VotingPhaseControls gameSessionState={gameSessionState} />;
+        return <VotingPhaseControls />;
 
       case GAME_PHASES[19]: // "repeat"
         return <ContinueNextRoundButton gameSessionState={gameSessionState} />;

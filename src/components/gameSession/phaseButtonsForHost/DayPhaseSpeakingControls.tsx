@@ -1,18 +1,16 @@
 "use client";
 
 import React, { useState, useCallback } from "react";
-import { GameSessionState } from "@/types/game/type";
-import {
-  startDayPhaseSpeaking,
-  advanceToNextSpeaker,
-  finishCurrentSpeaker,
-} from "@/lib/dayPhase/actions";
+import { useMutation } from "convex/react";
+import { dayPhase } from "@convex/refs/game";
+import type { Id } from "@convex/_generated/dataModel";
+import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { SPEAKING_STATE } from "@/lib/constants/game";
 import PhaseButton from "@/components/ui/PhaseButton";
 
 type Props = {
   gameId: string;
-  gameSessionState: GameSessionState;
+  gameSessionState: NonNullable<ReturnType<typeof useGameRoom>["gameSessionState"]>;
 };
 
 /**
@@ -26,9 +24,12 @@ export default function DayPhaseSpeakingControls({
   gameSessionState,
 }: Props) {
   const [isLoading, setIsLoading] = useState(false);
+  const startSpeaking = useMutation(dayPhase.startDaySpeaking);
+  const advanceSpeaker = useMutation(dayPhase.advanceSpeaker);
+  const finishSpeaker = useMutation(dayPhase.finishCurrentSpeaker);
 
-  const speakingOrder = gameSessionState.speaking_order ?? [];
-  const currentSpeaker = gameSessionState.current_speaker_index ?? null;
+  const speakingOrder = gameSessionState.speakingOrder ?? [];
+  const currentSpeaker = gameSessionState.currentSpeakerIndex ?? null;
 
   const isNotStarted = speakingOrder.length === 0 || currentSpeaker === null;
   const isPaused = SPEAKING_STATE.isPaused(currentSpeaker);
@@ -38,47 +39,44 @@ export default function DayPhaseSpeakingControls({
     if (isLoading) return;
     setIsLoading(true);
     try {
-      await startDayPhaseSpeaking(gameId);
+      await startSpeaking({ gameId: gameId as Id<"games"> });
     } finally {
       setIsLoading(false);
     }
-  }, [gameId, isLoading]);
+  }, [gameId, isLoading, startSpeaking]);
 
   const handleFinish = useCallback(async () => {
     if (isLoading) return;
     setIsLoading(true);
     try {
-      await finishCurrentSpeaker(gameId);
+      await finishSpeaker({ gameId: gameId as Id<"games"> });
     } finally {
       setIsLoading(false);
     }
-  }, [gameId, isLoading]);
+  }, [gameId, isLoading, finishSpeaker]);
 
   const handleNext = useCallback(async () => {
     if (isLoading) return;
     setIsLoading(true);
     try {
-      await advanceToNextSpeaker(gameId);
+      await advanceSpeaker({ gameId: gameId as Id<"games"> });
     } finally {
       setIsLoading(false);
     }
-  }, [gameId, isLoading]);
+  }, [gameId, isLoading, advanceSpeaker]);
 
-  // Not started yet or completed
   if (isNotStarted || isCompleted) {
     return (
       <PhaseButton onClick={handleStart} isLoading={isLoading} label="Start" />
     );
   }
 
-  // Paused state - show Start button (to start next speaker)
   if (isPaused) {
     return (
       <PhaseButton onClick={handleNext} isLoading={isLoading} label="Start" />
     );
   }
 
-  // Active speaker - show Finish button
   return (
     <PhaseButton onClick={handleFinish} isLoading={isLoading} label="Finish" />
   );

@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
-import { updateGameSession } from "@/lib/gameSession/actions";
-import { GameSessionState } from "@/types/game/type";
+import { useMutation } from "convex/react";
+import { gameSessions } from "@convex/refs/game";
+import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { GAME_PHASES } from "@/lib/constants/game";
 
 type StartVotingButtonProps = {
-  gameSessionState: GameSessionState;
+  gameSessionState: NonNullable<ReturnType<typeof useGameRoom>["gameSessionState"]>;
 };
 
 /**
@@ -14,18 +15,18 @@ type StartVotingButtonProps = {
  */
 const StartVotingButton = ({ gameSessionState }: StartVotingButtonProps) => {
   const [isLoading, setIsLoading] = useState(false);
+  const updateSession = useMutation(gameSessions.update);
 
   const handleStartVoting = async () => {
     if (isLoading) return;
     setIsLoading(true);
     try {
-      // Update game session to voting phase
-      const res = await updateGameSession(gameSessionState.id, {
-        game_phase: GAME_PHASES[18], // "voting"
+      await updateSession({
+        sessionId: gameSessionState._id,
+        updates: {
+          gamePhase: GAME_PHASES[18], // "voting"
+        },
       });
-      if (!res?.ok) {
-        console.error("Failed to start voting:", res?.message);
-      }
     } finally {
       setIsLoading(false);
     }

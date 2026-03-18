@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 import {
-  FullscreenEnterIcon,
-  FullscreenExitIcon,
   MoreVerticalIcon,
   UsersIcon,
 } from "@/assets/icons";
@@ -14,10 +12,8 @@ import FinishGameButton from "@/components/host-controls/FinishGameButton";
 type FloatingOptionsProps = {
   gameId: string;
   isHost: boolean;
-  isFullscreen: boolean;
   /** Whether the game can be finished (e.g., not already finished) */
   canFinishGame: boolean;
-  onToggleFullscreen: () => void;
   onLeaveRoom: () => void;
   /** Custom label for the leave button (default: "Leave room") */
   leaveLabel?: string;
@@ -26,9 +22,7 @@ type FloatingOptionsProps = {
 export default function FloatingOptions({
   gameId,
   isHost,
-  isFullscreen,
   canFinishGame,
-  onToggleFullscreen,
   onLeaveRoom,
   leaveLabel = "Leave room",
 }: FloatingOptionsProps) {
@@ -42,7 +36,7 @@ export default function FloatingOptions({
           <div className="flex flex-col items-end gap-2">
             {isHost && (
               <>
-                  {canFinishGame && <FinishGameButton gameId={gameId} />}
+                {canFinishGame && <FinishGameButton gameId={gameId} />}
                 <button
                   type="button"
                   aria-label="Manage join requests"
@@ -54,21 +48,7 @@ export default function FloatingOptions({
                 </button>
               </>
             )}
-            <button
-              type="button"
-              aria-label={
-                isFullscreen ? "Exit full screen" : "Enter full screen"
-              }
-              title={isFullscreen ? "Exit full screen" : "Enter full screen"}
-              onClick={onToggleFullscreen}
-              className="rounded-full border border-white/10 bg-black/40 backdrop-blur p-3 text-white hover:bg-black/50 transition"
-            >
-              {isFullscreen ? (
-                <FullscreenExitIcon width={20} height={20} />
-              ) : (
-                <FullscreenEnterIcon width={20} height={20} />
-              )}
-            </button>
+
             <button
               type="button"
               aria-label={leaveLabel}

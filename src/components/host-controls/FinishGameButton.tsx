@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useMutation } from "convex/react";
+import { gameSessions } from "@convex/refs/game";
+import type { Id } from "@convex/_generated/dataModel";
 import Modal from "@/components/ui/Modal";
-import { finishGame } from "@/lib/gameSession/actions";
 
 type FinishGameButtonProps = {
   gameId: string;
@@ -11,15 +13,15 @@ type FinishGameButtonProps = {
 export default function FinishGameButton({ gameId }: FinishGameButtonProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFinishing, setIsFinishing] = useState(false);
+  const finishGameMutation = useMutation(gameSessions.finishGame);
 
   const handleConfirm = async () => {
     if (isFinishing) return;
     setIsFinishing(true);
     try {
-      const res = await finishGame(gameId);
-      if (!res?.ok) {
-        console.error("Failed to finish game:", res?.message);
-      }
+      await finishGameMutation({ gameId: gameId as Id<"games"> });
+    } catch (error) {
+      console.error("Failed to finish game:", error);
     } finally {
       setIsFinishing(false);
       setIsModalOpen(false);
@@ -73,4 +75,3 @@ export default function FinishGameButton({ gameId }: FinishGameButtonProps) {
     </>
   );
 }
-

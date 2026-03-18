@@ -1,7 +1,9 @@
 "use client";
 
 import { useMemo } from "react";
-import { GameSessionState } from "@/types/game/type";
+import type { useGameRoom } from "@/lib/context/gameRoomContext";
+
+type GameSessionState = NonNullable<ReturnType<typeof useGameRoom>["gameSessionState"]>;
 
 export interface ParticipantSpeakingResult {
   isSpeaking: boolean;
@@ -23,7 +25,7 @@ export function useParticipantSpeaking(
   // Speaking state - check if this player is the current speaker
   const isSpeaking = useMemo(() => {
     if (!gameSessionState) return false;
-    const currentSpeakerSeat = gameSessionState.current_speaker_index;
+    const currentSpeakerSeat = gameSessionState.currentSpeakerIndex;
     return currentSpeakerSeat != null && seatNumber === currentSpeakerSeat;
   }, [gameSessionState, seatNumber]);
 

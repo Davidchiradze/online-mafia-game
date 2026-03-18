@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { GameRoom } from "@/types/game/type";
+import { Doc } from "@convex/_generated/dataModel";
+import { LobbyGame } from "@/components/lobby/LobbyContent";
 import {
   GAME_TYPE_LABEL,
   GAME_TYPE_MAX_PLAYER_NUMBER,
@@ -11,16 +12,15 @@ import ClickableTooltip from "@/components/ui/ClickableTooltip";
 import { LobbyConfirmModal } from "@/components/lobby/LobbyConfirmModal";
 import { SkullIcon } from "@/assets/icons";
 import { Eye, Info, Users } from "lucide-react";
-import { GameSpectator } from "@/types/game/type";
 
 type Props = {
-  room: GameRoom;
+  room: LobbyGame;
   variant: "desktop" | "mobile";
   onNavigate: (roomId: string) => void;
 };
 
-function PlayersTooltipContent({ room }: { room: GameRoom }) {
-  const maxPlayers = GAME_TYPE_MAX_PLAYER_NUMBER[room.game_type] + 1;
+function PlayersTooltipContent({ room }: { room: LobbyGame }) {
+  const maxPlayers = GAME_TYPE_MAX_PLAYER_NUMBER[room.gameType] + 1;
   const { players } = room;
   const slots = maxPlayers - players.length;
 
@@ -40,19 +40,19 @@ function PlayersTooltipContent({ room }: { room: GameRoom }) {
         ) : (
           players.map((player, idx) => (
             <div
-              key={player.player_id ?? idx}
+              key={player.playerId ?? idx}
               className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
             >
               <span
                 className={`font-sans text-[0.85rem] font-medium ${
-                  player.is_alive === false
+                  !player.isAlive
                     ? "text-gray-500 line-through"
                     : "text-white"
                 }`}
               >
                 {player.nickname ?? "Player"}
               </span>
-              {player.is_alive === false && (
+              {!player.isAlive && (
                 <SkullIcon size={14} className="text-red-400 shrink-0" />
               )}
             </div>
@@ -70,8 +70,8 @@ function PlayersTooltipContent({ room }: { room: GameRoom }) {
   );
 }
 
-function PlayerCountWithTooltip({ room }: { room: GameRoom }) {
-  const maxPlayers = GAME_TYPE_MAX_PLAYER_NUMBER[room.game_type] + 1;
+function PlayerCountWithTooltip({ room }: { room: LobbyGame }) {
+  const maxPlayers = GAME_TYPE_MAX_PLAYER_NUMBER[room.gameType] + 1;
 
   return (
     <div className="flex items-center gap-2">
@@ -96,7 +96,7 @@ function SpectatorTooltipContent({
   spectators,
   roomName,
 }: {
-  spectators: GameSpectator[];
+  spectators: Doc<"gameSpectators">[];
   roomName: string;
 }) {
   return (
@@ -115,7 +115,7 @@ function SpectatorTooltipContent({
         ) : (
           spectators.map((spectator) => (
             <div
-              key={spectator.id}
+              key={spectator._id}
               className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
             >
               <Eye className="w-3.5 h-3.5 text-blue-400 shrink-0" />
@@ -130,7 +130,7 @@ function SpectatorTooltipContent({
   );
 }
 
-function SpectatorCountWithTooltip({ room }: { room: GameRoom }) {
+function SpectatorCountWithTooltip({ room }: { room: LobbyGame }) {
   return (
     <div className="flex items-center gap-2">
       <Eye className="w-4 h-4 text-gray-400 shrink-0" />
@@ -163,14 +163,14 @@ function RoomActionButton({
   onSpectate,
   fullWidth = false,
 }: {
-  room: GameRoom;
+  room: LobbyGame;
   onJoin: () => void;
   onSpectate: () => void;
   fullWidth?: boolean;
 }) {
   const base = fullWidth ? "w-full justify-center" : "ml-auto";
 
-  if (room.game_status === "finished") {
+  if (room.gameStatus === "finished") {
     return (
       <button
         disabled
@@ -181,7 +181,7 @@ function RoomActionButton({
     );
   }
 
-  if (room.game_status === "playing") {
+  if (room.gameStatus === "playing") {
     return (
       <button
         onClick={onSpectate}
@@ -208,12 +208,12 @@ function DesktopRoomRow({
   onJoin,
   onSpectate,
 }: {
-  room: GameRoom;
+  room: LobbyGame;
   onJoin: () => void;
   onSpectate: () => void;
 }) {
   const hostNickname =
-    room.players.find((p) => p.player_id === room.host_id)?.nickname ?? "—";
+    room.players.find((p) => p.playerId === room.hostId)?.nickname ?? "—";
 
   return (
     <tr className="transition-all duration-200">
@@ -227,7 +227,7 @@ function DesktopRoomRow({
       </td>
       <td className="px-6 py-4">
         <span className="px-3 py-1 rounded-lg bg-white/10 border border-white/20 text-gray-300 font-sans text-[0.85rem] font-medium">
-          {GAME_TYPE_LABEL[room.game_type]}
+          {GAME_TYPE_LABEL[room.gameType]}
         </span>
       </td>
       <td className="px-6 py-4">
@@ -237,7 +237,7 @@ function DesktopRoomRow({
         <SpectatorCountWithTooltip room={room} />
       </td>
       <td className="px-6 py-4">
-        <GameStatusBadge status={room.game_status} />
+        <GameStatusBadge status={room.gameStatus} />
       </td>
       <td className="px-6 py-4 text-right">
         <RoomActionButton room={room} onJoin={onJoin} onSpectate={onSpectate} />
@@ -251,12 +251,12 @@ function MobileRoomRow({
   onJoin,
   onSpectate,
 }: {
-  room: GameRoom;
+  room: LobbyGame;
   onJoin: () => void;
   onSpectate: () => void;
 }) {
   const hostNickname =
-    room.players.find((p) => p.player_id === room.host_id)?.nickname ?? "—";
+    room.players.find((p) => p.playerId === room.hostId)?.nickname ?? "—";
 
   return (
     <div
@@ -277,7 +277,7 @@ function MobileRoomRow({
             Host: {hostNickname}
           </p>
         </div>
-        <GameStatusBadge status={room.game_status} />
+        <GameStatusBadge status={room.gameStatus} />
       </div>
 
       <div className="grid grid-cols-3 gap-3 mb-4">
@@ -298,7 +298,7 @@ function MobileRoomRow({
             Mode
           </div>
           <span className="inline-block px-3 py-1 rounded-lg bg-white/10 border border-white/20 text-gray-300 font-sans text-[0.85rem] font-medium">
-            {GAME_TYPE_LABEL[room.game_type]}
+            {GAME_TYPE_LABEL[room.gameType]}
           </span>
         </div>
       </div>
@@ -317,10 +317,10 @@ export default function GameRoomRow({ room, variant, onNavigate }: Props) {
   const [showJoinConfirm, setShowJoinConfirm] = useState(false);
 
   const handleJoin = () => setShowJoinConfirm(true);
-  const handleSpectate = () => onNavigate(room.id);
+  const handleSpectate = () => onNavigate(room._id);
   const handleJoinConfirm = () => {
     setShowJoinConfirm(false);
-    onNavigate(room.id);
+    onNavigate(room._id);
   };
 
   const LayoutComponent = variant === "desktop" ? DesktopRoomRow : MobileRoomRow;

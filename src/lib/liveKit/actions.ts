@@ -6,7 +6,6 @@ import {
   RoomServiceClient,
   TrackSource,
 } from "livekit-server-sdk";
-import { createClient } from "@/lib/supabase/server";
 
 export async function generateLivekitAccessToken(
   roomId: string,
@@ -14,26 +13,18 @@ export async function generateLivekitAccessToken(
   permissions: {
     hidden: boolean;
     roomAdmin: boolean;
-    /** If true, participant is a spectator with view-only access (no publishing) */
     isSpectator?: boolean;
-  }
+  },
+  participantName?: string
 ) {
-  // Resolve participant display name from the authenticated user
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const participantName =
-    ((user?.user_metadata as Record<string, unknown>)?.nickname as string) ||
-    user?.email ||
-    participantId;
+  const displayName = participantName || participantId;
 
   const at = new AccessToken(
     process.env.LIVEKIT_API_KEY!,
     process.env.LIVEKIT_API_SECRET!,
     {
       identity: participantId,
-      name: participantName,
+      name: displayName,
     }
   );
 

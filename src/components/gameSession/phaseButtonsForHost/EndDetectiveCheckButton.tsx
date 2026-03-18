@@ -1,13 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
-import { updateGameSession } from "@/lib/gameSession/actions";
-import { GameSessionState } from "@/types/game/type";
+import { useMutation } from "convex/react";
+import { gameSessions } from "@convex/refs/game";
+import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { GAME_PHASES } from "@/lib/constants/game";
 import PhaseButton from "@/components/ui/PhaseButton";
 
 type EndDetectiveCheckButtonProps = {
-  gameSessionState: GameSessionState;
+  gameSessionState: NonNullable<ReturnType<typeof useGameRoom>["gameSessionState"]>;
 };
 
 /**
@@ -17,17 +18,18 @@ const EndDetectiveCheckButton = ({
   gameSessionState,
 }: EndDetectiveCheckButtonProps) => {
   const [isLoading, setIsLoading] = useState(false);
+  const updateSession = useMutation(gameSessions.update);
 
   const handleEndDetectiveCheck = async () => {
     if (isLoading) return;
     setIsLoading(true);
     try {
-      const res = await updateGameSession(gameSessionState.id, {
-        game_phase: GAME_PHASES[14], // "doctor_heals_player"
+      await updateSession({
+        sessionId: gameSessionState._id,
+        updates: {
+          gamePhase: GAME_PHASES[14], // "doctor_heals_player"
+        },
       });
-      if (!res?.ok) {
-        console.error("Failed to end detective's check:", res?.message);
-      }
     } finally {
       setIsLoading(false);
     }

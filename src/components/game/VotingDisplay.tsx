@@ -15,11 +15,11 @@ export default function VotingDisplay() {
 
   // Get current player info
   const currentPlayer = useMemo(() => {
-    return players.find((p) => p.player_id === userId);
+    return players.find((p) => p.playerId === userId);
   }, [players, userId]);
 
-  const playerSeatNumber = currentPlayer?.seat_number ?? null;
-  const isPlayerDead = currentPlayer?.is_alive === false;
+  const playerSeatNumber = currentPlayer?.seatNumber ?? null;
+  const isPlayerDead = currentPlayer?.isAlive === false;
 
   const {
     isEnabled,
@@ -37,7 +37,7 @@ export default function VotingDisplay() {
   });
 
   // Don't render if not in voting phase
-  if (!votingSession || gameSessionState?.game_phase !== "voting") {
+  if (!votingSession || gameSessionState?.gamePhase !== "voting") {
     return null;
   }
 
@@ -47,7 +47,7 @@ export default function VotingDisplay() {
   }
 
   const candidates = votingSession.candidates ?? [];
-  const currentIdx = votingSession.current_candidate_index ?? 0;
+  const currentIdx = votingSession.currentCandidateIndex ?? 0;
   const currentCandidate = candidates[currentIdx];
   const isLastCandidate = currentIdx === candidates.length - 1;
 
@@ -128,7 +128,6 @@ export default function VotingDisplay() {
       <div className="text-center">
         <div className="text-[10px] text-amber-400 uppercase">Vote against</div>
         <div className="text-xl font-bold text-white">#{currentCandidate}</div>
-
       </div>
 
       {/* Vote button or status */}

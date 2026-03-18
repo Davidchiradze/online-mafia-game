@@ -1,0 +1,129 @@
+---
+description: Core Convex patterns and conventions for the Online Mafia project. Read this first before any implementation.
+globs:
+  - "convex/**"
+  - "src/**"
+alwaysApply: true
+---
+
+# Convex Overview - Online Mafia
+
+## Stack
+
+- **Framework**: Next.js 15 (App Router)
+- **Database & Backend**: Convex (document DB + server functions)
+- **Authentication**: Convex Auth (`@convex-dev/auth`) with Password + Resend OTP
+- **Real-time**: Convex reactive queries (`useQuery` auto-updates on data change)
+- **Video/Audio**: LiveKit (WebRTC)
+- **Styling**: TailwindCSS + shadcn/ui
+- **Validation**: Zod (client-side), Convex validators (server-side)
+- **Language**: TypeScript (strict mode)
+
+## What We Use
+
+- Convex `query` / `mutation` / `action` / `internalAction` for all backend logic
+- `useQuery()` for reactive real-time data
+- `useMutation()` for data writes
+- `Doc<"tableName">` for types (from `convex/_generated/dataModel`)
+- `v.id("tableName")` for references between tables
+- `getAuthUserId(ctx)` for authentication in Convex functions
+
+## What We Do NOT Use
+
+- `"use server"` server actions for game logic (use Convex mutations)
+- `useEffect` for data subscriptions (Convex handles this)
+- Redux / Zustand (Convex reactive queries are the state management)
+
+## Key Principles
+
+1. **All game logic in Convex functions**: mutations for writes, queries for reads
+2. **Reactive queries for real-time**: `useQuery` auto-syncs, no manual subscriptions
+3. **Type safety**: Use `Doc<"tableName">` from `convex/_generated/dataModel`
+4. **Auth in every function**: Call `getAuthUserId(ctx)` at the start of mutations/queries
+5. **Transactional mutations**: Convex mutations are atomic - they fully succeed or fully rollback
+6. **No RLS**: Access control is done in query/mutation handler code, not database rules
+
+## File Structure
+
+```
+convex/                          # All backend logic (deployed to Convex)
+  _generated/                    # Auto-generated types (DO NOT EDIT)
+  schema.ts                      # Database schema
+  tables/                        # Table definitions
+  auth.ts                        # Auth configuration
+  auth/                          # Auth queries/mutations (profiles)
+  lobby/                         # Lobby: games, joinRequests, hostTransfer
+  game/                          # Game: players, spectators, roles, sessions,
+                                 #   dayPhase, nightPhase, voting, farewellSpeech
+  lib/                           # Shared helpers (auth, constants, speakingOrder)
+  refs/                          # makeFunctionReference wrappers (TS2589 workaround)
+
+src/
+  app/                           # Next.js pages
+  components/                    # React components
+    providers/ConvexClientProvider.tsx
+  hooks/                         # Custom hooks (game, livekit, participant)
+  lib/                           # Utilities, constants, context
+    constants/game.ts            # Game constants (phases, roles)
+    game/visibility.ts           # Visibility logic (pure functions)
+    context/gameRoomContext.tsx   # Game room React context
+    liveKit/actions.ts           # LiveKit server actions (token, room mgmt)
+    utils/                       # Utility functions
+```
+
+## Quick Patterns
+
+### Reading data (reactive, real-time)
+```typescript
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+
+const gameSession = useQuery(api.gameSessions.getByGame, { gameId });
+// gameSession auto-updates when data changes. No useEffect, no cleanup.
+```
+
+### Writing data
+```typescript
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+
+const startGame = useMutation(api.gameSessions.start);
+await startGame({ gameId });
+```
+
+### Convex function (mutation)
+```typescript
+import { getAuthUserId } from "@convex-dev/auth/server";
+import { mutation } from "./_generated/server";
+import { v } from "convex/values";
+
+export const start = mutation({
+  args: { gameId: v.id("games") },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    const game = await ctx.db.get(args.gameId);
+    if (!game) throw new Error("Game not found");
+    if (game.hostId !== userId) throw new Error("Forbidden");
+
+    await ctx.db.patch(args.gameId, { gameStatus: "playing" });
+  },
+});
+```
+
+### Convex function (query)
+```typescript
+import { query } from "./_generated/server";
+import { v } from "convex/values";
+
+export const getByGame = query({
+  args: { gameId: v.id("games") },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("gameSessions")
+      .withIndex("by_gameId", (q) => q.eq("gameId", args.gameId))
+      .unique();
+  },
+});
+```

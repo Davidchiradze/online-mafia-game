@@ -10,99 +10,199 @@ import {
 } from "react";
 import type { PropsWithChildren } from "react";
 import { Room as LiveKitRoom } from "livekit-client";
-import type {
-  GameRoom,
-  GameSessionState,
-  JoinRequest,
-} from "@/types/game/type";
+import { useQuery, useMutation } from "convex/react";
+import { authProfiles, lobbyGames, joinRequests } from "@convex/refs/lobby";
 import {
-  useLivekitRoom,
-  useLivekitConnect,
-  useEnsurePlayerSeat,
-  useJoinPermissionListener,
-  useLiveKitVotingListener,
-} from "@/hooks/livekit";
-import {
-  useGameSession,
-  useGamePlayers,
-  usePlayerRoles,
-  useHealedPlayers,
-} from "@/hooks/game";
-import {
-  useMyJoinRequestStatus,
-  useGameHostSubscription,
-  useNightPhaseSessionListener,
-} from "@/hooks/realtime";
-import type { NightPhaseSession } from "@/hooks/realtime";
-import type { VotingSession, VoteData } from "@/lib/liveKit/messageTypes";
+  gameSessions,
+  gamePlayers,
+  gameRoles,
+  nightPhase,
+  voting,
+  gameSpectators,
+} from "@convex/refs/game";
+import type { Id } from "@convex/_generated/dataModel";
+import { useLivekitRoom, useLivekitConnect } from "@/hooks/livekit";
 import { JOIN_REQUEST_STATUSES } from "@/lib/constants/game";
-import { leaveGamePlayer } from "@/lib/gamePlayers/actions";
-import { leaveAsSpectator } from "@/lib/spectators/actions";
-import { Tables } from "@/db/supabase/database.types";
-import type { PlayerRolesMap } from "@/types/game/type";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+type JoinStatus = "pending" | "accepted" | "rejected" | "none";
+
+type ConvexGamePlayer = {
+  _id: Id<"gamePlayers">;
+  _creationTime: number;
+  gameId: Id<"games">;
+  playerId: Id<"profiles">;
+  nickname: string;
+  seatNumber?: number;
+  isAlive: boolean;
+  fouls: number;
+  foulSpeakStartedAt?: number;
+  state?: string;
+};
+
+type ConvexGameSession = {
+  _id: Id<"gameSessions">;
+  _creationTime: number;
+  gameId: Id<"games">;
+  gamePhase: string;
+  isFinished: boolean;
+  currentNightNumber: number;
+  currentSpeakerIndex?: number;
+  dayRoundOpenerIndex?: number;
+  foulEliminationOccurred?: boolean;
+  nominatedPlayers: number[];
+  speakerStartedAt?: string;
+  speakingOrder: number[];
+};
+
+type ConvexNightPhaseSession = {
+  _id: Id<"nightPhaseSessions">;
+  _creationTime: number;
+  gameId: Id<"games">;
+  nightNumber: number;
+  mafiaTarget?: number;
+  yakuzaTarget?: number;
+  healedPlayer?: number;
+};
+
+type ConvexVotingSession = {
+  _id: Id<"votingSessions">;
+  _creationTime: number;
+  gameId: Id<"games">;
+  roundNumber: number;
+  candidates: number[];
+  currentCandidateIndex?: number;
+  votingActive?: boolean;
+  votingStartedAt?: string;
+  isTieBreak?: boolean;
+  tieBreakRound?: number;
+  previousTiedCandidates?: number[];
+  bothLeaveVoteActive?: boolean;
+  playersWhoVoted?: number[];
+};
+
+type VoteData = {
+  votes: Record<string, number[]>;
+  playersWhoVoted: number[];
+  bothLeaveVoters: number[];
+};
+
+type GameData = {
+  _id: Id<"games">;
+  name: string;
+  hostId: Id<"profiles">;
+  gameType: string;
+  gameStatus: string;
+  maxPlayers: number;
+  code: string;
+};
 
 type GameRoomContextValue = {
   gameId: string;
   userId: string;
   hostUserId: string | null;
   isHost: boolean;
-  /** True if user is a spectator (view-only mode, validated server-side via database) */
   isSpectator: boolean;
-  /** Original game data (name, game_type, etc.) from the database */
-  gameData: GameRoom;
+  gameData: GameData | null;
   room: LiveKitRoom;
   maxPlayers: number | null;
   livekitToken: string | null;
-  joinStatus: JoinRequest["status"] | undefined;
-  gameSessionState: GameSessionState | null;
-  setGameSessionState: (gameSessionState: GameSessionState) => void;
+  joinStatus: JoinStatus;
+  gameSessionState: ConvexGameSession | null;
+  setGameSessionState: (state: ConvexGameSession | null) => void;
   startGame: () => Promise<{ ok: boolean; message?: string }>;
   disconnect: () => void;
   isJoiningGame: boolean;
   joinError: string | null;
-  players: Tables<"game_players">[];
-  /** Current user's role (null if no role assigned yet, always null for spectators) */
+  players: ConvexGamePlayer[];
   viewerRole: string | null;
-  /** Map of player roles filtered by team visibility */
-  playerRolesMap: PlayerRolesMap;
-  /** Get role for a specific player (returns null if not visible to current user) */
+  playerRolesMap: Map<string, string | null>;
   getRoleForUser: (targetUserId: string) => string | null;
-  /** Night phase session data - available to host and team members (RLS removed temporarily) */
-  nightPhaseSession: NightPhaseSession | null;
-  /** Voting session data - available during voting phase */
-  votingSession: VotingSession | null;
-  /** Set voting session state directly (for immediate updates after creation) */
-  setVotingSession: (session: VotingSession | null) => void;
-  /** Vote data aggregated from vote table - real-time vote counts */
+  nightPhaseSession: ConvexNightPhaseSession | null;
+  votingSession: ConvexVotingSession | null;
+  setVotingSession: (session: ConvexVotingSession | null) => void;
   voteData: VoteData;
-  /** Seat numbers of players healed across all nights (single fetch, not per-participant) */
   healedPlayers: number[];
+};
+
+const EMPTY_VOTE_DATA: VoteData = {
+  votes: {},
+  playersWhoVoted: [],
+  bothLeaveVoters: [],
 };
 
 const GameRoomContext = createContext<GameRoomContextValue | null>(null);
 
+// ---------------------------------------------------------------------------
+// Provider
+// ---------------------------------------------------------------------------
+
 export function GameRoomProvider({
-  userId,
-  game,
+  gameId,
   isSpectator = false,
   children,
 }: PropsWithChildren<{
-  game: GameRoom;
-  userId: string;
-  /** If true, user is a validated spectator (has database record) */
+  gameId: Id<"games">;
   isSpectator?: boolean;
 }>) {
-  const { id: gameId, host_id, max_players: maxPlayers } = game;
+  // ---------------------------------------------------------------------------
+  // Current user (profile ID is the app-level identity)
+  // ---------------------------------------------------------------------------
+  const currentProfile = useQuery(authProfiles.currentProfile);
+  const currentUserId = currentProfile?._id ?? null;
+  const userId = (currentUserId ?? "") as string;
 
-  const [currentHostId, setCurrentHostId] = useState<string | null>(host_id);
-  const isHost = !isSpectator && currentHostId === userId; // Spectators are never hosts
+  // ---------------------------------------------------------------------------
+  // Convex reactive queries
+  // ---------------------------------------------------------------------------
+  const game = useQuery(lobbyGames.getById, { gameId });
+  const myStatus = useQuery(joinRequests.myStatus, { gameId });
+  const playersData = useQuery(gamePlayers.listByGame, { gameId });
+  const sessionData = useQuery(gameSessions.get, { gameId });
+  const rolesData = useQuery(gameRoles.getVisible, { gameId });
+  const nightData = useQuery(nightPhase.getCurrent, { gameId });
+  const healedData = useQuery(nightPhase.getHealedPlayers, { gameId });
+  const votingData = useQuery(voting.getSession, { gameId });
+
+  const votingSessionId = votingData?._id ?? null;
+  const votesData = useQuery(
+    voting.getVotes,
+    votingSessionId ? { votingSessionId } : "skip",
+  );
+
+  // ---------------------------------------------------------------------------
+  // Convex mutations
+  // ---------------------------------------------------------------------------
+  const checkOrRequestMutation = useMutation(joinRequests.checkOrRequest);
+  const joinPlayerMutation = useMutation(gamePlayers.join);
+  const leavePlayerMutation = useMutation(gamePlayers.leave);
+  const leaveSpectatorMutation = useMutation(gameSpectators.leave);
+  const startGameMutation = useMutation(gameSessions.startGame);
+
+  // ---------------------------------------------------------------------------
+  // Derived state
+  // ---------------------------------------------------------------------------
+  const hostUserId = game?.hostId ?? null;
+  const joinStatus: JoinStatus = myStatus?.status ?? "none";
+  const isHost =
+    !isSpectator && !!currentUserId && !!game && game.hostId === currentUserId;
+
+  // ---------------------------------------------------------------------------
+  // Local state
+  // ---------------------------------------------------------------------------
   const [hasPlayerRecord, setHasPlayerRecord] = useState(false);
   const [isJoiningGame, setIsJoiningGame] = useState(false);
   const [joinError, setJoinError] = useState<string | null>(null);
-  const [joinStatus, setJoinStatus] = useState<
-    JoinRequest["status"] | undefined
-  >(undefined);
   const [livekitToken, setLivekitToken] = useState<string | null>(null);
+  const [localVotingSession, setLocalVotingSession] =
+    useState<ConvexVotingSession | null>(null);
+  const [localSessionState, setLocalSessionState] =
+    useState<ConvexGameSession | null>(null);
+
   const [room] = useState(
     () =>
       new LiveKitRoom({
@@ -115,206 +215,274 @@ export function GameRoomProvider({
       }),
   );
 
-  // Disconnect handler - defined early so it can be used in hooks
+  // ---------------------------------------------------------------------------
+  // Join flow
+  // ---------------------------------------------------------------------------
+  const [hasRequested, setHasRequested] = useState(false);
+
+  // Step 1: Create join request if none exists
+  useEffect(() => {
+    if (!currentUserId || isSpectator) return;
+    if (joinStatus === "none" && !hasRequested) {
+      setHasRequested(true);
+      checkOrRequestMutation({ gameId }).catch(() => {});
+    }
+  }, [
+    currentUserId,
+    isSpectator,
+    joinStatus,
+    hasRequested,
+    checkOrRequestMutation,
+    gameId,
+  ]);
+
+  // Step 2: Ensure player seat when accepted
+  useEffect(() => {
+    if (isSpectator || hasPlayerRecord || isJoiningGame) return;
+    if (joinStatus !== "accepted") return;
+
+    const ensureSeat = async () => {
+      setIsJoiningGame(true);
+      setJoinError(null);
+      try {
+        await joinPlayerMutation({ gameId });
+        setHasPlayerRecord(true);
+      } catch (err) {
+        setJoinError(
+          err instanceof Error ? err.message : "Unable to join game",
+        );
+      } finally {
+        setIsJoiningGame(false);
+      }
+    };
+
+    void ensureSeat();
+  }, [
+    isSpectator,
+    hasPlayerRecord,
+    isJoiningGame,
+    joinStatus,
+    joinPlayerMutation,
+    gameId,
+  ]);
+
+  // Spectators are ready immediately
+  useEffect(() => {
+    if (isSpectator) setHasPlayerRecord(true);
+  }, [isSpectator]);
+
+  // ---------------------------------------------------------------------------
+  // Disconnect
+  // ---------------------------------------------------------------------------
   const disconnect = useCallback(async () => {
     try {
       if (isSpectator) {
-        await leaveAsSpectator(gameId);
+        await leaveSpectatorMutation({ gameId });
       } else if (hasPlayerRecord) {
-        await leaveGamePlayer(gameId);
+        await leavePlayerMutation({ gameId });
       }
       room.disconnect();
     } catch {
       // noop
     }
-  }, [gameId, hasPlayerRecord, isSpectator, room]);
-
-  // Game session subscription (status + startGame action)
-  // Spectators can subscribe to game session updates immediately
-  const { gameSessionState, startGame, setGameSessionState } = useGameSession(
+  }, [
     gameId,
-    userId,
-    { enabled: isSpectator || hasPlayerRecord },
-  );
+    hasPlayerRecord,
+    isSpectator,
+    room,
+    leavePlayerMutation,
+    leaveSpectatorMutation,
+  ]);
 
-  // Game players subscription
-  // Spectators need to see players too
-  const players = useGamePlayers(gameId, isSpectator || hasPlayerRecord);
+  // Handle rejected → disconnect
+  useEffect(() => {
+    if (joinStatus === "rejected") {
+      room.disconnect();
+    }
+  }, [joinStatus, room]);
 
-  // Night phase session subscription (RLS removed temporarily - all players can see)
-  // Subscribe when game is in progress (spectators can also view)
-  const isReady = isSpectator || hasPlayerRecord;
-  const { currentNightSession: nightPhaseSession } =
-    useNightPhaseSessionListener(gameId, isReady && !!gameSessionState);
-
-  // Healed players across all nights (single fetch, re-fetches on new night)
-  const { healedPlayers } = useHealedPlayers(
-    gameId,
-    nightPhaseSession?.night_number,
-    isReady && !!gameSessionState,
-  );
-
-  // Voting session subscription via LiveKit Data Channels - only during voting phase
-  // Uses reliable delivery for guaranteed real-time updates
-  // Spectators can view voting but cannot participate
-  const isVotingPhase = gameSessionState?.game_phase === "voting";
-  const { votingSession, setVotingSession, voteData } =
-    useLiveKitVotingListener(gameId, room, isReady && isVotingPhase);
-
-  // Player roles (fetched once, filtered by team visibility)
-  // Auto-refetches on phase changes and when game finishes
-  // Spectators don't see any roles until game finishes (treated like dead players - see visibility after game ends)
-  const { viewerRole, playerRolesMap, getRoleForUser } = usePlayerRoles(
-    gameId,
-    userId,
-    {
-      enabled: (isSpectator || hasPlayerRecord) && !!gameSessionState,
-      gamePhase: gameSessionState?.game_phase,
-      isGameFinished: gameSessionState?.is_finished,
-    },
-  );
-
-  // Redirect back to lobby on disconnect, but not when rejected
-  // (rejected users get disconnected intentionally and see the rejected UI)
+  // ---------------------------------------------------------------------------
+  // LiveKit hooks
+  // ---------------------------------------------------------------------------
   useLivekitRoom(
     room,
     {
-      redirectOnDisconnect: joinStatus !== JOIN_REQUEST_STATUSES.REJECTED,
+      redirectOnDisconnect: joinStatus !== "rejected",
       redirectPath: "/lobby",
     },
     isSpectator || hasPlayerRecord,
   );
 
-  // Handle tab close/unload events to ensure cleanup
-  // useTabCloseCleanup({
-  //   gameId,
-  //   room,
-  //   enabled: hasPlayerRecord,
-  //   onCleanup: disconnect,
-  // });
-
-  // Spectators don't need join permission or player seat hooks
-  useJoinPermissionListener({
-    gameId,
-    room,
-    hasPlayerRecord: !isSpectator && hasPlayerRecord,
-    setJoinStatus,
-    enabled: !isSpectator, // Disable for spectators - they don't need join requests
-  });
-
-  // Only non-spectators need to ensure a player seat
-  useEnsurePlayerSeat({
-    gameId,
-    isHost,
-    joinStatus,
-    hasPlayerRecord: isSpectator || hasPlayerRecord, // Skip for spectators
-    setIsJoiningGame,
-    setJoinError,
-    setHasPlayerRecord,
-    setCurrentHostId,
-  });
+  const livekitJoinStatus =
+    joinStatus === "accepted"
+      ? JOIN_REQUEST_STATUSES.ACCEPTED
+      : joinStatus === "pending"
+        ? JOIN_REQUEST_STATUSES.PENDING
+        : joinStatus === "rejected"
+          ? JOIN_REQUEST_STATUSES.REJECTED
+          : undefined;
 
   useLivekitConnect({
-    gameId,
+    gameId: gameId as string,
     userId,
     isHost,
-    joinStatus,
+    joinStatus: livekitJoinStatus,
     isJoiningGame,
     hasPlayerRecord,
     joinError,
     room,
     setLivekitToken,
     isSpectator,
+    participantName: currentProfile?.nickname,
   });
 
-  // Listen to my join request updates (kick -> disconnect)
-  // Spectators don't have join requests
-  useMyJoinRequestStatus(gameId, userId, (nextStatus) => {
-    if (isSpectator) return;
-    setJoinStatus(nextStatus);
-    if (nextStatus === JOIN_REQUEST_STATUSES.REJECTED) {
-      room.disconnect();
+  // ---------------------------------------------------------------------------
+  // Computed: roles
+  // ---------------------------------------------------------------------------
+  const { viewerRole, playerRolesMap, getRoleForUser } = useMemo(() => {
+    if (!rolesData) {
+      return {
+        viewerRole: null,
+        playerRolesMap: new Map<string, string | null>(),
+        getRoleForUser: () => null,
+      };
     }
-  });
 
-  // Subscribe to host changes (keep same behavior as before)
-  useGameHostSubscription(
-    gameId,
-    (newHostId) => {
-      if (!isSpectator) {
-        setCurrentHostId(newHostId);
+    const map = new Map<string, string | null>();
+    for (const r of rolesData.roles) {
+      map.set(r.playerId as string, r.role);
+    }
+
+    return {
+      viewerRole: rolesData.viewerRole,
+      playerRolesMap: map,
+      getRoleForUser: (targetUserId: string): string | null =>
+        map.get(targetUserId) ?? null,
+    };
+  }, [rolesData]);
+
+  // ---------------------------------------------------------------------------
+  // Computed: vote data
+  // ---------------------------------------------------------------------------
+  const voteData = useMemo<VoteData>(() => {
+    if (!votesData) return EMPTY_VOTE_DATA;
+
+    const votes: Record<string, number[]> = {};
+    const playersWhoVoted: number[] = [];
+    const bothLeaveVoters: number[] = [];
+
+    for (const vote of votesData) {
+      if (vote.isBothLeave) {
+        bothLeaveVoters.push(vote.voterSeat);
+      } else {
+        playersWhoVoted.push(vote.voterSeat);
+        if (vote.seatNumber !== undefined) {
+          const key = String(vote.seatNumber);
+          if (!votes[key]) votes[key] = [];
+          votes[key].push(vote.voterSeat);
+        }
       }
-    },
-    true,
-  );
+    }
 
-  // In the future, we may subscribe to host changes in a hook and update currentHostId here.
+    return { votes, playersWhoVoted, bothLeaveVoters };
+  }, [votesData]);
+
+  // Prefer Convex reactive data over local overrides
+  const effectiveSession = sessionData ?? localSessionState;
+  const effectiveVoting = votingData ?? localVotingSession;
+
+  // ---------------------------------------------------------------------------
+  // Start game
+  // ---------------------------------------------------------------------------
+  const startGame = useCallback(async () => {
+    if (isSpectator)
+      return { ok: false, message: "Spectators cannot start games" };
+    try {
+      await startGameMutation({ gameId });
+      return { ok: true };
+    } catch (err) {
+      return {
+        ok: false,
+        message: err instanceof Error ? err.message : "Failed to start game",
+      };
+    }
+  }, [isSpectator, startGameMutation, gameId]);
+
+  // ---------------------------------------------------------------------------
+  // Context value
+  // ---------------------------------------------------------------------------
   const value: GameRoomContextValue = useMemo(
     () => ({
-      gameId,
+      gameId: gameId as string,
       userId,
-      hostUserId: currentHostId,
+      hostUserId: (hostUserId as string) ?? null,
       isHost,
       isSpectator,
-      gameData: game,
+      gameData: game
+        ? {
+            _id: game._id,
+            name: game.name,
+            hostId: game.hostId,
+            gameType: game.gameType,
+            gameStatus: game.gameStatus,
+            maxPlayers: game.maxPlayers,
+            code: game.code,
+          }
+        : null,
       room,
+      maxPlayers: game?.maxPlayers ?? null,
       livekitToken,
       joinStatus,
-      gameSessionState,
-      setGameSessionState,
-      maxPlayers,
-      startGame: async () => {
-        // Spectators cannot start games
-        if (isSpectator) {
-          return { ok: false, message: "Spectators cannot start games" };
-        }
-        const res = await startGame();
-        return {
-          ok: Boolean(res?.ok),
-          message: res?.ok ? undefined : res?.message,
-        };
-      },
+      gameSessionState: effectiveSession ?? null,
+      setGameSessionState: setLocalSessionState,
+      startGame,
       disconnect,
       isJoiningGame,
       joinError,
-      players,
+      players: playersData ?? [],
       viewerRole,
       playerRolesMap,
       getRoleForUser,
-      nightPhaseSession,
-      votingSession,
-      setVotingSession,
+      nightPhaseSession: nightData ?? null,
+      votingSession: effectiveVoting ?? null,
+      setVotingSession: setLocalVotingSession,
       voteData,
-      healedPlayers,
+      healedPlayers: healedData ?? [],
     }),
     [
       gameId,
       userId,
-      currentHostId,
+      hostUserId,
       isHost,
       isSpectator,
       game,
       room,
       livekitToken,
-      maxPlayers,
       joinStatus,
-      gameSessionState,
-      setGameSessionState,
+      effectiveSession,
       startGame,
       disconnect,
       isJoiningGame,
       joinError,
-      players,
+      playersData,
       viewerRole,
       playerRolesMap,
       getRoleForUser,
-      nightPhaseSession,
-      votingSession,
-      setVotingSession,
+      nightData,
+      effectiveVoting,
       voteData,
-      healedPlayers,
+      healedData,
     ],
   );
+
+  // Wait for auth to resolve before rendering children
+  if (currentUserId === undefined) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <LoadingSpinner message="Authenticating..." />
+      </div>
+    );
+  }
 
   return (
     <GameRoomContext.Provider value={value}>

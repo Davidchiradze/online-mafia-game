@@ -2,253 +2,245 @@
 
 ## Overview
 
-This application uses **Supabase Realtime** for all real-time updates. We subscribe to PostgreSQL database changes via `postgres_changes` events, which automatically push updates to connected clients when data changes.
+This application uses **Convex reactive queries** for all real-time updates. Convex `useQuery` hooks automatically subscribe to data changes and re-render components when the underlying data changes. This guarantees the frontend is always in sync with the database -- no events can be missed.
 
-**⚠️ Important**: We do NOT use Socket.IO, Redis Pub/Sub, or any other real-time solution.
+**What we use**: Convex `useQuery` (reactive, guaranteed consistency)
 
-## Supabase Realtime Subscriptions
+**What we do NOT use**:
+- Socket.IO / Redis Pub/Sub
+- Manual `useEffect` subscriptions with cleanup
 
-### How It Works
+## How It Works
 
-1. **Server Action** updates the database (e.g., `updateGameSession`)
-2. **Database change** triggers a Supabase Realtime event
-3. **Client subscription** receives the update via `postgres_changes`
-4. **React state** updates, triggering UI re-render
+```
+┌─────────────┐
+│   Browser    │
+│  (React)     │
+└──────┬───────┘
+       │
+       │ 1. User Action (e.g., vote, start phase)
+       │    calls useMutation(api.gameSessions.start)
+       │
+       ▼
+┌──────────────────┐
+│  Convex Mutation  │
+│  (server-side)    │
+└──────┬───────────┘
+       │
+       │ 2. Mutation writes to Convex DB
+       │
+       ▼
+┌──────────────────┐
+│   Convex DB      │
+│  (document store) │
+└──────┬───────────┘
+       │
+       │ 3. Convex detects which queries read this data
+       │    and re-runs them automatically
+       │
+       ▼
+┌──────────────────────────┐
+│  All subscribed clients  │
+│  useQuery auto-updates   │
+└──────────────────────────┘
+```
 
-### Subscription Pattern
+Convex does not send "change events" that can be missed. Instead, it re-runs the query and pushes the **current state** to every subscribed client. If a client disconnects and reconnects, it gets the current state immediately.
 
-All real-time subscriptions follow this pattern:
+## Reactive Query Pattern
+
+All real-time data uses `useQuery` from `convex/react`:
 
 ```typescript
 "use client";
-import { useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
-export function useMySubscription(
-  gameId: string,
-  setState: React.Dispatch<React.SetStateAction<State>>,
-  enabled: boolean = true
-) {
-  useEffect(() => {
-    if (!gameId || !enabled) return;
-    const supabase = createClient();
+function GameComponent({ gameId }: { gameId: Id<"games"> }) {
+  const gameSession = useQuery(api.gameSessions.getByGame, { gameId });
 
-    const channel = supabase
-      .channel(`unique_channel_name_${gameId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*", // or "INSERT", "UPDATE", "DELETE"
-          schema: "public",
-          table: "table_name",
-          filter: `game_id=eq.${gameId}`, // Optional filter
-        },
-        (payload) => {
-          // Handle the change
-          setState((prev) => ({ ...prev, ...payload.new }));
-        }
-      )
-      .subscribe();
+  if (gameSession === undefined) return <LoadingSpinner />;
+  if (gameSession === null) return <div>No session found</div>;
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [gameId, enabled, setState]);
+  return <div>Phase: {gameSession.gamePhase}</div>;
 }
 ```
 
-## Existing Subscriptions
+That single `useQuery` call:
+- Fetches the initial data
+- Subscribes to changes
+- Re-renders the component when data changes
+- Cleans up automatically when the component unmounts
+- Reconnects and syncs after network interruptions
 
-### 1. Game Session Updates
+## Active Subscriptions
 
-**Hook**: `useGameSessionListener`
-**File**: `src/hooks/useGameSessionListener.ts`
-**Subscribes to**: `game_sessions` table
-**Events**: All events (`*`)
-**Filter**: `game_id=eq.${gameId}`
+### 1. Game Session
+
+**Query**: `api.gameSessions.getByGame`
+**Returns**: Current game session (phase, speaking order, nominations, etc.)
 
 ```typescript
-useGameSessionListener(gameId, setGameSessionState, enabled);
+const session = useQuery(api.gameSessions.getByGame, { gameId });
+// session.gamePhase, session.speakingOrder, session.nominatedPlayers, etc.
 ```
 
-**When to use**: When you need to react to game phase changes, voting updates, or any game session state changes.
+**When to use**: Anywhere you need the current game phase, speaking state, or session data.
 
-### 2. Player Updates
+### 2. Game Players
 
-**Hook**: `useGamePlayerListener`
-**File**: `src/hooks/useGamePlayerListener.ts`
-**Subscribes to**: `game_players` table
-**Events**: `INSERT`, `UPDATE`, `DELETE`
-**Filter**: `game_id=eq.${gameId}`
+**Query**: `api.gamePlayers.listByGame`
+**Returns**: All players in the game (seat, alive status, fouls, etc.)
 
 ```typescript
-useGamePlayerListener(gameId, userId, setGameSessionState, enabled);
+const players = useQuery(api.gamePlayers.listByGame, { gameId });
+// Array of players with seatNumber, isAlive, fouls, state, nickname
 ```
 
-**When to use**: When you need to track player joins, role assignments, seat changes, or player removals.
+**When to use**: Player list, seat assignments, alive/dead status.
 
-### 3. Host Changes
+### 3. Game Data (includes host)
 
-**Hook**: `useGameHostSubscription`
-**File**: `src/hooks/useGameHostSubscription.ts`
-**Subscribes to**: `games` table
-**Events**: `UPDATE`
-**Filter**: `id=eq.${gameId}`
+**Query**: `api.games.getById`
+**Returns**: Game room data including `hostId`
 
 ```typescript
-useGameHostSubscription(
-  gameId,
-  (newHostId) => {
-    // Handle host change
-  },
-  enabled
+const game = useQuery(api.games.getById, { gameId });
+// game.hostId, game.gameStatus, game.name, game.gameType
+```
+
+**When to use**: Detecting host changes, game status, game metadata.
+
+### 4. Night Phase Session
+
+**Query**: `api.nightPhaseSessions.getCurrent`
+**Returns**: Current night session (mafia target, yakuza target, healed player)
+
+```typescript
+const nightSession = useQuery(
+  api.nightPhaseSessions.getCurrent,
+  session?.gamePhase === "night_phase" ? { gameId } : "skip"
 );
 ```
 
-**When to use**: When you need to detect when the game host changes.
+**When to use**: During night phases to show target selections to team members.
 
-### 4. Join Requests
+### 5. Player Roles (filtered by visibility)
 
-**Hook**: `useJoinRequests`
-**File**: `src/hooks/useJoinRequests.ts`
-**Subscribes to**: `join_requests` table
-**Events**: `INSERT`, `UPDATE`, `DELETE`
-**Filter**: `game_id=eq.${gameId}`
+**Query**: `api.gamePlayerRoles.getFiltered`
+**Returns**: Roles filtered by team visibility (teammates see each other, others see null)
 
-**When to use**: When you need to show pending join requests to the host.
+```typescript
+const roles = useQuery(api.gamePlayerRoles.getFiltered, { gameId });
+// Each role entry: { playerId, role } where role is null if not visible
+```
+
+**When to use**: Displaying role badges, team indicators.
+
+### 6. Join Requests
+
+**Query**: `api.joinRequests.getMyStatus` / `api.joinRequests.listPending`
+
+```typescript
+// Player checking their own request status
+const myRequest = useQuery(api.joinRequests.getMyStatus, { gameId });
+
+// Host viewing pending requests
+const pending = useQuery(api.joinRequests.listPending, { gameId });
+```
+
+**When to use**: Join request flow, host approval drawer.
+
+### 7. Lobby (all games)
+
+**Query**: `api.games.listAll`
+
+```typescript
+const games = useQuery(api.games.listAll);
+// Auto-updates when any game is created, deleted, or changes status
+```
+
+**When to use**: Lobby page game list.
+
+## Conditional Queries
+
+Use `"skip"` to conditionally disable a query:
+
+```typescript
+// Only subscribe when we have a gameId
+const session = useQuery(
+  api.gameSessions.getByGame,
+  gameId ? { gameId } : "skip"
+);
+
+// Only subscribe during night phase
+const nightSession = useQuery(
+  api.nightPhaseSessions.getCurrent,
+  isNightPhase ? { gameId } : "skip"
+);
+```
+
+## Loading States
+
+`useQuery` returns `undefined` while the initial data is loading:
+
+```typescript
+const session = useQuery(api.gameSessions.getByGame, { gameId });
+
+if (session === undefined) {
+  // Still loading initial data
+  return <LoadingSpinner />;
+}
+
+// session is now the actual data (could be null if not found)
+```
 
 ## Best Practices
 
-### 1. Always Clean Up Subscriptions
+### 1. No useEffect for Subscriptions
 
 ```typescript
-// ✅ DO: Return cleanup function
-useEffect(() => {
-  const channel = supabase.channel(...).subscribe();
-  return () => {
-    supabase.removeChannel(channel);
-  };
-}, [dependencies]);
+// DO: Single useQuery call
+const players = useQuery(api.gamePlayers.listByGame, { gameId });
+
+// DON'T: useEffect with manual subscription
 ```
 
-### 2. Use Unique Channel Names
+### 2. Use "skip" Instead of Enabled Flags
 
 ```typescript
-// ✅ DO: Include unique identifiers
-const channel = supabase.channel(`game_session_${gameId}_${userId}`);
-
-// ❌ DON'T: Use generic names that might conflict
-const channel = supabase.channel("game_updates");
+// DO: Use "skip" for conditional queries
+const data = useQuery(api.myQuery.get, condition ? { id } : "skip");
 ```
 
-### 3. Enable/Disable Subscriptions
+### 3. Combine Queries in Components
 
 ```typescript
-// ✅ DO: Add enabled flag
-export function useMySubscription(gameId: string, enabled: boolean = true) {
-  useEffect(() => {
-    if (!enabled) return; // Early return
-    // ... subscription logic
-  }, [enabled, gameId]);
+// DO: Multiple useQuery calls in one component
+function GameRoom({ gameId }) {
+  const game = useQuery(api.games.getById, { gameId });
+  const session = useQuery(api.gameSessions.getByGame, { gameId });
+  const players = useQuery(api.gamePlayers.listByGame, { gameId });
+  // Each updates independently
 }
 ```
 
-### 4. Handle Loading States
+### 4. Mutations Trigger Query Updates Automatically
 
 ```typescript
-// ✅ DO: Fetch initial data, then subscribe
-useEffect(() => {
-  // Fetch initial state
-  fetchInitialData().then(setState);
+const castVote = useMutation(api.votes.cast);
 
-  // Then subscribe to changes
-  const channel = supabase.channel(...).subscribe();
-  return () => supabase.removeChannel(channel);
-}, []);
+// After this mutation completes, any useQuery reading from the votes
+// table will automatically re-run and update the UI
+await castVote({ votingSessionId, voterSeat: 3, seatNumber: 5 });
 ```
 
-## Channel Naming Convention
+## Testing Real-time Updates
 
-Use descriptive, unique channel names:
+1. Open the game in two browser windows (host + player)
+2. Perform an action in one window (e.g., advance phase)
+3. Verify the other window updates immediately
+4. Test with browser tab backgrounded for 60 seconds, then switch back
+5. Test with slow network (Chrome DevTools throttling)
 
-- `game_session_changes_${gameId}` - Game session updates
-- `game_players_changes_${gameId}_${userId}` - Player updates (with user context)
-- `game_host_${gameId}` - Host changes
-- `join_requests_${gameId}` - Join request updates
-
-## Error Handling
-
-Supabase subscriptions handle reconnection automatically. However, you should handle edge cases:
-
-```typescript
-const channel = supabase
-  .channel(`my_channel_${gameId}`)
-  .on("postgres_changes", {...}, (payload) => {
-    if (payload.errors) {
-      console.error("Subscription error:", payload.errors);
-      return;
-    }
-    // Handle successful update
-  })
-  .subscribe((status) => {
-    if (status === "SUBSCRIBED") {
-      console.log("Subscribed successfully");
-    } else if (status === "CHANNEL_ERROR") {
-      console.error("Channel error");
-    }
-  });
-```
-
-## Performance Considerations
-
-1. **Filter at the database level**: Use `filter` to only receive relevant updates
-2. **Limit subscriptions**: Don't create multiple subscriptions for the same data
-3. **Unsubscribe when not needed**: Use the `enabled` flag to disable subscriptions
-4. **Debounce rapid updates**: Use `debounce` utility if needed for rapid state changes
-
-## Testing Subscriptions
-
-To test subscriptions:
-
-1. Open browser DevTools → Network tab
-2. Filter by "WS" (WebSocket)
-3. Look for Supabase WebSocket connections
-4. Trigger a database change (via server action)
-5. Verify the subscription receives the update
-
-## Common Pitfalls
-
-### ❌ Creating Subscriptions in Loops
-
-```typescript
-// ❌ DON'T: This creates multiple subscriptions
-players.forEach((player) => {
-  supabase.channel(`player_${player.id}`).subscribe();
-});
-```
-
-### ❌ Not Cleaning Up
-
-```typescript
-// ❌ DON'T: Memory leak
-useEffect(() => {
-  supabase.channel(...).subscribe();
-  // Missing cleanup!
-}, []);
-```
-
-### ❌ Subscribing to Too Much Data
-
-```typescript
-// ❌ DON'T: Subscribe to all games
-supabase.channel("all_games").on("postgres_changes", {
-  table: "games",
-  // No filter - receives ALL game updates
-}, ...);
-
-// ✅ DO: Filter to specific game
-supabase.channel(`game_${gameId}`).on("postgres_changes", {
-  table: "games",
-  filter: `id=eq.${gameId}`,
-}, ...);
-```
+In all cases, the UI should always show the correct current state.

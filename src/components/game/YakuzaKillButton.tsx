@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { selectYakuzaTarget } from "@/lib/nightPhase/actions";
+import { useMutation } from "convex/react";
+import { nightPhase } from "@convex/refs/game";
+import type { Id } from "@convex/_generated/dataModel";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import Skull from "@/assets/icons/Skull";
 
@@ -20,22 +22,23 @@ export default function YakuzaKillButton({
 }: YakuzaKillButtonProps) {
   const { gameId } = useGameRoom();
   const [isLoading, setIsLoading] = useState(false);
+  const selectTarget = useMutation(nightPhase.selectYakuzaTarget);
 
   const handleSelectTarget = useCallback(async () => {
     if (isLoading || isSelected) return;
 
     setIsLoading(true);
     try {
-      const result = await selectYakuzaTarget(gameId, seatNumber);
-      if (!result.ok) {
-        console.error("Failed to select target:", result.message);
-      }
+      await selectTarget({
+        gameId: gameId as Id<"games">,
+        targetSeatNumber: seatNumber,
+      });
     } catch (error) {
       console.error("Error selecting target:", error);
     } finally {
       setIsLoading(false);
     }
-  }, [gameId, seatNumber, isLoading, isSelected]);
+  }, [gameId, seatNumber, isLoading, isSelected, selectTarget]);
 
   return (
     <button
