@@ -5,7 +5,7 @@ import {
 } from "@convex-dev/auth/nextjs/server";
 
 const isAuthPage = createRouteMatcher(["/auth/signin", "/auth/signup"]);
-const isPublicPage = createRouteMatcher(["/", "/auth(.*)"]);
+const isPublicPage = createRouteMatcher(["/", "/auth(.*)", "/api/livekit/webhook"]);
 
 export default convexAuthNextjsMiddleware(
   async (request, { convexAuth }) => {
