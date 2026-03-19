@@ -1,4 +1,4 @@
-import { DatabaseReader } from "../_generated/server";
+import { DatabaseReader, DatabaseWriter } from "../_generated/server";
 import { Id } from "../_generated/dataModel";
 
 export async function getGameById(db: DatabaseReader, gameId: Id<"games">) {
@@ -84,4 +84,42 @@ export async function getPlayerInGame(
       q.eq("gameId", gameId).eq("playerId", playerId),
     )
     .unique();
+}
+
+const GAME_RELATED_TABLES = [
+  "gamePlayers",
+  "gameSpectators",
+  "joinRequests",
+  "gameSessions",
+  "gamePlayerRoles",
+  "nightPhaseSessions",
+  "votingSessions",
+] as const;
+
+export async function deleteGameAndRelations(
+  db: DatabaseWriter,
+  gameId: Id<"games">,
+) {
+  for (const table of GAME_RELATED_TABLES) {
+    const docs = await db
+      .query(table)
+      .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
+      .collect();
+
+    for (const doc of docs) {
+      // votes reference votingSessions, not games — cascade through them
+      if (table === "votingSessions") {
+        const votes = await db
+          .query("votes")
+          .withIndex("by_votingSessionId", (q) =>
+            q.eq("votingSessionId", doc._id as Id<"votingSessions">),
+          )
+          .collect();
+        for (const vote of votes) await db.delete(vote._id);
+      }
+      await db.delete(doc._id);
+    }
+  }
+
+  await db.delete(gameId);
 }

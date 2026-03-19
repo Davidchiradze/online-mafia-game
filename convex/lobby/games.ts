@@ -8,6 +8,7 @@ import {
   generateGameCode,
   isCodeTaken,
   assertIsHost,
+  deleteGameAndRelations,
 } from "../lib/games";
 import { gameType } from "../tables/games";
 
@@ -107,27 +108,3 @@ export const removeInternal = internalMutation({
   },
 });
 
-async function deleteGameAndRelations(
-  db: import("../_generated/server").DatabaseWriter,
-  gameId: import("../_generated/dataModel").Id<"games">,
-) {
-  const players = await getPlayersByGameId(db, gameId);
-  for (const player of players) {
-    await db.delete(player._id);
-  }
-
-  const spectators = await getSpectatorsByGameId(db, gameId);
-  for (const spectator of spectators) {
-    await db.delete(spectator._id);
-  }
-
-  const joinRequests = await db
-    .query("joinRequests")
-    .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
-    .collect();
-  for (const request of joinRequests) {
-    await db.delete(request._id);
-  }
-
-  await db.delete(gameId);
-}
