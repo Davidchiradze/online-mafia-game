@@ -377,6 +377,23 @@ export const dayPhase = {
 };
 
 // ============================================================================
+// WEBHOOK HANDLER
+// ============================================================================
+
+export const webhookHandler = {
+  handleParticipantLeft: makeFunctionReference<
+    "action",
+    { gameId: string; userId: string },
+    null
+  >("game/webhookHandler:handleParticipantLeft"),
+  handleRoomFinished: makeFunctionReference<
+    "action",
+    { gameId: string },
+    null
+  >("game/webhookHandler:handleRoomFinished"),
+};
+
+// ============================================================================
 // FAREWELL SPEECH
 // ============================================================================
 
