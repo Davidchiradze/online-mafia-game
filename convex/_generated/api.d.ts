@@ -21,6 +21,7 @@ import type * as game_roles from "../game/roles.js";
 import type * as game_sessions from "../game/sessions.js";
 import type * as game_spectators from "../game/spectators.js";
 import type * as game_voting from "../game/voting.js";
+import type * as game_webhookHandler from "../game/webhookHandler.js";
 import type * as http from "../http.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_constants from "../lib/constants.js";
@@ -64,6 +65,7 @@ declare const fullApi: ApiFromModules<{
   "game/sessions": typeof game_sessions;
   "game/spectators": typeof game_spectators;
   "game/voting": typeof game_voting;
+  "game/webhookHandler": typeof game_webhookHandler;
   http: typeof http;
   "lib/auth": typeof lib_auth;
   "lib/constants": typeof lib_constants;
