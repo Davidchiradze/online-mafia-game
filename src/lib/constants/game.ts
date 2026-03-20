@@ -196,8 +196,16 @@ export const VOTING = {
   BOTH_LEAVE_THRESHOLD: 0.5,
 } as const;
 
+// Game Cleanup Constants
+export const GAME_CLEANUP = {
+  /** Delay before deleting a finished game and its relations (1 minute) */
+  DELAY_MS: 60_000,
+} as const;
+
 // Spectator Constants
 export const SPECTATOR = {
   /** Maximum number of spectators allowed per game */
   MAX_SPECTATORS_PER_GAME: 7,
 } as const;
+
+

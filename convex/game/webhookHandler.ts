@@ -21,12 +21,18 @@ const removeGameInternal = makeFunctionReference<
   null
 >("lobby/games:removeInternal");
 
+function isConvexId(id: string): boolean {
+  return !id.includes("-");
+}
+
 export const handleParticipantLeft = action({
   args: {
     gameId: v.string(),
     userId: v.string(),
   },
   handler: async (ctx, args) => {
+    if (!isConvexId(args.gameId) || !isConvexId(args.userId)) return null;
+
     const gameId = args.gameId as Id<"games">;
     const userId = args.userId as Id<"profiles">;
 
@@ -49,6 +55,8 @@ export const handleRoomFinished = action({
     gameId: v.string(),
   },
   handler: async (ctx, args) => {
+    if (!isConvexId(args.gameId)) return null;
+
     const gameId = args.gameId as Id<"games">;
 
     await ctx.runMutation(removeGameInternal, { gameId });

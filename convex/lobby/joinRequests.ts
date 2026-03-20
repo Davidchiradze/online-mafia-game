@@ -95,7 +95,11 @@ export const myStatus = query({
   args: { gameId: v.id("games") },
   handler: async (ctx, { gameId }) => {
     const userId = await getAuthenticatedUser(ctx);
-    const game = await getGameById(ctx.db, gameId);
+    const game = await ctx.db.get(gameId);
+
+    if (!game) {
+      return { allowed: false, status: "none" as const };
+    }
 
     if (game.hostId === userId) {
       return { allowed: true, status: "accepted" as const };

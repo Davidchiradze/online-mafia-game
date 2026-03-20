@@ -1,8 +1,16 @@
 import { v } from "convex/values";
 import { query, mutation } from "../_generated/server";
+import { makeFunctionReference } from "convex/server";
+import type { Id } from "../_generated/dataModel";
 import { getAuthenticatedUser } from "../lib/auth";
 import { getGameById, assertIsHost, getPlayersByGameId } from "../lib/games";
-import { GAME_PHASES, JAPANESE_MAFIA_ROLE_DISTRIBUTION } from "../lib/constants";
+import { GAME_PHASES, JAPANESE_MAFIA_ROLE_DISTRIBUTION, GAME_CLEANUP } from "../lib/constants";
+
+const removeGameInternal = makeFunctionReference<
+  "mutation",
+  { gameId: Id<"games"> },
+  null
+>("lobby/games:removeInternal");
 
 export const get = query({
   args: { gameId: v.id("games") },
@@ -196,5 +204,9 @@ export const finishGame = mutation({
 
     await ctx.db.patch(gameId, { gameStatus: "finished" });
     await ctx.db.patch(session._id, { isFinished: true });
+
+    await ctx.scheduler.runAfter(GAME_CLEANUP.DELAY_MS, removeGameInternal, {
+      gameId,
+    });
   },
 });

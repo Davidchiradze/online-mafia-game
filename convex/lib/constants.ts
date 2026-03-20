@@ -59,6 +59,11 @@ export const SPEAKING_STATE = {
   toPausedValue: (seatNumber: number): number => -seatNumber,
 } as const;
 
+export const GAME_CLEANUP = {
+  /** Delay before deleting a finished game and its relations (1 minute) */
+  DELAY_MS: 60_000,
+} as const;
+
 export const FOULS = {
   MAX_FOULS: 3,
   ELIMINATION_THRESHOLD: 4,
