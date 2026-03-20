@@ -21,7 +21,7 @@ import {
   gameSpectators,
 } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
-import { useLivekitRoom, useLivekitConnect } from "@/hooks/livekit";
+import { useLivekitRoom, useLivekitConnect, useLivekitCleanup } from "@/hooks/livekit";
 import { JOIN_REQUEST_STATUSES } from "@/lib/constants/game";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
@@ -300,6 +300,9 @@ export function GameRoomProvider({
       room.disconnect();
     }
   }, [joinStatus, room]);
+
+  // Disconnect LiveKit and clean up Convex records on unmount / tab close
+  useLivekitCleanup(room, disconnect);
 
   // ---------------------------------------------------------------------------
   // LiveKit hooks

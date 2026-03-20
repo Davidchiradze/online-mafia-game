@@ -35,7 +35,11 @@ export default function GamePage({ params }: PageProps) {
     }
   }, [joinStatus, hasRequested, checkOrRequest, gameId]);
 
-  if (game === undefined || joinStatus === undefined || spectatorCheck === undefined) {
+  if (
+    game === undefined ||
+    joinStatus === undefined ||
+    spectatorCheck === undefined
+  ) {
     return (
       <div className="h-screen flex items-center justify-center">
         <LoadingSpinner message="Loading game..." />
