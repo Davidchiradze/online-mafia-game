@@ -36,7 +36,7 @@ const EndYakuzaShogunMeetButton = ({
   };
 
   return (
-    <PhaseButton onClick={handleEndYakuzaShogunMeet} isLoading={isLoading} />
+    <PhaseButton onClick={handleEndYakuzaShogunMeet} isLoading={isLoading} label="End Meeting" variant="danger" />
   );
 };
 

@@ -158,11 +158,22 @@ export function RegularVotingControls({
   };
 
   return (
-    <div className="flex flex-col items-center gap-2">
+    <div className="flex flex-col items-center gap-3">
       {/* Tie-break indicator */}
       {isTieBreak && (
-        <div className="text-[10px] text-amber-400 uppercase tracking-wide font-medium">
-          Tie-break #{tieBreakRound}
+        <div
+          className="px-3 py-1.5 rounded-full border"
+          style={{
+            background: "linear-gradient(135deg, rgba(245,158,11,0.2) 0%, rgba(217,119,6,0.25) 100%)",
+            borderColor: "rgba(245,158,11,0.45)",
+          }}
+        >
+          <span
+            className="text-[10px] text-amber-300 uppercase tracking-widest font-bold"
+            style={{ fontFamily: "var(--font-orbitron), sans-serif" }}
+          >
+            Tie-break #{tieBreakRound}
+          </span>
         </div>
       )}
 

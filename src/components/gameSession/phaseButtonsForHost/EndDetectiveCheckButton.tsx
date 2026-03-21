@@ -36,7 +36,7 @@ const EndDetectiveCheckButton = ({
   };
 
   return (
-    <PhaseButton onClick={handleEndDetectiveCheck} isLoading={isLoading} />
+    <PhaseButton onClick={handleEndDetectiveCheck} isLoading={isLoading} label="End Detective Check" variant="primary" />
   );
 };
 

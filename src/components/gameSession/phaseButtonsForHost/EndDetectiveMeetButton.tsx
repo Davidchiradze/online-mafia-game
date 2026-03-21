@@ -36,7 +36,7 @@ const EndDetectiveMeetButton = ({
   };
 
   return (
-    <PhaseButton onClick={handleEndDetectiveMeet} isLoading={isLoading} />
+    <PhaseButton onClick={handleEndDetectiveMeet} isLoading={isLoading} label="End Meeting" variant="danger" />
   );
 };
 

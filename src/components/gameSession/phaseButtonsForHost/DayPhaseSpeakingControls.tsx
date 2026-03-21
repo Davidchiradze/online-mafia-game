@@ -67,17 +67,17 @@ export default function DayPhaseSpeakingControls({
 
   if (isNotStarted || isCompleted) {
     return (
-      <PhaseButton onClick={handleStart} isLoading={isLoading} label="Start" />
+      <PhaseButton onClick={handleStart} isLoading={isLoading} label="Start" variant="success" />
     );
   }
 
   if (isPaused) {
     return (
-      <PhaseButton onClick={handleNext} isLoading={isLoading} label="Start" />
+      <PhaseButton onClick={handleNext} isLoading={isLoading} label="Start" variant="success" />
     );
   }
 
   return (
-    <PhaseButton onClick={handleFinish} isLoading={isLoading} label="Finish" />
+    <PhaseButton onClick={handleFinish} isLoading={isLoading} label="Finish" variant="danger" />
   );
 }

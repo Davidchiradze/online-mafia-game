@@ -36,7 +36,7 @@ const EndRightHandCheckButton = ({
   };
 
   return (
-    <PhaseButton onClick={handleEndRightHandCheck} isLoading={isLoading} />
+    <PhaseButton onClick={handleEndRightHandCheck} isLoading={isLoading} label="End Check" variant="primary" />
   );
 };
 

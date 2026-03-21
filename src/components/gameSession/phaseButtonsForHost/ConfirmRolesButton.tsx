@@ -33,7 +33,7 @@ const ConfirmRolesButton = ({ gameSessionState }: ConfirmRolesButtonProps) => {
     }
   };
 
-  return <PhaseButton onClick={handleConfirmRoles} isLoading={isLoading} />;
+  return <PhaseButton onClick={handleConfirmRoles} isLoading={isLoading} label="Confirm Roles" variant="success" />;
 };
 
 export default ConfirmRolesButton;

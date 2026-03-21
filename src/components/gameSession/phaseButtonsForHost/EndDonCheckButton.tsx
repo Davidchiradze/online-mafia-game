@@ -8,7 +8,9 @@ import { GAME_PHASES } from "@/lib/constants/game";
 import PhaseButton from "@/components/ui/PhaseButton";
 
 type EndDonCheckButtonProps = {
-  gameSessionState: NonNullable<ReturnType<typeof useGameRoom>["gameSessionState"]>;
+  gameSessionState: NonNullable<
+    ReturnType<typeof useGameRoom>["gameSessionState"]
+  >;
 };
 
 /**
@@ -33,7 +35,14 @@ const EndDonCheckButton = ({ gameSessionState }: EndDonCheckButtonProps) => {
     }
   };
 
-  return <PhaseButton onClick={handleEndDonCheck} isLoading={isLoading} />;
+  return (
+    <PhaseButton
+      onClick={handleEndDonCheck}
+      isLoading={isLoading}
+      label="End Don Check"
+      variant="primary"
+    />
+  );
 };
 
 export default EndDonCheckButton;

@@ -143,12 +143,14 @@ export default function NominatedPlayersSpeakingControls({
             onClick={handleNext}
             isLoading={isLoading}
             label="Finish"
+            variant="danger"
           />
         ) : (
           <PhaseButton
             onClick={handleFinish}
             isLoading={isLoading}
             label="Finish"
+            variant="danger"
           />
         )
       ) : isPaused ? (
@@ -156,12 +158,14 @@ export default function NominatedPlayersSpeakingControls({
           onClick={handleNext}
           isLoading={isLoading}
           label={isLastSpeaker ? "Finish" : "Start"}
+          variant={isLastSpeaker ? "danger" : "success"}
         />
       ) : (
         <PhaseButton
           onClick={handleFinish}
           isLoading={isLoading}
           label="Finish"
+          variant="danger"
         />
       )}
     </div>

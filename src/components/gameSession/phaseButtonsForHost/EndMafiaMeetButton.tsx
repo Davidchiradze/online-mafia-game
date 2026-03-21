@@ -33,7 +33,7 @@ const EndMafiaMeetButton = ({ gameSessionState }: EndMafiaMeetButtonProps) => {
     }
   };
 
-  return <PhaseButton onClick={handleEndMafiaMeet} isLoading={isLoading} />;
+  return <PhaseButton onClick={handleEndMafiaMeet} isLoading={isLoading} label="End Meeting" variant="danger" />;
 };
 
 export default EndMafiaMeetButton;

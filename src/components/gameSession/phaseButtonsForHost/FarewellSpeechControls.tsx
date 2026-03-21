@@ -185,18 +185,21 @@ export default function FarewellSpeechControls({ gameSessionState }: Props) {
           onClick={handleGrantTime}
           isLoading={isLoading}
           label="Start"
+          variant="success"
         />
       ) : speakerIsActive ? (
         <PhaseButton
           onClick={handleMarkDead}
           isLoading={isLoading}
           label="Finish"
+          variant="danger"
         />
       ) : allDone ? (
         <PhaseButton
           onClick={handleAdvance}
           isLoading={isLoading}
           label="Advance to Next Phase"
+          variant="primary"
         />
       ) : null}
     </div>

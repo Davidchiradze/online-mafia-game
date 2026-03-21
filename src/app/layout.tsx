@@ -5,6 +5,7 @@ import ConvexClientProvider from "@/components/providers/ConvexClientProvider";
 import { ThemeProvider } from "@/components/theme-provider/theme-provider";
 import { ToastContainer } from "react-toastify";
 import "./globals.css";
+import "@/styles/game.css";
 
 const inter = Inter({
   variable: "--font-inter",

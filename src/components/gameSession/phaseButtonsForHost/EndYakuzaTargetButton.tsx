@@ -35,7 +35,7 @@ const EndYakuzaTargetButton = ({
     }
   };
 
-  return <PhaseButton onClick={handleEndYakuzaTarget} isLoading={isLoading} />;
+  return <PhaseButton onClick={handleEndYakuzaTarget} isLoading={isLoading} label="End Yakuza Phase" variant="danger" />;
 };
 
 export default EndYakuzaTargetButton;

@@ -9,7 +9,9 @@ import { GAME_PHASES } from "@/lib/constants/game";
 import PhaseButton from "@/components/ui/PhaseButton";
 
 type Props = {
-  gameSessionState: NonNullable<ReturnType<typeof useGameRoom>["gameSessionState"]>;
+  gameSessionState: NonNullable<
+    ReturnType<typeof useGameRoom>["gameSessionState"]
+  >;
 };
 
 /**
@@ -22,7 +24,9 @@ const StartNominatedPlayersSpeakButton = ({ gameSessionState }: Props) => {
   const { gameId } = useGameRoom();
   const [isLoading, setIsLoading] = useState(false);
   const updateSession = useMutation(gameSessions.update);
-  const startNominatedSpeaking = useMutation(dayPhase.startNominatedPlayersSpeaking);
+  const startNominatedSpeaking = useMutation(
+    dayPhase.startNominatedPlayersSpeaking,
+  );
   const startNight = useMutation(nightPhase.startNight);
 
   const nominatedCount = gameSessionState.nominatedPlayers?.length ?? 0;
@@ -100,7 +104,8 @@ const StartNominatedPlayersSpeakButton = ({ gameSessionState }: Props) => {
     <PhaseButton
       onClick={handleStartSelfJustification}
       isLoading={isLoading}
-      label="Start"
+      label="Start self-justification"
+      variant="warning"
     />
   );
 };

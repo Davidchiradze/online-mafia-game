@@ -59,7 +59,7 @@ const StartGameButton = () => {
   return allReady ? (
     <div className="flex flex-col items-center gap-2">
       <PhaseTitle title="Ready to Play" />
-      <PhaseButton onClick={handleStartGame} isLoading={isLoading} label="Start" />
+      <PhaseButton onClick={handleStartGame} isLoading={isLoading} label="Start" variant="success" />
     </div>
   ) : (
     <div className="text-xs text-white/50">

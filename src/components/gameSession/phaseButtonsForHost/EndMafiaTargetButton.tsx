@@ -35,7 +35,7 @@ const EndMafiaTargetButton = ({
     }
   };
 
-  return <PhaseButton onClick={handleEndMafiaTarget} isLoading={isLoading} />;
+  return <PhaseButton onClick={handleEndMafiaTarget} isLoading={isLoading} label="End Mafia Phase" variant="danger" />;
 };
 
 export default EndMafiaTargetButton;

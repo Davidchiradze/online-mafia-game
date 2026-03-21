@@ -46,7 +46,8 @@ const ContinueNextRoundButton = ({
     <PhaseButton
       onClick={handleContinueNextRound}
       isLoading={isLoading}
-      label="Start"
+      label="Continue"
+      variant="primary"
     />
   );
 };

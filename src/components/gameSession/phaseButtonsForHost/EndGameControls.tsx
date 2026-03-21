@@ -27,6 +27,7 @@ const EndGameControls = () => {
       onClick={handleReturnToLobby}
       isLoading={isLoading}
       label="Return to Lobby"
+      variant="secondary"
     />
   );
 };

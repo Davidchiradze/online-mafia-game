@@ -34,7 +34,7 @@ const EndDoctorHealButton = () => {
     }
   };
 
-  return <PhaseButton onClick={handleEndDoctorHeal} isLoading={isLoading} />;
+  return <PhaseButton onClick={handleEndDoctorHeal} isLoading={isLoading} label="End Doctor Phase" variant="success" />;
 };
 
 export default EndDoctorHealButton;

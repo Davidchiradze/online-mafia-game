@@ -53,7 +53,8 @@ const StartMafiaTargetButton = ({
     <PhaseButton
       onClick={handleStartMafiaTarget}
       isLoading={isLoading}
-      label="Start"
+      label="Start Mafia Phase"
+      variant="danger"
     />
   );
 };

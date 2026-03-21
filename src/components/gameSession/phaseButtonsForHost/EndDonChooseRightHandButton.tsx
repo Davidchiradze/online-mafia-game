@@ -35,7 +35,7 @@ const EndDonChooseRightHandButton = ({
     }
   };
 
-  return <PhaseButton onClick={handleEndDonChoice} isLoading={isLoading} />;
+  return <PhaseButton onClick={handleEndDonChoice} isLoading={isLoading} label="Confirm" variant="success" />;
 };
 
 export default EndDonChooseRightHandButton;

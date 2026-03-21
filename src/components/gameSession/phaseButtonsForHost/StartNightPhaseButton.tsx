@@ -47,7 +47,8 @@ const StartNightPhaseButton = ({
     <PhaseButton
       onClick={handleStartNightPhase}
       isLoading={isLoading}
-      label="Start"
+      label="Start Night"
+      variant="secondary"
     />
   );
 };

@@ -40,7 +40,7 @@ const EndDoctorMeetButton = ({
     }
   };
 
-  return <PhaseButton onClick={handleEndDoctorMeet} isLoading={isLoading} />;
+  return <PhaseButton onClick={handleEndDoctorMeet} isLoading={isLoading} label="End Meeting" variant="danger" />;
 };
 
 export default EndDoctorMeetButton;

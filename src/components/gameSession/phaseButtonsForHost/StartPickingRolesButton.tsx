@@ -42,7 +42,8 @@ const StartPickingRolesButton = ({
     <PhaseButton
       onClick={handleStartPickingRoles}
       isLoading={isLoading}
-      label="Start"
+      label="Pick Roles"
+      variant="primary"
     />
   );
 };
