@@ -1,13 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
-import { updateGameSession } from "@/lib/gameSession/actions";
-import { GameSessionState } from "@/types/game/type";
+import { useMutation } from "convex/react";
+import { gameSessions } from "@convex/refs/game";
+import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { GAME_PHASES } from "@/lib/constants/game";
 import PhaseButton from "@/components/ui/PhaseButton";
 
 type EndRightHandCheckButtonProps = {
-  gameSessionState: GameSessionState;
+  gameSessionState: NonNullable<ReturnType<typeof useGameRoom>["gameSessionState"]>;
 };
 
 /**
@@ -17,24 +18,25 @@ const EndRightHandCheckButton = ({
   gameSessionState,
 }: EndRightHandCheckButtonProps) => {
   const [isLoading, setIsLoading] = useState(false);
+  const updateSession = useMutation(gameSessions.update);
 
   const handleEndRightHandCheck = async () => {
     if (isLoading) return;
     setIsLoading(true);
     try {
-      const res = await updateGameSession(gameSessionState.id, {
-        game_phase: GAME_PHASES[12], // "yakuza_and_shogun_chooses_target"
+      await updateSession({
+        sessionId: gameSessionState._id,
+        updates: {
+          gamePhase: GAME_PHASES[12], // "yakuza_and_shogun_chooses_target"
+        },
       });
-      if (!res?.ok) {
-        console.error("Failed to end right hand's check:", res?.message);
-      }
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <PhaseButton onClick={handleEndRightHandCheck} isLoading={isLoading} />
+    <PhaseButton onClick={handleEndRightHandCheck} isLoading={isLoading} label="End Check" variant="primary" />
   );
 };
 

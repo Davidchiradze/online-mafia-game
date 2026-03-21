@@ -42,11 +42,12 @@ The game follows this phase sequence:
 13. **yakuza_and_shogun_chooses_target** - Yakuza team selects kill target
 14. **detective_checks_for_mafia** - Detective checks if a player is Mafia
 15. **doctor_heals_player** - Doctor selects a player to heal
-16. **day_phase** - Day discussion phase, everyone can see everyone
-17. **nominated_players_speak** - Nominated players give 30-second self-justification in nomination order
-18. **voting** - Players vote to eliminate someone
-19. **repeat** - Cycle back to night_phase (if game continues)
-20. **end_game** - Game ends, win condition met
+16. **farewell_speech** - Killed player(s) give farewell speech
+17. **day_phase** - Day discussion phase, everyone can see everyone
+18. **nominated_players_speak** - Nominated players give 30-second self-justification in nomination order
+19. **voting** - Players vote to eliminate someone
+20. **repeat** - Cycle back to night_phase (if game continues)
+21. **end_game** - Game ends, win condition met
 
 ## Role-Based Visibility
 
@@ -59,7 +60,7 @@ Visibility rules determine who can see whom during each phase. See `src/lib/game
 - **Team meetings**: Only team members see each other
 - **Day phases**: Everyone sees everyone
 - **Role-specific phases**: Only that role (and host) can see
-- **Sleeping players appear dimmed**: During night phases, both the host and the awake role see sleeping players with a blur overlay — this signals to the active player that others are asleep
+- **Sleeping players appear dimmed**: During night phases, both the host and the awake role see sleeping players with a blur overlay -- this signals to the active player that others are asleep
 
 ### Visibility States
 
@@ -68,9 +69,9 @@ Participant tiles are driven by a single `VisibilityState` enum:
 | State | Meaning |
 |---|---|
 | `VISIBLE` | Full video shown |
-| `DIMMED` | Video with blur overlay (💤) — host or awake role viewing sleeping players |
-| `COVERED` | Video replaced with sleeping cover (💤) — player cannot see this target |
-| `DEAD` | Permanent dead overlay (💀) |
+| `DIMMED` | Video with blur overlay -- host or awake role viewing sleeping players |
+| `COVERED` | Video replaced with sleeping cover -- player cannot see this target |
+| `DEAD` | Permanent dead overlay |
 | `DISCONNECTED` | No video track / connection lost |
 
 The primary function is `getVisibilityStateWithDeath()` which accounts for game phase, roles, alive status, and game-finished state. See `src/lib/game/visibility.ts` for the full implementation.
@@ -120,7 +121,7 @@ The primary function is `getVisibilityStateWithDeath()` which accounts for game 
 
 **Mafia wins** when:
 
-- Mafia + Don + Right Hand ≥ Citizens + Detective + Doctor + Yakuza + Shogun
+- Mafia + Don + Right Hand >= Citizens + Detective + Doctor + Yakuza + Shogun
 
 **Citizens win** when:
 
@@ -128,50 +129,85 @@ The primary function is `getVisibilityStateWithDeath()` which accounts for game 
 
 **Yakuza wins** when:
 
-- Yakuza + Shogun ≥ All other players
+- Yakuza + Shogun >= All other players
 
 ## Data Model
 
-### Games Table
+### Games Table (`games`)
 
-- `id` - UUID
-- `code` - Unique game code
+- `_id` - Convex auto-generated ID
+- `code` - Unique game code (6 chars)
 - `name` - Game name
-- `host_id` - User ID of host
-- `game_status` - `not_started` | `playing` | `finished`
-- `game_type` - `traditional` | `city_mafia` | `japanese_mafia`
-- `max_players` - Maximum players (10 or 12)
+- `hostId` - Reference to `profiles` table
+- `gameStatus` - `"not_started"` | `"playing"` | `"finished"`
+- `gameType` - `"traditional"` | `"city_mafia"` | `"japanese_mafia"`
+- `maxPlayers` - Maximum players (10 or 12)
 
-### Game Players Table
+### Game Players Table (`gamePlayers`)
 
-- `id` - UUID
-- `game_id` - Foreign key to games
-- `player_id` - Foreign key to profiles
-- `role` - Player's role (null until assigned)
-- `is_alive` - Whether player is alive
-- `seat_number` - Seat position (1-12)
-- `state` - Player state (optional)
+- `_id` - Convex auto-generated ID
+- `gameId` - Reference to `games`
+- `playerId` - Reference to `profiles`
+- `isAlive` - Whether player is alive
+- `seatNumber` - Seat position (1-12)
+- `state` - Player connection state (optional)
 - `fouls` - Number of fouls
+- `nickname` - Player display name
 
-### Game Sessions Table
+### Game Player Roles Table (`gamePlayerRoles`)
 
-- `id` - UUID
-- `game_id` - Foreign key to games
-- `game_phase` - Current game phase
-- `is_finished` - Whether game is finished
-- `nominated_players` - Array of seat numbers nominated for voting
-- `attempt_to_kill_players` - Array of seat numbers targeted for kill
-- `healed_players` - Array of seat numbers healed
+- `_id` - Convex auto-generated ID
+- `gameId` - Reference to `games`
+- `playerId` - Reference to `profiles`
+- `role` - Player's role string
+
+### Game Sessions Table (`gameSessions`)
+
+- `_id` - Convex auto-generated ID
+- `gameId` - Reference to `games`
+- `gamePhase` - Current game phase
+- `isFinished` - Whether game is finished
+- `speakingOrder` - Array of seat numbers
+- `currentSpeakerIndex` - Current speaker position
+- `nominatedPlayers` - Array of seat numbers nominated for voting
+- `currentNightNumber` - Current night round
+
+### Night Phase Sessions Table (`nightPhaseSessions`)
+
+- `_id` - Convex auto-generated ID
+- `gameId` - Reference to `games`
+- `nightNumber` - Night round number
+- `mafiaTarget` - Seat number targeted by mafia
+- `yakuzaTarget` - Seat number targeted by yakuza
+- `healedPlayer` - Seat number healed by doctor
+
+### Voting Sessions Table (`votingSessions`)
+
+- `_id` - Convex auto-generated ID
+- `gameId` - Reference to `games`
+- `candidates` - Array of nominated seat numbers
+- `currentCandidateIndex` - Current candidate being voted on
+- `votingActive` - Whether voting window is open
+- `roundNumber` - Voting round number
+
+### Votes Table (`votes`)
+
+- `_id` - Convex auto-generated ID
+- `votingSessionId` - Reference to `votingSessions`
+- `voterSeat` - Seat number of voter
+- `seatNumber` - Seat number voted for (optional)
+- `isAutoVote` - Whether vote was auto-cast
+- `isBothLeave` - Whether this is a "both leave" vote
 
 ## Role Filtering (Security)
 
-**Critical**: Role information must be filtered server-side based on team relationships.
+**Critical**: Role information must be filtered server-side in Convex queries based on team relationships.
 
 - **Teammates** can always see each other's roles
-- **Non-teammates** cannot see roles (except host)
+- **Non-teammates** cannot see roles (returned as `null`)
 - **Host** can see all roles
 
-See `src/lib/utils/filterPlayerRoles.ts` for implementation.
+See `convex/gamePlayerRoles.ts` (`getFiltered` query) for implementation.
 
 ## Constants
 
@@ -198,8 +234,9 @@ Example:
 
 ## Implementation Notes
 
-1. **Server-side authority**: All phase transitions happen via server actions
-2. **Real-time updates**: Phase changes trigger Supabase subscriptions
-3. **Visibility logic**: Centralized in `src/lib/game/visibility.ts`
-4. **Role assignment**: Random shuffle in `src/lib/gameSession/actions.ts`
-5. **Seat shuffling**: Implemented in `src/lib/game/shuffleSeats.ts`
+1. **Server-side authority**: All phase transitions happen via Convex mutations
+2. **Real-time updates**: Phase changes automatically update all clients via reactive queries
+3. **Visibility logic**: Centralized in `src/lib/game/visibility.ts` (pure functions, no DB dependency)
+4. **Role assignment**: Random shuffle in `convex/game/sessions.ts` (`assignRandomRoles`)
+5. **Seat shuffling**: Implemented in `convex/game/sessions.ts` (`startGame`)
+6. **Atomic transitions**: Convex mutations ensure phase transitions are transactional

@@ -1,0 +1,213 @@
+---
+description: Game-specific Convex patterns for the Mafia game. Reference when working on game phases, roles, voting, or night actions.
+globs:
+  - "convex/gameSessions.ts"
+  - "convex/gamePlayerRoles.ts"
+  - "convex/nightPhaseSessions.ts"
+  - "convex/dayPhase.ts"
+  - "convex/votingSessions.ts"
+  - "convex/votes.ts"
+  - "convex/farewellSpeech.ts"
+  - "convex/gamePlayers.ts"
+  - "src/components/game/**"
+  - "src/components/gameSession/**"
+  - "src/hooks/game/**"
+---
+
+# Game Logic in Convex
+
+## Game Constants
+
+Game constants remain in `src/lib/constants/game.ts` (shared between frontend and backend). Import them in Convex functions:
+
+```typescript
+// In convex/ files, import from the constants file
+// Note: Convex functions can import from src/ if configured in tsconfig
+```
+
+## Game Session State Machine
+
+The game session tracks the current phase. All phase transitions happen in Convex mutations:
+
+```typescript
+// convex/gameSessions.ts
+export const advancePhase = mutation({
+  args: { gameId: v.id("games"), nextPhase: v.string() },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    const game = await ctx.db.get(args.gameId);
+    if (game?.hostId !== userId) throw new Error("Only host can advance phase");
+
+    const session = await ctx.db
+      .query("gameSessions")
+      .withIndex("by_gameId", (q) => q.eq("gameId", args.gameId))
+      .unique();
+    if (!session) throw new Error("No game session");
+
+    await ctx.db.patch(session._id, { gamePhase: args.nextPhase });
+  },
+});
+```
+
+## Role-Based Data Filtering
+
+Roles are filtered in Convex queries (server-side), not on the client:
+
+```typescript
+// convex/gamePlayerRoles.ts
+export const getFiltered = query({
+  args: { gameId: v.id("games") },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return [];
+
+    const allRoles = await ctx.db
+      .query("gamePlayerRoles")
+      .withIndex("by_gameId", (q) => q.eq("gameId", args.gameId))
+      .collect();
+
+    const game = await ctx.db.get(args.gameId);
+    const isHost = game?.hostId === userId;
+
+    // Host sees all roles
+    if (isHost) return allRoles;
+
+    // Find requesting player's role
+    const myRole = allRoles.find((r) => r.playerId === userId);
+    if (!myRole) return allRoles.map((r) => ({ ...r, role: null }));
+
+    // Filter based on team visibility
+    return filterByTeamVisibility(allRoles, myRole.role);
+  },
+});
+```
+
+## Night Phase Pattern
+
+```typescript
+// convex/nightPhaseSessions.ts
+export const selectMafiaTarget = mutation({
+  args: {
+    gameId: v.id("games"),
+    targetSeat: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    // Verify player is on mafia team
+    const role = await ctx.db
+      .query("gamePlayerRoles")
+      .withIndex("by_gameId_playerId", (q) =>
+        q.eq("gameId", args.gameId).eq("playerId", userId)
+      )
+      .unique();
+
+    const mafiaRoles = ["DON", "MAFIA", "MAFIA_RIGHT_HAND"];
+    if (!role || !mafiaRoles.includes(role.role)) {
+      throw new Error("Not a mafia member");
+    }
+
+    // Update night session
+    const nightSession = await ctx.db
+      .query("nightPhaseSessions")
+      .withIndex("by_gameId", (q) => q.eq("gameId", args.gameId))
+      .order("desc")
+      .first();
+
+    if (!nightSession) throw new Error("No night session");
+
+    await ctx.db.patch(nightSession._id, { mafiaTarget: args.targetSeat });
+  },
+});
+```
+
+## Voting Pattern
+
+```typescript
+// convex/votes.ts
+export const cast = mutation({
+  args: {
+    votingSessionId: v.id("votingSessions"),
+    voterSeat: v.number(),
+    seatNumber: v.optional(v.number()),
+    isBothLeave: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    // Check if already voted
+    const existing = await ctx.db
+      .query("votes")
+      .withIndex("by_votingSessionId", (q) =>
+        q.eq("votingSessionId", args.votingSessionId)
+      )
+      .filter((q) => q.eq(q.field("voterSeat"), args.voterSeat))
+      .first();
+
+    if (existing) throw new Error("Already voted");
+
+    await ctx.db.insert("votes", {
+      votingSessionId: args.votingSessionId,
+      voterSeat: args.voterSeat,
+      seatNumber: args.seatNumber,
+      isAutoVote: false,
+      isBothLeave: args.isBothLeave ?? false,
+    });
+  },
+});
+```
+
+## Visibility Logic
+
+Visibility functions in `src/lib/game/visibility.ts` are pure functions (no DB dependency). They remain unchanged and can be used on both frontend and in Convex functions.
+
+## Player Kill Pattern
+
+```typescript
+// convex/gamePlayers.ts
+export const kill = mutation({
+  args: {
+    gameId: v.id("games"),
+    seatNumber: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    const game = await ctx.db.get(args.gameId);
+    if (game?.hostId !== userId) throw new Error("Only host can kill players");
+
+    const player = await ctx.db
+      .query("gamePlayers")
+      .withIndex("by_gameId", (q) => q.eq("gameId", args.gameId))
+      .filter((q) => q.eq(q.field("seatNumber"), args.seatNumber))
+      .unique();
+
+    if (!player) throw new Error("Player not found");
+
+    await ctx.db.patch(player._id, { isAlive: false });
+  },
+});
+```
+
+## Frontend Hook Pattern
+
+Game hooks now use `useQuery` and `useMutation`:
+
+```typescript
+// src/hooks/game/useGameSession.ts
+import { useQuery, useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
+
+export function useGameSession(gameId: Id<"games">) {
+  const session = useQuery(api.gameSessions.getByGame, { gameId });
+  const start = useMutation(api.gameSessions.start);
+
+  return { session, start };
+}
+```

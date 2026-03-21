@@ -1,18 +1,18 @@
 "use client";
 
 import { useCallback } from "react";
+import { useMutation } from "convex/react";
+import { voting } from "@convex/refs/game";
+import type { Id } from "@convex/_generated/dataModel";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
-import {
-  startBothLeaveVote,
-  processBothLeaveResult,
-  startBothLeaveFarewell,
-  skipToNightAfterTie,
-} from "@/lib/voting/actions";
 import { useVotingTimer } from "./useVotingTimer";
 import { CandidateDots } from "./CandidateDots";
 import { VotingTimer } from "./VotingTimer";
 import { ResultMessage } from "./ResultMessage";
-import { VotingActionButton, getBothLeaveActionState } from "./VotingActionButton";
+import {
+  VotingActionButton,
+  getBothLeaveActionState,
+} from "./VotingActionButton";
 
 type Props = {
   isLoading: boolean;
@@ -32,15 +32,24 @@ export function BothLeaveVoteControls({
   setResultMessage,
 }: Props) {
   const { gameId, votingSession, voteData } = useGameRoom();
-  const { timeLeft, isLocalVoting, startLocalVoting, stopLocalVoting } = useVotingTimer();
+  const { timeLeft, isLocalVoting, startLocalVoting, stopLocalVoting } =
+    useVotingTimer();
+
+  const startBothLeaveVoteMutation = useMutation(voting.startBothLeaveVote);
+  const processBothLeaveResultMutation = useMutation(
+    voting.processBothLeaveResult,
+  );
+  const startBothLeaveFarewellMutation = useMutation(
+    voting.startBothLeaveFarewell,
+  );
+  const skipToNightAfterTieMutation = useMutation(voting.skipToNightAfterTie);
 
   const candidates = votingSession?.candidates ?? [];
   const bothLeaveVotes = voteData.bothLeaveVoters;
-  const isVotingNow = votingSession?.voting_active ?? false;
+  const isVotingNow = votingSession?.votingActive ?? false;
   const isVoting = isLocalVoting || isVotingNow;
 
-  const voteEnded =
-    !isVoting && votingSession?.voting_started_at !== null;
+  const voteEnded = !isVoting && !!votingSession?.votingStartedAt;
 
   // Handler to start "both leave" vote
   const handleVoteNow = useCallback(async () => {
@@ -50,34 +59,64 @@ export function BothLeaveVoteControls({
     setIsLoading(true);
     setResultMessage(null);
 
-    await startBothLeaveVote(gameId);
-
-    stopLocalVoting();
-    setIsLoading(false);
-  }, [gameId, isLoading, isVoting, startLocalVoting, stopLocalVoting, setIsLoading, setResultMessage]);
+    try {
+      await startBothLeaveVoteMutation({ gameId: gameId as Id<"games"> });
+    } finally {
+      stopLocalVoting();
+      setIsLoading(false);
+    }
+  }, [
+    gameId,
+    isLoading,
+    isVoting,
+    startLocalVoting,
+    stopLocalVoting,
+    setIsLoading,
+    setResultMessage,
+    startBothLeaveVoteMutation,
+  ]);
 
   // Handler to process "both leave" result
   const handleSeeResult = useCallback(async () => {
     if (isLoading) return;
     setIsLoading(true);
 
-    const result = await processBothLeaveResult(gameId);
-    if (result.ok) {
+    try {
+      const result = await processBothLeaveResultMutation({
+        gameId: gameId as Id<"games">,
+      });
       if (result.allLeave) {
-        await startBothLeaveFarewell(gameId, result.candidates);
+        await startBothLeaveFarewellMutation({
+          gameId: gameId as Id<"games">,
+          candidates: result.candidates,
+        });
         setResultMessage(`All ${result.candidates.length} players farewell...`);
       } else {
-        await skipToNightAfterTie(gameId);
+        await skipToNightAfterTieMutation({ gameId: gameId as Id<"games"> });
         setResultMessage(
-          `Vote failed (${result.voteCount}/${result.totalVoters}). Night...`
+          `Vote failed (${result.voteCount}/${result.totalVoters}). Night...`,
         );
       }
+    } catch (e) {
+      console.error("Failed to process both leave result:", e);
+    } finally {
+      setIsLoading(false);
     }
+  }, [
+    gameId,
+    isLoading,
+    setIsLoading,
+    setResultMessage,
+    processBothLeaveResultMutation,
+    startBothLeaveFarewellMutation,
+    skipToNightAfterTieMutation,
+  ]);
 
-    setIsLoading(false);
-  }, [gameId, isLoading, setIsLoading, setResultMessage]);
-
-  const actionState = getBothLeaveActionState({ isLoading, isVoting, voteEnded });
+  const actionState = getBothLeaveActionState({
+    isLoading,
+    isVoting,
+    voteEnded,
+  });
 
   // Status text for when not voting
   const getStatusText = () => {
@@ -86,7 +125,27 @@ export function BothLeaveVoteControls({
   };
 
   return (
-    <div className="flex flex-col items-center gap-2">
+    <div className="flex flex-col items-center gap-3">
+      {/* "Both Leave" label */}
+      <div
+        className="w-full px-4 py-2 rounded-lg border text-center"
+        style={{
+          background:
+            "linear-gradient(135deg, rgba(245,158,11,0.2) 0%, rgba(217,119,6,0.25) 100%)",
+          borderColor: "rgba(245,158,11,0.5)",
+        }}
+      >
+        <span
+          className="text-amber-300 text-xs uppercase tracking-wider"
+          style={{
+            fontFamily: "var(--font-orbitron), sans-serif",
+            fontWeight: 700,
+          }}
+        >
+          Both Leave Vote
+        </span>
+      </div>
+
       {/* Tied candidates */}
       <CandidateDots
         candidates={candidates}
@@ -97,7 +156,10 @@ export function BothLeaveVoteControls({
       />
 
       {/* Question */}
-      <div className="text-xs text-center text-white/70">
+      <div
+        className="text-xs text-center text-white/50"
+        style={{ fontFamily: "var(--font-inter), sans-serif" }}
+      >
         Should all {candidates.length} leave?
       </div>
 
@@ -108,7 +170,12 @@ export function BothLeaveVoteControls({
           subtitle={`${bothLeaveVotes.length} votes`}
         />
       ) : (
-        <div className="text-xs text-white/60">{getStatusText()}</div>
+        <div
+          className="text-xs text-white/50 uppercase tracking-wider"
+          style={{ fontFamily: "var(--font-orbitron), sans-serif" }}
+        >
+          {getStatusText()}
+        </div>
       )}
 
       {/* Result message */}
@@ -124,4 +191,3 @@ export function BothLeaveVoteControls({
     </div>
   );
 }
-

@@ -1,8 +1,11 @@
 "use client";
 
 import { useMemo } from "react";
-import { GameSessionState } from "@/types/game/type";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
+
+type GameSessionState = NonNullable<
+  ReturnType<typeof useGameRoom>["gameSessionState"]
+>;
 
 export interface DoctorHealSelectionResult {
   hasDoctorHealAuthority: boolean;
@@ -50,20 +53,17 @@ export function useDoctorHealSelection(
   }, [healedPlayers, seatNumber]);
 
   const isHealSelectedThisNight = useMemo(() => {
-    return (
-      nightPhaseSession?.healed_player !== null &&
-      nightPhaseSession?.healed_player !== undefined
-    );
-  }, [nightPhaseSession?.healed_player]);
+    return nightPhaseSession?.healedPlayer !== undefined;
+  }, [nightPhaseSession?.healedPlayer]);
 
   const isDoctorHealSelected = useMemo(() => {
     if (!gameSessionState || seatNumber === null) return false;
     const isInDoctorPhase =
-      gameSessionState.game_phase === "doctor_heals_player";
+      gameSessionState.gamePhase === "doctor_heals_player";
     if (!isInDoctorPhase) return false;
 
     if (nightPhaseSession) {
-      return nightPhaseSession.healed_player === seatNumber;
+      return nightPhaseSession.healedPlayer === seatNumber;
     }
 
     return false;

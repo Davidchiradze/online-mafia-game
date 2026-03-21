@@ -5,11 +5,10 @@ import React from "react";
 import ParticipantComponent from "../participant/ParticipantComponent";
 import { usePlayerSlots } from "@/hooks/game";
 import GamePhaseControls from "./GamePhaseControls";
-import { Tables } from "@/db/supabase/database.types";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
-import NominatedPlayersDisplay from "./NominatedPlayersDisplay";
 import VotingDisplay from "./VotingDisplay";
 import { EmptySeat } from "@/components/participant/playerStates";
+import PhaseTitle from "@/components/ui/PhaseTitle";
 
 // 4x5 grid placement for 12 players around a centered host (spanning 2 rows)
 // Player indices are 1..12 (clockwise-ish around the host)
@@ -68,6 +67,7 @@ export default function PlayerCircle({
   maxPlayers?: number;
 }) {
   const { players, gameSessionState, isHost } = useGameRoom();
+  console.log("🚀 ~ PlayerCircle ~ players:", players);
   const slotDescriptors = usePlayerSlots({
     tracks,
     hostUserId,
@@ -75,29 +75,27 @@ export default function PlayerCircle({
     players,
   });
 
+  const hostSlotKey = maxPlayers + 1;
+  const hostSlotDescriptor = slotDescriptors.find(
+    ({ key }) => key === hostSlotKey,
+  );
+  const hostPlayer = players.find((p) => p.seatNumber === hostSlotKey);
+
   return (
-    <div
-      className="grid w-full h-full gap-2 md:gap-3 lg:gap-4"
-      style={{
-        gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-        gridTemplateRows: "repeat(4, minmax(0, 1fr))",
-      }}
-    >
+    <div className="grid w-full h-full gap-2 md:gap-3 lg:gap-4 grid-cols-4 grid-rows-4">
       {slotDescriptors.map(({ key, track }) => {
+        if (key === hostSlotKey) return null;
+
         const pos = gridPositionForPlayerIndex(key);
-        const isHostIndex = key === maxPlayers + 1;
-        const player = players.find(
-          (p) => p.seat_number === key,
-        ) as Tables<"game_players">;
+        const player = players.find((p) => p.seatNumber === key);
         return (
           <div
             key={`seat-${String(key)}`}
             className={
-              "relative rounded-xl backdrop-blur-sm" +
+              "relative rounded-xl backdrop-blur-sm " +
               (player
                 ? "bg-black/40 border border-white/10"
-                : "bg-white/[0.03] border border-dashed border-white/20 ") +
-              (isHostIndex ? "transform translate-y-1/2" : "")
+                : "bg-white/[0.03] border border-dashed border-white/20")
             }
             style={{ gridColumn: pos.gridColumn, gridRow: pos.gridRow }}
           >
@@ -105,8 +103,8 @@ export default function PlayerCircle({
               <ParticipantComponent
                 player={player}
                 gameId={gameId}
-                hostUserId={hostUserId}
-                currentUserId={userId}
+                hostProfileId={hostUserId}
+                currentProfileId={userId}
                 trackRef={track}
                 playerIndex={key}
               />
@@ -116,23 +114,41 @@ export default function PlayerCircle({
           </div>
         );
       })}
-      <div style={{ gridColumn: 3, gridRow: 2, position: "relative" }}>
-        {(isHost || gameSessionState?.game_phase === "voting") && (
-          <div className="absolute top-0 left-0 w-full h-[200%] flex flex-col items-center justify-center gap-2">
-            <div className="w-full h-[50%] flex flex-col items-center justify-center gap-3 px-4 py-3 rounded-2xl bg-black/50 backdrop-blur-md border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.4)] ring-1 ring-inset ring-white/[0.05]">
-              {isHost ? (
-                <NominatedPlayersDisplay
-                  nominatedPlayers={gameSessionState?.nominated_players ?? []}
-                />
-              ) : (
-                <VotingDisplay />
-              )}
-              {isHost && <GamePhaseControls />}
-            </div>
+
+      {/* Unified 2×2 center panel */}
+      <div className="center-panel rounded-2xl backdrop-blur-xl border flex flex-col-reverse overflow-hidden col-start-2 col-end-4 row-start-2 row-end-4">
+        {/* Host video — top 50% */}
+        <div className="h-1/2 border-b border-white/10 flex items-center justify-center bg-black/20">
+          <div className="relative h-full aspect-[4/3] overflow-hidden rounded-xl">
+            {hostPlayer ? (
+              <ParticipantComponent
+                player={hostPlayer}
+                gameId={gameId}
+                hostProfileId={hostUserId}
+                currentProfileId={userId}
+                trackRef={hostSlotDescriptor?.track}
+                playerIndex={hostSlotKey}
+              />
+            ) : (
+              <EmptySeat seatIndex={hostSlotKey} />
+            )}
           </div>
-        )}
+        </div>
+
+        {/* Controls — bottom 50% */}
+        <div className="h-1/2 flex flex-col items-center justify-center gap-2 p-3 overflow-y-auto">
+          {isHost ? (
+            <GamePhaseControls />
+          ) : (
+            <>
+              {gameSessionState && (
+                <PhaseTitle gameSessionState={gameSessionState} />
+              )}
+              {gameSessionState?.gamePhase === "voting" && <VotingDisplay />}
+            </>
+          )}
+        </div>
       </div>
-      <div style={{ gridColumn: 3, gridRow: 3 }}></div>
     </div>
   );
 }

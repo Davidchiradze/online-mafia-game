@@ -1,29 +1,20 @@
-import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
-import { fetchAllGameRooms } from "@/lib/gameRoom/actions";
+"use client";
+
+import { useQuery } from "convex/react";
+import { lobbyGames } from "@convex/refs/lobby";
 import LobbyContent from "@/components/lobby/LobbyContent";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
-export default async function LobbyPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+export default function LobbyPage() {
+  const games = useQuery(lobbyGames.list);
 
-  if (!user) {
-    redirect("/auth");
+  if (games === undefined) {
+    return (
+      <div className="min-h-screen bg-[#0a0a12] flex items-center justify-center">
+        <LoadingSpinner message="Loading…" />
+      </div>
+    );
   }
 
-  const sessionsRes = await fetchAllGameRooms();
-  const initialSessions = sessionsRes.ok ? sessionsRes.data : [];
-
-  return (
-    <LobbyContent
-      user={{
-        id: user.id,
-        email: user.email,
-        nickname: user.user_metadata?.nickname,
-      }}
-      initialSessions={initialSessions}
-    />
-  );
+  return <LobbyContent games={games} />;
 }

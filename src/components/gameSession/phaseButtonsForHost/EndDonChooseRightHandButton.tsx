@@ -1,13 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
-import { updateGameSession } from "@/lib/gameSession/actions";
-import { GameSessionState } from "@/types/game/type";
+import { useMutation } from "convex/react";
+import { gameSessions } from "@convex/refs/game";
+import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { GAME_PHASES } from "@/lib/constants/game";
 import PhaseButton from "@/components/ui/PhaseButton";
 
 type EndDonChooseRightHandButtonProps = {
-  gameSessionState: GameSessionState;
+  gameSessionState: NonNullable<ReturnType<typeof useGameRoom>["gameSessionState"]>;
 };
 
 /**
@@ -17,23 +18,24 @@ const EndDonChooseRightHandButton = ({
   gameSessionState,
 }: EndDonChooseRightHandButtonProps) => {
   const [isLoading, setIsLoading] = useState(false);
+  const updateSession = useMutation(gameSessions.update);
 
   const handleEndDonChoice = async () => {
     if (isLoading) return;
     setIsLoading(true);
     try {
-      const res = await updateGameSession(gameSessionState.id, {
-        game_phase: GAME_PHASES[4], // "yakuda_shogun_meet"
+      await updateSession({
+        sessionId: gameSessionState._id,
+        updates: {
+          gamePhase: GAME_PHASES[4], // "yakuda_shogun_meet"
+        },
       });
-      if (!res?.ok) {
-        console.error("Failed to end don's choice:", res?.message);
-      }
     } finally {
       setIsLoading(false);
     }
   };
 
-  return <PhaseButton onClick={handleEndDonChoice} isLoading={isLoading} />;
+  return <PhaseButton onClick={handleEndDonChoice} isLoading={isLoading} label="Confirm" variant="success" />;
 };
 
 export default EndDonChooseRightHandButton;

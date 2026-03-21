@@ -1,14 +1,11 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+
+import { useState } from "react";
+import { useQuery, useMutation } from "convex/react";
+import { joinRequests } from "@convex/refs/lobby";
 import Drawer from "@/components/ui/Drawer";
-import {
-  acceptJoinRequest,
-  fetchPendingJoinRequests,
-  rejectJoinRequest,
-} from "@/lib/gameRoom/actions";
-import { usePendingJoinRequests } from "@/hooks/realtime";
-import { JoinRequest } from "@/types/game/type";
-import { JOIN_REQUEST_STATUSES } from "@/lib/constants/game";
+import type { Id } from "@convex/_generated/dataModel";
+
 type Props = {
   gameId: string;
   open: boolean;
@@ -16,81 +13,59 @@ type Props = {
 };
 
 export default function JoinRequestsDrawer({ gameId, open, onClose }: Props) {
-  const [requests, setRequests] = useState<JoinRequest[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  useEffect(() => {
-    if (!open) return;
-    const init = async () => {
-      const res = await fetchPendingJoinRequests(gameId);
-      if (res.ok) setRequests(res.data);
-    };
-    init();
-  }, [gameId, open]);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
 
-  const handlePendingEvent = useCallback(
-    (event: "insert" | "update", req: JoinRequest) => {
-      if (event === "insert") setRequests((p) => [req, ...p]);
-      else if (event === "update") {
-        setRequests((prev) =>
-          prev.map((r) =>
-            r.id === req.id
-              ? {
-                  ...req,
-                  status: req.status,
-                }
-              : r
-          )
-        );
-      }
-    },
-    []
+  const requests = useQuery(
+    joinRequests.listByGame,
+    open ? { gameId: gameId as Id<"games"> } : "skip",
   );
 
-  usePendingJoinRequests(gameId, handlePendingEvent, open);
-  const approve = async (id: string) => {
-    setIsLoading(true);
-    await acceptJoinRequest(id);
-    setIsLoading(false);
-  };
-  const reject = async (id: string) => {
-    setIsLoading(true);
-    await rejectJoinRequest(id);
-    setIsLoading(false);
+  const acceptRequest = useMutation(joinRequests.accept);
+  const rejectRequest = useMutation(joinRequests.reject);
+
+  const pendingRequests = requests?.filter((r) => r.status === "pending") ?? [];
+
+  const handleToggle = async (requestId: Id<"joinRequests">, currentStatus: string) => {
+    setLoadingId(requestId);
+    try {
+      if (currentStatus === "accepted") {
+        await rejectRequest({ requestId });
+      } else {
+        await acceptRequest({ requestId });
+      }
+    } finally {
+      setLoadingId(null);
+    }
   };
 
   return (
     <Drawer open={open} onClose={onClose} title="Join Requests" size="md">
-      {requests.length === 0 ? (
+      {pendingRequests.length === 0 ? (
         <div className="text-gray-600 dark:text-gray-400">
           No pending requests
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          {requests.map((r) => (
+          {pendingRequests.map((r) => (
             <div
-              key={r.id}
+              key={r._id}
               className="flex items-center justify-between p-3 rounded-lg border border-gray-200 dark:border-gray-700"
             >
               <div className="text-gray-800 dark:text-gray-200 text-sm">
-                {r.requester_nickname}
+                {r.requesterNickname}
               </div>
               <div className="flex items-center gap-3">
                 <button
                   type="button"
-                  disabled={isLoading}
+                  disabled={loadingId === r._id}
                   aria-label="Toggle accept"
-                  // aria-pressed={r.status === JOIN_REQUEST_STATUSES.ACCEPTED}
-                  onClick={() =>
-                    r.status === JOIN_REQUEST_STATUSES.ACCEPTED
-                      ? reject(r.id)
-                      : approve(r.id)
-                  }
+                  onClick={() => handleToggle(r._id, r.status)}
                   className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer"
                 >
                   <span
                     className={
                       `absolute inset-0 rounded-full transition-colors ` +
-                      (r.status === JOIN_REQUEST_STATUSES.ACCEPTED
+                      (r.status === "accepted"
                         ? `bg-green-500`
                         : `bg-gray-300 dark:bg-gray-700`)
                     }
@@ -98,7 +73,7 @@ export default function JoinRequestsDrawer({ gameId, open, onClose }: Props) {
                   <span
                     className={
                       `pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ` +
-                      (r.status === JOIN_REQUEST_STATUSES.ACCEPTED
+                      (r.status === "accepted"
                         ? `translate-x-6`
                         : `translate-x-1`)
                     }

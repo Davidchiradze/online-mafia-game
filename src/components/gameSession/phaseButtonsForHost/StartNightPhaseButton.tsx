@@ -1,15 +1,15 @@
 "use client";
 
 import React, { useState } from "react";
-import { updateGameSession } from "@/lib/gameSession/actions";
-import { startNight } from "@/lib/nightPhase/actions";
-import { GameSessionState } from "@/types/game/type";
-import { GAME_PHASES } from "@/lib/constants/game";
+import { useMutation } from "convex/react";
+import { gameSessions, nightPhase } from "@convex/refs/game";
+import type { Id } from "@convex/_generated/dataModel";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
+import { GAME_PHASES } from "@/lib/constants/game";
 import PhaseButton from "@/components/ui/PhaseButton";
 
 type StartNightPhaseButtonProps = {
-  gameSessionState: GameSessionState;
+  gameSessionState: NonNullable<ReturnType<typeof useGameRoom>["gameSessionState"]>;
 };
 
 /**
@@ -21,23 +21,23 @@ const StartNightPhaseButton = ({
 }: StartNightPhaseButtonProps) => {
   const { gameId } = useGameRoom();
   const [isLoading, setIsLoading] = useState(false);
+  const updateSession = useMutation(gameSessions.update);
+  const startNightMutation = useMutation(nightPhase.startNight);
 
   const handleStartNightPhase = async () => {
     if (isLoading) return;
     setIsLoading(true);
     try {
-      const nightRes = await startNight(gameId);
-      if (!nightRes.ok) {
-        console.error("Failed to start night:", nightRes.message);
-        return;
-      }
+      await startNightMutation({ gameId: gameId as Id<"games"> });
 
-      const res = await updateGameSession(gameSessionState.id, {
-        game_phase: GAME_PHASES[8], // "night_phase"
+      await updateSession({
+        sessionId: gameSessionState._id,
+        updates: {
+          gamePhase: GAME_PHASES[8], // "night_phase"
+        },
       });
-      if (!res?.ok) {
-        console.error("Failed to start night phase:", res?.message);
-      }
+    } catch (error) {
+      console.error("Failed to start night phase:", error);
     } finally {
       setIsLoading(false);
     }
@@ -47,7 +47,8 @@ const StartNightPhaseButton = ({
     <PhaseButton
       onClick={handleStartNightPhase}
       isLoading={isLoading}
-      label="Start"
+      label="Start Night"
+      variant="secondary"
     />
   );
 };

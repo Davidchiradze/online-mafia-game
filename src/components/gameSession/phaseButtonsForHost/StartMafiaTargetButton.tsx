@@ -1,49 +1,49 @@
 "use client";
 
 import React, { useState } from "react";
-import { updateGameSession } from "@/lib/gameSession/actions";
-import { startNight } from "@/lib/nightPhase/actions";
-import { GameSessionState } from "@/types/game/type";
-import { GAME_PHASES } from "@/lib/constants/game";
+import { useMutation } from "convex/react";
+import { gameSessions, nightPhase } from "@convex/refs/game";
+import type { Id } from "@convex/_generated/dataModel";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
+import { GAME_PHASES } from "@/lib/constants/game";
 import PhaseButton from "@/components/ui/PhaseButton";
 
 type StartMafiaTargetButtonProps = {
-  gameSessionState: GameSessionState;
+  gameSessionState: NonNullable<ReturnType<typeof useGameRoom>["gameSessionState"]>;
 };
 
 /**
  * Button to start mafia target selection.
  * If coming from night_phase (night already started), just transitions.
- * If current_night_number is 0, starts a new night first.
+ * If currentNightNumber is 0, starts a new night first.
  */
 const StartMafiaTargetButton = ({
   gameSessionState,
 }: StartMafiaTargetButtonProps) => {
   const { gameId } = useGameRoom();
   const [isLoading, setIsLoading] = useState(false);
+  const updateSession = useMutation(gameSessions.update);
+  const startNightMutation = useMutation(nightPhase.startNight);
 
   const handleStartMafiaTarget = async () => {
     if (isLoading) return;
     setIsLoading(true);
     try {
       if (
-        !gameSessionState.current_night_number ||
-        gameSessionState.current_night_number === 0
+        !gameSessionState.currentNightNumber ||
+        gameSessionState.currentNightNumber === 0
       ) {
-        const nightRes = await startNight(gameId);
-        if (!nightRes.ok) {
-          console.error("Failed to start night:", nightRes.message);
-          return;
-        }
+        await startNightMutation({ gameId: gameId as Id<"games"> });
       }
 
-      const res = await updateGameSession(gameSessionState.id, {
-        game_phase: GAME_PHASES[9], // "mafia_chooses_target"
+      await updateSession({
+        sessionId: gameSessionState._id,
+        updates: {
+          gamePhase: GAME_PHASES[9], // "mafia_chooses_target"
+        },
       });
-      if (!res?.ok) {
-        console.error("Failed to start mafia target selection:", res?.message);
-      }
+    } catch (error) {
+      console.error("Failed to start mafia target:", error);
     } finally {
       setIsLoading(false);
     }
@@ -53,7 +53,8 @@ const StartMafiaTargetButton = ({
     <PhaseButton
       onClick={handleStartMafiaTarget}
       isLoading={isLoading}
-      label="Start"
+      label="Start Mafia Phase"
+      variant="danger"
     />
   );
 };

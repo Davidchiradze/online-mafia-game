@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { giveFoul } from "@/lib/dayPhase/actions";
+import { useMutation } from "convex/react";
+import { dayPhase } from "@convex/refs/game";
+import type { Id } from "@convex/_generated/dataModel";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { FOULS } from "@/lib/constants/game";
 import { FoulAlertIcon } from "@/assets/icons";
@@ -24,6 +26,7 @@ export default function FoulButton({
   const { gameId } = useGameRoom();
   const [isLoading, setIsLoading] = useState(false);
   const [showEliminationModal, setShowEliminationModal] = useState(false);
+  const giveFoulMutation = useMutation(dayPhase.giveFoul);
 
   // Check if this would be the 4th (elimination) foul
   const wouldBeEliminationFoul = currentFouls === FOULS.MAX_FOULS;
@@ -35,12 +38,12 @@ export default function FoulButton({
     if (isLoading) return;
     setIsLoading(true);
     try {
-      await giveFoul(gameId, seatNumber);
+      await giveFoulMutation({ gameId: gameId as Id<"games">, seatNumber });
     } finally {
       setIsLoading(false);
       setShowEliminationModal(false);
     }
-  }, [gameId, seatNumber, isLoading]);
+  }, [gameId, seatNumber, isLoading, giveFoulMutation]);
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {

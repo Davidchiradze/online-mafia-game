@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { healPlayer } from "@/lib/nightPhase/actions";
+import { useMutation } from "convex/react";
+import { nightPhase } from "@convex/refs/game";
+import type { Id } from "@convex/_generated/dataModel";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 
 interface DoctorHealButtonProps {
@@ -16,24 +18,24 @@ export default function DoctorHealButton({
   const { gameId } = useGameRoom();
   const [isLoading, setIsLoading] = useState(false);
   const [hasHealed, setHasHealed] = useState(false);
+  const healPlayerMutation = useMutation(nightPhase.healPlayer);
 
   const handleHeal = useCallback(async () => {
     if (isLoading || isAlreadyHealed || hasHealed) return;
 
     setIsLoading(true);
     try {
-      const result = await healPlayer(gameId, seatNumber);
-      if (!result.ok) {
-        console.error("Failed to heal player:", result.message);
-      } else {
-        setHasHealed(true);
-      }
+      await healPlayerMutation({
+        gameId: gameId as Id<"games">,
+        targetSeatNumber: seatNumber,
+      });
+      setHasHealed(true);
     } catch (error) {
       console.error("Error healing player:", error);
     } finally {
       setIsLoading(false);
     }
-  }, [gameId, seatNumber, isLoading, isAlreadyHealed, hasHealed]);
+  }, [gameId, seatNumber, isLoading, isAlreadyHealed, hasHealed, healPlayerMutation]);
 
   const isDisabled = isLoading || isAlreadyHealed || hasHealed;
 

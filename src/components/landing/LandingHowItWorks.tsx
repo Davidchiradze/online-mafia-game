@@ -8,7 +8,6 @@ import {
   Trophy,
   LucideIcon,
 } from "lucide-react";
-import { GlowCard } from "./GlowCard";
 import { SectionHeader } from "./SectionHeader";
 
 interface Step {
@@ -16,13 +15,6 @@ interface Step {
   step: string;
   title: string;
   description: string;
-}
-
-interface Testimonial {
-  name: string;
-  role: string;
-  text: string;
-  avatar: string;
 }
 
 const steps: Step[] = [
@@ -53,27 +45,6 @@ const steps: Step[] = [
     title: "Win or Betray",
     description:
       "The Mafia wins by eliminating all civilians. Town wins by exposing the Mafia. Who do you trust?",
-  },
-];
-
-const testimonials: Testimonial[] = [
-  {
-    name: "Koshka",
-    role: "",
-    text: "Cool website blat",
-    avatar: "from-red-500 to-pink-600",
-  },
-  {
-    name: "Jordan K.",
-    role: "Casual Gamer",
-    text: "My friend group plays every weekend. Private rooms and custom rules make it endlessly fun.",
-    avatar: "from-blue-500 to-cyan-600",
-  },
-  {
-    name: "Sam T.",
-    role: "Streamer",
-    text: "I've streamed hundreds of hours. The role variety and strategic depth keep viewers hooked.",
-    avatar: "from-purple-500 to-violet-600",
   },
 ];
 

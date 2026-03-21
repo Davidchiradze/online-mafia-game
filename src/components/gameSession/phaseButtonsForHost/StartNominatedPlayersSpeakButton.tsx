@@ -1,16 +1,17 @@
 "use client";
 
 import React, { useState } from "react";
-import { startNominatedPlayersSpeaking } from "@/lib/dayPhase/actions";
-import { updateGameSession } from "@/lib/gameSession/actions";
-import { startNight } from "@/lib/nightPhase/actions";
-import { GameSessionState } from "@/types/game/type";
+import { useMutation } from "convex/react";
+import { gameSessions, dayPhase, nightPhase } from "@convex/refs/game";
+import type { Id } from "@convex/_generated/dataModel";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { GAME_PHASES } from "@/lib/constants/game";
 import PhaseButton from "@/components/ui/PhaseButton";
 
 type Props = {
-  gameSessionState: GameSessionState;
+  gameSessionState: NonNullable<
+    ReturnType<typeof useGameRoom>["gameSessionState"]
+  >;
 };
 
 /**
@@ -22,26 +23,23 @@ type Props = {
 const StartNominatedPlayersSpeakButton = ({ gameSessionState }: Props) => {
   const { gameId } = useGameRoom();
   const [isLoading, setIsLoading] = useState(false);
+  const updateSession = useMutation(gameSessions.update);
+  const startNominatedSpeaking = useMutation(
+    dayPhase.startNominatedPlayersSpeaking,
+  );
+  const startNight = useMutation(nightPhase.startNight);
 
-  const nominatedCount = gameSessionState.nominated_players?.length ?? 0;
+  const nominatedCount = gameSessionState.nominatedPlayers?.length ?? 0;
   const hasNominations = nominatedCount > 0;
 
-  // Check if foul elimination occurred this round
   const foulEliminationOccurred =
-    (gameSessionState as unknown as { foul_elimination_occurred?: boolean })
-      .foul_elimination_occurred ?? false;
+    gameSessionState.foulEliminationOccurred ?? false;
 
   const handleStartSelfJustification = async () => {
     if (isLoading || !hasNominations) return;
     setIsLoading(true);
     try {
-      const res = await startNominatedPlayersSpeaking(gameId);
-      if (!res?.ok) {
-        console.error(
-          "Failed to start nominated players speaking:",
-          res?.message
-        );
-      }
+      await startNominatedSpeaking({ gameId: gameId as Id<"games"> });
     } finally {
       setIsLoading(false);
     }
@@ -51,27 +49,22 @@ const StartNominatedPlayersSpeakButton = ({ gameSessionState }: Props) => {
     if (isLoading) return;
     setIsLoading(true);
     try {
-      const nightRes = await startNight(gameId);
-      if (!nightRes.ok) {
-        console.error("Failed to start night:", nightRes.message);
-        return;
-      }
+      await startNight({ gameId: gameId as Id<"games"> });
 
-      const res = await updateGameSession(gameSessionState.id, {
-        game_phase: GAME_PHASES[8], // "night_phase"
-        current_speaker_index: null,
-        speaker_started_at: null,
-        speaking_order: [],
+      await updateSession({
+        sessionId: gameSessionState._id,
+        updates: {
+          gamePhase: GAME_PHASES[8], // "night_phase"
+          currentSpeakerIndex: null,
+          speakerStartedAt: null,
+          speakingOrder: [],
+        },
       });
-      if (!res?.ok) {
-        console.error("Failed to skip to night phase:", res?.message);
-      }
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Foul elimination occurred - show message and skip to night button
   if (foulEliminationOccurred) {
     return (
       <div className="flex flex-col items-center gap-2">
@@ -92,7 +85,6 @@ const StartNominatedPlayersSpeakButton = ({ gameSessionState }: Props) => {
     );
   }
 
-  // No nominations - show button to skip to night phase
   if (!hasNominations) {
     return (
       <div className="flex flex-col items-center gap-2">
@@ -112,7 +104,8 @@ const StartNominatedPlayersSpeakButton = ({ gameSessionState }: Props) => {
     <PhaseButton
       onClick={handleStartSelfJustification}
       isLoading={isLoading}
-      label="Start"
+      label="Start self-justification"
+      variant="warning"
     />
   );
 };

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
-import { ChevronRight, Users } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { GlowButton } from "./GlowButton";
 import { GlassButton } from "./GlassButton";
 
@@ -9,13 +9,6 @@ const HERO_IMG =
   "https://images.unsplash.com/photo-1702332240877-07fd6fb1195f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxub2lyJTIwY2l0eSUyMHN0cmVldCUyMG5pZ2h0JTIwdm9sdW1ldHJpYyUyMGxpZ2h0JTIwZm9nfGVufDF8fHx8MTc3MTk2NjQ4N3ww&ixlib=rb-4.1.0&q=80&w=1080";
 const HERO_IMG_ALT =
   "https://images.unsplash.com/photo-1671836651670-a0fa5702f210?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkYXJrJTIwbW9vZHklMjBjaXR5JTIwc2t5bGluZSUyMG5pZ2h0JTIwcmVkJTIwZ2xvdyUyMGNpbmVtYXRpY3xlbnwxfHx8fDE3NzE5NjY0ODh8MA&ixlib=rb-4.1.0&q=80&w=1080";
-
-const avatarGradients = [
-  "from-red-500 to-red-700",
-  "from-purple-500 to-purple-700",
-  "from-blue-500 to-blue-700",
-  "from-emerald-500 to-emerald-700",
-];
 
 export function LandingHero() {
   return (

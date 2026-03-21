@@ -1,14 +1,10 @@
 "use client";
 
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useEffect } from "react";
+import { useMutation } from "convex/react";
+import { voting } from "@convex/refs/game";
+import type { Id } from "@convex/_generated/dataModel";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
-import {
-  startVoteWindow,
-  advanceToNextCandidate,
-  processVotingResults,
-  startVotingFarewell,
-  startTieBreak,
-} from "@/lib/voting/actions";
 import { useVotingTimer } from "./useVotingTimer";
 import { CandidateDots } from "./CandidateDots";
 import { VotingTimer } from "./VotingTimer";
@@ -35,30 +31,36 @@ export function RegularVotingControls({
 }: Props) {
   const { gameId, votingSession, voteData } = useGameRoom();
   const { timeLeft, isLocalVoting, startLocalVoting, stopLocalVoting } = useVotingTimer();
-  
+
+  const startVoteWindowMutation = useMutation(voting.startVoteWindow);
+  const advanceCandidateMutation = useMutation(voting.advanceCandidate);
+  const processResultsMutation = useMutation(voting.processResults);
+  const startVotingFarewellMutation = useMutation(voting.startVotingFarewell);
+  const startTieBreakMutation = useMutation(voting.startTieBreak);
+
   // Track when we're waiting for real-time sync after advancing to next candidate
   // const [waitingForSync, setWaitingForSync] = useState(false);
 
   // Clear loading when real-time update confirms the advance
-  // (voting_started_at becomes null after advancing to next candidate)
+  // (votingStartedAt becomes null after advancing to next candidate)
   useEffect(() => {
-    if (votingSession?.voting_started_at === null) {
+    if (!votingSession?.votingStartedAt) {
       // setWaitingForSync(false);
       setIsLoading(false);
     }
-  }, [ votingSession?.voting_started_at, setIsLoading]);
+  }, [votingSession?.votingStartedAt, setIsLoading]);
 
   const candidates = votingSession?.candidates ?? [];
-  const currentIdx = votingSession?.current_candidate_index ?? 0;
+  const currentIdx = votingSession?.currentCandidateIndex ?? 0;
   const currentCandidate = candidates[currentIdx];
-  const isVotingNow = votingSession?.voting_active ?? false;
+  const isVotingNow = votingSession?.votingActive ?? false;
   const isVoting = isLocalVoting || isVotingNow;
   const allDone = currentIdx >= candidates.length;
   const isLastCandidate = currentIdx === candidates.length - 1 && !allDone;
 
   // Tie-break info
-  const isTieBreak = votingSession?.is_tie_break ?? false;
-  const tieBreakRound = votingSession?.tie_break_round ?? 0;
+  const isTieBreak = votingSession?.isTieBreak ?? false;
+  const tieBreakRound = votingSession?.tieBreakRound ?? 0;
 
   // Vote counts
   const currentVotes = currentCandidate
@@ -67,7 +69,7 @@ export function RegularVotingControls({
 
   // Determine which button to show
   const voteEndedForCurrentCandidate =
-    !isVoting && votingSession?.voting_started_at !== null;
+    !isVoting && !!votingSession?.votingStartedAt;
   const showTallyButton = allDone || isLastCandidate;
   const showNextCandidateButton = voteEndedForCurrentCandidate && !showTallyButton;
   const showVoteNowButton = !isVoting && !showTallyButton && !showNextCandidateButton;
@@ -80,50 +82,63 @@ export function RegularVotingControls({
     setIsLoading(true);
     setResultMessage(null);
 
-    await startVoteWindow(gameId);
-
-    stopLocalVoting();
-    setIsLoading(false);
-  }, [gameId, isLoading, isVoting, startLocalVoting, stopLocalVoting, setIsLoading, setResultMessage]);
+    try {
+      await startVoteWindowMutation({ gameId: gameId as Id<"games"> });
+    } catch (e) {
+      console.error("Failed to start vote window:", e);
+    } finally {
+      stopLocalVoting();
+      setIsLoading(false);
+    }
+  }, [gameId, isLoading, isVoting, startLocalVoting, stopLocalVoting, setIsLoading, setResultMessage, startVoteWindowMutation]);
 
   // Handler: Advance to next candidate (waits for real-time sync)
   const handleNextCandidate = useCallback(async () => {
     if (isLoading) return;
     setIsLoading(true);
-    
-    await advanceToNextCandidate(gameId);
-    
-    // Don't clear loading here - wait for real-time sync
-    // useEffect above will clear it when voting_started_at becomes null
-    // setWaitingForSync(true);
-  }, [gameId, isLoading, setIsLoading]);
+
+    try {
+      await advanceCandidateMutation({ gameId: gameId as Id<"games"> });
+      // Don't clear loading here - wait for real-time sync
+      // useEffect above will clear it when votingStartedAt becomes null
+    } catch (e) {
+      console.error("Failed to advance candidate:", e);
+      setIsLoading(false);
+    }
+  }, [gameId, isLoading, setIsLoading, advanceCandidateMutation]);
 
   // Handler: Tally results
   const handleTally = useCallback(async () => {
     if (isLoading) return;
     setIsLoading(true);
 
-    const result = await processVotingResults(gameId);
-    if (result.ok) {
+    try {
+      const result = await processResultsMutation({ gameId: gameId as Id<"games"> });
       if (result.result === "winner") {
-        await startVotingFarewell(gameId, result.winner);
+        await startVotingFarewellMutation({
+          gameId: gameId as Id<"games">,
+          winnerSeatNumber: result.winner,
+        });
         setResultMessage(`#${result.winner} farewell...`);
       } else {
-        const tieResult = await startTieBreak(gameId, result.tiedCandidates);
-        if (tieResult.ok) {
-          if (tieResult.bothLeaveVote) {
-            setResultMessage(`Same tie! Vote: should all leave?`);
-          } else {
-            setResultMessage(
-              `Tie! #${result.tiedCandidates.join(", #")} justify...`
-            );
-          }
+        const tieResult = await startTieBreakMutation({
+          gameId: gameId as Id<"games">,
+          tiedCandidates: result.tiedCandidates,
+        });
+        if (tieResult.bothLeaveVote) {
+          setResultMessage(`Same tie! Vote: should all leave?`);
+        } else {
+          setResultMessage(
+            `Tie! #${result.tiedCandidates.join(", #")} justify...`
+          );
         }
       }
+    } catch (e) {
+      console.error("Failed to process voting results:", e);
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
-  }, [gameId, isLoading, setIsLoading, setResultMessage]);
+  }, [gameId, isLoading, setIsLoading, setResultMessage, processResultsMutation, startVotingFarewellMutation, startTieBreakMutation]);
 
   // Compute action state
   const actionState = getRegularVotingActionState({
@@ -143,11 +158,22 @@ export function RegularVotingControls({
   };
 
   return (
-    <div className="flex flex-col items-center gap-2">
+    <div className="flex flex-col items-center gap-3">
       {/* Tie-break indicator */}
       {isTieBreak && (
-        <div className="text-[10px] text-amber-400 uppercase tracking-wide font-medium">
-          Tie-break #{tieBreakRound}
+        <div
+          className="px-3 py-1.5 rounded-full border"
+          style={{
+            background: "linear-gradient(135deg, rgba(245,158,11,0.2) 0%, rgba(217,119,6,0.25) 100%)",
+            borderColor: "rgba(245,158,11,0.45)",
+          }}
+        >
+          <span
+            className="text-[10px] text-amber-300 uppercase tracking-widest font-bold"
+            style={{ fontFamily: "var(--font-orbitron), sans-serif" }}
+          >
+            Tie-break #{tieBreakRound}
+          </span>
         </div>
       )}
 
@@ -182,4 +208,3 @@ export function RegularVotingControls({
     </div>
   );
 }
-

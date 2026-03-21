@@ -1,48 +1,70 @@
-import { createClient } from "@/lib/supabase/server";
-import { fetchGameRoomById } from "@/lib/gameRoom/actions";
-import { Suspense } from "react";
-import Room from "@/components/game/Room";
-import { redirect } from "next/navigation";
+"use client";
+
+import { use } from "react";
+import { useQuery, useMutation } from "convex/react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { lobbyGames, joinRequests } from "@convex/refs/lobby";
+import { gameSpectators } from "@convex/refs/game";
 import { GameRoomProvider } from "@/lib/context/gameRoomContext";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import Room from "@/components/game/Room";
 import SpectatorJoinPrompt from "@/components/game/SpectatorJoinPrompt";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import type { Id } from "@convex/_generated/dataModel";
 
 type PageProps = {
   params: Promise<{ id: string }>;
 };
 
-export default async function GamePage({ params }: PageProps) {
-  const { id } = await params;
+export default function GamePage({ params }: PageProps) {
+  const { id } = use(params);
+  const router = useRouter();
+  const gameId = id as Id<"games">;
 
-  const supabase = await createClient();
-  const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) {
-    redirect("/auth");
+  const game = useQuery(lobbyGames.getById, { gameId });
+  const joinStatus = useQuery(joinRequests.myStatus, { gameId });
+  const spectatorCheck = useQuery(gameSpectators.isSpectator, { gameId });
+
+  const checkOrRequest = useMutation(joinRequests.checkOrRequest);
+  const [hasRequested, setHasRequested] = useState(false);
+
+  useEffect(() => {
+    if (joinStatus?.status === "none" && !hasRequested) {
+      setHasRequested(true);
+      checkOrRequest({ gameId }).catch(() => {});
+    }
+  }, [joinStatus, hasRequested, checkOrRequest, gameId]);
+
+  if (
+    game === undefined ||
+    joinStatus === undefined ||
+    spectatorCheck === undefined
+  ) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <LoadingSpinner message="Loading game..." />
+      </div>
+    );
   }
-  const userId = userData.user?.id || null;
 
-  const sessionRes = await fetchGameRoomById(id);
-  if (!sessionRes.ok) {
-    redirect("/lobby");
+  if (game === null) {
+    router.replace("/lobby");
+    return null;
   }
 
-  const game = sessionRes.data;
+  const isPlayer = joinStatus.allowed;
+  const isSpectatorUser = spectatorCheck.isSpectator;
 
-  const isPlayer = game.players.some((p) => p.player_id === userId);
-  const isHost = game.host_id === userId;
-
-  // Non-players/hosts see the spectator prompt for in-progress games.
   const shouldShowSpectatorPrompt =
-    (game.game_status === "playing" || game.game_status === "finished") &&
+    (game.gameStatus === "playing" || game.gameStatus === "finished") &&
     !isPlayer &&
-    !isHost;
+    !isSpectatorUser;
 
   if (shouldShowSpectatorPrompt) {
     return (
       <div className="h-screen flex items-center justify-center px-4">
         <SpectatorJoinPrompt
           gameId={id}
-          userId={userId!}
           game={game}
           currentSpectatorCount={game.spectators?.length ?? 0}
         />
@@ -54,17 +76,9 @@ export default async function GamePage({ params }: PageProps) {
     <div className="h-screen">
       <div className="mx-auto px-4 sm:px-6 lg:px-8 py-6 h-full flex items-center justify-center">
         <div className="flex flex-col gap-6 h-full w-full sm:w-[80%] md:w-[90%] lg:w-[90%]">
-          {!userId || !game ? (
-            <div className="flex h-full items-center justify-center text-gray-600 dark:text-gray-400">
-              <LoadingSpinner message="Loading..." />
-            </div>
-          ) : (
-            <Suspense>
-              <GameRoomProvider userId={userId} game={game}>
-                <Room />
-              </GameRoomProvider>
-            </Suspense>
-          )}
+          <GameRoomProvider gameId={gameId} isSpectator={isSpectatorUser}>
+            <Room />
+          </GameRoomProvider>
         </div>
       </div>
     </div>

@@ -1,9 +1,12 @@
 "use client";
 
 import { useMemo } from "react";
-import { GameSessionState } from "@/types/game/type";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { YAKUZA_TEAM_ROLES } from "@/lib/constants/game";
+
+type GameSessionState = NonNullable<
+  ReturnType<typeof useGameRoom>["gameSessionState"]
+>;
 
 export interface YakuzaTargetSelectionResult {
   hasYakuzaKillAuthority: boolean;
@@ -51,11 +54,11 @@ export function useYakuzaTargetSelection(
   const isYakuzaTargetSelected = useMemo(() => {
     if (!gameSessionState || seatNumber === null) return false;
     const isInYakuzaPhase =
-      gameSessionState.game_phase === "yakuza_and_shogun_chooses_target";
+      gameSessionState.gamePhase === "yakuza_and_shogun_chooses_target";
     if (!isInYakuzaPhase) return false;
 
     if ((isViewerHost || isViewerOnYakuzaTeam) && nightPhaseSession) {
-      return nightPhaseSession.yakuza_target === seatNumber;
+      return nightPhaseSession.yakuzaTarget === seatNumber;
     }
 
     return false;
@@ -76,18 +79,14 @@ export function useYakuzaTargetSelection(
     if (!isYakuzaPhase || !hasYakuzaKillAuthority) return false;
     if (isTargetHost) return false;
     if (isPlayerAlive === false) return false;
-    if (
-      nightPhaseSession?.yakuza_target !== null &&
-      nightPhaseSession?.yakuza_target !== undefined
-    )
-      return false;
+    if (nightPhaseSession?.yakuzaTarget !== undefined) return false;
     return true;
   }, [
     isYakuzaPhase,
     hasYakuzaKillAuthority,
     isTargetHost,
     isPlayerAlive,
-    nightPhaseSession?.yakuza_target,
+    nightPhaseSession?.yakuzaTarget,
   ]);
 
   return {

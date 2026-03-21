@@ -42,7 +42,11 @@ export default function ReadyButton({
       type="button"
       onClick={(e) => {
         e.stopPropagation();
-        isReady ? onUnready() : onReady();
+        if (isReady) {
+          void onUnready();
+        } else {
+          void onReady();
+        }
       }}
       disabled={disabled}
       className={`
@@ -60,7 +64,7 @@ export default function ReadyButton({
             ? "bg-zinc-800/90 hover:bg-zinc-700/90 text-zinc-100 border-2 border-zinc-500/50 hover:border-zinc-400/60"
             : "bg-emerald-600/90 hover:bg-emerald-500/90 text-white border-2 border-emerald-400/50 hover:border-emerald-300/60"
         }
-        ${!disabled && "active:scale-95"}
+        ${!disabled ? "active:scale-95" : ""}
       `}
     >
       {content}

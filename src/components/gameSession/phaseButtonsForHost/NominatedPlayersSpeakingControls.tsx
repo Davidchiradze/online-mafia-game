@@ -1,17 +1,15 @@
 "use client";
 
 import React, { useState, useCallback } from "react";
-import { GameSessionState } from "@/types/game/type";
-import {
-  advanceToNextNominatedSpeaker,
-  finishCurrentNominatedSpeaker,
-} from "@/lib/dayPhase/actions";
+import { useMutation } from "convex/react";
+import { dayPhase } from "@convex/refs/game";
+import type { Id } from "@convex/_generated/dataModel";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { SPEAKING_STATE } from "@/lib/constants/game";
 import PhaseButton from "@/components/ui/PhaseButton";
 
 type Props = {
-  gameSessionState: GameSessionState;
+  gameSessionState: NonNullable<ReturnType<typeof useGameRoom>["gameSessionState"]>;
 };
 
 /**
@@ -27,26 +25,23 @@ export default function NominatedPlayersSpeakingControls({
 }: Props) {
   const { gameId } = useGameRoom();
   const [isLoading, setIsLoading] = useState(false);
+  const advanceNominatedSpeaker = useMutation(dayPhase.advanceNominatedSpeaker);
+  const finishCurrentNominatedSpeaker = useMutation(dayPhase.finishCurrentNominatedSpeaker);
 
-  const speakingOrder = gameSessionState.speaking_order ?? [];
-  const currentSpeaker = gameSessionState.current_speaker_index ?? null;
-  const nominatedPlayers = gameSessionState.nominated_players ?? [];
+  const speakingOrder = gameSessionState.speakingOrder ?? [];
+  const currentSpeaker = gameSessionState.currentSpeakerIndex ?? null;
+  const nominatedPlayers = gameSessionState.nominatedPlayers ?? [];
 
-  // Check if foul elimination occurred this round
   const foulEliminationOccurred =
-    (
-      gameSessionState as unknown as { foul_elimination_occurred?: boolean }
-    ).foul_elimination_occurred ?? false;
+    gameSessionState.foulEliminationOccurred ?? false;
 
   const isPaused = SPEAKING_STATE.isPaused(currentSpeaker);
 
-  // Get the actual speaker seat (decode from paused state if needed)
   const lastSpeakerSeat = isPaused
     ? SPEAKING_STATE.getLastSpeakerFromPaused(currentSpeaker!)
     : null;
   const activeSpeakerSeat = !isPaused ? currentSpeaker : null;
 
-  // Calculate next speaker when paused
   const lastSpeakerIndex = lastSpeakerSeat
     ? speakingOrder.indexOf(lastSpeakerSeat)
     : -1;
@@ -55,7 +50,6 @@ export default function NominatedPlayersSpeakingControls({
       ? speakingOrder[lastSpeakerIndex + 1]
       : null;
 
-  // Calculate position in speaking order
   const currentPosition = isPaused
     ? lastSpeakerIndex + 1
     : activeSpeakerSeat !== null
@@ -68,21 +62,21 @@ export default function NominatedPlayersSpeakingControls({
     if (isLoading) return;
     setIsLoading(true);
     try {
-      await finishCurrentNominatedSpeaker(gameId);
+      await finishCurrentNominatedSpeaker({ gameId: gameId as Id<"games"> });
     } finally {
       setIsLoading(false);
     }
-  }, [gameId, isLoading]);
+  }, [gameId, isLoading, finishCurrentNominatedSpeaker]);
 
   const handleNext = useCallback(async () => {
     if (isLoading) return;
     setIsLoading(true);
     try {
-      await advanceToNextNominatedSpeaker(gameId);
+      await advanceNominatedSpeaker({ gameId: gameId as Id<"games"> });
     } finally {
       setIsLoading(false);
     }
-  }, [gameId, isLoading]);
+  }, [gameId, isLoading, advanceNominatedSpeaker]);
 
   if (currentSpeaker === null || speakingOrder.length === 0) {
     return (
@@ -149,12 +143,14 @@ export default function NominatedPlayersSpeakingControls({
             onClick={handleNext}
             isLoading={isLoading}
             label="Finish"
+            variant="danger"
           />
         ) : (
           <PhaseButton
             onClick={handleFinish}
             isLoading={isLoading}
             label="Finish"
+            variant="danger"
           />
         )
       ) : isPaused ? (
@@ -162,12 +158,14 @@ export default function NominatedPlayersSpeakingControls({
           onClick={handleNext}
           isLoading={isLoading}
           label={isLastSpeaker ? "Finish" : "Start"}
+          variant={isLastSpeaker ? "danger" : "success"}
         />
       ) : (
         <PhaseButton
           onClick={handleFinish}
           isLoading={isLoading}
           label="Finish"
+          variant="danger"
         />
       )}
     </div>
