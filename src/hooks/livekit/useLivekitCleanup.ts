@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Room as LiveKitRoom, ConnectionState } from "livekit-client";
+import { Room as LiveKitRoom, RoomEvent, ConnectionState } from "livekit-client";
 
 type CleanupFn = () => Promise<void> | void;
 
@@ -9,26 +9,45 @@ type CleanupFn = () => Promise<void> | void;
  * Calls `onCleanup` and disconnects the LiveKit room when the component
  * unmounts, or when the browser tab is closed / refreshed.
  *
- * Only cleans up if the room was actually connected, to avoid spurious
- * disconnects during React remounts (e.g., when props change).
- *
- * A ref is used so the cleanup always sees the latest version of `onCleanup`
- * without needing it as an effect dependency (avoids spurious re-runs).
+ * Tracks whether the room was ever connected (via hasConnectedRef) to
+ * distinguish between spurious React remounts (never connected → skip cleanup)
+ * and real navigation away (was connected → always clean up, even if already
+ * disconnected by the time the effect teardown runs).
  */
 export function useLivekitCleanup(room: LiveKitRoom, onCleanup: CleanupFn) {
   const onCleanupRef = useRef<CleanupFn>(onCleanup);
+  const hasConnectedRef = useRef(false);
 
   // Keep the ref current so stale closures are never called
   useEffect(() => {
     onCleanupRef.current = onCleanup;
   }, [onCleanup]);
 
+  // Track whether we ever successfully connected
+  useEffect(() => {
+    const handleConnected = () => {
+      hasConnectedRef.current = true;
+    };
+
+    room.on(RoomEvent.Connected, handleConnected);
+
+    // Also catch the case where the room is already connected when this runs
+    if (room.state === ConnectionState.Connected) {
+      hasConnectedRef.current = true;
+    }
+
+    return () => {
+      room.off(RoomEvent.Connected, handleConnected);
+    };
+  }, [room]);
+
   // Unmount cleanup (React navigation, soft route changes)
-  // Only clean up if the room is actually connected
+  // Only runs if we ever connected, so spurious remounts are ignored
   useEffect(() => {
     return () => {
-      if (room.state === ConnectionState.Connected) {
+      if (hasConnectedRef.current) {
         void onCleanupRef.current();
+        room.disconnect();
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -41,7 +60,7 @@ export function useLivekitCleanup(room: LiveKitRoom, onCleanup: CleanupFn) {
   // best-effort.
   useEffect(() => {
     const handleBeforeUnload = () => {
-      if (room.state === ConnectionState.Connected) {
+      if (hasConnectedRef.current) {
         void onCleanupRef.current();
         room.disconnect();
       }
