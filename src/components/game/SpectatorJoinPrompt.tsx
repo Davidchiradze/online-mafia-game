@@ -4,8 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "convex/react";
 import { gameSpectators } from "@convex/refs/game";
-import { GameRoomProvider } from "@/lib/context/gameRoomContext";
-import Room from "@/components/game/Room";
 import { Eye, ArrowLeft, Loader2 } from "lucide-react";
 import type { Id } from "@convex/_generated/dataModel";
 
@@ -49,10 +47,11 @@ export default function SpectatorJoinPrompt({ gameId, game }: Props) {
 
   if (hasJoined) {
     return (
-      <div className="flex flex-col gap-6 h-full w-full sm:w-[80%] md:w-[90%] lg:w-[90%]">
-        <GameRoomProvider gameId={gameId as Id<"games">} isSpectator>
-          <Room />
-        </GameRoomProvider>
+      <div className="w-full max-w-md mx-auto flex flex-col items-center justify-center gap-4">
+        <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+        <p className="text-gray-400 font-sans text-sm">
+          Connecting as spectator…
+        </p>
       </div>
     );
   }

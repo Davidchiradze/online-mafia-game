@@ -1,13 +1,16 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Room as LiveKitRoom } from "livekit-client";
+import { Room as LiveKitRoom, ConnectionState } from "livekit-client";
 
 type CleanupFn = () => Promise<void> | void;
 
 /**
  * Calls `onCleanup` and disconnects the LiveKit room when the component
  * unmounts, or when the browser tab is closed / refreshed.
+ *
+ * Only cleans up if the room was actually connected, to avoid spurious
+ * disconnects during React remounts (e.g., when props change).
  *
  * A ref is used so the cleanup always sees the latest version of `onCleanup`
  * without needing it as an effect dependency (avoids spurious re-runs).
@@ -21,12 +24,15 @@ export function useLivekitCleanup(room: LiveKitRoom, onCleanup: CleanupFn) {
   }, [onCleanup]);
 
   // Unmount cleanup (React navigation, soft route changes)
+  // Only clean up if the room is actually connected
   useEffect(() => {
     return () => {
-      void onCleanupRef.current();
+      if (room.state === ConnectionState.Connected) {
+        void onCleanupRef.current();
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [room]);
 
   // Hard-leave cleanup (tab close, page refresh, browser back)
   // Note: async work is not guaranteed to complete in beforeunload,
@@ -35,10 +41,10 @@ export function useLivekitCleanup(room: LiveKitRoom, onCleanup: CleanupFn) {
   // best-effort.
   useEffect(() => {
     const handleBeforeUnload = () => {
-      void onCleanupRef.current();
-      // Synchronous disconnect so the browser closes the WebRTC tracks
-      // before the page is torn down.
-      room.disconnect();
+      if (room.state === ConnectionState.Connected) {
+        void onCleanupRef.current();
+        room.disconnect();
+      }
     };
 
     window.addEventListener("beforeunload", handleBeforeUnload);

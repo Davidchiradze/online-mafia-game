@@ -60,13 +60,6 @@ export default function SpectatorView({
           <span>Spectating</span>
         </div>
 
-        {/* Game Phase Badge */}
-        {gamePhaseLabel && (
-          <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-1.5 rounded-full bg-black/60 text-white text-sm font-medium backdrop-blur-sm border border-white/10">
-            {gamePhaseLabel}
-          </div>
-        )}
-
         {/* Floating Options - reusing shared component */}
         <FloatingOptions
           gameId={gameId}
