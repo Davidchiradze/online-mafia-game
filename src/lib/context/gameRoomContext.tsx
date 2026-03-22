@@ -195,10 +195,17 @@ export function GameRoomProvider({
   const isHost =
     !isSpectator && !!currentUserId && !!game && game.hostId === currentUserId;
 
+  // Derived from server state so it resets to false if the player record is
+  // deleted (e.g. after a kick), allowing the join flow to re-run on re-accept.
+  const hasPlayerRecord = useMemo(() => {
+    if (isSpectator) return true;
+    if (!playersData || !currentUserId) return false;
+    return playersData.some((p) => p.playerId === currentUserId);
+  }, [isSpectator, playersData, currentUserId]);
+
   // ---------------------------------------------------------------------------
   // Local state
   // ---------------------------------------------------------------------------
-  const [hasPlayerRecord, setHasPlayerRecord] = useState(false);
   const [isJoiningGame, setIsJoiningGame] = useState(false);
   const [joinError, setJoinError] = useState<string | null>(null);
   const [livekitToken, setLivekitToken] = useState<string | null>(null);
@@ -250,7 +257,6 @@ export function GameRoomProvider({
       setJoinError(null);
       try {
         await joinPlayerMutation({ gameId });
-        setHasPlayerRecord(true);
       } catch (err) {
         setJoinError("Unable to join game (Room is full)");
       } finally {
@@ -268,11 +274,6 @@ export function GameRoomProvider({
     joinPlayerMutation,
     gameId,
   ]);
-
-  // Spectators are ready immediately
-  useEffect(() => {
-    if (isSpectator) setHasPlayerRecord(true);
-  }, [isSpectator]);
 
   // ---------------------------------------------------------------------------
   // Disconnect

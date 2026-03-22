@@ -25,7 +25,10 @@ export default function JoinRequestsDrawer({ gameId, open, onClose }: Props) {
 
   const pendingRequests = requests?.filter((r) => r.status === "pending") ?? [];
 
-  const handleToggle = async (requestId: Id<"joinRequests">, currentStatus: string) => {
+  const handleToggle = async (
+    requestId: Id<"joinRequests">,
+    currentStatus: string,
+  ) => {
     setLoadingId(requestId);
     try {
       if (currentStatus === "accepted") {
@@ -40,13 +43,13 @@ export default function JoinRequestsDrawer({ gameId, open, onClose }: Props) {
 
   return (
     <Drawer open={open} onClose={onClose} title="Join Requests" size="md">
-      {pendingRequests.length === 0 ? (
+      {requests?.length === 0 ? (
         <div className="text-gray-600 dark:text-gray-400">
           No pending requests
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          {pendingRequests.map((r) => (
+          {requests?.map((r) => (
             <div
               key={r._id}
               className="flex items-center justify-between p-3 rounded-lg border border-gray-200 dark:border-gray-700"

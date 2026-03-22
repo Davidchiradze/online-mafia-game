@@ -149,10 +149,6 @@ export const accept = mutation({
 
     await assertIsHost(ctx.db, joinRequest.gameId, userId);
 
-    if (joinRequest.status !== "pending") {
-      throw new Error(`Cannot accept a request with status "${joinRequest.status}"`);
-    }
-
     await ctx.db.patch(requestId, { status: "accepted" });
   },
 });
