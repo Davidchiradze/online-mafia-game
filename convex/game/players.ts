@@ -21,6 +21,15 @@ export const listByGame = query({
   },
 });
 
+export const isPlayer = query({
+  args: { gameId: v.id("games") },
+  handler: async (ctx, { gameId }) => {
+    const userId = await getAuthenticatedUser(ctx);
+    const player = await getPlayerInGame(ctx.db, gameId, userId);
+    return { isPlayer: !!player, player };
+  },
+});
+
 export const join = mutation({
   args: { gameId: v.id("games") },
   handler: async (ctx, { gameId }) => {

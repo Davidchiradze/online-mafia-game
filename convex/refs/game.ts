@@ -152,6 +152,11 @@ export const gamePlayers = {
   listByGame: makeFunctionReference<"query", { gameId: Id<"games"> }, GamePlayer[]>(
     "game/players:listByGame",
   ),
+  isPlayer: makeFunctionReference<
+    "query",
+    { gameId: Id<"games"> },
+    { isPlayer: boolean; player: GamePlayer | null }
+  >("game/players:isPlayer"),
   join: makeFunctionReference<
     "mutation",
     { gameId: Id<"games"> },

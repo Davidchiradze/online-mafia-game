@@ -21,7 +21,11 @@ import {
   gameSpectators,
 } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
-import { useLivekitRoom, useLivekitConnect, useLivekitCleanup } from "@/hooks/livekit";
+import {
+  useLivekitRoom,
+  useLivekitConnect,
+  useLivekitCleanup,
+} from "@/hooks/livekit";
 import { JOIN_REQUEST_STATUSES } from "@/lib/constants/game";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
@@ -238,7 +242,7 @@ export function GameRoomProvider({
 
   // Step 2: Ensure player seat when accepted
   useEffect(() => {
-    if (isSpectator || hasPlayerRecord || isJoiningGame) return;
+    if (isSpectator || hasPlayerRecord || isJoiningGame || joinError) return;
     if (joinStatus !== "accepted") return;
 
     const ensureSeat = async () => {
@@ -248,9 +252,7 @@ export function GameRoomProvider({
         await joinPlayerMutation({ gameId });
         setHasPlayerRecord(true);
       } catch (err) {
-        setJoinError(
-          err instanceof Error ? err.message : "Unable to join game",
-        );
+        setJoinError("Unable to join game (Room is full)");
       } finally {
         setIsJoiningGame(false);
       }
@@ -261,6 +263,7 @@ export function GameRoomProvider({
     isSpectator,
     hasPlayerRecord,
     isJoiningGame,
+    joinError,
     joinStatus,
     joinPlayerMutation,
     gameId,

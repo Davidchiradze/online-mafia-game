@@ -5,7 +5,7 @@ import { useQuery, useMutation } from "convex/react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { lobbyGames, joinRequests } from "@convex/refs/lobby";
-import { gameSpectators } from "@convex/refs/game";
+import { gamePlayers, gameSpectators } from "@convex/refs/game";
 import { GameRoomProvider } from "@/lib/context/gameRoomContext";
 import Room from "@/components/game/Room";
 import SpectatorJoinPrompt from "@/components/game/SpectatorJoinPrompt";
@@ -23,6 +23,7 @@ export default function GamePage({ params }: PageProps) {
 
   const game = useQuery(lobbyGames.getById, { gameId });
   const joinStatus = useQuery(joinRequests.myStatus, { gameId });
+  const playerCheck = useQuery(gamePlayers.isPlayer, { gameId });
   const spectatorCheck = useQuery(gameSpectators.isSpectator, { gameId });
 
   const checkOrRequest = useMutation(joinRequests.checkOrRequest);
@@ -38,6 +39,7 @@ export default function GamePage({ params }: PageProps) {
   if (
     game === undefined ||
     joinStatus === undefined ||
+    playerCheck === undefined ||
     spectatorCheck === undefined
   ) {
     return (
@@ -52,7 +54,7 @@ export default function GamePage({ params }: PageProps) {
     return null;
   }
 
-  const isPlayer = joinStatus.allowed;
+  const isPlayer = playerCheck.isPlayer;
   const isSpectatorUser = spectatorCheck.isSpectator;
 
   const shouldShowSpectatorPrompt =
