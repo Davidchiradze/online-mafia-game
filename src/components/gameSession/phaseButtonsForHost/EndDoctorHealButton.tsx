@@ -6,6 +6,7 @@ import { farewellSpeech } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import PhaseButton from "@/components/ui/PhaseButton";
+import { useNightPhaseReadiness } from "@/hooks/game/useNightPhaseReadiness";
 
 /**
  * Button to end doctor's heal action and transition to farewell speech phase.
@@ -19,6 +20,7 @@ import PhaseButton from "@/components/ui/PhaseButton";
 const EndDoctorHealButton = () => {
   const { gameId } = useGameRoom();
   const [isLoading, setIsLoading] = useState(false);
+  const { canEndDoctorPhase } = useNightPhaseReadiness();
 
   const startFarewellSpeechMutation = useMutation(farewellSpeech.startFarewellSpeech);
 
@@ -34,7 +36,15 @@ const EndDoctorHealButton = () => {
     }
   };
 
-  return <PhaseButton onClick={handleEndDoctorHeal} isLoading={isLoading} label="End Doctor Phase" variant="success" />;
+  return (
+    <PhaseButton
+      onClick={handleEndDoctorHeal}
+      isLoading={isLoading}
+      disabled={!canEndDoctorPhase}
+      label={canEndDoctorPhase ? "End Doctor Phase" : "Waiting for Doctor..."}
+      variant="success"
+    />
+  );
 };
 
 export default EndDoctorHealButton;

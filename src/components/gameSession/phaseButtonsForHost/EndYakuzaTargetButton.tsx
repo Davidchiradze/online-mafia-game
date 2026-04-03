@@ -6,6 +6,7 @@ import { gameSessions } from "@convex/refs/game";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { GAME_PHASES } from "@/lib/constants/game";
 import PhaseButton from "@/components/ui/PhaseButton";
+import { useNightPhaseReadiness } from "@/hooks/game/useNightPhaseReadiness";
 
 type EndYakuzaTargetButtonProps = {
   gameSessionState: NonNullable<ReturnType<typeof useGameRoom>["gameSessionState"]>;
@@ -19,6 +20,7 @@ const EndYakuzaTargetButton = ({
 }: EndYakuzaTargetButtonProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const updateSession = useMutation(gameSessions.update);
+  const { canEndYakuzaPhase } = useNightPhaseReadiness();
 
   const handleEndYakuzaTarget = async () => {
     if (isLoading) return;
@@ -35,7 +37,15 @@ const EndYakuzaTargetButton = ({
     }
   };
 
-  return <PhaseButton onClick={handleEndYakuzaTarget} isLoading={isLoading} label="End Yakuza Phase" variant="danger" />;
+  return (
+    <PhaseButton
+      onClick={handleEndYakuzaTarget}
+      isLoading={isLoading}
+      disabled={!canEndYakuzaPhase}
+      label={canEndYakuzaPhase ? "End Yakuza Phase" : "Waiting for Yakuza..."}
+      variant="danger"
+    />
+  );
 };
 
 export default EndYakuzaTargetButton;

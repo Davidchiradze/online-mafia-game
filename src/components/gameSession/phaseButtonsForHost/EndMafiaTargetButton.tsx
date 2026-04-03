@@ -6,6 +6,7 @@ import { gameSessions } from "@convex/refs/game";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { GAME_PHASES } from "@/lib/constants/game";
 import PhaseButton from "@/components/ui/PhaseButton";
+import { useNightPhaseReadiness } from "@/hooks/game/useNightPhaseReadiness";
 
 type EndMafiaTargetButtonProps = {
   gameSessionState: NonNullable<ReturnType<typeof useGameRoom>["gameSessionState"]>;
@@ -19,6 +20,7 @@ const EndMafiaTargetButton = ({
 }: EndMafiaTargetButtonProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const updateSession = useMutation(gameSessions.update);
+  const { canEndMafiaPhase } = useNightPhaseReadiness();
 
   const handleEndMafiaTarget = async () => {
     if (isLoading) return;
@@ -35,7 +37,15 @@ const EndMafiaTargetButton = ({
     }
   };
 
-  return <PhaseButton onClick={handleEndMafiaTarget} isLoading={isLoading} label="End Mafia Phase" variant="danger" />;
+  return (
+    <PhaseButton
+      onClick={handleEndMafiaTarget}
+      isLoading={isLoading}
+      disabled={!canEndMafiaPhase}
+      label={canEndMafiaPhase ? "End Mafia Phase" : "Waiting for Mafia..."}
+      variant="danger"
+    />
+  );
 };
 
 export default EndMafiaTargetButton;
