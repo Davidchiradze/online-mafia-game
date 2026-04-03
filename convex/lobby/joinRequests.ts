@@ -28,6 +28,10 @@ export const checkOrRequest = mutation({
       return { allowed: true, status: "accepted" as const };
     }
 
+    if (game.gameStatus !== "not_started") {
+      return { allowed: false, status: "none" as const };
+    }
+
     const existing = await getJoinRequestByRequester(ctx.db, gameId, userId);
     if (existing) {
       return {

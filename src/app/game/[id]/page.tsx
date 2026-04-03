@@ -30,11 +30,15 @@ export default function GamePage({ params }: PageProps) {
   const [hasRequested, setHasRequested] = useState(false);
 
   useEffect(() => {
-    if (joinStatus?.status === "none" && !hasRequested) {
+    if (
+      joinStatus?.status === "none" &&
+      !hasRequested &&
+      game?.gameStatus === "not_started"
+    ) {
       setHasRequested(true);
       checkOrRequest({ gameId }).catch(() => {});
     }
-  }, [joinStatus, hasRequested, checkOrRequest, gameId]);
+  }, [joinStatus, hasRequested, checkOrRequest, gameId, game]);
 
   if (
     game === undefined ||
