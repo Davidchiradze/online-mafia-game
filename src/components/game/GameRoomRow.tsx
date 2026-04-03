@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useQuery } from "convex/react";
 import { Doc } from "@convex/_generated/dataModel";
+import { authProfiles } from "@convex/refs/lobby";
 import { LobbyGame } from "@/components/lobby/LobbyContent";
 import {
   GAME_TYPE_LABEL,
@@ -11,7 +13,7 @@ import GameStatusBadge from "./GameStatusBadge";
 import ClickableTooltip from "@/components/ui/ClickableTooltip";
 import { LobbyConfirmModal } from "@/components/lobby/LobbyConfirmModal";
 import { SkullIcon } from "@/assets/icons";
-import { Eye, Info, Users } from "lucide-react";
+import { Eye, Info, LogIn, Users } from "lucide-react";
 
 type Props = {
   room: LobbyGame;
@@ -161,11 +163,13 @@ function RoomActionButton({
   room,
   onJoin,
   onSpectate,
+  isPlayer,
   fullWidth = false,
 }: {
   room: LobbyGame;
   onJoin: () => void;
   onSpectate: () => void;
+  isPlayer: boolean;
   fullWidth?: boolean;
 }) {
   const base = fullWidth ? "w-full justify-center" : "ml-auto";
@@ -182,6 +186,18 @@ function RoomActionButton({
   }
 
   if (room.gameStatus === "playing") {
+    if (isPlayer) {
+      return (
+        <button
+          onClick={onJoin}
+          className={`px-4 py-2${fullWidth ? ".5" : ""} rounded-lg bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white shadow-[0_0_20px_rgba(220,38,38,0.3)] hover:shadow-[0_0_30px_rgba(220,38,38,0.5)] transition-all flex items-center gap-2 ${base} font-sans text-[0.85rem] font-semibold cursor-pointer`}
+        >
+          <LogIn className="w-4 h-4" />
+          {fullWidth ? "Rejoin Game" : "Rejoin"}
+        </button>
+      );
+    }
+
     return (
       <button
         onClick={onSpectate}
@@ -207,10 +223,12 @@ function DesktopRoomRow({
   room,
   onJoin,
   onSpectate,
+  isPlayer,
 }: {
   room: LobbyGame;
   onJoin: () => void;
   onSpectate: () => void;
+  isPlayer: boolean;
 }) {
   const hostNickname =
     room.players.find((p) => p.playerId === room.hostId)?.nickname ?? "—";
@@ -240,7 +258,7 @@ function DesktopRoomRow({
         <GameStatusBadge status={room.gameStatus} />
       </td>
       <td className="px-6 py-4 text-right">
-        <RoomActionButton room={room} onJoin={onJoin} onSpectate={onSpectate} />
+        <RoomActionButton room={room} onJoin={onJoin} onSpectate={onSpectate} isPlayer={isPlayer} />
       </td>
     </tr>
   );
@@ -250,10 +268,12 @@ function MobileRoomRow({
   room,
   onJoin,
   onSpectate,
+  isPlayer,
 }: {
   room: LobbyGame;
   onJoin: () => void;
   onSpectate: () => void;
+  isPlayer: boolean;
 }) {
   const hostNickname =
     room.players.find((p) => p.playerId === room.hostId)?.nickname ?? "—";
@@ -307,6 +327,7 @@ function MobileRoomRow({
         room={room}
         onJoin={onJoin}
         onSpectate={onSpectate}
+        isPlayer={isPlayer}
         fullWidth
       />
     </div>
@@ -315,6 +336,10 @@ function MobileRoomRow({
 
 export default function GameRoomRow({ room, variant, onNavigate }: Props) {
   const [showJoinConfirm, setShowJoinConfirm] = useState(false);
+  const currentProfile = useQuery(authProfiles.currentProfile);
+  const isPlayer =
+    !!currentProfile &&
+    room.players.some((p) => p.playerId === currentProfile._id);
 
   const handleJoin = () => setShowJoinConfirm(true);
   const handleSpectate = () => onNavigate(room._id);
@@ -331,6 +356,7 @@ export default function GameRoomRow({ room, variant, onNavigate }: Props) {
         room={room}
         onJoin={handleJoin}
         onSpectate={handleSpectate}
+        isPlayer={isPlayer}
       />
 
       {showJoinConfirm && (
