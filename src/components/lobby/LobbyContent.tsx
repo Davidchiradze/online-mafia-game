@@ -29,9 +29,7 @@ export default function LobbyContent({ games }: Props) {
   };
 
   const stats = useMemo(() => {
-    const activeRooms = games.filter(
-      (s) => s.gameStatus !== "finished",
-    ).length;
+    const activeRooms = games.filter((s) => s.gameStatus !== "finished").length;
     const playing = games.filter((s) => s.gameStatus === "playing").length;
     const totalPlayers = games.reduce(
       (acc, s) => acc + (s.players?.length ?? 0),

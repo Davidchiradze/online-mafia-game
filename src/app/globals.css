@@ -147,6 +147,29 @@
   }
 }
 
+/*
+ * iOS Safari zooms the viewport when a focused input/select/textarea computes
+ * to under 16px. Tailwind `text-sm` (14px) loses a base-layer rule, so this
+ * unlayered block + !important overrides utilities on touch-primary devices.
+ */
+@media (hover: none) and (pointer: coarse) {
+  input:not(
+      [type="hidden"],
+      [type="button"],
+      [type="submit"],
+      [type="reset"],
+      [type="checkbox"],
+      [type="radio"],
+      [type="range"],
+      [type="color"],
+      [type="file"]
+    ),
+  textarea,
+  select {
+    font-size: max(1rem, 16px) !important;
+  }
+}
+
 /* Foul notification flash animation */
 @keyframes foul-flash {
   0% {

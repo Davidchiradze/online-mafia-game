@@ -16,7 +16,8 @@ type Props = {
 
 export default function CreateGameModal({ open, onClose, onCreated }: Props) {
   const [name, setName] = useState("");
-  const [type, setType] = useState<(typeof GAME_TYPES)[number]>("japanese_mafia");
+  const [type, setType] =
+    useState<(typeof GAME_TYPES)[number]>("japanese_mafia");
   const [isPrivate, setIsPrivate] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +29,11 @@ export default function CreateGameModal({ open, onClose, onCreated }: Props) {
     setLoading(true);
     setError(null);
     try {
-      const gameId = await createGame({ name: name.trim(), gameType: type, isPrivate });
+      const gameId = await createGame({
+        name: name.trim(),
+        gameType: type,
+        isPrivate,
+      });
       await createLivekitRoom(gameId);
       onCreated?.(gameId);
       setName("");
@@ -101,10 +106,14 @@ export default function CreateGameModal({ open, onClose, onCreated }: Props) {
           </label>
           <select
             value={type}
-            onChange={(e) => setType(e.target.value as (typeof GAME_TYPES)[number])}
+            onChange={(e) =>
+              setType(e.target.value as (typeof GAME_TYPES)[number])
+            }
             className="w-full px-4 py-3 rounded-xl bg-white/[0.05] border border-white/[0.08] text-white font-sans text-sm focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 transition-all appearance-none cursor-pointer"
           >
-            {GAME_TYPES.filter((gt) => gt !== "traditional" && gt !== "city_mafia").map((gt) => (
+            {GAME_TYPES.filter(
+              (gt) => gt !== "traditional" && gt !== "city_mafia",
+            ).map((gt) => (
               <option key={gt} value={gt} className="bg-[#0f0f1a]">
                 {GAME_TYPE_LABEL[gt]}
               </option>
