@@ -53,8 +53,9 @@ export const create = mutation({
   args: {
     name: v.string(),
     gameType,
+    isPrivate: v.boolean(),
   },
-  handler: async (ctx, { name, gameType }) => {
+  handler: async (ctx, { name, gameType, isPrivate }) => {
     const userId = await getAuthenticatedUser(ctx);
 
     const trimmedName = name.trim();
@@ -83,6 +84,7 @@ export const create = mutation({
       gameType,
       gameStatus: "not_started",
       maxPlayers,
+      isPrivate,
     });
 
     return gameId;

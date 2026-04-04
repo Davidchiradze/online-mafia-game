@@ -39,6 +39,10 @@ export const join = mutation({
       throw new Error("Can only spectate games that are in progress");
     }
 
+    if (game.isPrivate) {
+      throw new Error("This game is private. Spectators cannot join.");
+    }
+
     const existingPlayer = await getPlayerInGame(ctx.db, gameId, userId);
     if (existingPlayer) {
       throw new Error("You are already a player in this game");

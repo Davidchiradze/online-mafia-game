@@ -13,7 +13,7 @@ import GameStatusBadge from "./GameStatusBadge";
 import ClickableTooltip from "@/components/ui/ClickableTooltip";
 import { LobbyConfirmModal } from "@/components/lobby/LobbyConfirmModal";
 import { SkullIcon } from "@/assets/icons";
-import { Eye, Info, LogIn, Users } from "lucide-react";
+import { Eye, Info, Lock, LogIn, Users } from "lucide-react";
 
 type Props = {
   room: LobbyGame;
@@ -198,6 +198,18 @@ function RoomActionButton({
       );
     }
 
+    if (room.isPrivate) {
+      return (
+        <button
+          disabled
+          className={`px-4 py-2${fullWidth ? ".5" : ""} rounded-lg bg-white/5 text-gray-500 border border-white/10 cursor-not-allowed font-sans text-[0.85rem] font-medium flex items-center gap-2 ${base}`}
+        >
+          <Lock className="w-3.5 h-3.5" />
+          Private
+        </button>
+      );
+    }
+
     return (
       <button
         onClick={onSpectate}
@@ -236,8 +248,13 @@ function DesktopRoomRow({
   return (
     <tr className="transition-all duration-200">
       <td className="px-6 py-4">
-        <div className="font-sans font-semibold text-white text-[0.95rem] leading-tight">
-          {room.name}
+        <div className="flex items-center gap-2">
+          <span className="font-sans font-semibold text-white text-[0.95rem] leading-tight">
+            {room.name}
+          </span>
+          {room.isPrivate && (
+            <Lock className="w-3.5 h-3.5 text-amber-500/80 shrink-0" />
+          )}
         </div>
         <div className="font-sans text-gray-500 text-[0.78rem] mt-0.5">
           {hostNickname}
@@ -290,8 +307,11 @@ function MobileRoomRow({
     >
       <div className="flex items-start justify-between gap-3 mb-3 pb-3 border-b border-white/10">
         <div className="flex-1 min-w-0">
-          <h3 className="text-white font-sans font-semibold text-base truncate mb-0.5">
+          <h3 className="text-white font-sans font-semibold text-base truncate mb-0.5 flex items-center gap-2">
             {room.name}
+            {room.isPrivate && (
+              <Lock className="w-3.5 h-3.5 text-amber-500/80 shrink-0" />
+            )}
           </h3>
           <p className="text-gray-400 font-sans text-[0.85rem]">
             Host: {hostNickname}

@@ -95,6 +95,7 @@ type GameWithRelations = {
   gameType: GameType;
   gameStatus: GameStatus;
   maxPlayers: number;
+  isPrivate: boolean;
   players: GamePlayer[];
   spectators: Array<{
     _id: Id<"gameSpectators">;

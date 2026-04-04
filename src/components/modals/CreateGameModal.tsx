@@ -5,7 +5,7 @@ import { useMutation } from "convex/react";
 import { lobbyGames } from "@convex/refs/lobby";
 import { createLivekitRoom } from "@/lib/liveKit/actions";
 import { GAME_TYPES, GAME_TYPE_LABEL } from "@/lib/constants/game";
-import { Loader2 } from "lucide-react";
+import { Globe, Loader2, Lock } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 
 type Props = {
@@ -17,6 +17,7 @@ type Props = {
 export default function CreateGameModal({ open, onClose, onCreated }: Props) {
   const [name, setName] = useState("");
   const [type, setType] = useState<(typeof GAME_TYPES)[number]>("japanese_mafia");
+  const [isPrivate, setIsPrivate] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const canCreate = useMemo(() => name.trim().length > 0, [name]);
@@ -27,11 +28,12 @@ export default function CreateGameModal({ open, onClose, onCreated }: Props) {
     setLoading(true);
     setError(null);
     try {
-      const gameId = await createGame({ name: name.trim(), gameType: type });
+      const gameId = await createGame({ name: name.trim(), gameType: type, isPrivate });
       await createLivekitRoom(gameId);
       onCreated?.(gameId);
       setName("");
       setType("japanese_mafia");
+      setIsPrivate(false);
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create game");
@@ -108,6 +110,65 @@ export default function CreateGameModal({ open, onClose, onCreated }: Props) {
               </option>
             ))}
           </select>
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="block text-sm font-medium text-gray-400 font-sans">
+            Room Visibility
+          </label>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => setIsPrivate(false)}
+              className={`flex flex-col items-center gap-2 px-4 py-4 rounded-xl border transition-all cursor-pointer ${
+                !isPrivate
+                  ? "border-red-500/50 bg-red-500/[0.08] shadow-[0_0_16px_rgba(220,38,38,0.15)]"
+                  : "border-white/[0.08] bg-white/[0.03] hover:border-white/15 hover:bg-white/[0.05]"
+              }`}
+            >
+              <Globe
+                className={`w-5 h-5 transition-colors ${!isPrivate ? "text-red-400" : "text-gray-600"}`}
+              />
+              <div className="text-center">
+                <p
+                  className={`font-sans text-sm font-semibold transition-colors ${!isPrivate ? "text-white" : "text-gray-500"}`}
+                >
+                  Public
+                </p>
+                <p
+                  className={`font-sans text-[0.7rem] mt-0.5 transition-colors ${!isPrivate ? "text-gray-400" : "text-gray-600"}`}
+                >
+                  Anyone can spectate
+                </p>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsPrivate(true)}
+              className={`flex flex-col items-center gap-2 px-4 py-4 rounded-xl border transition-all cursor-pointer ${
+                isPrivate
+                  ? "border-red-500/50 bg-red-500/[0.08] shadow-[0_0_16px_rgba(220,38,38,0.15)]"
+                  : "border-white/[0.08] bg-white/[0.03] hover:border-white/15 hover:bg-white/[0.05]"
+              }`}
+            >
+              <Lock
+                className={`w-5 h-5 transition-colors ${isPrivate ? "text-red-400" : "text-gray-600"}`}
+              />
+              <div className="text-center">
+                <p
+                  className={`font-sans text-sm font-semibold transition-colors ${isPrivate ? "text-white" : "text-gray-500"}`}
+                >
+                  Private
+                </p>
+                <p
+                  className={`font-sans text-[0.7rem] mt-0.5 transition-colors ${isPrivate ? "text-gray-400" : "text-gray-600"}`}
+                >
+                  No spectators allowed
+                </p>
+              </div>
+            </button>
+          </div>
         </div>
       </div>
     </Modal>

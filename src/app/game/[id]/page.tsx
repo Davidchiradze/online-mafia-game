@@ -73,6 +73,7 @@ export default function GamePage({ params }: PageProps) {
           gameId={id}
           game={game}
           currentSpectatorCount={game.spectators?.length ?? 0}
+          isPrivate={game.isPrivate}
         />
       </div>
     );

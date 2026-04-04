@@ -34,6 +34,7 @@ type GameWithRelations = {
   gameType: GameType;
   gameStatus: GameStatus;
   maxPlayers: number;
+  isPrivate: boolean;
   players: GamePlayer[];
   spectators: GameSpectator[];
 };
@@ -114,7 +115,7 @@ export const lobbyGames = {
   ),
   create: makeFunctionReference<
     "mutation",
-    { name: string; gameType: GameType },
+    { name: string; gameType: GameType; isPrivate: boolean },
     Id<"games">
   >("lobby/games:create"),
   remove: makeFunctionReference<"mutation", { gameId: Id<"games"> }, null>(
