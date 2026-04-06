@@ -202,13 +202,13 @@
 
 @media (orientation: landscape) and (max-height: 500px) {
   .game-grid-container {
-    max-width: calc(100vh * 1.6);
+    max-width: calc(100dvh * 1.6);
   }
 }
 
 @media (orientation: landscape) and (max-height: 400px) {
   .game-grid-container {
-    max-width: calc(100vh * 1.4);
+    max-width: calc(100dvh * 1.4);
   }
 }
 

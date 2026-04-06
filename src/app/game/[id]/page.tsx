@@ -47,7 +47,7 @@ export default function GamePage({ params }: PageProps) {
     spectatorCheck === undefined
   ) {
     return (
-      <div className="h-screen flex items-center justify-center">
+      <div className="h-dvh flex items-center justify-center">
         <LoadingSpinner message="Loading game..." />
       </div>
     );
@@ -68,7 +68,7 @@ export default function GamePage({ params }: PageProps) {
 
   if (shouldShowSpectatorPrompt) {
     return (
-      <div className="h-screen flex items-center justify-center px-4">
+      <div className="h-dvh flex items-center justify-center px-4">
         <SpectatorJoinPrompt
           gameId={id}
           game={game}
@@ -80,7 +80,7 @@ export default function GamePage({ params }: PageProps) {
   }
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-dvh flex flex-col overflow-hidden">
       <GameRoomProvider gameId={gameId} isSpectator={isSpectatorUser}>
         <Room />
       </GameRoomProvider>

@@ -5,7 +5,7 @@ export default function GameLayout({
 }) {
   return (
     <div
-      className="relative min-h-screen overflow-hidden"
+      className="relative h-dvh overflow-hidden"
       style={{
         background:
           "linear-gradient(180deg, #0a0a12 0%, #0f0f1a 50%, #0a0a12 100%)",
