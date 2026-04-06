@@ -88,10 +88,7 @@ function JoinRequestToastBody({
  * When the request is accepted/rejected (from toast or drawer), the
  * corresponding toast is automatically dismissed.
  */
-export function useJoinRequestNotification(
-  gameId: string,
-  isHost: boolean,
-) {
+export function useJoinRequestNotification(gameId: string, isHost: boolean) {
   const pendingRequests = useQuery(
     joinRequests.listPending,
     isHost ? { gameId: gameId as Id<"games"> } : "skip",
@@ -140,7 +137,7 @@ export function useJoinRequestNotification(
             onAccept={handleAccept}
             onReject={handleReject}
           />,
-          { autoClose: 15000, closeOnClick: false },
+          { autoClose: 15000, closeOnClick: true },
         );
         if (toastId !== undefined) {
           toastIdsRef.current.set(id, toastId);

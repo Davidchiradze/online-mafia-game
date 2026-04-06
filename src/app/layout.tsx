@@ -59,7 +59,11 @@ export default function RootLayout({
                 pauseOnHover
                 draggable={false}
                 theme="dark"
-                toastStyle={{ background: "transparent", boxShadow: "none", padding: 0 }}
+                toastStyle={{
+                  background: "transparent",
+                  boxShadow: "none",
+                  padding: 0,
+                }}
                 style={{ zIndex: 99999 }}
                 limit={4}
               />

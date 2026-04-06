@@ -53,8 +53,8 @@ export default function JoinRequestsDrawer({ gameId, open, onClose }: Props) {
     ? [...requests].sort((a, b) => {
         const order: Record<string, number> = {
           pending: 0,
-          // accepted: 1,
-          // rejected: 2,
+          accepted: 1,
+          rejected: 2,
         };
         return (order[a.status] ?? 3) - (order[b.status] ?? 3);
       })
@@ -127,7 +127,7 @@ export default function JoinRequestsDrawer({ gameId, open, onClose }: Props) {
                   </span>
                 </div>
 
-                <div className="flex items-center gap-1.5 shrink-0">
+                <div className="flex items-center gap-2 shrink-0">
                   {isPending && (
                     <>
                       <button
@@ -153,36 +153,32 @@ export default function JoinRequestsDrawer({ gameId, open, onClose }: Props) {
 
                   {isAccepted && (
                     <>
-                      <span className="text-xs uppercase tracking-wider font-semibold font-inter text-emerald-400/70">
-                        {config.label}
-                      </span>
                       <button
                         type="button"
                         disabled={isLoading}
                         onClick={() => handleReject(r._id)}
-                        className="flex items-center justify-center w-7 h-7 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400/70 hover:bg-red-500/20 hover:text-red-400 transition-colors disabled:opacity-50 cursor-pointer"
-                        aria-label={`Revoke ${r.requesterNickname}`}
-                        title="Revoke access"
+                        className="flex items-center gap-1 px-2 py-1 rounded-md text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50 cursor-pointer"
+                        aria-label={`Reject ${r.requesterNickname}`}
+                        title="Reject access"
                       >
-                        <X className="w-3.5 h-3.5" />
+                        <X className="w-3 h-3" />
+                        <span className="text-xs font-inter">Reject</span>
                       </button>
                     </>
                   )}
 
                   {isRejected && (
                     <>
-                      <span className="text-xs uppercase tracking-wider font-semibold font-inter text-red-400/50">
-                        {config.label}
-                      </span>
                       <button
                         type="button"
                         disabled={isLoading}
                         onClick={() => handleAccept(r._id)}
-                        className="flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400/70 hover:bg-emerald-500/20 hover:text-emerald-400 transition-colors disabled:opacity-50 cursor-pointer"
+                        className="flex items-center gap-1 px-2 py-1 rounded-md text-white/30 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors disabled:opacity-50 cursor-pointer"
                         aria-label={`Re-accept ${r.requesterNickname}`}
                         title="Allow again"
                       >
-                        <Check className="w-3.5 h-3.5" />
+                        <Check className="w-3 h-3" />
+                        <span className="text-xs font-inter">Allow</span>
                       </button>
                     </>
                   )}
