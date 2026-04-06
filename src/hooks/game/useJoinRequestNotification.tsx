@@ -25,21 +25,16 @@ function JoinRequestToastBody({
 }) {
   const [loading, setLoading] = useState<"accept" | "reject" | null>(null);
 
-  const handle = async (action: "accept" | "reject") => {
+  const handle = (e: React.MouseEvent, action: "accept" | "reject") => {
+    e.stopPropagation();
     setLoading(action);
-    try {
-      if (action === "accept") {
-        await onAccept(requestId);
-      } else {
-        await onReject(requestId);
-      }
-    } catch {
-      setLoading(null);
-    }
+    (action === "accept" ? onAccept(requestId) : onReject(requestId)).catch(
+      () => setLoading(null),
+    );
   };
 
   return (
-    <div className="flex items-center justify-between gap-3">
+    <div className="flex items-center justify-between gap-3 cursor-pointer">
       <span className="text-white/90 truncate">
         <span className="font-semibold text-white">{nickname}</span> wants to
         join
@@ -48,7 +43,7 @@ function JoinRequestToastBody({
         <button
           type="button"
           disabled={loading !== null}
-          onClick={() => handle("accept")}
+          onClick={(e) => handle(e, "accept")}
           className="flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/30 transition-colors disabled:opacity-50 cursor-pointer"
           aria-label={`Accept ${nickname}`}
         >
@@ -61,7 +56,7 @@ function JoinRequestToastBody({
         <button
           type="button"
           disabled={loading !== null}
-          onClick={() => handle("reject")}
+          onClick={(e) => handle(e, "reject")}
           className="flex items-center justify-center w-7 h-7 rounded-lg bg-red-500/20 border border-red-500/40 text-red-400 hover:bg-red-500/30 transition-colors disabled:opacity-50 cursor-pointer"
           aria-label={`Reject ${nickname}`}
         >
@@ -137,7 +132,7 @@ export function useJoinRequestNotification(gameId: string, isHost: boolean) {
             onAccept={handleAccept}
             onReject={handleReject}
           />,
-          { autoClose: 15000, closeOnClick: true },
+          { autoClose: 15000, closeOnClick: true, draggable: true },
         );
         if (toastId !== undefined) {
           toastIdsRef.current.set(id, toastId);
