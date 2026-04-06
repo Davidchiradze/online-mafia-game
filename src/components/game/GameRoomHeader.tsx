@@ -5,8 +5,14 @@ import { useQuery } from "convex/react";
 import { joinRequests } from "@convex/refs/lobby";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { LandingLogo } from "@/components/landing/LandingLogo";
-import { EyeIcon, UsersIcon } from "@/assets/icons";
+import {
+  EyeIcon,
+  UsersIcon,
+  FullscreenEnterIcon,
+  FullscreenExitIcon,
+} from "@/assets/icons";
 import { LogOut, Settings } from "lucide-react";
+import { useFullscreen } from "@/hooks/game/useFullscreen";
 import ClickableTooltip from "@/components/ui/ClickableTooltip";
 import JoinRequestsDrawer from "@/components/host-controls/JoinRequestsDrawer";
 import CreateGameModal from "@/components/modals/CreateGameModal";
@@ -63,6 +69,7 @@ export default function GameRoomHeader() {
     gameSessionState,
   } = useGameRoom();
   const router = useRouter();
+  const { isFullscreen, toggleFullscreen } = useFullscreen();
   const [isJoinDrawerOpen, setIsJoinDrawerOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
@@ -145,6 +152,28 @@ export default function GameRoomHeader() {
                 <Settings className="w-[18px] h-[18px] text-gray-400 group-hover:text-white transition-colors" />
               </button>
             )}
+
+            <button
+              type="button"
+              onClick={toggleFullscreen}
+              className="p-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-all group"
+              title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+              aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+            >
+              {isFullscreen ? (
+                <FullscreenExitIcon
+                  width={18}
+                  height={18}
+                  className="text-gray-400 group-hover:text-white transition-colors"
+                />
+              ) : (
+                <FullscreenEnterIcon
+                  width={18}
+                  height={18}
+                  className="text-gray-400 group-hover:text-white transition-colors"
+                />
+              )}
+            </button>
 
             <button
               type="button"

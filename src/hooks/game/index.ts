@@ -23,3 +23,5 @@ export { useRoleRevealModal } from "./useRoleRevealModal";
 
 export { useVotingButton } from "./useVotingButton";
 export { useVoteIndicator } from "./useVoteIndicator";
+
+export { useFullscreen } from "./useFullscreen";
