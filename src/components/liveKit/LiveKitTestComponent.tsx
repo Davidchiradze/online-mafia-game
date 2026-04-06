@@ -3,7 +3,6 @@
 import {
   RoomAudioRenderer,
   RoomContext,
-  StartAudio,
   useTracks,
 } from "@livekit/components-react";
 import { Room, Track } from "livekit-client";
@@ -16,6 +15,7 @@ import { useSpeakingAutoMute, useDeadPlayerMute } from "@/hooks/livekit";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import RoleRevealModal from "@/components/modals/RoleRevealModal";
+import AudioPlaybackModal from "@/components/liveKit/AudioPlaybackModal";
 
 export default function LiveKitTestComponent({
   gameId,
@@ -65,7 +65,7 @@ export default function LiveKitTestComponent({
           />
         </div>
         <RoomAudioRenderer />
-        <StartAudio label="Click to allow audio playback" />
+        <AudioPlaybackModal room={room} />
 
         {role && (
           <RoleRevealModal

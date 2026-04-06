@@ -3,7 +3,6 @@
 import {
   RoomAudioRenderer,
   RoomContext,
-  StartAudio,
   useTracks,
 } from "@livekit/components-react";
 import { Room, Track } from "livekit-client";
@@ -12,6 +11,7 @@ import PlayerCircle from "@/components/game/PlayerCircle";
 import GameRoomHeader from "@/components/game/GameRoomHeader";
 import { useRef } from "react";
 import LoadingSpinner from "../ui/LoadingSpinner";
+import AudioPlaybackModal from "@/components/liveKit/AudioPlaybackModal";
 
 type SpectatorViewProps = {
   gameId: string;
@@ -46,7 +46,7 @@ export default function SpectatorView({
           />
         </div>
         <RoomAudioRenderer />
-        <StartAudio label="Click to allow audio playback" />
+        <AudioPlaybackModal room={room} />
       </div>
     </RoomContext.Provider>
   );
