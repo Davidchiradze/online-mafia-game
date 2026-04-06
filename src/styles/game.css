@@ -198,6 +198,13 @@
 
 .game-grid-container {
   margin: 0 auto;
+  padding: 15px;
+}
+
+@media (orientation: portrait) and (max-width: 600px) {
+  .game-grid-container {
+    padding:5px;
+  }
 }
 
 @media (orientation: landscape) and (max-height: 500px) {
