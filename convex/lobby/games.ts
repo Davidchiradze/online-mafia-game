@@ -101,6 +101,34 @@ export const remove = mutation({
   },
 });
 
+export const update = mutation({
+  args: {
+    gameId: v.id("games"),
+    name: v.optional(v.string()),
+    isPrivate: v.optional(v.boolean()),
+  },
+  handler: async (ctx, { gameId, name, isPrivate }) => {
+    const userId = await getAuthenticatedUser(ctx);
+    await assertIsHost(ctx.db, gameId, userId);
+
+    const patch: Record<string, unknown> = {};
+
+    if (name !== undefined) {
+      const trimmed = name.trim();
+      if (trimmed.length === 0) throw new Error("Room name cannot be empty");
+      patch.name = trimmed;
+    }
+
+    if (isPrivate !== undefined) {
+      patch.isPrivate = isPrivate;
+    }
+
+    if (Object.keys(patch).length > 0) {
+      await ctx.db.patch(gameId, patch);
+    }
+  },
+});
+
 export const removeInternal = internalMutation({
   args: { gameId: v.id("games") },
   handler: async (ctx, { gameId }) => {

@@ -9,8 +9,8 @@ import {
 import { Room, Track } from "livekit-client";
 import "@livekit/components-styles";
 import PlayerCircle from "@/components/game/PlayerCircle";
+import GameRoomHeader from "@/components/game/GameRoomHeader";
 import { useRef } from "react";
-import FloatingOptions from "./FloatingOptions";
 import { useRoleAssignmentNotification } from "@/hooks/game";
 import { useSpeakingAutoMute, useDeadPlayerMute } from "@/hooks/livekit";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
@@ -53,25 +53,20 @@ export default function LiveKitTestComponent({
       <div
         ref={containerRef}
         data-lk-theme="default"
-        className="w-full h-full flex flex-col items-center justify-center"
+        className="w-full h-full flex flex-col"
       >
-        <FloatingOptions
-          gameId={gameId}
-          isHost={isHost}
-          canFinishGame={isHost && !isGameFinished}
-          onLeaveRoom={disconnect}
-        />
+        <GameRoomHeader />
 
-        <MyVideoConference
-          gameId={gameId}
-          hostUserId={hostUserId}
-          userId={userId}
-        />
+        <div className="flex-1 min-h-0">
+          <MyVideoConference
+            gameId={gameId}
+            hostUserId={hostUserId}
+            userId={userId}
+          />
+        </div>
         <RoomAudioRenderer />
         <StartAudio label="Click to allow audio playback" />
-        {/* <ControlBar /> */}
 
-        {/* Role Reveal Modal */}
         {role && (
           <RoleRevealModal
             isOpen={showRoleModal}

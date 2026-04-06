@@ -80,14 +80,10 @@ export default function GamePage({ params }: PageProps) {
   }
 
   return (
-    <div className="h-screen">
-      <div className="mx-auto px-4 sm:px-6 lg:px-8 py-6 h-full flex items-center justify-center">
-        <div className="flex flex-col gap-6 h-full w-full sm:w-[80%] md:w-[90%] lg:w-[90%]">
-          <GameRoomProvider gameId={gameId} isSpectator={isSpectatorUser}>
-            <Room />
-          </GameRoomProvider>
-        </div>
-      </div>
+    <div className="h-screen flex flex-col">
+      <GameRoomProvider gameId={gameId} isSpectator={isSpectatorUser}>
+        <Room />
+      </GameRoomProvider>
     </div>
   );
 }

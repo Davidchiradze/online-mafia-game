@@ -118,6 +118,11 @@ export const lobbyGames = {
     { name: string; gameType: GameType; isPrivate: boolean },
     Id<"games">
   >("lobby/games:create"),
+  update: makeFunctionReference<
+    "mutation",
+    { gameId: Id<"games">; name?: string; isPrivate?: boolean },
+    null
+  >("lobby/games:update"),
   remove: makeFunctionReference<"mutation", { gameId: Id<"games"> }, null>(
     "lobby/games:remove",
   ),

@@ -103,6 +103,14 @@ type GameData = {
   gameStatus: string;
   maxPlayers: number;
   code: string;
+  isPrivate: boolean;
+};
+
+type GameSpectator = {
+  _id: string;
+  gameId: string;
+  userId: string;
+  nickname: string;
 };
 
 type GameRoomContextValue = {
@@ -112,6 +120,7 @@ type GameRoomContextValue = {
   isHost: boolean;
   isSpectator: boolean;
   gameData: GameData | null;
+  spectators: GameSpectator[];
   room: LiveKitRoom;
   maxPlayers: number | null;
   livekitToken: string | null;
@@ -434,8 +443,10 @@ export function GameRoomProvider({
             gameStatus: game.gameStatus,
             maxPlayers: game.maxPlayers,
             code: game.code,
+            isPrivate: game.isPrivate,
           }
         : null,
+      spectators: (game?.spectators ?? []) as GameSpectator[],
       room,
       maxPlayers: game?.maxPlayers ?? null,
       livekitToken,
