@@ -72,12 +72,14 @@ function SpectatorVideoConference({
     <div className="w-full h-full flex items-center justify-center">
       {!hasAnyTracks && <LoadingSpinner message="Waiting for players..." />}
       {hasAnyTracks && (
-        <PlayerCircle
-          gameId={gameId}
-          tracks={tracks}
-          hostUserId={hostUserId}
-          userId={userId}
-        />
+        <div className="game-grid-container w-full h-full">
+          <PlayerCircle
+            gameId={gameId}
+            tracks={tracks}
+            hostUserId={hostUserId}
+            userId={userId}
+          />
+        </div>
       )}
     </div>
   );

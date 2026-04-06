@@ -98,12 +98,14 @@ function MyVideoConference({
     <div className="w-full h-full flex items-center justify-center">
       {!track && <LoadingSpinner message="Loading..." />}
       {track && (
-        <PlayerCircle
-          gameId={gameId}
-          tracks={tracks}
-          hostUserId={hostUserId}
-          userId={userId}
-        />
+        <div className="game-grid-container w-full h-full">
+          <PlayerCircle
+            gameId={gameId}
+            tracks={tracks}
+            hostUserId={hostUserId}
+            userId={userId}
+          />
+        </div>
       )}
     </div>
   );

@@ -191,6 +191,28 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   Game Grid – landscape / short-viewport constraint
+   When height is the bottleneck (e.g. mobile landscape), cap the grid width
+   so tiles keep a reasonable aspect ratio instead of stretching too wide.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.game-grid-container {
+  margin: 0 auto;
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .game-grid-container {
+    max-width: calc(100vh * 1.6);
+  }
+}
+
+@media (orientation: landscape) and (max-height: 400px) {
+  .game-grid-container {
+    max-width: calc(100vh * 1.4);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    Center Panel (PlayerCircle)
    ═══════════════════════════════════════════════════════════════════════════ */
 
