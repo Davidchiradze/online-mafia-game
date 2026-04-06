@@ -127,6 +127,39 @@ export const myStatus = query({
 });
 
 /**
+ * Reactive count of pending join requests for a game.
+ * Lightweight query the host subscribes to for the badge indicator.
+ */
+export const countPending = query({
+  args: { gameId: v.id("games") },
+  handler: async (ctx, { gameId }) => {
+    const pending = await ctx.db
+      .query("joinRequests")
+      .withIndex("by_gameId_status", (q) =>
+        q.eq("gameId", gameId).eq("status", "pending"),
+      )
+      .collect();
+    return pending.length;
+  },
+});
+
+/**
+ * List pending join requests for a game. Reactive — auto-updates in real time.
+ * Used by the host notification system to track individual new requests.
+ */
+export const listPending = query({
+  args: { gameId: v.id("games") },
+  handler: async (ctx, { gameId }) => {
+    return await ctx.db
+      .query("joinRequests")
+      .withIndex("by_gameId_status", (q) =>
+        q.eq("gameId", gameId).eq("status", "pending"),
+      )
+      .collect();
+  },
+});
+
+/**
  * List all join requests for a game. Reactive — auto-updates in real time.
  */
 export const listByGame = query({

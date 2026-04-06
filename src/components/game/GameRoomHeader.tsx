@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useQuery } from "convex/react";
+import { joinRequests } from "@convex/refs/lobby";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { LandingLogo } from "@/components/landing/LandingLogo";
 import { EyeIcon, UsersIcon } from "@/assets/icons";
@@ -9,6 +11,8 @@ import ClickableTooltip from "@/components/ui/ClickableTooltip";
 import JoinRequestsDrawer from "@/components/host-controls/JoinRequestsDrawer";
 import CreateGameModal from "@/components/modals/CreateGameModal";
 import type { GAME_TYPES } from "@/lib/constants/game";
+import type { Id } from "@convex/_generated/dataModel";
+import { useJoinRequestNotification } from "@/hooks/game/useJoinRequestNotification";
 import { useRouter } from "next/navigation";
 
 function SpectatorTooltipContent({
@@ -62,6 +66,13 @@ export default function GameRoomHeader() {
   const [isJoinDrawerOpen, setIsJoinDrawerOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
+  const pendingCount = useQuery(
+    joinRequests.countPending,
+    isHost ? { gameId: gameId as Id<"games"> } : "skip",
+  );
+
+  useJoinRequestNotification(gameId, isHost);
+
   const roomName = gameData?.name ?? "Game Room";
   const isGameFinished = Boolean(gameSessionState?.isFinished);
   const canFinishGame =
@@ -110,11 +121,16 @@ export default function GameRoomHeader() {
               <button
                 type="button"
                 onClick={() => setIsJoinDrawerOpen(true)}
-                className="p-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-all group"
+                className="relative p-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-all group"
                 aria-label="Manage join requests"
                 title="Join requests"
               >
                 <UsersIcon width={18} height={18} />
+                {!!pendingCount && pendingCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white shadow-[0_0_8px_rgba(239,68,68,0.5)]">
+                    {pendingCount}
+                  </span>
+                )}
               </button>
             )}
 

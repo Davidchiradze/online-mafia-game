@@ -1,5 +1,6 @@
 "use client";
 import { ReactNode } from "react";
+import { X } from "lucide-react";
 
 type Props = {
   open: boolean;
@@ -9,6 +10,7 @@ type Props = {
   footer?: ReactNode;
   side?: "right" | "left";
   size?: "sm" | "md" | "lg";
+  variant?: "default" | "dark";
 };
 
 const sizeClass = {
@@ -25,35 +27,70 @@ export default function Drawer({
   footer,
   side = "right",
   size = "md",
+  variant = "default",
 }: Props) {
   if (!open) return null;
+
+  const isDark = variant === "dark";
+
   return (
     <div className="fixed inset-0 z-50">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div
-        className={`absolute top-0 ${
-          side === "right" ? "right-0" : "left-0"
-        } h-full ${
-          sizeClass[size]
-        } bg-white dark:bg-gray-900 shadow-2xl border-l border-gray-200 dark:border-gray-800 flex flex-col`}
+        className={`absolute inset-0 ${isDark ? "bg-black/75 backdrop-blur-sm" : "bg-black/50"}`}
+        onClick={onClose}
+      />
+      <div
+        className={`absolute top-0 ${side === "right" ? "right-0" : "left-0"} h-full ${sizeClass[size]} flex flex-col ${
+          isDark
+            ? "dark-panel border-white/10"
+            : "bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 shadow-2xl"
+        } ${side === "right" ? "border-l" : "border-r"}`}
       >
-        <div className="px-5 py-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
-          <div className="text-lg font-semibold text-gray-900 dark:text-white">
-            {title}
-          </div>
+        <div
+          className={`px-5 py-4 flex items-center justify-between shrink-0 ${
+            isDark
+              ? "border-b border-white/10"
+              : "border-b border-gray-200 dark:border-gray-800"
+          }`}
+        >
+          {title && (
+            <h3
+              className={
+                isDark
+                  ? "text-white font-orbitron font-bold text-base tracking-tight"
+                  : "text-lg font-semibold text-gray-900 dark:text-white"
+              }
+            >
+              {title}
+            </h3>
+          )}
           <button
+            type="button"
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all cursor-pointer ${
+              isDark
+                ? "text-gray-500 hover:text-white hover:bg-white/10"
+                : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            }`}
+            aria-label="Close drawer"
           >
-            ✕
+            <X className="w-4 h-4" />
           </button>
         </div>
+
         <div className="p-5 flex-1 overflow-auto">{children}</div>
-        {footer ? (
-          <div className="p-5 border-t border-gray-200 dark:border-gray-800">
+
+        {footer && (
+          <div
+            className={`p-5 shrink-0 ${
+              isDark
+                ? "border-t border-white/10"
+                : "border-t border-gray-200 dark:border-gray-800"
+            }`}
+          >
             {footer}
           </div>
-        ) : null}
+        )}
       </div>
     </div>
   );

@@ -82,6 +82,12 @@ export const joinRequests = {
     { gameId: Id<"games"> },
     { allowed: boolean; status: string; requestId?: Id<"joinRequests"> }
   >("lobby/joinRequests:checkOrRequest"),
+  countPending: makeFunctionReference<"query", { gameId: Id<"games"> }, number>(
+    "lobby/joinRequests:countPending",
+  ),
+  listPending: makeFunctionReference<"query", { gameId: Id<"games"> }, JoinRequestDoc[]>(
+    "lobby/joinRequests:listPending",
+  ),
   listByGame: makeFunctionReference<"query", { gameId: Id<"games"> }, JoinRequestDoc[]>(
     "lobby/joinRequests:listByGame",
   ),

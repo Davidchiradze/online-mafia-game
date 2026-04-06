@@ -51,15 +51,17 @@ export default function RootLayout({
               {children}
               <ToastContainer
                 position="top-right"
-                autoClose={8000}
-                hideProgressBar={false}
-                newestOnTop={false}
+                autoClose={4000}
+                hideProgressBar
+                newestOnTop
                 closeOnClick
-                rtl={false}
                 pauseOnFocusLoss
-                draggable
                 pauseOnHover
+                draggable={false}
                 theme="dark"
+                toastStyle={{ background: "transparent", boxShadow: "none", padding: 0 }}
+                style={{ zIndex: 99999 }}
+                limit={4}
               />
             </ThemeProvider>
           </ConvexClientProvider>
