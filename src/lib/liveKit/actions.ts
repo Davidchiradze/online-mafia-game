@@ -56,7 +56,7 @@ export async function createLivekitRoom(roomId: string) {
   const opts = {
     name: roomId,
     emptyTimeout: 10 * 60, // 10 minutes
-    maxParticipants: 20,
+    maxParticipants: 23,
   };
   roomService.createRoom(opts).then((room: Room) => {
     console.log("room created", room);
