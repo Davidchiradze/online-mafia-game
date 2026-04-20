@@ -201,6 +201,11 @@
   padding: 15px;
 }
 
+@media (orientation: landscape) and (min-width: 600px) {
+  .game-grid-container {
+    max-width: calc(100dvh * 1.6);
+  }
+}
 @media (orientation: portrait) and (max-width: 600px) {
   .game-grid-container {
     padding:5px;
@@ -209,13 +214,13 @@
 
 @media (orientation: landscape) and (max-height: 500px) {
   .game-grid-container {
-    /* max-width: calc(100dvh * 1.6); */
+    max-width: calc(100dvh * 1.6);
   }
 }
 
 @media (orientation: landscape) and (max-height: 400px) {
   .game-grid-container {
-    /* max-width: calc(100dvh * 1.4); */
+    max-width: calc(100dvh * 1.4);
   }
 }
 
