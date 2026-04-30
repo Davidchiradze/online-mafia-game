@@ -12,7 +12,13 @@ import { MAFIA_TEAM_ROLES } from "@/lib/constants/game";
  * `nightPhaseSession`, the reactive query fires and the button enables.
  */
 export function useNightPhaseReadiness() {
-  const { nightPhaseSession, players, playerRolesMap } = useGameRoom();
+  const {
+    nightPhaseSession,
+    players,
+    playerRolesMap,
+    healedPlayers,
+    hostUserId,
+  } = useGameRoom();
 
   const isFirstNight = nightPhaseSession?.nightNumber === 1;
 
@@ -53,8 +59,31 @@ export function useNightPhaseReadiness() {
     );
     if (!hasAliveDoctor) return true;
 
-    return nightPhaseSession?.healedPlayer !== undefined;
-  }, [players, playerRolesMap, nightPhaseSession?.healedPlayer]);
+    if (nightPhaseSession?.healedPlayer !== undefined) return true;
+
+    // Doctor can heal each player only once per game. If every alive
+    // non-host player has already been healed in a previous night, the
+    // doctor has no valid target left, so the phase can be ended without
+    // action. The host is not a participant of the game and cannot be healed.
+    const aliveSeats = players
+      .filter(
+        (p) =>
+          p.isAlive &&
+          typeof p.seatNumber === "number" &&
+          (p.playerId as string) !== hostUserId,
+      )
+      .map((p) => p.seatNumber as number);
+
+    if (aliveSeats.length === 0) return true;
+
+    return aliveSeats.every((seat) => healedPlayers.includes(seat));
+  }, [
+    players,
+    playerRolesMap,
+    nightPhaseSession?.healedPlayer,
+    healedPlayers,
+    hostUserId,
+  ]);
 
   return { canEndMafiaPhase, canEndYakuzaPhase, canEndDoctorPhase };
 }
