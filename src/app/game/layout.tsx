@@ -13,7 +13,7 @@ export default function GameLayout({
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="https://images.unsplash.com/photo-1568450902879-3b3ffb882ecb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkYXJrJTIwY2l0eSUyMG5pZ2h0JTIwc2t5bGluZSUyMG5vaXJ8ZW58MXx8fHwxNzcyMTE2NjM5fDA&ixlib=rb-4.1.0&q=80&w=1080"
+        src="https://www.mafia.ge/templates/newassets/img/mafiabg.jpg"
         alt=""
         className="absolute inset-0 w-full h-full object-cover opacity-20 pointer-events-none select-none"
       />

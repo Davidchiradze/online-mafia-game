@@ -10,8 +10,8 @@ export default function LobbyPage() {
 
   if (games === undefined) {
     return (
-      <div className="min-h-screen bg-[#0a0a12] flex items-center justify-center">
-        <LoadingSpinner message="Loading…" />
+      <div className="flex min-h-full items-center justify-center">
+        <LoadingSpinner message="Loading..." />
       </div>
     );
   }

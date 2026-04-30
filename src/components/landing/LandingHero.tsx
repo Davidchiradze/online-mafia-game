@@ -5,10 +5,8 @@ import { ChevronRight } from "lucide-react";
 import { GlowButton } from "./GlowButton";
 import { GlassButton } from "./GlassButton";
 
-const HERO_IMG =
-  "https://images.unsplash.com/photo-1702332240877-07fd6fb1195f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxub2lyJTIwY2l0eSUyMHN0cmVldCUyMG5pZ2h0JTIwdm9sdW1ldHJpYyUyMGxpZ2h0JTIwZm9nfGVufDF8fHx8MTc3MTk2NjQ4N3ww&ixlib=rb-4.1.0&q=80&w=1080";
-const HERO_IMG_ALT =
-  "https://images.unsplash.com/photo-1671836651670-a0fa5702f210?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkYXJrJTIwbW9vZHklMjBjaXR5JTIwc2t5bGluZSUyMG5pZ2h0JTIwcmVkJTIwZ2xvdyUyMGNpbmVtYXRpY3xlbnwxfHx8fDE3NzE5NjY0ODh8MA&ixlib=rb-4.1.0&q=80&w=1080";
+const HERO_IMG = "https://www.mafia.ge/templates/newassets/img/mafiabg.jpg";
+const HERO_IMG_ALT = "https://www.mafia.ge/templates/newassets/img/mafiabg.jpg";
 
 export function LandingHero() {
   return (
