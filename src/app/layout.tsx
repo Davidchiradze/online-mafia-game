@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Geist_Mono, Orbitron } from "next/font/google";
 import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
 import ConvexClientProvider from "@/components/providers/ConvexClientProvider";
+import ServerTimeProvider from "@/components/providers/ServerTimeProvider";
 import { ThemeProvider } from "@/components/theme-provider/theme-provider";
 import { ToastContainer } from "react-toastify";
 import "./globals.css";
@@ -42,32 +43,34 @@ export default function RootLayout({
           className={`${inter.variable} ${geistMono.variable} ${orbitron.variable} antialiased`}
         >
           <ConvexClientProvider>
-            <ThemeProvider
-              attribute="class"
-              defaultTheme="dark"
-              enableSystem
-              disableTransitionOnChange
-            >
-              {children}
-              <ToastContainer
-                position="top-right"
-                autoClose={4000}
-                hideProgressBar
-                newestOnTop
-                closeOnClick
-                pauseOnFocusLoss
-                pauseOnHover
-                draggable={false}
-                theme="dark"
-                toastStyle={{
-                  background: "transparent",
-                  boxShadow: "none",
-                  padding: 0,
-                }}
-                style={{ zIndex: 99999 }}
-                limit={4}
-              />
-            </ThemeProvider>
+            <ServerTimeProvider initialServerTime={Date.now()}>
+              <ThemeProvider
+                attribute="class"
+                defaultTheme="dark"
+                enableSystem
+                disableTransitionOnChange
+              >
+                {children}
+                <ToastContainer
+                  position="top-right"
+                  autoClose={4000}
+                  hideProgressBar
+                  newestOnTop
+                  closeOnClick
+                  pauseOnFocusLoss
+                  pauseOnHover
+                  draggable={false}
+                  theme="dark"
+                  toastStyle={{
+                    background: "transparent",
+                    boxShadow: "none",
+                    padding: 0,
+                  }}
+                  style={{ zIndex: 99999 }}
+                  limit={4}
+                />
+              </ThemeProvider>
+            </ServerTimeProvider>
           </ConvexClientProvider>
         </body>
       </html>

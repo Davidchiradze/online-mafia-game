@@ -7,6 +7,7 @@ import {
   FAREWELL_SPEECH,
 } from "@/lib/constants/game";
 import { calculateRemainingTime } from "@/lib/game/speakingOrder";
+import { useServerTime } from "@/lib/time/serverTime";
 
 /**
  * Get the speaking duration based on game phase.
@@ -49,6 +50,7 @@ export function useSpeakingProgress(
 ): number {
   const [progress, setProgress] = useState(0);
   const hasPlayedSoundRef = useRef(false);
+  const getServerTime = useServerTime();
 
   // Reset sound flag when speaker changes
   useEffect(() => {
@@ -71,13 +73,16 @@ export function useSpeakingProgress(
     const duration = getSpeakingDuration(gamePhase);
 
     const updateProgress = () => {
-      const remaining = calculateRemainingTime(speakerStartedAt, duration);
+      const remaining = calculateRemainingTime(
+        speakerStartedAt,
+        duration,
+        getServerTime(),
+      );
       const elapsed = duration - remaining;
       const pct = (elapsed / duration) * 100;
       const clampedPct = Math.min(100, Math.max(0, pct));
       setProgress(clampedPct);
 
-      // Play sound when time is up
       if (clampedPct >= 100) {
         handleTimeUp();
       }
@@ -86,7 +91,7 @@ export function useSpeakingProgress(
     updateProgress();
     const interval = setInterval(updateProgress, 100);
     return () => clearInterval(interval);
-  }, [isActive, speakerStartedAt, gamePhase, handleTimeUp]);
+  }, [isActive, speakerStartedAt, gamePhase, handleTimeUp, getServerTime]);
 
   return progress;
 }

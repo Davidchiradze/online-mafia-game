@@ -6,6 +6,7 @@ import { voting } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
 import { VOTING } from "@/lib/constants/game";
 import type { useGameRoom } from "@/lib/context/gameRoomContext";
+import { useServerTime } from "@/lib/time/serverTime";
 
 type UseVotingButtonOptions = {
   votingSession: ReturnType<typeof useGameRoom>["votingSession"];
@@ -27,6 +28,7 @@ export function useVotingButton({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number>(VOTING.VOTE_WINDOW_SECONDS);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const getServerTime = useServerTime();
 
   const castVoteMutation = useMutation(voting.castVote);
   const castBothLeaveMutation = useMutation(voting.castBothLeaveVote);
@@ -60,7 +62,7 @@ export function useVotingButton({
     const startTime = new Date(votingSession.votingStartedAt!).getTime();
 
     const tick = () => {
-      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      const elapsed = Math.floor((getServerTime() - startTime) / 1000);
       setTimeLeft(Math.max(0, VOTING.VOTE_WINDOW_SECONDS - elapsed));
     };
 
@@ -73,7 +75,7 @@ export function useVotingButton({
         intervalRef.current = null;
       }
     };
-  }, [votingSession?.votingStartedAt, isVotingActive]);
+  }, [votingSession?.votingStartedAt, isVotingActive, getServerTime]);
 
   // Button enabled when voting is active and player hasn't voted
   const isEnabled =

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { VOTING } from "@/lib/constants/game";
+import { useServerTime } from "@/lib/time/serverTime";
 
 type UseVotingTimerReturn = {
   timeLeft: number;
@@ -22,6 +23,7 @@ export function useVotingTimer(): UseVotingTimerReturn {
   const [localVotingStart, setLocalVotingStart] = useState<number | null>(null);
   const [isLocalVoting, setIsLocalVoting] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const getServerTime = useServerTime();
 
   const startLocalVoting = useCallback(() => {
     setLocalVotingStart(Date.now());
@@ -48,7 +50,11 @@ export function useVotingTimer(): UseVotingTimerReturn {
 
     if (isVotingActive && startTime) {
       const tick = () => {
-        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        // Host's local-start branch subtracts two local `Date.now()` values
+        // so clock skew cancels out. Server-timestamp branch uses
+        // `getServerTime()` to apply the SSR-measured offset.
+        const nowMs = isLocalVoting && localVotingStart ? Date.now() : getServerTime();
+        const elapsed = Math.floor((nowMs - startTime) / 1000);
         const remaining = Math.max(0, VOTING.VOTE_WINDOW_SECONDS - elapsed);
         setTimeLeft(remaining);
       };
@@ -67,6 +73,7 @@ export function useVotingTimer(): UseVotingTimerReturn {
     localVotingStart,
     votingSession?.votingActive,
     votingSession?.votingStartedAt,
+    getServerTime,
   ]);
 
   return { timeLeft, isLocalVoting, startLocalVoting, stopLocalVoting };

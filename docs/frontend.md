@@ -367,6 +367,33 @@ const HeavyComponent = dynamic(() => import("./HeavyComponent"), {
 });
 ```
 
+## Time-Based UI (Timers, Progress Bars)
+
+Any UI that subtracts a server-issued timestamp from "now" (voting
+countdowns, speaker progress bar, farewell speech timer, etc.) MUST go
+through `useServerTime()` from `@/lib/time/serverTime` instead of
+`Date.now()` / `new Date()`.
+
+```typescript
+import { useServerTime } from "@/lib/time/serverTime";
+
+const getServerTime = useServerTime();
+
+const tick = () => {
+  const elapsedMs = getServerTime() - new Date(serverStartIso).getTime();
+};
+```
+
+`getServerTime()` returns `Date.now() + offsetMs`, where `offsetMs` is
+captured at SSR from the Vercel Node clock. This makes timers correct
+even when a user's device clock is wildly wrong.
+
+Pure helpers should accept a `currentServerTimeMs: number` parameter
+rather than calling `new Date()` internally. See
+[server-time.md](./server-time.md) for the full pattern, exceptions
+(pure local countdowns are fine to keep using `setInterval` deltas),
+and the rationale.
+
 ## Best Practices
 
 1. **Keep components small** - Break down large components
@@ -377,3 +404,4 @@ const HeavyComponent = dynamic(() => import("./HeavyComponent"), {
 6. **Handle errors** - Wrap `useMutation` calls in try/catch
 7. **Use `"skip"` for conditional queries** - Not `enabled` flags
 8. **Don't use `useEffect` for data** - Convex `useQuery` handles subscriptions
+9. **Don't use `Date.now()` for timer math** - Use `useServerTime()` (see [server-time.md](./server-time.md))

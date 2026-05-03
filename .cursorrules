@@ -10,6 +10,7 @@
 - **`/docs/game-design.md`** - Mafia rules, phases, visibility
 - **`/docs/frontend.md`** - React / UI conventions
 - **`/docs/backend.md`** - Server patterns
+- **`/docs/server-time.md`** - Server-corrected client clock for timers
 - **`/docs/decisions.md`** - Architectural decisions (ADR)
 
 ## Core Stack
@@ -33,6 +34,7 @@
 6. **Component composition**: Small, reusable components
 7. **Custom hooks**: Extract data fetching into hooks under `src/hooks`
 8. **Role-based visibility**: Game phase and role determine what players see
+9. **Server-corrected time on client**: Use `useServerTime()` from `@/lib/time/serverTime` for any timer math against a server-issued timestamp. Never use raw `Date.now()` / `new Date()` for elapsed time on the client (see `/docs/server-time.md`)
 
 ## What We Do NOT Use
 
@@ -59,6 +61,7 @@
 - `/src/lib` - Utilities, constants, context
 - `/src/lib/constants/game.ts` - Game constants (phases, roles, statuses)
 - `/src/lib/game/visibility.ts` - Visibility logic (pure functions)
+- `/src/lib/time/serverTime.ts` - `useServerTime()` for server-corrected client clock
 
 ## Type Safety
 
