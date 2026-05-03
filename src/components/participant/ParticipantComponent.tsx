@@ -24,6 +24,7 @@ import {
   useYakuzaTargetSelection,
   useDoctorHealSelection,
   useNightActionAuthority,
+  useRightHandPromotion,
   useVoteIndicator,
 } from "@/hooks/game";
 import { useFoulNotification } from "@/hooks/game/useFoulNotification";
@@ -210,6 +211,14 @@ export default function ParticipantComponent({
     healedPlayers,
   );
 
+  // Right Hand promotion (Don picks during `don_chooses_right_hand`)
+  const { canShowPromoteButton: canShowPromoteRightHandButton } =
+    useRightHandPromotion(
+      (player.playerId as string | undefined) ?? null,
+      isTargetHost,
+      player.isAlive !== false,
+    );
+
   // Vote indicator (voting phase)
   const { showVoteIndicator } = useVoteIndicator(player.seatNumber ?? null);
 
@@ -310,9 +319,11 @@ export default function ParticipantComponent({
         startFoulSpeak={startFoulSpeak}
       />
 
-      {/* Night action buttons (Mafia kill, Yakuza kill, Doctor heal) */}
+      {/* Night action buttons (Mafia kill, Yakuza kill, Doctor heal, Don's
+          Right Hand promotion) */}
       <NightActionButtons
         seatNumber={player.seatNumber ?? null}
+        targetPlayerId={player.playerId ?? null}
         canShowMafiaKillButton={canShowMafiaKillButton}
         isMafiaTargetSelected={isMafiaTargetSelected}
         shouldShowMafiaTargetIndicator={shouldShowMafiaTargetIndicator}
@@ -322,6 +333,7 @@ export default function ParticipantComponent({
         canShowDoctorHealButton={canShowDoctorHealButton}
         isAlreadyHealed={isAlreadyHealed}
         shouldShowDoctorHealIndicator={shouldShowDoctorHealIndicator}
+        canShowPromoteRightHandButton={canShowPromoteRightHandButton}
       />
 
       {/* Ready button */}

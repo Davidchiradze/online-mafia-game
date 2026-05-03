@@ -2,7 +2,11 @@ import { v } from "convex/values";
 import { query, mutation } from "../_generated/server";
 import { getAuthenticatedUser } from "../lib/auth";
 import { getGameById, assertIsHost } from "../lib/games";
-import { MAFIA_TEAM_ROLES, YAKUZA_TEAM_ROLES } from "../lib/constants";
+import {
+  GAME_PHASES,
+  MAFIA_TEAM_ROLES,
+  YAKUZA_TEAM_ROLES,
+} from "../lib/constants";
 
 /**
  * Get player roles filtered by team visibility.
@@ -94,5 +98,79 @@ export const assign = mutation({
     } else {
       await ctx.db.insert("gamePlayerRoles", { gameId, playerId, role });
     }
+  },
+});
+
+/**
+ * The Don promotes one of the two MAFIA players to MAFIA_RIGHT_HAND during
+ * the `don_chooses_right_hand` phase.
+ *
+ * Single-shot per game (matches the UX rule: "after picking, the promote
+ * buttons disappear and the Don cannot change their mind"). The host has to
+ * advance the phase via `EndDonChooseRightHandButton` once a Right Hand has
+ * been chosen.
+ *
+ * Validation:
+ *   - Caller must hold the "DON" role for this game.
+ *   - Phase must be `don_chooses_right_hand`.
+ *   - Target player must currently hold the "MAFIA" role.
+ *   - No `MAFIA_RIGHT_HAND` may already exist in this game.
+ *
+ * On success: target's `gamePlayerRoles.role` is patched to MAFIA_RIGHT_HAND.
+ * Convex mutations are atomic; any thrown error rolls back.
+ */
+export const promoteToRightHand = mutation({
+  args: {
+    gameId: v.id("games"),
+    targetPlayerId: v.id("profiles"),
+  },
+  handler: async (ctx, { gameId, targetPlayerId }) => {
+    const userId = await getAuthenticatedUser(ctx);
+    await getGameById(ctx.db, gameId);
+
+    const callerRole = await ctx.db
+      .query("gamePlayerRoles")
+      .withIndex("by_gameId_playerId", (q) =>
+        q.eq("gameId", gameId).eq("playerId", userId),
+      )
+      .unique();
+    if (!callerRole || callerRole.role !== "DON") {
+      throw new Error("Only the Don can promote the Right Hand");
+    }
+
+    const session = await ctx.db
+      .query("gameSessions")
+      .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
+      .unique();
+    if (!session) throw new Error("Game session not found");
+    if (session.gamePhase !== GAME_PHASES[3]) {
+      throw new Error("Not in don_chooses_right_hand phase");
+    }
+
+    const targetRole = await ctx.db
+      .query("gamePlayerRoles")
+      .withIndex("by_gameId_playerId", (q) =>
+        q.eq("gameId", gameId).eq("playerId", targetPlayerId),
+      )
+      .unique();
+    if (!targetRole) {
+      throw new Error("Target player has no role assigned");
+    }
+    if (targetRole.role !== "MAFIA") {
+      throw new Error("Only MAFIA players can be promoted to Right Hand");
+    }
+
+    const allRolesInGame = await ctx.db
+      .query("gamePlayerRoles")
+      .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
+      .collect();
+    const alreadyHasRightHand = allRolesInGame.some(
+      (r) => r.role === "MAFIA_RIGHT_HAND",
+    );
+    if (alreadyHasRightHand) {
+      throw new Error("Right Hand has already been chosen");
+    }
+
+    await ctx.db.patch(targetRole._id, { role: "MAFIA_RIGHT_HAND" });
   },
 });
