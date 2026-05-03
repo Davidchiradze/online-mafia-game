@@ -15,6 +15,8 @@ type PhaseButtonProps = {
   disabled?: boolean;
   label?: string;
   variant?: PhaseButtonVariant;
+  /** Native HTML title attribute — used for tooltip text on disabled state. */
+  title?: string;
 };
 
 const variantStyles: Record<
@@ -64,6 +66,7 @@ export default function PhaseButton({
   disabled = false,
   label = "Finish",
   variant = "primary",
+  title,
 }: PhaseButtonProps) {
   const [isMountDisabled, setIsMountDisabled] = useState(true);
   const style = variantStyles[variant];
@@ -81,6 +84,7 @@ export default function PhaseButton({
       type="button"
       disabled={isLoading || disabled || isMountDisabled}
       onClick={onClick}
+      title={title}
       className="w-full px-6 py-3 rounded-xl cursor-pointer text-[0.85rem] text-white border-2 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 flex items-center justify-center gap-2 [@media(max-height:900px)]:px-5 [@media(max-height:900px)]:py-2.5 [@media(max-height:900px)]:text-[0.8rem] [@media(max-height:760px)]:px-4 [@media(max-height:760px)]:py-2 [@media(max-height:760px)]:text-xs"
       style={{
         background: style.bg,

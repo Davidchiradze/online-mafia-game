@@ -1,14 +1,17 @@
 "use client";
 
+import type { Id } from "@convex/_generated/dataModel";
 import MafiaKillButton from "@/components/game/MafiaKillButton";
 import YakuzaKillButton from "@/components/game/YakuzaKillButton";
 import DoctorHealButton from "@/components/game/DoctorHealButton";
+import PromoteToRightHandButton from "@/components/game/PromoteToRightHandButton";
 import MafiaTargetIndicator from "./MafiaTargetIndicator";
 import YakuzaTargetIndicator from "./YakuzaTargetIndicator";
 import DoctorHealIndicator from "./DoctorHealIndicator";
 
 interface NightActionButtonsProps {
   seatNumber: number | null;
+  targetPlayerId: Id<"profiles"> | null;
   canShowMafiaKillButton: boolean;
   isMafiaTargetSelected: boolean;
   shouldShowMafiaTargetIndicator: boolean;
@@ -18,10 +21,12 @@ interface NightActionButtonsProps {
   canShowDoctorHealButton: boolean;
   isAlreadyHealed: boolean;
   shouldShowDoctorHealIndicator: boolean;
+  canShowPromoteRightHandButton: boolean;
 }
 
 export default function NightActionButtons({
   seatNumber,
+  targetPlayerId,
   canShowMafiaKillButton,
   isMafiaTargetSelected,
   shouldShowMafiaTargetIndicator,
@@ -31,6 +36,7 @@ export default function NightActionButtons({
   canShowDoctorHealButton,
   isAlreadyHealed,
   shouldShowDoctorHealIndicator,
+  canShowPromoteRightHandButton,
 }: NightActionButtonsProps) {
   if (seatNumber == null) return null;
 
@@ -73,6 +79,12 @@ export default function NightActionButtons({
 
       {shouldShowDoctorHealIndicator && !canShowDoctorHealButton && (
         <DoctorHealIndicator />
+      )}
+
+      {canShowPromoteRightHandButton && targetPlayerId && (
+        <NightActionWrapper isSelected={false}>
+          <PromoteToRightHandButton targetPlayerId={targetPlayerId} />
+        </NightActionWrapper>
       )}
     </>
   );

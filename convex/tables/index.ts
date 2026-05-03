@@ -8,3 +8,4 @@ export { gamePlayerRoles } from "./gamePlayerRoles";
 export { nightPhaseSessions } from "./nightPhaseSessions";
 export { votingSessions } from "./votingSessions";
 export { votes } from "./votes";
+export { cardPickingSessions } from "./cardPickingSessions";

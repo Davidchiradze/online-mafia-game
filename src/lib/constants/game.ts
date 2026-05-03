@@ -202,6 +202,14 @@ export const GAME_CLEANUP = {
   DELAY_MS: 60_000,
 } as const;
 
+// Card-picking phase constants
+export const CARD_PICK = {
+  /** Per-pick timeout in milliseconds (15 seconds) */
+  TIMEOUT_MS: 15 * 1000,
+  /** Per-pick timeout in seconds */
+  TIMEOUT_SECONDS: 15,
+} as const;
+
 // Spectator Constants
 export const SPECTATOR = {
   /** Maximum number of spectators allowed per game */

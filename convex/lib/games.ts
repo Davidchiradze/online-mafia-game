@@ -94,6 +94,7 @@ const GAME_RELATED_TABLES = [
   "gamePlayerRoles",
   "nightPhaseSessions",
   "votingSessions",
+  "cardPickingSessions",
 ] as const;
 
 export async function deleteGameAndRelations(

@@ -67,7 +67,6 @@ export default function PlayerCircle({
   maxPlayers?: number;
 }) {
   const { players, gameSessionState, isHost } = useGameRoom();
-  console.log("🚀 ~ PlayerCircle ~ players:", players);
   const slotDescriptors = usePlayerSlots({
     tracks,
     hostUserId,

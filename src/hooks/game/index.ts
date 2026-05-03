@@ -18,10 +18,12 @@ export type { YakuzaTargetSelectionResult } from "./useYakuzaTargetSelection";
 export { useDoctorHealSelection } from "./useDoctorHealSelection";
 export type { DoctorHealSelectionResult } from "./useDoctorHealSelection";
 
-export { useRoleAssignmentNotification } from "./useRoleAssignmentNotification";
-export { useRoleRevealModal } from "./useRoleRevealModal";
+export { useRightHandPromotion } from "./useRightHandPromotion";
+export type { RightHandPromotionResult } from "./useRightHandPromotion";
 
 export { useVotingButton } from "./useVotingButton";
 export { useVoteIndicator } from "./useVoteIndicator";
 
 export { useFullscreen } from "./useFullscreen";
+
+export { useCardPicking } from "./useCardPicking";

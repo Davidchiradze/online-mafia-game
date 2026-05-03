@@ -22,10 +22,17 @@ export const GAME_PHASES = [
   "end_game",
 ] as const;
 
+/**
+ * Initial card-pick deck for a 12-player Japanese Mafia game.
+ *
+ * Note: MAFIA_RIGHT_HAND is intentionally absent from the initial deck.
+ * Two MAFIA cards are dealt, and during the `don_chooses_right_hand` phase
+ * the Don promotes one of the MAFIA players to MAFIA_RIGHT_HAND.
+ */
 export const JAPANESE_MAFIA_ROLE_DISTRIBUTION = [
   "DON",
   "MAFIA",
-  "MAFIA_RIGHT_HAND",
+  "MAFIA",
   "SHOGUN",
   "YAKUZA",
   "DETECTIVE",
@@ -62,6 +69,13 @@ export const SPEAKING_STATE = {
 export const GAME_CLEANUP = {
   /** Delay before deleting a finished game and its relations (1 minute) */
   DELAY_MS: 60_000,
+} as const;
+
+export const CARD_PICK = {
+  /** Per-pick timeout: server auto-picks a random remaining card on expiry */
+  TIMEOUT_MS: 15 * 1000,
+  /** Per-pick timeout in seconds */
+  TIMEOUT_SECONDS: 15,
 } as const;
 
 export const FOULS = {

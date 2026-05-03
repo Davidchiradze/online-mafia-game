@@ -3,7 +3,9 @@
 import React, { useState } from "react";
 import { useMutation } from "convex/react";
 import { gameSessions } from "@convex/refs/game";
+import type { Id } from "@convex/_generated/dataModel";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
+import { useCardPicking } from "@/hooks/game";
 import { GAME_PHASES } from "@/lib/constants/game";
 import PhaseButton from "@/components/ui/PhaseButton";
 
@@ -12,14 +14,20 @@ type ConfirmRolesButtonProps = {
 };
 
 /**
- * Button to confirm role assignments and move to mafia_meet phase
+ * Host-only button that ends the picking_roles phase.
+ *
+ * Stays disabled until every seat in the cardPickingSession has picked
+ * (`state.isComplete === true`).
  */
 const ConfirmRolesButton = ({ gameSessionState }: ConfirmRolesButtonProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const updateSession = useMutation(gameSessions.update);
+  const { state } = useCardPicking(gameSessionState.gameId as Id<"games">);
+
+  const isComplete = state?.isComplete ?? false;
 
   const handleConfirmRoles = async () => {
-    if (isLoading) return;
+    if (isLoading || !isComplete) return;
     setIsLoading(true);
     try {
       await updateSession({
@@ -33,7 +41,15 @@ const ConfirmRolesButton = ({ gameSessionState }: ConfirmRolesButtonProps) => {
     }
   };
 
-  return <PhaseButton onClick={handleConfirmRoles} isLoading={isLoading} label="Confirm Roles" variant="success" />;
+  return (
+    <PhaseButton
+      onClick={handleConfirmRoles}
+      isLoading={isLoading}
+      disabled={!isComplete}
+      label={isComplete ? "Confirm Roles" : "Waiting for picks..."}
+      variant="success"
+    />
+  );
 };
 
 export default ConfirmRolesButton;
