@@ -2,37 +2,40 @@
 
 import React, { useState } from "react";
 import { useMutation } from "convex/react";
-import { gameSessions } from "@convex/refs/game";
+import { cardPicking } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
-import { GAME_PHASES } from "@/lib/constants/game";
 import PhaseButton from "@/components/ui/PhaseButton";
 
 type StartPickingRolesButtonProps = {
   gameSessionState: NonNullable<ReturnType<typeof useGameRoom>["gameSessionState"]>;
 };
 
+/**
+ * Host-side button that enters the card-picking phase.
+ *
+ * Calls `cardPicking.start`, which atomically:
+ *   - shuffles a 12-card deck (hidden roles per card),
+ *   - inserts the cardPickingSession,
+ *   - flips gameSessions.gamePhase to "picking_roles".
+ *
+ * Idempotent on the server: clicking twice returns the existing session id.
+ */
 const StartPickingRolesButton = ({
   gameSessionState,
 }: StartPickingRolesButtonProps) => {
   const [isLoading, setIsLoading] = useState(false);
-  const assignRoles = useMutation(gameSessions.assignRandomRoles);
-  const updateSession = useMutation(gameSessions.update);
+  const startCardPicking = useMutation(cardPicking.start);
 
   const handleStartPickingRoles = async () => {
     if (isLoading) return;
     setIsLoading(true);
     try {
-      await assignRoles({ gameId: gameSessionState.gameId as Id<"games"> });
-
-      await updateSession({
-        sessionId: gameSessionState._id,
-        updates: {
-          gamePhase: GAME_PHASES[1],
-        },
+      await startCardPicking({
+        gameId: gameSessionState.gameId as Id<"games">,
       });
     } catch (error) {
-      console.error("Failed to assign roles:", error);
+      console.error("Failed to start card picking:", error);
     } finally {
       setIsLoading(false);
     }

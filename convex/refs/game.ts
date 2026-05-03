@@ -430,3 +430,57 @@ export const farewellSpeech = {
     "game/farewellSpeech:advanceFromFarewell",
   ),
 };
+
+// ============================================================================
+// CARD PICKING
+// ============================================================================
+
+type CardPickingCardView = {
+  cardId: string;
+  claimed: boolean;
+  claimedBySeat: number | null;
+  role: string | null;
+};
+
+type CardPickingState = {
+  pickOrder: number[];
+  currentPickIndex: number;
+  currentSeat: number | null;
+  viewerSeat: number | null;
+  isMyTurn: boolean;
+  currentTurnStartedAt: string | null;
+  isComplete: boolean;
+  cards: CardPickingCardView[];
+} | null;
+
+export const cardPicking = {
+  start: makeFunctionReference<
+    "mutation",
+    { gameId: Id<"games"> },
+    Id<"cardPickingSessions">
+  >("game/cardPicking:start"),
+  pickCard: makeFunctionReference<
+    "mutation",
+    { gameId: Id<"games">; cardId: string },
+    null
+  >("game/cardPicking:pickCard"),
+  /**
+   * Internal-only watchdog. Scheduled by `start` and by `applyCardClaim`
+   * (after every successful pick) via `ctx.scheduler.runAfter`. Auto-picks
+   * a random unclaimed card if the seat at `expectedPickIndex` still hasn't
+   * picked when the job fires; otherwise it's a no-op (stale schedule).
+   *
+   * Not exposed to the client. Mirrors the `endVoteWindowInternal` pattern
+   * used elsewhere in this file.
+   */
+  expireTurnInternal: makeFunctionReference<
+    "mutation",
+    { gameId: Id<"games">; expectedPickIndex: number },
+    null
+  >("game/cardPicking:expireTurnInternal"),
+  getState: makeFunctionReference<
+    "query",
+    { gameId: Id<"games"> },
+    CardPickingState
+  >("game/cardPicking:getState"),
+};

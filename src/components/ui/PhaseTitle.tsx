@@ -4,6 +4,7 @@ import {
   GAME_PHASE_LABELS,
   SPEAKING_STATE,
 } from "@/lib/constants/game";
+import PickerIndicator from "@/components/gameSession/cardPicking/PickerIndicator";
 
 type GameSessionState = {
   gamePhase: string;
@@ -113,6 +114,7 @@ export default function PhaseTitle(props: PhaseTitleProps) {
 
   const title = getPhaseTitle(gamePhase, currentNightNumber);
   const speakerInfo = getSpeakerInfo(speakingOrder, currentSpeakerIndex);
+  const isPickingRolesPhase = gamePhase === GAME_PHASES[1];
 
   // Only show nominated players to host
   const showNominated = isHost && nominatedPlayers.length > 0;
@@ -122,6 +124,8 @@ export default function PhaseTitle(props: PhaseTitleProps) {
       <h3 className="font-orbitron text-white uppercase tracking-wider text-sm font-bold">
         {title}
       </h3>
+
+      {isPickingRolesPhase && <PickerIndicator />}
 
       {(speakerInfo || showNominated) && (
         <div className="flex items-center justify-center gap-2 flex-wrap">

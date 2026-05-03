@@ -11,6 +11,7 @@ import {
   nightPhaseSessions,
   votingSessions,
   votes,
+  cardPickingSessions,
 } from "./tables";
 
 const schema = defineSchema({
@@ -25,6 +26,7 @@ const schema = defineSchema({
   nightPhaseSessions,
   votingSessions,
   votes,
+  cardPickingSessions,
 });
 
 export default schema;

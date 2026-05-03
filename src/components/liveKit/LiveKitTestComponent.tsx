@@ -10,12 +10,11 @@ import "@livekit/components-styles";
 import PlayerCircle from "@/components/game/PlayerCircle";
 import GameRoomHeader from "@/components/game/GameRoomHeader";
 import { useRef } from "react";
-import { useRoleAssignmentNotification } from "@/hooks/game";
 import { useSpeakingAutoMute, useDeadPlayerMute } from "@/hooks/livekit";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import LoadingSpinner from "../ui/LoadingSpinner";
-import RoleRevealModal from "@/components/modals/RoleRevealModal";
 import AudioPlaybackModal from "@/components/liveKit/AudioPlaybackModal";
+import CardPickingBoard from "@/components/gameSession/cardPicking/CardPickingBoard";
 
 export default function LiveKitTestComponent({
   gameId,
@@ -31,20 +30,13 @@ export default function LiveKitTestComponent({
   userId: string;
   isHost: boolean;
 }) {
-  const { disconnect, viewerRole, gameSessionState, players } = useGameRoom();
+  const { gameSessionState, players } = useGameRoom();
   const containerRef = useRef<HTMLDivElement | null>(null);
 
-  // Role assignment notification - triggers modal when role is first assigned
-  const { showRoleModal, role, description, closeRoleModal } =
-    useRoleAssignmentNotification(viewerRole);
-
-  // Auto mute/unmute based on speaking round state
-  // Players listen to currentSpeakerIndex and mute/unmute themselves
   useSpeakingAutoMute(room, gameSessionState, players, userId, isHost);
 
-  // Disable microphone and camera for dead players
-  // Dead players cannot speak or show video for the rest of the game
-  // When game is finished (gameSessionState.isFinished), all cameras are enabled for role reveal
+  // When the game is finished (`gameSessionState.isFinished`) all cameras are
+  // re-enabled so the final role reveal works for dead players too.
   const isGameFinished = Boolean(gameSessionState?.isFinished);
   useDeadPlayerMute(room, players, userId, isGameFinished);
 
@@ -66,15 +58,7 @@ export default function LiveKitTestComponent({
         </div>
         <RoomAudioRenderer />
         <AudioPlaybackModal room={room} />
-
-        {role && (
-          <RoleRevealModal
-            isOpen={showRoleModal}
-            role={role}
-            description={description}
-            onClose={closeRoleModal}
-          />
-        )}
+        <CardPickingBoard />
       </div>
     </RoomContext.Provider>
   );
