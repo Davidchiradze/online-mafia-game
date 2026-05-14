@@ -115,9 +115,9 @@ export default function PlayerCircle({
       })}
 
       {/* Unified 2×2 center panel */}
-      <div className="center-panel rounded-2xl backdrop-blur-xl border flex flex-col-reverse overflow-hidden col-start-2 col-end-4 row-start-2 row-end-4">
+      <div className="center-panel rounded-2xl border flex flex-col-reverse overflow-hidden col-start-2 col-end-4 row-start-2 row-end-4">
         {/* Host video — top 50% */}
-        <div className="h-1/2 border-b border-white/10 flex items-center justify-center bg-black/20">
+        <div className="h-1/2 border-b border-white/10 flex items-center justify-center">
           <div className="relative h-full aspect-[4/3] overflow-hidden rounded-xl">
             {hostPlayer ? (
               <ParticipantComponent

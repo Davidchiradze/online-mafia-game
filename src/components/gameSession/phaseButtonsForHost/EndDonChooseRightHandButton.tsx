@@ -14,10 +14,12 @@ type EndDonChooseRightHandButtonProps = {
 /**
  * Host button that ends the `don_chooses_right_hand` phase.
  *
- * Stays disabled until the Don has actually promoted someone (i.e. until any
- * role in `playerRolesMap` is `MAFIA_RIGHT_HAND`). The host always sees all
- * roles, so we can read `playerRolesMap` directly without role-visibility
- * concerns.
+ * Enabled when either:
+ *   - the Don has already promoted someone (any role is `MAFIA_RIGHT_HAND`), or
+ *   - no `DON` role exists in this game (so there is nobody to make a pick).
+ *
+ * The host always sees all roles, so we can read `playerRolesMap` directly
+ * without role-visibility concerns.
  */
 const EndDonChooseRightHandButton = ({
   gameSessionState,
@@ -26,15 +28,17 @@ const EndDonChooseRightHandButton = ({
   const updateSession = useMutation(gameSessions.update);
   const { playerRolesMap } = useGameRoom();
 
-  const hasRightHand = useMemo(() => {
+  const canConfirm = useMemo(() => {
+    let donExists = false;
     for (const role of playerRolesMap.values()) {
       if (role === "MAFIA_RIGHT_HAND") return true;
+      if (role === "DON") donExists = true;
     }
-    return false;
+    return !donExists;
   }, [playerRolesMap]);
 
   const handleEndDonChoice = async () => {
-    if (isLoading || !hasRightHand) return;
+    if (isLoading || !canConfirm) return;
     setIsLoading(true);
     try {
       await updateSession({
@@ -52,13 +56,9 @@ const EndDonChooseRightHandButton = ({
     <PhaseButton
       onClick={handleEndDonChoice}
       isLoading={isLoading}
-      disabled={!hasRightHand}
-      label={hasRightHand ? "Confirm" : "Waiting for Don's pick..."}
-      title={
-        hasRightHand
-          ? undefined
-          : "Don has not promoted Right Hand yet"
-      }
+      disabled={!canConfirm}
+      label={canConfirm ? "Confirm" : "Waiting for Don's pick..."}
+      title={canConfirm ? undefined : "Don has not promoted Right Hand yet"}
       variant="success"
     />
   );
