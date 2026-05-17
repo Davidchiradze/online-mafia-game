@@ -125,7 +125,7 @@ export function BothLeaveVoteControls({
   };
 
   return (
-    <div className="flex flex-col items-center gap-3">
+    <div className="w-full flex flex-col items-center gap-3">
       {/* "Both Leave" label */}
       <div
         className="w-full px-4 py-2 rounded-lg border text-center"

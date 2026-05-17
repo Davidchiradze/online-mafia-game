@@ -8,6 +8,8 @@ import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { SPEAKING_STATE } from "@/lib/constants/game";
 import PhaseButton from "@/components/ui/PhaseButton";
 
+const BUTTON_RENDER_DELAY_MS = 2000;
+
 type Props = {
   gameId: string;
   gameSessionState: NonNullable<ReturnType<typeof useGameRoom>["gameSessionState"]>;
@@ -34,6 +36,8 @@ export default function DayPhaseSpeakingControls({
   const isNotStarted = speakingOrder.length === 0 || currentSpeaker === null;
   const isPaused = SPEAKING_STATE.isPaused(currentSpeaker);
   const isCompleted = SPEAKING_STATE.isCompleted(currentSpeaker);
+  const buttonMode = isNotStarted || isCompleted ? "start" : isPaused ? "next" : "finish";
+  const disableResetKey = `${buttonMode}-${String(currentSpeaker)}-${speakingOrder.length}`;
 
   const handleStart = useCallback(async () => {
     if (isLoading) return;
@@ -67,17 +71,38 @@ export default function DayPhaseSpeakingControls({
 
   if (isNotStarted || isCompleted) {
     return (
-      <PhaseButton onClick={handleStart} isLoading={isLoading} label="Start" variant="success" />
+      <PhaseButton
+        onClick={handleStart}
+        isLoading={isLoading}
+        disableOnMountMs={BUTTON_RENDER_DELAY_MS}
+        disableResetKey={disableResetKey}
+        label="Start"
+        variant="success"
+      />
     );
   }
 
   if (isPaused) {
     return (
-      <PhaseButton onClick={handleNext} isLoading={isLoading} label="Start" variant="success" />
+      <PhaseButton
+        onClick={handleNext}
+        isLoading={isLoading}
+        disableOnMountMs={BUTTON_RENDER_DELAY_MS}
+        disableResetKey={disableResetKey}
+        label="Start"
+        variant="success"
+      />
     );
   }
 
   return (
-    <PhaseButton onClick={handleFinish} isLoading={isLoading} label="Finish" variant="danger" />
+    <PhaseButton
+      onClick={handleFinish}
+      isLoading={isLoading}
+      disableOnMountMs={BUTTON_RENDER_DELAY_MS}
+      disableResetKey={disableResetKey}
+      label="Finish"
+      variant="danger"
+    />
   );
 }

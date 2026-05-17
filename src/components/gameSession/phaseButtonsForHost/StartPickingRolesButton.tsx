@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useMutation } from "convex/react";
 import { cardPicking } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
@@ -25,16 +25,7 @@ const StartPickingRolesButton = ({
   gameSessionState,
 }: StartPickingRolesButtonProps) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [isInitialDisabled, setIsInitialDisabled] = useState(true);
   const startCardPicking = useMutation(cardPicking.start);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsInitialDisabled(false);
-    }, 3000);
-
-    return () => clearTimeout(timer);
-  }, []);
 
   const handleStartPickingRoles = async () => {
     if (isLoading) return;
@@ -54,7 +45,7 @@ const StartPickingRolesButton = ({
     <PhaseButton
       onClick={handleStartPickingRoles}
       isLoading={isLoading}
-      disabled={isInitialDisabled}
+      disableOnMountMs={3000}
       label="Pick Roles"
       variant="primary"
     />

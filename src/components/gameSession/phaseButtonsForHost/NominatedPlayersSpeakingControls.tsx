@@ -8,8 +8,12 @@ import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { SPEAKING_STATE } from "@/lib/constants/game";
 import PhaseButton from "@/components/ui/PhaseButton";
 
+const BUTTON_RENDER_DELAY_MS = 2000;
+
 type Props = {
-  gameSessionState: NonNullable<ReturnType<typeof useGameRoom>["gameSessionState"]>;
+  gameSessionState: NonNullable<
+    ReturnType<typeof useGameRoom>["gameSessionState"]
+  >;
 };
 
 /**
@@ -26,7 +30,9 @@ export default function NominatedPlayersSpeakingControls({
   const { gameId } = useGameRoom();
   const [isLoading, setIsLoading] = useState(false);
   const advanceNominatedSpeaker = useMutation(dayPhase.advanceNominatedSpeaker);
-  const finishCurrentNominatedSpeaker = useMutation(dayPhase.finishCurrentNominatedSpeaker);
+  const finishCurrentNominatedSpeaker = useMutation(
+    dayPhase.finishCurrentNominatedSpeaker,
+  );
 
   const speakingOrder = gameSessionState.speakingOrder ?? [];
   const currentSpeaker = gameSessionState.currentSpeakerIndex ?? null;
@@ -53,10 +59,20 @@ export default function NominatedPlayersSpeakingControls({
   const currentPosition = isPaused
     ? lastSpeakerIndex + 1
     : activeSpeakerSeat !== null
-    ? speakingOrder.indexOf(activeSpeakerSeat) + 1
-    : 0;
+      ? speakingOrder.indexOf(activeSpeakerSeat) + 1
+      : 0;
   const totalSpeakers = speakingOrder.length;
   const isLastSpeaker = currentPosition === totalSpeakers;
+  const buttonMode = foulEliminationOccurred
+    ? isPaused
+      ? "foul-paused-finish"
+      : "foul-active-finish"
+    : isPaused
+      ? isLastSpeaker
+        ? "paused-last-finish"
+        : "paused-next-start"
+      : "active-finish";
+  const disableResetKey = `${buttonMode}-${String(currentSpeaker)}-${totalSpeakers}`;
 
   const handleFinish = useCallback(async () => {
     if (isLoading) return;
@@ -85,7 +101,7 @@ export default function NominatedPlayersSpeakingControls({
   }
 
   return (
-    <div className="flex flex-col items-center gap-3">
+    <div className="w-full flex flex-col items-center gap-3">
       {/* Foul elimination warning */}
       {foulEliminationOccurred && (
         <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 text-center w-full">
@@ -115,19 +131,19 @@ export default function NominatedPlayersSpeakingControls({
                 isActive
                   ? "bg-emerald-500/20 text-emerald-300 border-emerald-500 ring-2 ring-emerald-500/30"
                   : isNext
-                  ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/50"
-                  : hasSpoken
-                  ? "bg-white/5 text-white/30 border-white/10"
-                  : "bg-white/5 text-white/60 border-white/20"
+                    ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/50"
+                    : hasSpoken
+                      ? "bg-white/5 text-white/30 border-white/10"
+                      : "bg-white/5 text-white/60 border-white/20"
               }`}
               title={
                 isActive
                   ? "Currently speaking"
                   : isNext
-                  ? "Next speaker"
-                  : hasSpoken
-                  ? "Finished"
-                  : "Waiting"
+                    ? "Next speaker"
+                    : hasSpoken
+                      ? "Finished"
+                      : "Waiting"
               }
             >
               {seat}
@@ -142,6 +158,8 @@ export default function NominatedPlayersSpeakingControls({
           <PhaseButton
             onClick={handleNext}
             isLoading={isLoading}
+            disableOnMountMs={BUTTON_RENDER_DELAY_MS}
+            disableResetKey={disableResetKey}
             label="Finish"
             variant="danger"
           />
@@ -149,6 +167,8 @@ export default function NominatedPlayersSpeakingControls({
           <PhaseButton
             onClick={handleFinish}
             isLoading={isLoading}
+            disableOnMountMs={BUTTON_RENDER_DELAY_MS}
+            disableResetKey={disableResetKey}
             label="Finish"
             variant="danger"
           />
@@ -157,6 +177,8 @@ export default function NominatedPlayersSpeakingControls({
         <PhaseButton
           onClick={handleNext}
           isLoading={isLoading}
+          disableOnMountMs={BUTTON_RENDER_DELAY_MS}
+          disableResetKey={disableResetKey}
           label={isLastSpeaker ? "Finish" : "Start"}
           variant={isLastSpeaker ? "danger" : "success"}
         />
@@ -164,6 +186,8 @@ export default function NominatedPlayersSpeakingControls({
         <PhaseButton
           onClick={handleFinish}
           isLoading={isLoading}
+          disableOnMountMs={BUTTON_RENDER_DELAY_MS}
+          disableResetKey={disableResetKey}
           label="Finish"
           variant="danger"
         />

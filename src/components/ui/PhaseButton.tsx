@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
+import { useDelayedDisable } from "@/hooks/useDelayedDisable";
 
 type PhaseButtonVariant =
   | "primary"
@@ -13,6 +14,10 @@ type PhaseButtonProps = {
   onClick: () => void;
   isLoading: boolean;
   disabled?: boolean;
+  /** Disable button for N ms right after render. */
+  disableOnMountMs?: number;
+  /** Re-runs disable timer when this key changes. */
+  disableResetKey?: string | number | null;
   label?: string;
   variant?: PhaseButtonVariant;
   /** Native HTML title attribute — used for tooltip text on disabled state. */
@@ -58,26 +63,20 @@ const variantStyles: Record<
 /**
  * Unified phase action button with gradient background, glow effect, and inline spinner.
  */
-const MOUNT_DELAY_MS = 1000;
+const DEFAULT_MOUNT_DISABLE_MS = 1000;
 
 export default function PhaseButton({
   onClick,
   isLoading,
   disabled = false,
+  disableOnMountMs = DEFAULT_MOUNT_DISABLE_MS,
+  disableResetKey,
   label = "Finish",
   variant = "primary",
   title,
 }: PhaseButtonProps) {
-  const [isMountDisabled, setIsMountDisabled] = useState(true);
+  const isMountDisabled = useDelayedDisable(disableOnMountMs, disableResetKey);
   const style = variantStyles[variant];
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsMountDisabled(false);
-    }, MOUNT_DELAY_MS);
-
-    return () => clearTimeout(timer);
-  }, []);
 
   return (
     <button
@@ -94,7 +93,7 @@ export default function PhaseButton({
         fontWeight: 700,
       }}
       onMouseEnter={(e) => {
-        if (!isLoading && !disabled) {
+        if (!isLoading && !disabled && !isMountDisabled) {
           e.currentTarget.style.boxShadow = style.hoverShadow;
         }
       }}

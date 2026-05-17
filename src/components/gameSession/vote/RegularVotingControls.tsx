@@ -10,7 +10,10 @@ import { CandidateDots } from "./CandidateDots";
 import { VotingTimer } from "./VotingTimer";
 import { ResultMessage } from "./ResultMessage";
 import { StatusText } from "./StatusText";
-import { VotingActionButton, getRegularVotingActionState } from "./VotingActionButton";
+import {
+  VotingActionButton,
+  getRegularVotingActionState,
+} from "./VotingActionButton";
 
 type Props = {
   isLoading: boolean;
@@ -30,7 +33,8 @@ export function RegularVotingControls({
   setResultMessage,
 }: Props) {
   const { gameId, votingSession, voteData } = useGameRoom();
-  const { timeLeft, isLocalVoting, startLocalVoting, stopLocalVoting } = useVotingTimer();
+  const { timeLeft, isLocalVoting, startLocalVoting, stopLocalVoting } =
+    useVotingTimer();
 
   const startVoteWindowMutation = useMutation(voting.startVoteWindow);
   const advanceCandidateMutation = useMutation(voting.advanceCandidate);
@@ -71,8 +75,10 @@ export function RegularVotingControls({
   const voteEndedForCurrentCandidate =
     !isVoting && !!votingSession?.votingStartedAt;
   const showTallyButton = allDone || isLastCandidate;
-  const showNextCandidateButton = voteEndedForCurrentCandidate && !showTallyButton;
-  const showVoteNowButton = !isVoting && !showTallyButton && !showNextCandidateButton;
+  const showNextCandidateButton =
+    voteEndedForCurrentCandidate && !showTallyButton;
+  const showVoteNowButton =
+    !isVoting && !showTallyButton && !showNextCandidateButton;
 
   // Handler: Start vote for current candidate
   const handleVoteNow = useCallback(async () => {
@@ -90,7 +96,16 @@ export function RegularVotingControls({
       stopLocalVoting();
       setIsLoading(false);
     }
-  }, [gameId, isLoading, isVoting, startLocalVoting, stopLocalVoting, setIsLoading, setResultMessage, startVoteWindowMutation]);
+  }, [
+    gameId,
+    isLoading,
+    isVoting,
+    startLocalVoting,
+    stopLocalVoting,
+    setIsLoading,
+    setResultMessage,
+    startVoteWindowMutation,
+  ]);
 
   // Handler: Advance to next candidate (waits for real-time sync)
   const handleNextCandidate = useCallback(async () => {
@@ -113,7 +128,9 @@ export function RegularVotingControls({
     setIsLoading(true);
 
     try {
-      const result = await processResultsMutation({ gameId: gameId as Id<"games"> });
+      const result = await processResultsMutation({
+        gameId: gameId as Id<"games">,
+      });
       if (result.result === "winner") {
         await startVotingFarewellMutation({
           gameId: gameId as Id<"games">,
@@ -129,7 +146,7 @@ export function RegularVotingControls({
           setResultMessage(`Same tie! Vote: should all leave?`);
         } else {
           setResultMessage(
-            `Tie! #${result.tiedCandidates.join(", #")} justify...`
+            `Tie! #${result.tiedCandidates.join(", #")} justify...`,
           );
         }
       }
@@ -138,7 +155,15 @@ export function RegularVotingControls({
     } finally {
       setIsLoading(false);
     }
-  }, [gameId, isLoading, setIsLoading, setResultMessage, processResultsMutation, startVotingFarewellMutation, startTieBreakMutation]);
+  }, [
+    gameId,
+    isLoading,
+    setIsLoading,
+    setResultMessage,
+    processResultsMutation,
+    startVotingFarewellMutation,
+    startTieBreakMutation,
+  ]);
 
   // Compute action state
   const actionState = getRegularVotingActionState({
@@ -152,19 +177,22 @@ export function RegularVotingControls({
   // Get status text for when not voting
   const getStatusText = () => {
     if (allDone) return "All candidates voted";
-    if (isLastCandidate) return `#${currentCandidate} • Auto-voted (${currentVotes} votes)`;
-    if (voteEndedForCurrentCandidate) return `#${currentCandidate} • ${currentVotes} votes`;
+    if (isLastCandidate)
+      return `#${currentCandidate} • Auto-voted (${currentVotes} votes)`;
+    if (voteEndedForCurrentCandidate)
+      return `#${currentCandidate} • ${currentVotes} votes`;
     return `#${currentCandidate} (${currentIdx + 1}/${candidates.length})`;
   };
 
   return (
-    <div className="flex flex-col items-center gap-3">
+    <div className="w-full flex flex-col items-center gap-3">
       {/* Tie-break indicator */}
       {isTieBreak && (
         <div
           className="px-3 py-1.5 rounded-full border"
           style={{
-            background: "linear-gradient(135deg, rgba(245,158,11,0.2) 0%, rgba(217,119,6,0.25) 100%)",
+            background:
+              "linear-gradient(135deg, rgba(245,158,11,0.2) 0%, rgba(217,119,6,0.25) 100%)",
             borderColor: "rgba(245,158,11,0.45)",
           }}
         >
