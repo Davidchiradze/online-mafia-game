@@ -27,3 +27,6 @@ export { useVoteIndicator } from "./useVoteIndicator";
 export { useFullscreen } from "./useFullscreen";
 
 export { useCardPicking } from "./useCardPicking";
+
+export { useSeatShuffleAnimation } from "./useSeatShuffleAnimation";
+export type { SeatShuffleResult } from "./useSeatShuffleAnimation";
