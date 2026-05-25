@@ -23,8 +23,12 @@ export const bridgeRedirectMiddleware: NextComposableMiddleware = {
       };
     }
 
+    const authErrorUrl = new URL(
+      middlewareConfig.authErrorPath,
+      request.nextUrl.origin,
+    );
     return {
-      next: NextResponse.redirect(middlewareConfig.phpLoginRedirectUrl),
+      next: NextResponse.redirect(authErrorUrl),
       stop: true,
     };
   },
