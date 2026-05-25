@@ -1,4 +1,4 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { middlewareConfig } from "./constants";
 import type { NextComposableMiddleware } from "./types";
 

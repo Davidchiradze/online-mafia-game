@@ -50,7 +50,6 @@ export function useLivekitCleanup(room: LiveKitRoom, onCleanup: CleanupFn) {
         room.disconnect();
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [room]);
 
   // Hard-leave cleanup (tab close, page refresh, browser back)

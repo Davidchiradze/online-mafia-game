@@ -10,8 +10,8 @@ import type {
   NextComposableMiddleware,
 } from "./types";
 
-export function composeMiddlewares<E, Req, Res, T = unknown>(
-  ...middlewares: Array<ComposableMiddleware<E, Req, Res, T>>
+export function composeMiddlewares<E, Req, Res>(
+  ...middlewares: Array<ComposableMiddleware<E, Req, Res>>
 ): (request: Req, event: E, initialResponse: Res) => Promise<Res> {
   return async (request, event, initialResponse) => {
     let response = initialResponse;

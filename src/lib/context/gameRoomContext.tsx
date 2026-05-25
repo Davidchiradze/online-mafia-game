@@ -266,7 +266,7 @@ export function GameRoomProvider({
       setJoinError(null);
       try {
         await joinPlayerMutation({ gameId });
-      } catch (err) {
+      } catch {
         setJoinError("Unable to join game (Room is full)");
       } finally {
         setIsJoiningGame(false);

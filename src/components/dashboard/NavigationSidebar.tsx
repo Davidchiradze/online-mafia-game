@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Crosshair, LogOut } from "lucide-react";
+import { Crosshair } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   NAVIGATION_SIDEBAR_ITEMS,
@@ -11,7 +11,6 @@ import {
 
 type NavigationSidebarProps = {
   expanded: boolean;
-  onSignOut?: () => void;
 };
 
 function NavItem({
@@ -62,7 +61,6 @@ function NavItem({
 
 export default function NavigationSidebar({
   expanded,
-  onSignOut,
 }: NavigationSidebarProps) {
   const pathname = usePathname();
 
@@ -96,7 +94,7 @@ export default function NavigationSidebar({
         ))}
       </div>
 
-      <div className="w-full shrink-0 overflow-hidden border-t border-white/5 p-4">
+      {/* <div className="w-full shrink-0 overflow-hidden border-t border-white/5 p-4">
         <button
           type="button"
           onClick={onSignOut}
@@ -112,7 +110,7 @@ export default function NavigationSidebar({
             Logout
           </span>
         </button>
-      </div>
+      </div> */}
     </>
   );
 }
