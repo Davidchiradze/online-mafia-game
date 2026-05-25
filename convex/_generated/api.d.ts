@@ -8,11 +8,7 @@
  * @module
  */
 
-import type * as ResendOTP from "../ResendOTP.js";
-import type * as ResendOTPPasswordReset from "../ResendOTPPasswordReset.js";
-import type * as auth from "../auth.js";
 import type * as auth_profiles from "../auth/profiles.js";
-import type * as auth_users from "../auth/users.js";
 import type * as game_cardPicking from "../game/cardPicking.js";
 import type * as game_dayPhase from "../game/dayPhase.js";
 import type * as game_farewellSpeech from "../game/farewellSpeech.js";
@@ -23,7 +19,6 @@ import type * as game_sessions from "../game/sessions.js";
 import type * as game_spectators from "../game/spectators.js";
 import type * as game_voting from "../game/voting.js";
 import type * as game_webhookHandler from "../game/webhookHandler.js";
-import type * as http from "../http.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_constants from "../lib/constants.js";
 import type * as lib_games from "../lib/games.js";
@@ -54,11 +49,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
-  ResendOTP: typeof ResendOTP;
-  ResendOTPPasswordReset: typeof ResendOTPPasswordReset;
-  auth: typeof auth;
   "auth/profiles": typeof auth_profiles;
-  "auth/users": typeof auth_users;
   "game/cardPicking": typeof game_cardPicking;
   "game/dayPhase": typeof game_dayPhase;
   "game/farewellSpeech": typeof game_farewellSpeech;
@@ -69,7 +60,6 @@ declare const fullApi: ApiFromModules<{
   "game/spectators": typeof game_spectators;
   "game/voting": typeof game_voting;
   "game/webhookHandler": typeof game_webhookHandler;
-  http: typeof http;
   "lib/auth": typeof lib_auth;
   "lib/constants": typeof lib_constants;
   "lib/games": typeof lib_games;

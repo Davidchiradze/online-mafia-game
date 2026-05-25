@@ -1,8 +1,11 @@
 export default {
   providers: [
     {
-      domain: process.env.CONVEX_SITE_URL,
-      applicationID: "convex",
+      type: "customJwt",
+      issuer: process.env.CUSTOM_JWT_ISSUER,
+      jwks: process.env.CUSTOM_JWT_JWKS_URL,
+      algorithm: "RS256",
+      applicationID: process.env.CUSTOM_JWT_AUDIENCE,
     },
   ],
 };

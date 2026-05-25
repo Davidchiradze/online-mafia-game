@@ -42,18 +42,27 @@ type GameWithRelations = {
 type Profile = {
   _id: Id<"profiles">;
   _creationTime: number;
-  userId: Id<"users">;
-  email: string;
+  accountId: string;
+  email?: string;
+  username?: string;
+  name?: string;
   nickname: string;
+  avatar?: string;
+  role?: string;
   verified: boolean;
+  createdAt: number;
+  updatedAt: number;
 } | null;
 
 export const authProfiles = {
-  currentUserId: makeFunctionReference<"query", Record<string, never>, Id<"users"> | null>(
-    "auth/profiles:currentUserId",
+  currentAccountId: makeFunctionReference<"query", Record<string, never>, string | null>(
+    "auth/profiles:currentAccountId",
   ),
   currentProfile: makeFunctionReference<"query", Record<string, never>, Profile>(
     "auth/profiles:currentProfile",
+  ),
+  syncCurrentProfile: makeFunctionReference<"mutation", Record<string, never>, Id<"profiles">>(
+    "auth/profiles:syncCurrentProfile",
   ),
 };
 

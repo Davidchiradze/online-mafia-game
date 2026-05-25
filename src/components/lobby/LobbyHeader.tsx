@@ -1,22 +1,17 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useQuery } from "convex/react";
-import { useAuthActions } from "@convex-dev/auth/react";
 import { authProfiles } from "@convex/refs/lobby";
 import { LogOut, User, ChevronDown } from "lucide-react";
 import { LandingLogo } from "@/components/landing/LandingLogo";
 
 export default function LobbyHeader() {
-  const router = useRouter();
-  const { signOut } = useAuthActions();
   const profile = useQuery(authProfiles.currentProfile);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const handleSignOut = async () => {
-    await signOut();
-    router.push("/auth");
+  const handleSignOut = () => {
+    window.location.href = "/api/auth/logout";
   };
 
   const displayName = profile?.nickname ?? "Player";

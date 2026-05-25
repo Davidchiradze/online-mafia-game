@@ -11,7 +11,7 @@ import {
 
 type NavigationSidebarProps = {
   expanded: boolean;
-  onSignOut: () => void;
+  onSignOut?: () => void;
 };
 
 function NavItem({
