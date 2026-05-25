@@ -2,6 +2,7 @@
 
 import { motion } from "motion/react";
 import { ShieldAlert, ChevronRight, Home } from "lucide-react";
+import Link from "next/link";
 import { PHP_LOGIN_REDIRECT_URL } from "@/lib/auth/constants";
 
 const BG_IMG = "https://www.mafia.ge/templates/newassets/img/mafiabg.jpg";
@@ -133,13 +134,13 @@ export default function AuthErrorScreen() {
                 <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </a>
 
-              <a
+              <Link
                 href="/"
                 className="group relative flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 px-7 py-3.5 font-sans text-base font-medium text-white backdrop-blur-md transition-all hover:border-white/30 hover:bg-white/10 sm:w-auto"
               >
                 <Home className="h-4 w-4" />
                 Back to Home
-              </a>
+              </Link>
             </motion.div>
           </div>
         </motion.div>
