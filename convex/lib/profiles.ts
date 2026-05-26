@@ -1,5 +1,6 @@
 import { DatabaseReader } from "../_generated/server";
 
+
 export async function getNicknameOwner(db: DatabaseReader, nickname: string) {
   return await db
     .query("profiles")

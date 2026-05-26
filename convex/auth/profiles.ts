@@ -1,7 +1,10 @@
 import { query, mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthenticatedUser } from "../lib/auth";
-import { getNicknameOwner, getProfileByAccountId } from "../lib/profiles";
+import {
+  getNicknameOwner,
+  getProfileByAccountId,
+} from "../lib/profiles";
 
 /**
  * Returns the PHP account id from the validated JWT, or null if the
@@ -71,6 +74,7 @@ export const syncCurrentProfile = mutation({
       username?: string;
       avatar?: string;
       role?: string;
+      amount?: string;
     };
 
     const email = claims.email ?? undefined;
@@ -78,6 +82,7 @@ export const syncCurrentProfile = mutation({
     const name = claims.name ?? undefined;
     const avatar = claims.avatar ?? undefined;
     const role = claims.role ?? undefined;
+    const amount = claims.amount ?? undefined;
 
     const now = Date.now();
     const existing = await getProfileByAccountId(ctx.db, accountId);
@@ -89,6 +94,7 @@ export const syncCurrentProfile = mutation({
         name,
         avatar,
         role,
+        amount,
         updatedAt: now,
       });
       return existing._id;
@@ -107,6 +113,7 @@ export const syncCurrentProfile = mutation({
       nickname: fallbackNickname,
       avatar,
       role,
+      amount,
       verified: true,
       createdAt: now,
       updatedAt: now,

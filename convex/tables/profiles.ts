@@ -9,6 +9,7 @@ export const profiles = defineTable({
   nickname: v.string(),
   avatar: v.optional(v.string()),
   role: v.optional(v.string()),
+  amount: v.optional(v.string()),
   verified: v.boolean(),
   createdAt: v.number(),
   updatedAt: v.number(),

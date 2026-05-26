@@ -1,4 +1,5 @@
 export const PHP_API_BASE_URL = "https://mafia.ge";
+// export const PHP_API_BASE_URL = "http://localhost:8000";
 export const PHP_LOGIN_REDIRECT_URL = "https://mafia.ge";
 
 export const PHP_SESSION_COOKIE_NAME = "PHPSESSID";
