@@ -39,7 +39,7 @@ export default function ConvexAuthFailureRedirect() {
     console.warn(
       "[auth] Convex rejected the JWT — clearing auth cookies and redirecting to PHP login",
     );
-    // window.location.replace(LOGOUT_ENDPOINT);
+    window.location.replace(LOGOUT_ENDPOINT);
   }, [bridgeLoading, convexLoading, hasToken, convexAuthenticated]);
 
   return null;
