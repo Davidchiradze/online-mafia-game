@@ -9,7 +9,7 @@ export const BRIDGE_ATTEMPT_COOKIE_NAME = "bridge_attempted";
 export const BRIDGE_ATTEMPT_TTL_SECONDS = 20;
 export const CONVEX_JWT_TTL_SECONDS = 3600;
 
-export const CONVEX_JWT_ISSUER = "https://online.mafia.ge";
+export const CONVEX_JWT_ISSUER = "https://staging.online.mafia.ge";
 export const CONVEX_JWT_AUDIENCE = "convex";
 
 export const AUTH_TOKEN_ENDPOINT = "/api/auth/token";
