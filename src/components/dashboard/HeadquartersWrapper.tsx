@@ -20,9 +20,9 @@ export default function HeadquartersWrapper({
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [pathname]);
-  // const handleSignOut = () => {
-  //   window.location.href = "/api/auth/logout";
-  // };
+  const handleSignOut = () => {
+    window.location.href = "/api/auth/logout";
+  };
   return (
     <div
       className="relative flex min-h-screen overflow-hidden bg-[#0a0a12] text-white"
@@ -46,7 +46,10 @@ export default function HeadquartersWrapper({
         onMouseLeave={() => setIsSidebarHovered(false)}
         className={`fixed left-0 top-0 z-30 hidden h-screen shrink-0 flex-col overflow-hidden border-r border-white/5 bg-black/80 backdrop-blur-xl transition-all duration-300 ease-in-out md:flex ${isSidebarHovered ? "w-[240px]" : "w-[72px]"}`}
       >
-        <NavigationSidebar expanded={isSidebarHovered} />
+        <NavigationSidebar
+          expanded={isSidebarHovered}
+          onSignOut={handleSignOut}
+        />
       </aside>
 
       <AnimatePresence>
@@ -66,10 +69,7 @@ export default function HeadquartersWrapper({
               transition={{ type: "spring", bounce: 0, duration: 0.3 }}
               className="fixed inset-y-0 left-0 z-50 flex w-[240px] flex-col overflow-hidden border-r border-white/10 bg-black/90 backdrop-blur-xl md:hidden"
             >
-              <NavigationSidebar
-                expanded
-                // onSignOut={handleSignOut}
-              />
+              <NavigationSidebar expanded onSignOut={handleSignOut} />
             </motion.aside>
           </>
         ) : null}
