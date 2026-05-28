@@ -1,6 +1,6 @@
 export const PHP_API_BASE_URL = "https://mafia.ge";
 // export const PHP_API_BASE_URL = "http://localhost:8000";
-export const PHP_LOGIN_REDIRECT_URL = "https://mafia.ge";
+export const PHP_LOGIN_REDIRECT_URL = "https://www.mafia.ge/ka/accounts/login/?from=https://staging.online.mafia.ge";
 
 export const PHP_SESSION_COOKIE_NAME = "PHPSESSID";
 export const CONVEX_AUTH_COOKIE_NAME = "cnvx-auth";
