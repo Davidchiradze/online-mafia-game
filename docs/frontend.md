@@ -385,8 +385,9 @@ const tick = () => {
 ```
 
 `getServerTime()` returns `Date.now() + offsetMs`, where `offsetMs` is
-captured at SSR from the Vercel Node clock. This makes timers correct
-even when a user's device clock is wildly wrong.
+measured on mount via a round-trip to `GET /api/time` (Vercel Node
+clock). This makes timers correct even when a user's device clock is
+wildly wrong, and is immune to SSR caching or static optimisation.
 
 Pure helpers should accept a `currentServerTimeMs: number` parameter
 rather than calling `new Date()` internally. See

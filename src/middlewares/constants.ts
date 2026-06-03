@@ -20,6 +20,7 @@ export const middlewareConfig = {
 export const PUBLIC_PATH_PREFIXES = [
   "/api/auth/",
   "/api/livekit/webhook",
+  "/api/time",
   "/.well-known/",
   "/_next/",
   "/favicon.ico",

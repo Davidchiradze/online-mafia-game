@@ -43,7 +43,7 @@ export default function RootLayout({
       >
         <ConvexClientProvider>
           <ProfileSyncBootstrap />
-          <ServerTimeProvider initialServerTime={Date.now()}>
+          <ServerTimeProvider>
             <ThemeProvider
               attribute="class"
               defaultTheme="dark"
