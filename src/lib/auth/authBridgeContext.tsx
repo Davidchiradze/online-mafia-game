@@ -10,9 +10,13 @@ import {
   useRef,
   useState,
 } from "react";
-import { AUTH_TOKEN_ENDPOINT } from "@/lib/auth/constants";
+import {
+  AUTH_TOKEN_ENDPOINT,
+  AUTH_TOKEN_REFRESH_ENDPOINT,
+} from "@/lib/auth/constants";
 
 const TOKEN_ENDPOINT = AUTH_TOKEN_ENDPOINT;
+const REFRESH_ENDPOINT = AUTH_TOKEN_REFRESH_ENDPOINT;
 
 interface AuthBridgeState {
   /**
@@ -47,6 +51,39 @@ async function fetchTokenFromEndpoint(): Promise<string | null> {
 }
 
 /**
+ * Re-validates the PHP session and mints a fresh JWT. Returns the new
+ * token on success. On failure (expired session, server error) the
+ * endpoint clears the auth cookie and signals logout — we immediately
+ * redirect to the logout route so the user doesn't sit in a broken state.
+ */
+async function refreshTokenFromEndpoint(): Promise<string | null> {
+  try {
+    const res = await fetch(REFRESH_ENDPOINT, {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+    });
+
+    const data = (await res.json()) as {
+      token: string | null;
+      logout?: boolean;
+    };
+
+    if (data.logout) {
+      window.location.replace("/api/auth/logout");
+      return null;
+    }
+
+    if (!res.ok) return null;
+    return data.token ?? null;
+  } catch (err) {
+    console.error("[auth] token refresh failed", err);
+    window.location.replace("/api/auth/logout");
+    return null;
+  }
+}
+
+/**
  * Owns the JWT-fetching state shared between Convex's `useAuth` hook and
  * the auth-failure recovery component. Both need to know whether a JWT
  * is present in the cookie; lifting the state here lets a sibling
@@ -65,7 +102,11 @@ export function AuthBridgeProvider({ children }: { children: ReactNode }) {
       if (!forceRefreshToken && tokenRef.current) return tokenRef.current;
       if (inflightRef.current) return inflightRef.current;
 
-      const promise = fetchTokenFromEndpoint().then((token) => {
+      const fetcher = forceRefreshToken
+        ? refreshTokenFromEndpoint
+        : fetchTokenFromEndpoint;
+
+      const promise = fetcher().then((token) => {
         tokenRef.current = token;
         inflightRef.current = null;
         setHasToken(token !== null);

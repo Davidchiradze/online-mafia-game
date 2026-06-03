@@ -7,10 +7,11 @@ export const CONVEX_AUTH_COOKIE_NAME = "cnvx-auth";
 export const BRIDGE_ATTEMPT_COOKIE_NAME = "bridge_attempted";
 
 export const BRIDGE_ATTEMPT_TTL_SECONDS = 20;
-export const CONVEX_JWT_TTL_SECONDS = 3600;
+export const CONVEX_JWT_TTL_SECONDS = 10000;
 
 export const CONVEX_JWT_ISSUER = "https://staging.online.mafia.ge";
 export const CONVEX_JWT_AUDIENCE = "convex";
 
 export const AUTH_TOKEN_ENDPOINT = "/api/auth/token";
+export const AUTH_TOKEN_REFRESH_ENDPOINT = "/api/auth/token/refresh";
 export const IS_PROD = process.env.NODE_ENV === "production";

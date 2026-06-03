@@ -30,12 +30,6 @@ export const currentProfile = query({
   },
 });
 
-export const getByAccountId = query({
-  args: { accountId: v.string() },
-  handler: async (ctx, args) => {
-    return await getProfileByAccountId(ctx.db, args.accountId);
-  },
-});
 
 export const isNicknameTaken = query({
   args: { nickname: v.string() },
@@ -46,74 +40,57 @@ export const isNicknameTaken = query({
 });
 
 /**
- * Idempotent upsert of the profile row for the authenticated user.
+ * Secret-gated upsert called by `POST /api/auth/sync-profile`.
  *
- * Called once after Convex auth is established (see ProfileSyncBootstrap).
- * Source-of-truth for identity fields (email/username/name/avatar/role) is
- * the PHP backend; this mutation just mirrors the latest JWT claims into
- * the `profiles` table so game queries can resolve a stable `Id<"profiles">`.
+ * The Next.js route fetches fresh profile data from PHP (using the
+ * httpOnly PHPSESSID cookie + INTERNAL_API_KEY), then calls this
+ * mutation with the result. Two trust controls (defense in depth):
  *
- * `nickname` is treated as a per-game display name. We seed it from
- * `username` (or `name`) on first sync, then leave it alone so users can
- * change it later via a future `updateNickname` flow without it being
- * overwritten on every login.
+ * 1. `CONVEX_SYNC_SECRET` — a dedicated shared secret that proves the
+ *    call originated from the trusted server route, not the browser.
+ * 2. JWT identity check — `ctx.auth.getUserIdentity().subject` must
+ *    match `accountId`, so even a leaked secret cannot write to
+ *    arbitrary profiles.
+ *
+ * `nickname` is seeded from `username`/`name` on first insert,
+ * then never overwritten so users can customise it independently.
  */
-export const syncCurrentProfile = mutation({
-  args: {},
-  handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
+export const upsertFromPhp = mutation({
+  args: {
+    secret: v.string(),
+    accountId: v.string(),
+    email: v.optional(v.string()),
+    username: v.optional(v.string()),
+    name: v.optional(v.string()),
+    avatar: v.optional(v.string()),
+    role: v.optional(v.string()),
+    amount: v.optional(v.string()),
+  },
+  handler: async (ctx, { secret, accountId, ...fields }) => {
+    if (secret !== process.env.CONVEX_SYNC_SECRET) {
+      throw new Error("Forbidden");
     }
 
-    const accountId = identity.subject;
-    const claims = identity as unknown as {
-      subject: string;
-      email?: string;
-      name?: string;
-      username?: string;
-      avatar?: string;
-      role?: string;
-      amount?: string;
-    };
-
-    const email = claims.email ?? undefined;
-    const username = claims.username ?? undefined;
-    const name = claims.name ?? undefined;
-    const avatar = claims.avatar ?? undefined;
-    const role = claims.role ?? undefined;
-    const amount = claims.amount ?? undefined;
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity || identity.subject !== accountId) {
+      throw new Error("Identity mismatch");
+    }
 
     const now = Date.now();
     const existing = await getProfileByAccountId(ctx.db, accountId);
 
     if (existing) {
-      await ctx.db.patch(existing._id, {
-        email,
-        username,
-        name,
-        avatar,
-        role,
-        amount,
-        updatedAt: now,
-      });
+      await ctx.db.patch(existing._id, { ...fields, updatedAt: now });
       return existing._id;
     }
 
     const fallbackNickname =
-      (username && username.trim()) ||
-      (name && name.trim()) ||
-      `Player-${accountId}`;
+      fields.username?.trim() || fields.name?.trim() || `Player-${accountId}`;
 
     return await ctx.db.insert("profiles", {
       accountId,
-      email,
-      username,
-      name,
+      ...fields,
       nickname: fallbackNickname,
-      avatar,
-      role,
-      amount,
       verified: true,
       createdAt: now,
       updatedAt: now,

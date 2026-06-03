@@ -1,33 +1,42 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useConvexAuth, useMutation } from "convex/react";
-import { authProfiles } from "@convex/refs/lobby";
+import { useConvexAuth } from "convex/react";
 
 /**
  * Idempotent profile sync. Once Convex reports an authenticated session,
- * we call `auth.profiles.syncCurrentProfile` once per page load to mirror
- * the latest PHP-backed JWT claims into the Convex `profiles` row.
+ * we POST to `/api/auth/sync-profile` once per page load. That route
+ * reads the httpOnly PHPSESSID cookie, fetches fresh profile data from
+ * PHP, and upserts the Convex `profiles` row via a secret-gated mutation.
  *
- * Runs as a leaf client component (renders null) and lives inside
- * `ConvexClientProvider`. We can't perform this from middleware (Edge
- * runtime, no Convex client) and we can't perform it inside the bridge
- * route (no Convex auth context, no React lifecycle). The client-side
- * bootstrap is the safest production-ready spot.
+ * - 401 from the route means the PHP session is gone -> redirect to logout.
+ * - Any other failure (502/500) is transient -> log and allow retry on
+ *   next auth change (do NOT force logout).
  */
 export default function ProfileSyncBootstrap() {
   const { isAuthenticated } = useConvexAuth();
-  const syncProfile = useMutation(authProfiles.syncCurrentProfile);
   const syncedRef = useRef(false);
 
   useEffect(() => {
     if (!isAuthenticated || syncedRef.current) return;
     syncedRef.current = true;
-    syncProfile({}).catch((err) => {
-      syncedRef.current = false;
-      console.error("[auth] profile sync failed", err);
-    });
-  }, [isAuthenticated, syncProfile]);
+
+    fetch("/api/auth/sync-profile", {
+      method: "POST",
+      credentials: "include",
+    })
+      .then((res) => {
+        //   if (res.status === 401) {
+        //     return;
+        //   }
+        //   if (!res.ok) throw new Error(`sync failed: ${res.status}`);
+      })
+      .catch((err) => {
+        syncedRef.current = false;
+        window.location.href = "/api/auth/logout";
+        console.error("[auth] profile sync failed", err);
+      });
+  }, [isAuthenticated]);
 
   return null;
 }

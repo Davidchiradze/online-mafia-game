@@ -27,40 +27,27 @@ export interface ConvexJwtClaims {
   aud: string;
   iat: number;
   exp: number;
-  email?: string;
-  username?: string;
-  name?: string;
-  avatar?: string;
-  role?: string;
 }
 
 /**
- * Mints an RS256 JWT that Convex will validate against the JWKS at
- * `/.well-known/jwks.json`. The `sub` claim is the PHP `accounts.id`
- * (stringified) and is what `ctx.auth.getUserIdentity().subject` returns
- * inside Convex functions.
+ * Mints an identity-only RS256 JWT that Convex validates via JWKS at
+ * `/.well-known/jwks.json`. Contains only standard claims (sub/iss/aud/iat/exp).
+ * All volatile profile data (email, avatar, role, amount, etc.) is synced
+ * separately via `POST /api/auth/sync-profile` so it stays fresh regardless
+ * of JWT TTL.
  */
-export async function signConvexJwt(user: PhpUser): Promise<string> {
+export async function signConvexJwt(user: Pick<PhpUser, "id">): Promise<string> {
   const now = Math.floor(Date.now() / 1000);
-  const exp = now + CONVEX_JWT_TTL_SECONDS;
 
-  const payload: Record<string, unknown> = {
+  const key = await getPrivateKey();
+
+  return await new SignJWT({
     sub: user.id,
     iss: CONVEX_JWT_ISSUER,
     aud: CONVEX_JWT_AUDIENCE,
     iat: now,
-    exp,
-  };
-  if (user.email) payload.email = user.email;
-  if (user.username) payload.username = user.username;
-  if (user.name) payload.name = user.name;
-  if (user.avatar) payload.avatar = user.avatar;
-  if (user.role) payload.role = user.role;
-  if (user.amount) payload.amount = user.amount;
-
-  const key = await getPrivateKey();
-
-  return await new SignJWT(payload)
+    exp: now + CONVEX_JWT_TTL_SECONDS,
+  })
     .setProtectedHeader({ alg: "RS256", typ: "JWT", kid: serverEnv.jwtKid })
     .sign(key);
 }

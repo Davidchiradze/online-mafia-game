@@ -22,7 +22,7 @@ globs:
 - **Source of truth**: PHP backend on `mafia.ge` (`accounts` table + PHPSESSID).
 - **Bridge**: Next.js mints a short-lived RS256 JWT from a validated PHP session.
 - **Convex**: validates that JWT via JWKS as a "custom JWT" provider. Convex never creates auth users.
-- **Profile**: per-user row in `profiles`, keyed by `accountId` (string copy of PHP `accounts.id`), upserted by `auth.profiles.syncCurrentProfile`.
+- **Profile**: per-user row in `profiles`, keyed by `accountId` (string copy of PHP `accounts.id`), upserted by `auth.profiles.upsertFromPhp` (called via `POST /api/auth/sync-profile`).
 
 ## Do NOT use
 
@@ -82,7 +82,7 @@ const profile = await getProfileByAccountId(ctx.db, identity.subject);
 
 ### Profile sync
 
-Profiles are upserted by `api.auth.profiles.syncCurrentProfile` (called once per page load from `ProfileSyncBootstrap`). Do not write to the `profiles` table from other Convex functions except for `updateNickname`.
+Profiles are upserted by `auth.profiles.upsertFromPhp`, a secret-gated mutation called indirectly via `POST /api/auth/sync-profile`. The route reads the httpOnly `PHPSESSID` cookie, fetches fresh data from PHP, and pushes it into Convex with a dedicated `CONVEX_SYNC_SECRET`. The JWT carries identity-only claims (`sub/iss/aud/iat/exp`) — no profile data. `ProfileSyncBootstrap` triggers a POST to the route once per page load after Convex auth is established. Do not write to the `profiles` table from other Convex functions except for `updateNickname`.
 
 ## Next.js side
 
@@ -105,8 +105,8 @@ That's it. No client mutation, no Convex action.
 
 See `/docs` and the auth-bridge plan for the canonical list. Critical ones:
 
-- Next.js: `INTERNAL_API_KEY`, `PHP_API_BASE_URL`, `PHP_LOGIN_REDIRECT_URL`, `CONVEX_JWT_ISSUER`, `CONVEX_JWT_AUDIENCE`, `CONVEX_JWT_KID`, `CONVEX_JWT_PRIVATE_KEY_B64`, `CONVEX_JWT_PUBLIC_JWK`.
-- Convex (via `npx convex env set`): `CUSTOM_JWT_ISSUER`, `CUSTOM_JWT_AUDIENCE`, `CUSTOM_JWT_JWKS_URL`.
+- Next.js: `INTERNAL_API_KEY`, `CONVEX_SYNC_SECRET`, `PHP_API_BASE_URL`, `PHP_LOGIN_REDIRECT_URL`, `CONVEX_JWT_ISSUER`, `CONVEX_JWT_AUDIENCE`, `CONVEX_JWT_KID`, `CONVEX_JWT_PRIVATE_KEY_B64`, `CONVEX_JWT_PUBLIC_JWK`.
+- Convex (via `npx convex env set`): `CUSTOM_JWT_ISSUER`, `CUSTOM_JWT_AUDIENCE`, `CUSTOM_JWT_JWKS_URL`, `CONVEX_SYNC_SECRET`.
 
 Generate a keypair with `npm run auth:keygen`.
 
@@ -119,4 +119,4 @@ Generate a keypair with `npm run auth:keygen`.
 | Read current profile (client) | `useQuery(api.auth.profiles.currentProfile)` |
 | Sign out (client) | `<a href="/api/auth/logout">` |
 | Protect a route | Add the path to middleware's match list (default: anything not in `PUBLIC_PATH_PREFIXES`) |
-| Sync profile manually | `api.auth.profiles.syncCurrentProfile` (already auto-called on auth) |
+| Sync profile manually | `POST /api/auth/sync-profile` (auto-called on auth by `ProfileSyncBootstrap`) |

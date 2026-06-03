@@ -9,7 +9,6 @@ import {
   isSafeRelativePath,
   setAuthCookie,
 } from "@/lib/auth/cookies";
-import { normalizeAvatarUrl } from "@/lib/auth/avatar";
 import { jwtMaxAgeSeconds, signConvexJwt } from "@/lib/auth/jwt";
 import { fetchUserBySession } from "@/lib/auth/php";
 
@@ -44,10 +43,7 @@ export async function GET(req: NextRequest) {
       return res;
     }
 
-    const token = await signConvexJwt({
-      ...user,
-      avatar: normalizeAvatarUrl(user.avatar),
-    });
+    const token = await signConvexJwt({ id: user.id });
     const redirectUrl = new URL(destination, req.nextUrl.origin);
 
     const res = NextResponse.redirect(redirectUrl);

@@ -54,6 +54,17 @@ type Profile = {
   updatedAt: number;
 } | null;
 
+type UpsertFromPhpArgs = {
+  secret: string;
+  accountId: string;
+  email?: string;
+  username?: string;
+  name?: string;
+  avatar?: string;
+  role?: string;
+  amount?: string;
+};
+
 export const authProfiles = {
   currentAccountId: makeFunctionReference<"query", Record<string, never>, string | null>(
     "auth/profiles:currentAccountId",
@@ -61,8 +72,8 @@ export const authProfiles = {
   currentProfile: makeFunctionReference<"query", Record<string, never>, Profile>(
     "auth/profiles:currentProfile",
   ),
-  syncCurrentProfile: makeFunctionReference<"mutation", Record<string, never>, Id<"profiles">>(
-    "auth/profiles:syncCurrentProfile",
+  upsertFromPhp: makeFunctionReference<"mutation", UpsertFromPhpArgs, Id<"profiles">>(
+    "auth/profiles:upsertFromPhp",
   ),
 };
 

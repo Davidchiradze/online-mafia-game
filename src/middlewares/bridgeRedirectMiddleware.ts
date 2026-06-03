@@ -14,8 +14,6 @@ export const bridgeRedirectMiddleware: NextComposableMiddleware = {
       middlewareConfig.bridgeAttemptCookieName,
     )?.value;
 
-    console.log("🚀 ~ hasPhpSession:", hasPhpSession)
-    console.log("🚀 ~ alreadyBridged:", alreadyBridged)
     if (hasPhpSession && !alreadyBridged) {
       const bridge = new URL("/api/auth/bridge", request.nextUrl.origin);
       bridge.searchParams.set("next", pathname + search);
