@@ -14,6 +14,7 @@ import ClickableTooltip from "@/components/ui/ClickableTooltip";
 import { LobbyConfirmModal } from "@/components/lobby/LobbyConfirmModal";
 import { SkullIcon } from "@/assets/icons";
 import { Eye, Info, Lock, LogIn, Users } from "lucide-react";
+import { SPECTATOR } from "@convex/lib/constants";
 
 type Props = {
   room: LobbyGame;
@@ -47,9 +48,7 @@ function PlayersTooltipContent({ room }: { room: LobbyGame }) {
             >
               <span
                 className={`font-sans text-[0.85rem] font-medium ${
-                  !player.isAlive
-                    ? "text-gray-500 line-through"
-                    : "text-white"
+                  !player.isAlive ? "text-gray-500 line-through" : "text-white"
                 }`}
               >
                 {player.nickname ?? "Player"}
@@ -137,7 +136,7 @@ function SpectatorCountWithTooltip({ room }: { room: LobbyGame }) {
     <div className="flex items-center gap-2">
       <Eye className="w-4 h-4 text-gray-400 shrink-0" />
       <span className="text-white font-sans font-semibold text-[0.9rem]">
-        {room.spectators.length}
+        {room.spectators.length}/{SPECTATOR.MAX_SPECTATORS_PER_GAME}
       </span>
       {room.spectators.length > 0 && (
         <ClickableTooltip
@@ -275,7 +274,12 @@ function DesktopRoomRow({
         <GameStatusBadge status={room.gameStatus} />
       </td>
       <td className="px-6 py-4 text-right">
-        <RoomActionButton room={room} onJoin={onJoin} onSpectate={onSpectate} isPlayer={isPlayer} />
+        <RoomActionButton
+          room={room}
+          onJoin={onJoin}
+          onSpectate={onSpectate}
+          isPlayer={isPlayer}
+        />
       </td>
     </tr>
   );
@@ -368,7 +372,8 @@ export default function GameRoomRow({ room, variant, onNavigate }: Props) {
     onNavigate(room._id);
   };
 
-  const LayoutComponent = variant === "desktop" ? DesktopRoomRow : MobileRoomRow;
+  const LayoutComponent =
+    variant === "desktop" ? DesktopRoomRow : MobileRoomRow;
 
   return (
     <>

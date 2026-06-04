@@ -133,14 +133,6 @@ export default function AuthErrorScreen() {
                 Sign In on mafia.ge
                 <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </a>
-
-              <Link
-                href="/"
-                className="group relative flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 px-7 py-3.5 font-sans text-base font-medium text-white backdrop-blur-md transition-all hover:border-white/30 hover:bg-white/10 sm:w-auto"
-              >
-                <Home className="h-4 w-4" />
-                Back to Home
-              </Link>
             </motion.div>
           </div>
         </motion.div>
