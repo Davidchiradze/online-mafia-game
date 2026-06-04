@@ -1,14 +1,10 @@
 import clientEnv from "../env/client";
-console.log("🚀 ~ clientEnv:", clientEnv)
 
 export const PHP_API_BASE_URL = "https://mafia.ge";
 // export const PHP_API_BASE_URL = "http://localhost:8000";
-export const IS_PROD = clientEnv.NEXT_PUBLIC_ENVIRONMENT === "production";
-console.log("🚀 ~ IS_PROD:", IS_PROD)
+export const IS_PROD = process.env.NEXT_PUBLIC_ENVIRONMENT === "production";
 
-const ONLINE_MAFIA_ORIGIN = IS_PROD
-    ? "https://online.mafia.ge"
-    : "https://staging.online.mafia.ge";
+const ONLINE_MAFIA_ORIGIN = process.env.NEXT_PUBLIC_ONLINE_MAFIA_ORIGIN;
 
 export const PHP_LOGIN_REDIRECT_URL = `https://www.mafia.ge/ka/accounts/login/?from=${ONLINE_MAFIA_ORIGIN}`;
 
