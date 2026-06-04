@@ -1,33 +1,41 @@
-import { getAuthUserId } from "@convex-dev/auth/server";
 import { QueryCtx, MutationCtx } from "../_generated/server";
 import { Id } from "../_generated/dataModel";
 
 /**
- * Returns the Convex Auth user ID (Id<"users">).
- * Use only when you need the raw auth identity (e.g. profile lookups).
+ * Returns the external PHP `accounts.id` from the validated JWT.
+ * Throws if the request is not authenticated.
+ *
+ * The id arrives in the JWT `sub` claim (always a string per RFC 7519)
+ * and is stored on `profiles.accountId`.
  */
-export async function getAuthenticatedUserId(ctx: QueryCtx | MutationCtx) {
-  const userId = await getAuthUserId(ctx);
-  if (userId === null) {
+export async function getAuthenticatedAccountId(
+  ctx: QueryCtx | MutationCtx,
+): Promise<string> {
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity) {
     throw new Error("Not authenticated");
   }
-  return userId;
+  return identity.subject;
 }
 
 /**
- * Returns the profile ID (Id<"profiles">) for the authenticated user.
- * This is the app-level identity used as foreign key in all game tables.
+ * Returns the profile id (`Id<"profiles">`) for the authenticated user.
+ * This is the app-level identity used as a foreign key in all game tables.
+ *
+ * Signature is intentionally preserved from the previous Convex-Auth
+ * implementation so existing call sites (`convex/game/**`, `convex/lobby/**`)
+ * do not change.
  */
 export async function getAuthenticatedUser(
   ctx: QueryCtx | MutationCtx,
 ): Promise<Id<"profiles">> {
-  const authUserId = await getAuthenticatedUserId(ctx);
+  const accountId = await getAuthenticatedAccountId(ctx);
   const profile = await ctx.db
     .query("profiles")
-    .withIndex("by_userId", (q) => q.eq("userId", authUserId))
+    .withIndex("by_accountId", (q) => q.eq("accountId", accountId))
     .unique();
   if (!profile) {
-    throw new Error("Profile not found. Please complete your profile setup.");
+    throw new Error("Profile not found. Please complete profile sync.");
   }
   return profile._id;
 }

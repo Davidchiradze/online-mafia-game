@@ -3,36 +3,38 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { ServerTimeContext } from "@/lib/time/serverTime";
 
-type Props = {
-  /**
-   * `Date.now()` captured in the Server Component that renders this
-   * provider. Read from the Vercel Node runtime, so it reflects the
-   * server's NTP-synced clock — not the user's (potentially wrong)
-   * device clock.
-   */
-  initialServerTime: number;
-  children: ReactNode;
-};
-
 /**
- * Measures the server-vs-device clock offset on first paint and exposes
- * it via `ServerTimeContext`. See `src/lib/time/serverTime.ts` for the
- * consumer hooks (`useServerTime`, `useServerTimeOffset`).
+ * Fetches the server clock via `GET /api/time` on mount and computes
+ * the device-vs-server offset. Immune to SSR caching, static
+ * optimisation, and preview-vs-prod differences because the offset is
+ * always measured with a fresh round-trip at runtime.
  *
- * The offset is captured on mount from the `initialServerTime` prop and
- * stays constant for the session — sufficient for timer math because
- * device clocks are typically *set* wrong (a static error), not
- * *running* wrong (drift). A full reload re-syncs via SSR.
+ * The offset stays constant for the session — sufficient for timer math
+ * because device clocks are typically *set* wrong (a static error), not
+ * *running* wrong (drift). A full page reload re-syncs.
+ *
+ * See `src/lib/time/serverTime.ts` for consumer hooks
+ * (`useServerTime`, `useServerTimeOffset`).
  */
 export default function ServerTimeProvider({
-  initialServerTime,
   children,
-}: Props) {
+}: {
+  children: ReactNode;
+}) {
   const [serverTimeOffsetMs, setServerTimeOffsetMs] = useState(0);
 
   useEffect(() => {
-    setServerTimeOffsetMs(initialServerTime - Date.now());
-  }, [initialServerTime]);
+    const before = Date.now();
+    fetch("/api/time", { cache: "no-store" })
+      .then((r) => r.json())
+      .then(({ t }: { t: number }) => {
+        const rtt = Date.now() - before;
+        setServerTimeOffsetMs(t + Math.round(rtt / 2) - Date.now());
+      })
+      .catch(() => {
+        // Fetch failed — offset stays 0 (device clock fallback).
+      });
+  }, []);
 
   return (
     <ServerTimeContext.Provider value={{ serverTimeOffsetMs }}>

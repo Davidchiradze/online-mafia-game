@@ -1,11 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
-import { useAuthActions } from "@convex-dev/auth/react";
-import { useQuery } from "convex/react";
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
-import { authProfiles } from "@convex/refs/lobby";
 import AuthorizedHeader from "@/components/dashboard/AuthorizedHeader";
 import NavigationSidebar from "@/components/dashboard/NavigationSidebar";
 
@@ -16,27 +13,22 @@ type HeadquartersWrapperProps = {
 export default function HeadquartersWrapper({
   children,
 }: HeadquartersWrapperProps) {
-  const router = useRouter();
   const pathname = usePathname();
-  const { signOut } = useAuthActions();
-  const profile = useQuery(authProfiles.currentProfile);
   const [isSidebarHovered, setIsSidebarHovered] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [pathname]);
-
-  const handleSignOut = async () => {
-    await signOut();
-    router.push("/auth");
+  const handleSignOut = () => {
+    window.location.href = "/api/auth/logout";
   };
-
   return (
     <div
       className="relative flex min-h-screen overflow-hidden bg-[#0a0a12] text-white"
       style={{
-        background: "linear-gradient(180deg, #0a0a12 0%, #0f0f1a 50%, #0a0a12 100%)",
+        background:
+          "linear-gradient(180deg, #0a0a12 0%, #0f0f1a 50%, #0a0a12 100%)",
       }}
     >
       <div className="pointer-events-none fixed inset-0 z-0">
@@ -56,7 +48,7 @@ export default function HeadquartersWrapper({
       >
         <NavigationSidebar
           expanded={isSidebarHovered}
-          onSignOut={() => void handleSignOut()}
+          onSignOut={handleSignOut}
         />
       </aside>
 
@@ -77,20 +69,14 @@ export default function HeadquartersWrapper({
               transition={{ type: "spring", bounce: 0, duration: 0.3 }}
               className="fixed inset-y-0 left-0 z-50 flex w-[240px] flex-col overflow-hidden border-r border-white/10 bg-black/90 backdrop-blur-xl md:hidden"
             >
-              <NavigationSidebar
-                expanded
-                onSignOut={() => void handleSignOut()}
-              />
+              <NavigationSidebar expanded onSignOut={handleSignOut} />
             </motion.aside>
           </>
         ) : null}
       </AnimatePresence>
 
       <div className="relative z-10 flex h-screen min-w-0 flex-1 flex-col overflow-hidden transition-all duration-300 ease-in-out md:ml-[72px]">
-        <AuthorizedHeader
-          nickname={profile?.nickname ?? "PlayerOne"}
-          onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
-        />
+        <AuthorizedHeader onOpenMobileMenu={() => setIsMobileMenuOpen(true)} />
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-black/20 shadow-[-10px_-10px_30px_rgba(0,0,0,0.5)] md:rounded-tl-3xl md:border-l md:border-t md:border-white/10">
           <div className="h-full">{children}</div>
         </main>

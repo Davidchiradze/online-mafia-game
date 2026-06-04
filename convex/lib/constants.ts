@@ -53,7 +53,7 @@ export const VOTING = {
 } as const;
 
 export const SPECTATOR = {
-  MAX_SPECTATORS_PER_GAME: 10,
+  MAX_SPECTATORS_PER_GAME: 5,
 } as const;
 
 export const SPEAKING_STATE = {

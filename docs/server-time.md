@@ -46,13 +46,17 @@ it is easy to miss in QA.
 ## Architecture
 
 ```
-Vercel Server Component (RSC)
+Client mount
         |
-        | initialServerTime = Date.now()    <-- correct, NTP-synced
+        | fetch("/api/time")  -->  Vercel Node runtime  -->  { t: Date.now() }
+        |                                                         |
+        | before = Date.now()                                     |
+        |<--------------------------------------------------------|
+        | rtt = Date.now() - before
+        | offsetMs = t + rtt/2 - Date.now()
         v
-ServerTimeProvider (client)
+ServerTimeProvider
         |
-        | offsetMs = initialServerTime - Date.now()
         v
 ServerTimeContext
         |
@@ -60,18 +64,23 @@ ServerTimeContext
 useServerTime()  ->  getServerTime() returns Date.now() + offsetMs
 ```
 
-- The Vercel Node runtime captures `Date.now()` at SSR.
-- That value is passed as a prop into the client `ServerTimeProvider`.
-- On mount, the provider measures the offset between the SSR time and
-  the device's local clock.
+- On mount, `ServerTimeProvider` sends `GET /api/time` to the Vercel
+  Node runtime. The route returns `{ t: Date.now() }` with
+  `force-dynamic` and `Cache-Control: no-store`, so the value is always
+  fresh.
+- The provider compensates for network round-trip by assuming the
+  server timestamp was captured halfway through the RTT (`rtt / 2`).
 - All timer code calls `getServerTime()` (= `Date.now() + offsetMs`),
   which yields server-corrected milliseconds even on a device with a
   wildly wrong clock.
 
-A full page reload re-syncs the offset because SSR runs again. Within a
-single session the offset stays constant — sufficient because device
-clocks are typically *set* wrong (a static error), not *running* wrong
-(rapid drift).
+This approach is immune to SSR caching, static optimisation, and
+preview-vs-prod deployment differences because the offset is always
+measured with a live round-trip at runtime.
+
+A full page reload re-syncs the offset. Within a single session the
+offset stays constant — sufficient because device clocks are typically
+*set* wrong (a static error), not *running* wrong (rapid drift).
 
 ## Public API
 
@@ -87,7 +96,7 @@ clocks are typically *set* wrong (a static error), not *running* wrong
 
 | Symbol | Where |
 |---|---|
-| `<ServerTimeProvider initialServerTime={Date.now()}>` | Mounted once in `src/app/layout.tsx` (already done). |
+| `<ServerTimeProvider>` | Mounted once in `src/app/layout.tsx` (already done). Fetches server time via `/api/time` on mount. |
 
 ## Rules
 
@@ -160,8 +169,8 @@ are correct. Do not change them.
 ## Future extensions (not implemented yet)
 
 If telemetry ever shows users on long-running sessions whose clocks
-*drift* (rare — orders of seconds per day at worst), add an
-`/api/time` Route Handler and have `ServerTimeProvider` re-measure
-periodically (e.g. once a minute, with median-of-N samples for
-RTT-compensated precision). Until then, the SSR-snapshot offset is
-both simpler and sufficient.
+*drift* (rare — orders of seconds per day at worst), have
+`ServerTimeProvider` re-measure periodically (e.g. once a minute,
+with median-of-N samples for improved RTT-compensated precision).
+Until then, the single fetch-on-mount offset is both simpler and
+sufficient.

@@ -36,7 +36,7 @@ const elapsed = Date.now() - new Date(votingStartedAt).getTime();
 ```
 
 The fix is a single `useServerTime()` primitive backed by an offset
-captured at SSR from the Vercel Node runtime.
+fetched via `GET /api/time` on mount (RTT-compensated).
 
 ## Pattern (in hooks/components)
 
@@ -111,11 +111,12 @@ use `useServerTime()`.
 
 ## Provider Setup (already done)
 
-`<ServerTimeProvider initialServerTime={Date.now()}>` is mounted in
-`src/app/layout.tsx` between `ConvexClientProvider` and
-`ThemeProvider`. The `Date.now()` call there runs on the Vercel Node
-runtime at SSR. Do not move it into a Client Component, or it will
-read the device clock and the offset becomes 0 (i.e. the bug returns).
+`<ServerTimeProvider>` is mounted in `src/app/layout.tsx` between
+`ConvexClientProvider` and `ThemeProvider`. On mount it fetches
+`GET /api/time` (a `force-dynamic`, `no-store` route that returns the
+Vercel Node runtime's `Date.now()`), compensates for network RTT, and
+stores the offset. This is immune to SSR caching and preview-vs-prod
+differences.
 
 ## Where to Read More
 

@@ -42,18 +42,38 @@ type GameWithRelations = {
 type Profile = {
   _id: Id<"profiles">;
   _creationTime: number;
-  userId: Id<"users">;
-  email: string;
+  accountId: string;
+  email?: string;
+  username?: string;
+  name?: string;
   nickname: string;
+  avatar?: string;
+  role?: string;
   verified: boolean;
+  createdAt: number;
+  updatedAt: number;
 } | null;
 
+type UpsertFromPhpArgs = {
+  secret: string;
+  accountId: string;
+  email?: string;
+  username?: string;
+  name?: string;
+  avatar?: string;
+  role?: string;
+  amount?: string;
+};
+
 export const authProfiles = {
-  currentUserId: makeFunctionReference<"query", Record<string, never>, Id<"users"> | null>(
-    "auth/profiles:currentUserId",
+  currentAccountId: makeFunctionReference<"query", Record<string, never>, string | null>(
+    "auth/profiles:currentAccountId",
   ),
   currentProfile: makeFunctionReference<"query", Record<string, never>, Profile>(
     "auth/profiles:currentProfile",
+  ),
+  upsertFromPhp: makeFunctionReference<"mutation", UpsertFromPhpArgs, Id<"profiles">>(
+    "auth/profiles:upsertFromPhp",
   ),
 };
 

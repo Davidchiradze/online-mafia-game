@@ -1,34 +1,35 @@
-import { getAuthUserId } from "@convex-dev/auth/server";
 import { query, mutation } from "../_generated/server";
 import { v } from "convex/values";
-import { getAuthenticatedUserId } from "../lib/auth";
-import { getNicknameOwner, getProfileByUserId } from "../lib/profiles";
+import { getAuthenticatedUser } from "../lib/auth";
+import {
+  getNicknameOwner,
+  getProfileByAccountId,
+} from "../lib/profiles";
 
-export const currentUserId = query({
+/**
+ * Returns the PHP account id from the validated JWT, or null if the
+ * request is not authenticated. This replaces the previous `currentUserId`
+ * (Id<"users">) that depended on Convex Auth.
+ */
+export const currentAccountId = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    return userId;
+    const identity = await ctx.auth.getUserIdentity();
+    return identity ? identity.subject : null;
   },
 });
 
 export const currentProfile = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (userId === null) {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
       return null;
     }
-    return await getProfileByUserId(ctx.db, userId);
+    return await getProfileByAccountId(ctx.db, identity.subject);
   },
 });
 
-export const getByUserId = query({
-  args: { userId: v.id("users") },
-  handler: async (ctx, args) => {
-    return await getProfileByUserId(ctx.db, args.userId);
-  },
-});
 
 export const isNicknameTaken = query({
   args: { nickname: v.string() },
@@ -38,54 +39,82 @@ export const isNicknameTaken = query({
   },
 });
 
-export const createProfile = mutation({
+/**
+ * Secret-gated upsert called by `POST /api/auth/sync-profile`.
+ *
+ * The Next.js route fetches fresh profile data from PHP (using the
+ * httpOnly PHPSESSID cookie + INTERNAL_API_KEY), then calls this
+ * mutation with the result. Two trust controls (defense in depth):
+ *
+ * 1. `CONVEX_SYNC_SECRET` — a dedicated shared secret that proves the
+ *    call originated from the trusted server route, not the browser.
+ * 2. JWT identity check — `ctx.auth.getUserIdentity().subject` must
+ *    match `accountId`, so even a leaked secret cannot write to
+ *    arbitrary profiles.
+ *
+ * `nickname` is seeded from `username`/`name` on first insert,
+ * then never overwritten so users can customise it independently.
+ */
+export const upsertFromPhp = mutation({
   args: {
-    nickname: v.string(),
+    secret: v.string(),
+    accountId: v.string(),
+    email: v.optional(v.string()),
+    username: v.optional(v.string()),
+    name: v.optional(v.string()),
+    avatar: v.optional(v.string()),
+    role: v.optional(v.string()),
+    amount: v.optional(v.string()),
   },
-  handler: async (ctx, args) => {
-    const userId = await getAuthenticatedUserId(ctx);
-
-    const existingProfile = await getProfileByUserId(ctx.db, userId);
-    if (existingProfile) {
-      throw new Error("Profile already exists");
+  handler: async (ctx, { secret, accountId, ...fields }) => {
+    if (secret !== process.env.CONVEX_SYNC_SECRET) {
+      throw new Error("Forbidden");
     }
 
-    const nicknameOwner = await getNicknameOwner(ctx.db, args.nickname);
-    if (nicknameOwner) {
-      throw new Error("Nickname is already taken");
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity || identity.subject !== accountId) {
+      throw new Error("Identity mismatch");
     }
 
-    const user = await ctx.db.get(userId);
-    if (!user?.email) {
-      throw new Error("User email not found");
+    const now = Date.now();
+    const existing = await getProfileByAccountId(ctx.db, accountId);
+
+    if (existing) {
+      await ctx.db.patch(existing._id, { ...fields, updatedAt: now });
+      return existing._id;
     }
+
+    const fallbackNickname =
+      fields.username?.trim() || fields.name?.trim() || `Player-${accountId}`;
 
     return await ctx.db.insert("profiles", {
-      userId,
-      email: user.email,
-      nickname: args.nickname,
+      accountId,
+      ...fields,
+      nickname: fallbackNickname,
       verified: true,
+      createdAt: now,
+      updatedAt: now,
     });
   },
 });
 
 export const updateNickname = mutation({
-  args: {
-    nickname: v.string(),
-  },
+  args: { nickname: v.string() },
   handler: async (ctx, args) => {
-    const userId = await getAuthenticatedUserId(ctx);
-
-    const profile = await getProfileByUserId(ctx.db, userId);
+    const profileId = await getAuthenticatedUser(ctx);
+    const profile = await ctx.db.get(profileId);
     if (!profile) {
       throw new Error("Profile not found");
     }
 
-    const nicknameOwner = await getNicknameOwner(ctx.db, args.nickname);
-    if (nicknameOwner && nicknameOwner._id !== profile._id) {
+    const owner = await getNicknameOwner(ctx.db, args.nickname);
+    if (owner && owner._id !== profile._id) {
       throw new Error("Nickname is already taken");
     }
 
-    await ctx.db.patch(profile._id, { nickname: args.nickname });
+    await ctx.db.patch(profile._id, {
+      nickname: args.nickname,
+      updatedAt: Date.now(),
+    });
   },
 });

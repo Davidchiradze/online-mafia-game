@@ -14,8 +14,8 @@ import { createContext, useCallback, useContext } from "react";
  * 100%, voting timers snap to 0s, etc.
  *
  * The fix is to learn the server-vs-device clock offset once on app load
- * (captured in the Server Component layout via `Date.now()` at SSR), and
- * use `Date.now() + offset` everywhere we need "now" in timer math.
+ * (fetched via `GET /api/time` in `ServerTimeProvider`), and use
+ * `Date.now() + offset` everywhere we need "now" in timer math.
  *
  * Usage
  * -----

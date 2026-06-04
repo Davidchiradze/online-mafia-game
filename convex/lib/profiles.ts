@@ -1,5 +1,5 @@
 import { DatabaseReader } from "../_generated/server";
-import { Id } from "../_generated/dataModel";
+
 
 export async function getNicknameOwner(db: DatabaseReader, nickname: string) {
   return await db
@@ -8,9 +8,12 @@ export async function getNicknameOwner(db: DatabaseReader, nickname: string) {
     .unique();
 }
 
-export async function getProfileByUserId(db: DatabaseReader, userId: Id<"users">) {
+export async function getProfileByAccountId(
+  db: DatabaseReader,
+  accountId: string,
+) {
   return await db
     .query("profiles")
-    .withIndex("by_userId", (q) => q.eq("userId", userId))
+    .withIndex("by_accountId", (q) => q.eq("accountId", accountId))
     .unique();
 }

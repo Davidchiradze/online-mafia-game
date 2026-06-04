@@ -7,20 +7,19 @@
     "dev:convex": "convex dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "auth:keygen": "node scripts/generate-jwt-keypair.mjs"
   },
   "dependencies": {
-    "@auth/core": "^0.37.4",
-    "@convex-dev/auth": "^0.0.91",
     "@hookform/resolvers": "^5.2.1",
     "@livekit/components-react": "^2.9.15",
     "@livekit/components-styles": "^1.1.6",
-    "@oslojs/crypto": "^1.0.1",
     "@radix-ui/react-popover": "^1.1.15",
     "@radix-ui/react-tooltip": "^1.2.8",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "convex": "^1.32.0",
+    "jose": "^6.2.3",
     "livekit-client": "^2.15.14",
     "livekit-server-sdk": "^2.14.0",
     "lucide-react": "^0.539.0",
@@ -32,7 +31,7 @@
     "react-hook-form": "^7.62.0",
     "react-modal": "^3.16.3",
     "react-toastify": "^11.0.5",
-    "resend": "^6.9.3",
+    "server-only": "^0.0.1",
     "tailwind-merge": "^3.4.0",
     "zod": "^4.0.17"
   },
