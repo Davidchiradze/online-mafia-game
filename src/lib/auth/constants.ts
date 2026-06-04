@@ -1,6 +1,8 @@
+import { clientEnv } from "../env/client";
+
 export const PHP_API_BASE_URL = "https://mafia.ge";
 // export const PHP_API_BASE_URL = "http://localhost:8000";
-export const IS_PROD = process.env.ENVIRONMENT === "production";
+export const IS_PROD = clientEnv.environment === "production";
 
 const ONLINE_MAFIA_ORIGIN = IS_PROD
     ? "https://online.mafia.ge"
