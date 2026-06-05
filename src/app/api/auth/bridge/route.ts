@@ -1,6 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
 import {
-  LOGOUT_ENDPOINT,
   PHP_LOGIN_REDIRECT_URL,
   PHP_SESSION_COOKIE_NAME,
 } from "@/lib/auth/constants";
@@ -12,6 +11,7 @@ import {
 } from "@/lib/auth/cookies";
 import { jwtMaxAgeSeconds, signConvexJwt } from "@/lib/auth/jwt";
 import { fetchUserBySession } from "@/lib/auth/php";
+import { AUTH_ERROR_PATH } from "@/middlewares/constants";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -38,7 +38,9 @@ export async function GET(req: NextRequest) {
   try {
     const user = await fetchUserBySession(sessionId);
     if (!user) {
-      const res = NextResponse.redirect(LOGOUT_ENDPOINT);
+      const res = NextResponse.redirect(
+        new URL(AUTH_ERROR_PATH, req.nextUrl.origin),
+      );
       clearAuthCookie(res);
       return res;
     }
