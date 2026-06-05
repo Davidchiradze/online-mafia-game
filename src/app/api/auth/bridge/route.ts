@@ -24,22 +24,20 @@ export const dynamic = "force-dynamic";
  * session but no Convex JWT yet.
  */
 export async function GET(req: NextRequest) {
-  const phpLoginUrl = PHP_LOGIN_REDIRECT_URL;
   const nextParam = req.nextUrl.searchParams.get("next");
   const destination = isSafeRelativePath(nextParam) ? nextParam! : "/";
 
   const sessionId = req.cookies.get(PHP_SESSION_COOKIE_NAME)?.value;
   if (!sessionId) {
-    const res = NextResponse.redirect(phpLoginUrl);
+    const res = NextResponse.redirect(PHP_LOGIN_REDIRECT_URL);
     clearAuthCookie(res);
     return res;
   }
 
   try {
     const user = await fetchUserBySession(sessionId);
-    console.log("🚀 ~ GET ~ user:", user)
     if (!user) {
-      const res = NextResponse.redirect(phpLoginUrl);
+      const res = NextResponse.redirect(PHP_LOGIN_REDIRECT_URL);
       clearAuthCookie(res);
       return res;
     }
@@ -56,7 +54,7 @@ export async function GET(req: NextRequest) {
     return res;
   } catch (err) {
     console.error("[auth/bridge] failed to bridge session", err);
-    const res = NextResponse.redirect(phpLoginUrl);
+    const res = NextResponse.redirect(PHP_LOGIN_REDIRECT_URL);
     clearAuthCookie(res);
     return res;
   }
