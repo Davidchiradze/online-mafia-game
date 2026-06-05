@@ -7,6 +7,7 @@ export const IS_PROD = process.env.NEXT_PUBLIC_ENVIRONMENT === "production";
 const ONLINE_MAFIA_ORIGIN = process.env.NEXT_PUBLIC_ONLINE_MAFIA_ORIGIN;
 
 export const PHP_LOGIN_REDIRECT_URL = `https://www.mafia.ge/ka/accounts/login/?from=${ONLINE_MAFIA_ORIGIN}`;
+export const LOGOUT_ENDPOINT = "/api/auth/logout";
 
 export const PHP_SESSION_COOKIE_NAME = "PHPSESSID";
 export const CONVEX_AUTH_COOKIE_NAME = "cnvx-auth";

@@ -3,8 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useConvexAuth } from "convex/react";
 import { useAuthBridge } from "@/lib/auth/authBridgeContext";
-
-const LOGOUT_ENDPOINT = "/api/auth/logout";
+import { LOGOUT_ENDPOINT } from "@/lib/auth/constants";
 
 /**
  * Recovers from a Convex JWT validation failure for any reason —
