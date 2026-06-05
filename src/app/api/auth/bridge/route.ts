@@ -11,6 +11,7 @@ import {
 } from "@/lib/auth/cookies";
 import { jwtMaxAgeSeconds, signConvexJwt } from "@/lib/auth/jwt";
 import { fetchUserBySession } from "@/lib/auth/php";
+import { AUTH_ERROR_PATH } from "@/middlewares/constants";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -37,7 +38,7 @@ export async function GET(req: NextRequest) {
   try {
     const user = await fetchUserBySession(sessionId);
     if (!user) {
-      const res = NextResponse.redirect(PHP_LOGIN_REDIRECT_URL);
+      const res = NextResponse.redirect(AUTH_ERROR_PATH);
       clearAuthCookie(res);
       return res;
     }
