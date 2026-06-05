@@ -37,6 +37,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const user = await fetchUserBySession(sessionId);
+    console.log("🚀 ~ GET ~ user:", user)
     if (!user) {
       const res = NextResponse.redirect(phpLoginUrl);
       clearAuthCookie(res);

@@ -24,6 +24,7 @@ export async function fetchUserBySession(
     cache: "no-store",
   });
 
+  console.log("🚀 ~ fetchUserBySession ~ res:", res)
   if (res.status === 401) return null;
   if (!res.ok) {
     const body = await res.text().catch(() => "");

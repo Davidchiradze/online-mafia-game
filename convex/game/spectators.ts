@@ -39,7 +39,10 @@ export const join = mutation({
       throw new Error("Can only spectate games that are in progress");
     }
 
-    if (game.isPrivate) {
+    const isPrivilegedSpectator =
+      SPECTATOR.PRIVILEGED_PROFILE_IDS.includes(userId);
+
+    if (game.isPrivate && !isPrivilegedSpectator) {
       throw new Error("This game is private. Spectators cannot join.");
     }
 
@@ -64,7 +67,10 @@ export const join = mutation({
       .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
       .collect();
 
-    if (spectators.length >= SPECTATOR.MAX_SPECTATORS_PER_GAME) {
+    if (
+      !isPrivilegedSpectator &&
+      spectators.length >= SPECTATOR.MAX_SPECTATORS_PER_GAME
+    ) {
       throw new Error("Maximum spectator limit reached");
     }
 
