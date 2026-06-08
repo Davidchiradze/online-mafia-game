@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { query, mutation } from "../_generated/server";
 import { getAuthenticatedUser } from "../lib/auth";
 import { assertIsHost } from "../lib/games";
+import { enterNightPhase } from "../lib/phaseTransitions";
 import type { Id } from "../_generated/dataModel";
 import type { DatabaseReader } from "../_generated/server";
 
@@ -203,31 +204,17 @@ export const checkDoctorAuthority = query({
 // MUTATIONS
 // ============================================================================
 
-export const startNight = mutation({
+/**
+ * Enter the night phase. Single client-facing entry point for every "go to
+ * night" flow (intro → night, continue → night, day skip → night). Delegates
+ * to the shared `enterNightPhase` helper so all state resets live in one place.
+ */
+export const enterNight = mutation({
   args: { gameId: v.id("games") },
   handler: async (ctx, { gameId }) => {
     const userId = await getAuthenticatedUser(ctx);
     await assertIsHost(ctx.db, gameId, userId);
-
-    const session = await getGameSession(ctx.db, gameId);
-    const newNightNumber = (session.currentNightNumber || 0) + 1;
-
-    await ctx.db.patch(session._id, {
-      nominatedPlayers: [],
-      speakingOrder: [],
-      currentSpeakerIndex: undefined,
-      speakerStartedAt: undefined,
-      currentNightNumber: newNightNumber,
-      foulEliminationOccurred: false,
-    });
-
-    const existing = await getNightSession(ctx.db, gameId, newNightNumber);
-    if (!existing) {
-      await ctx.db.insert("nightPhaseSessions", {
-        gameId,
-        nightNumber: newNightNumber,
-      });
-    }
+    await enterNightPhase(ctx.db, gameId);
   },
 });
 

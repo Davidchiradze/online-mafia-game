@@ -2,10 +2,9 @@
 
 import React, { useState } from "react";
 import { useMutation } from "convex/react";
-import { gameSessions, dayPhase, nightPhase } from "@convex/refs/game";
+import { dayPhase, nightPhase } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
-import { GAME_PHASES } from "@/lib/constants/game";
 import PhaseButton from "@/components/ui/PhaseButton";
 
 type Props = {
@@ -23,11 +22,10 @@ type Props = {
 const StartNominatedPlayersSpeakButton = ({ gameSessionState }: Props) => {
   const { gameId } = useGameRoom();
   const [isLoading, setIsLoading] = useState(false);
-  const updateSession = useMutation(gameSessions.update);
   const startNominatedSpeaking = useMutation(
     dayPhase.startNominatedPlayersSpeaking,
   );
-  const startNight = useMutation(nightPhase.startNight);
+  const enterNight = useMutation(nightPhase.enterNight);
 
   const nominatedCount = gameSessionState.nominatedPlayers?.length ?? 0;
   const hasNominations = nominatedCount > 0;
@@ -49,17 +47,7 @@ const StartNominatedPlayersSpeakButton = ({ gameSessionState }: Props) => {
     if (isLoading) return;
     setIsLoading(true);
     try {
-      await startNight({ gameId: gameId as Id<"games"> });
-
-      await updateSession({
-        sessionId: gameSessionState._id,
-        updates: {
-          gamePhase: GAME_PHASES[8], // "night_phase"
-          currentSpeakerIndex: null,
-          speakerStartedAt: null,
-          speakingOrder: [],
-        },
-      });
+      await enterNight({ gameId: gameId as Id<"games"> });
     } finally {
       setIsLoading(false);
     }

@@ -2,10 +2,11 @@ import { v } from "convex/values";
 import { mutation } from "../_generated/server";
 import { getAuthenticatedUser } from "../lib/auth";
 import { assertIsHost, getGameById, getPlayersByGameId } from "../lib/games";
+import { enterNightPhase } from "../lib/phaseTransitions";
 import { SPEAKING_STATE, FOULS } from "../lib/constants";
 import { computeSpeakingOrder, getNextSpeaker } from "../lib/speakingOrder";
 import type { Id } from "../_generated/dataModel";
-import type { DatabaseReader, DatabaseWriter } from "../_generated/server";
+import type { DatabaseReader } from "../_generated/server";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -18,23 +19,6 @@ async function getGameSession(db: DatabaseReader, gameId: Id<"games">) {
     .unique();
   if (!session) throw new Error("Game session not found");
   return session;
-}
-
-async function createNightSessionIfNeeded(
-  db: DatabaseWriter,
-  gameId: Id<"games">,
-  nightNumber: number,
-) {
-  const existing = await db
-    .query("nightPhaseSessions")
-    .withIndex("by_gameId_nightNumber", (q) =>
-      q.eq("gameId", gameId).eq("nightNumber", nightNumber),
-    )
-    .unique();
-
-  if (!existing) {
-    await db.insert("nightPhaseSessions", { gameId, nightNumber });
-  }
 }
 
 // ---------------------------------------------------------------------------
@@ -252,19 +236,7 @@ export const advanceNominatedSpeaker = mutation({
     }
 
     if (session.foulEliminationOccurred) {
-      const newNightNumber = (session.currentNightNumber || 0) + 1;
-
-      await ctx.db.patch(session._id, {
-        gamePhase: "night_phase",
-        currentNightNumber: newNightNumber,
-        currentSpeakerIndex: undefined,
-        speakerStartedAt: undefined,
-        speakingOrder: [],
-        nominatedPlayers: [],
-        foulEliminationOccurred: false,
-      });
-
-      await createNightSessionIfNeeded(ctx.db, gameId, newNightNumber);
+      await enterNightPhase(ctx.db, gameId);
       return;
     }
 

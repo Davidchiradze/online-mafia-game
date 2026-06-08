@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { query, mutation, internalMutation } from "../_generated/server";
 import { getAuthenticatedUser } from "../lib/auth";
 import { assertIsHost, getPlayerInGame } from "../lib/games";
+import { enterNightPhase } from "../lib/phaseTransitions";
 import { voting as votingRefs } from "../refs/game";
 import { VOTING } from "../lib/constants";
 import type { Id } from "../_generated/dataModel";
@@ -588,92 +589,7 @@ export const skipToNightAfterTie = mutation({
   handler: async (ctx, { gameId }) => {
     const userId = await getAuthenticatedUser(ctx);
     await assertIsHost(ctx.db, gameId, userId);
-
-    const session = await getVotingSessionByGameId(ctx.db, gameId);
-    if (session) {
-      await deleteVotesForSession(ctx.db, session._id);
-      await ctx.db.delete(session._id);
-    }
-
-    const gameSession = await ctx.db
-      .query("gameSessions")
-      .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
-      .unique();
-
-    if (!gameSession) throw new Error("Game session not found");
-
-    const newNightNumber = (gameSession.currentNightNumber || 0) + 1;
-
-    await ctx.db.patch(gameSession._id, {
-      gamePhase: "night_phase",
-      currentNightNumber: newNightNumber,
-      speakingOrder: [],
-      currentSpeakerIndex: undefined,
-      speakerStartedAt: undefined,
-      nominatedPlayers: [],
-      foulEliminationOccurred: false,
-    });
-
-    const existingNight = await ctx.db
-      .query("nightPhaseSessions")
-      .withIndex("by_gameId_nightNumber", (q) =>
-        q.eq("gameId", gameId).eq("nightNumber", newNightNumber),
-      )
-      .unique();
-
-    if (!existingNight) {
-      await ctx.db.insert("nightPhaseSessions", {
-        gameId,
-        nightNumber: newNightNumber,
-      });
-    }
-  },
-});
-
-export const transitionToNightPhase = mutation({
-  args: { gameId: v.id("games") },
-  handler: async (ctx, { gameId }) => {
-    const userId = await getAuthenticatedUser(ctx);
-    await assertIsHost(ctx.db, gameId, userId);
-
-    const session = await getVotingSessionByGameId(ctx.db, gameId);
-    if (session) {
-      await deleteVotesForSession(ctx.db, session._id);
-      await ctx.db.delete(session._id);
-    }
-
-    const gameSession = await ctx.db
-      .query("gameSessions")
-      .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
-      .unique();
-
-    if (!gameSession) throw new Error("Game session not found");
-
-    const newNightNumber = (gameSession.currentNightNumber || 0) + 1;
-
-    await ctx.db.patch(gameSession._id, {
-      gamePhase: "night_phase",
-      currentNightNumber: newNightNumber,
-      speakingOrder: [],
-      currentSpeakerIndex: undefined,
-      speakerStartedAt: undefined,
-      nominatedPlayers: [],
-      foulEliminationOccurred: false,
-    });
-
-    const existingNight = await ctx.db
-      .query("nightPhaseSessions")
-      .withIndex("by_gameId_nightNumber", (q) =>
-        q.eq("gameId", gameId).eq("nightNumber", newNightNumber),
-      )
-      .unique();
-
-    if (!existingNight) {
-      await ctx.db.insert("nightPhaseSessions", {
-        gameId,
-        nightNumber: newNightNumber,
-      });
-    }
+    await enterNightPhase(ctx.db, gameId);
   },
 });
 

@@ -247,8 +247,8 @@ export const nightPhase = {
   checkDoctorAuthority: makeFunctionReference<"query", { gameId: Id<"games"> }, DoctorAuthorityCheck>(
     "game/nightPhase:checkDoctorAuthority",
   ),
-  startNight: makeFunctionReference<"mutation", { gameId: Id<"games"> }, null>(
-    "game/nightPhase:startNight",
+  enterNight: makeFunctionReference<"mutation", { gameId: Id<"games"> }, null>(
+    "game/nightPhase:enterNight",
   ),
   selectMafiaTarget: makeFunctionReference<
     "mutation",
@@ -336,9 +336,6 @@ export const voting = {
   >("game/voting:startBothLeaveFarewell"),
   skipToNightAfterTie: makeFunctionReference<"mutation", { gameId: Id<"games"> }, null>(
     "game/voting:skipToNightAfterTie",
-  ),
-  transitionToNightPhase: makeFunctionReference<"mutation", { gameId: Id<"games"> }, null>(
-    "game/voting:transitionToNightPhase",
   ),
   deleteSession: makeFunctionReference<"mutation", { gameId: Id<"games"> }, null>(
     "game/voting:deleteSession",

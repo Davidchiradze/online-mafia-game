@@ -39,6 +39,10 @@ export async function GET() {
     sameSite: "lax",
   });
 
+  res.cookies.delete({
+    name: PHP_SESSION_COOKIE_NAME,
+  });
+
   return res;
 }
 

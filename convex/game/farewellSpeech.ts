@@ -2,8 +2,9 @@ import { v } from "convex/values";
 import { query, mutation } from "../_generated/server";
 import { getAuthenticatedUser } from "../lib/auth";
 import { assertIsHost, getPlayersByGameId } from "../lib/games";
+import { enterNightPhase, enterDayPhase } from "../lib/phaseTransitions";
 import type { Id } from "../_generated/dataModel";
-import type { DatabaseReader, DatabaseWriter } from "../_generated/server";
+import type { DatabaseReader } from "../_generated/server";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -16,23 +17,6 @@ async function getGameSession(db: DatabaseReader, gameId: Id<"games">) {
     .unique();
   if (!session) throw new Error("Game session not found");
   return session;
-}
-
-async function createNightSessionIfNeeded(
-  db: DatabaseWriter,
-  gameId: Id<"games">,
-  nightNumber: number,
-) {
-  const existing = await db
-    .query("nightPhaseSessions")
-    .withIndex("by_gameId_nightNumber", (q) =>
-      q.eq("gameId", gameId).eq("nightNumber", nightNumber),
-    )
-    .unique();
-
-  if (!existing) {
-    await db.insert("nightPhaseSessions", { gameId, nightNumber });
-  }
 }
 
 function shuffleArray<T>(array: T[]): T[] {
@@ -131,12 +115,7 @@ export const startFarewellSpeech = mutation({
     }
 
     if (killedPlayers.length === 0) {
-      await ctx.db.patch(session._id, {
-        gamePhase: "day_phase",
-        speakingOrder: [],
-        currentSpeakerIndex: undefined,
-        speakerStartedAt: undefined,
-      });
+      await enterDayPhase(ctx.db, gameId);
       return { skipToDay: true };
     }
 
@@ -248,27 +227,10 @@ export const advanceFromFarewell = mutation({
     const nominatedPlayers = session.nominatedPlayers ?? [];
 
     if (nominatedPlayers.length > 0) {
-      const newNightNumber = (session.currentNightNumber || 0) + 1;
-
-      await ctx.db.patch(session._id, {
-        gamePhase: "night_phase",
-        currentNightNumber: newNightNumber,
-        speakingOrder: [],
-        currentSpeakerIndex: undefined,
-        speakerStartedAt: undefined,
-        nominatedPlayers: [],
-        foulEliminationOccurred: false,
-      });
-
-      await createNightSessionIfNeeded(ctx.db, gameId, newNightNumber);
+      await enterNightPhase(ctx.db, gameId);
       return;
     }
 
-    await ctx.db.patch(session._id, {
-      gamePhase: "day_phase",
-      speakingOrder: [],
-      currentSpeakerIndex: undefined,
-      speakerStartedAt: undefined,
-    });
+    await enterDayPhase(ctx.db, gameId);
   },
 });

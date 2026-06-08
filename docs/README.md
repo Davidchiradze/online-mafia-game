@@ -17,6 +17,7 @@ This documentation describes the architecture, patterns, and conventions used in
 - **[architecture.md](./architecture.md)** - Stack overview, system boundaries, data flow
 - **[realtime.md](./realtime.md)** - Convex reactive queries (real-time updates)
 - **[game-design.md](./game-design.md)** - Mafia game rules, phases, role visibility
+- **[game-end-conditions.md](./game-end-conditions.md)** - Auto win-detection rules (when a game ends automatically)
 - **[frontend.md](./frontend.md)** - React conventions, component patterns, UI guidelines
 - **[backend.md](./backend.md)** - Convex mutations, queries, database patterns
 - **[server-time.md](./server-time.md)** - Server-corrected client clock (use `useServerTime()` for any timer math involving a server timestamp)

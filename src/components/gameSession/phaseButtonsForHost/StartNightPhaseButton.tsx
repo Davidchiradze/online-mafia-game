@@ -2,10 +2,9 @@
 
 import React, { useState } from "react";
 import { useMutation } from "convex/react";
-import { gameSessions, nightPhase } from "@convex/refs/game";
+import { nightPhase } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
-import { GAME_PHASES } from "@/lib/constants/game";
 import PhaseButton from "@/components/ui/PhaseButton";
 
 type StartNightPhaseButtonProps = {
@@ -14,28 +13,21 @@ type StartNightPhaseButtonProps = {
 
 /**
  * Button to start the night phase after introduction.
- * This increments the night number and creates a new night_phase_sessions row.
+ * Delegates to the single `enterNight` transition, which increments the night
+ * number, resets state, and creates the night_phase_sessions row.
  */
 const StartNightPhaseButton = ({
-  gameSessionState,
+  gameSessionState: _gameSessionState,
 }: StartNightPhaseButtonProps) => {
   const { gameId } = useGameRoom();
   const [isLoading, setIsLoading] = useState(false);
-  const updateSession = useMutation(gameSessions.update);
-  const startNightMutation = useMutation(nightPhase.startNight);
+  const enterNight = useMutation(nightPhase.enterNight);
 
   const handleStartNightPhase = async () => {
     if (isLoading) return;
     setIsLoading(true);
     try {
-      await startNightMutation({ gameId: gameId as Id<"games"> });
-
-      await updateSession({
-        sessionId: gameSessionState._id,
-        updates: {
-          gamePhase: GAME_PHASES[8], // "night_phase"
-        },
-      });
+      await enterNight({ gameId: gameId as Id<"games"> });
     } catch (error) {
       console.error("Failed to start night phase:", error);
     } finally {

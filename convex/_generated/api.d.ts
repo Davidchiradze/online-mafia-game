@@ -22,6 +22,7 @@ import type * as game_webhookHandler from "../game/webhookHandler.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_constants from "../lib/constants.js";
 import type * as lib_games from "../lib/games.js";
+import type * as lib_phaseTransitions from "../lib/phaseTransitions.js";
 import type * as lib_profiles from "../lib/profiles.js";
 import type * as lib_speakingOrder from "../lib/speakingOrder.js";
 import type * as lobby_games from "../lobby/games.js";
@@ -63,6 +64,7 @@ declare const fullApi: ApiFromModules<{
   "lib/auth": typeof lib_auth;
   "lib/constants": typeof lib_constants;
   "lib/games": typeof lib_games;
+  "lib/phaseTransitions": typeof lib_phaseTransitions;
   "lib/profiles": typeof lib_profiles;
   "lib/speakingOrder": typeof lib_speakingOrder;
   "lobby/games": typeof lobby_games;

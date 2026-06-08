@@ -1,12 +1,10 @@
-import clientEnv from "../env/client";
-
 export const PHP_API_BASE_URL = "https://mafia.ge";
 // export const PHP_API_BASE_URL = "http://localhost:8000";
 export const IS_PROD = process.env.NEXT_PUBLIC_ENVIRONMENT === "production";
 
 const ONLINE_MAFIA_ORIGIN = process.env.NEXT_PUBLIC_ONLINE_MAFIA_ORIGIN;
 
-export const PHP_LOGIN_REDIRECT_URL = `https://www.mafia.ge/ka/accounts/login/?from=${ONLINE_MAFIA_ORIGIN}`;
+export const PHP_LOGIN_REDIRECT_URL = `${PHP_API_BASE_URL}/ka/accounts/login/?from=${ONLINE_MAFIA_ORIGIN}`;
 export const LOGOUT_ENDPOINT = "/api/auth/logout";
 
 export const PHP_SESSION_COOKIE_NAME = "PHPSESSID";
@@ -16,7 +14,7 @@ export const BRIDGE_ATTEMPT_COOKIE_NAME = "bridge_attempted";
 export const BRIDGE_ATTEMPT_TTL_SECONDS = 20;
 export const CONVEX_JWT_TTL_SECONDS = 10000;
 
-export const CONVEX_JWT_ISSUER = ONLINE_MAFIA_ORIGIN;
+export const CONVEX_JWT_ISSUER = process.env.CONVEX_JWT_ISSUER;
 export const CONVEX_JWT_AUDIENCE = "convex";
 
 export const AUTH_TOKEN_ENDPOINT = "/api/auth/token";
