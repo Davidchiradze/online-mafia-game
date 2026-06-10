@@ -12,4 +12,11 @@ export const gameSessions = defineTable({
   nominatedPlayers: v.array(v.number()),
   speakerStartedAt: v.optional(v.string()),
   speakingOrder: v.array(v.number()),
+  winner: v.optional(
+    v.union(
+      v.literal("mafia"),
+      v.literal("yakuza"),
+      v.literal("citizens"),
+    ),
+  ),
 }).index("by_gameId", ["gameId"]);

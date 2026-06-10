@@ -1,7 +1,12 @@
 import { v } from "convex/values";
 import { mutation } from "../_generated/server";
 import { getAuthenticatedUser } from "../lib/auth";
-import { assertIsHost, getGameById, getPlayersByGameId } from "../lib/games";
+import {
+  assertIsHost,
+  getGameById,
+  getPlayersByGameId,
+  recordWinnerIfDecided,
+} from "../lib/games";
 import { enterNightPhase } from "../lib/phaseTransitions";
 import { SPEAKING_STATE, FOULS } from "../lib/constants";
 import { computeSpeakingOrder, getNextSpeaker } from "../lib/speakingOrder";
@@ -236,7 +241,7 @@ export const advanceNominatedSpeaker = mutation({
     }
 
     if (session.foulEliminationOccurred) {
-      await enterNightPhase(ctx.db, gameId);
+      await enterNightPhase(ctx, gameId);
       return;
     }
 
@@ -353,7 +358,14 @@ export const giveFoul = mutation({
     if (newFoulCount === FOULS.ELIMINATION_THRESHOLD) {
       await ctx.db.patch(player._id, { isAlive: false });
       await ctx.db.patch(session._id, { foulEliminationOccurred: true });
-      return { playerEliminated: true };
+
+      // A foul elimination can remove the last Mafia/Yakuza, deciding the game
+      // immediately (outside any night/day boundary). Foul-allowed phases all
+      // head toward night, so use the `beforeNight` context. This records the
+      // pending winner; the host still confirms via "Finish Game".
+      const winner = await recordWinnerIfDecided(ctx, gameId, "beforeNight");
+
+      return { playerEliminated: true, winnerDecided: winner !== null };
     }
 
     return { playerEliminated: false };

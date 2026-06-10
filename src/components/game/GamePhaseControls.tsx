@@ -25,6 +25,7 @@ import StartNominatedPlayersSpeakButton from "../gameSession/phaseButtonsForHost
 import NominatedPlayersSpeakingControls from "../gameSession/phaseButtonsForHost/NominatedPlayersSpeakingControls";
 import NightActionsDisplay from "./NightActionsDisplay";
 import PhaseTitle from "../ui/PhaseTitle";
+import WinnerBanner from "../host-controls/WinnerBanner";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 
 function isSpeakingComplete(
@@ -43,6 +44,18 @@ const GamePhaseControls = () => {
       <div className="w-full h-full flex flex-col items-center justify-center gap-2">
         <StartGameButton />
       </div>
+    );
+  }
+
+  // A faction has been auto-decided: show the win banner. While the game is not
+  // finished yet, include the host's "Finish Game" button to confirm the end.
+  if (gameSessionState.winner) {
+    return (
+      <WinnerBanner
+        gameId={gameId}
+        winner={gameSessionState.winner}
+        canFinish={!gameSessionState.isFinished}
+      />
     );
   }
 

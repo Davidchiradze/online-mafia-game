@@ -1,5 +1,6 @@
-import type { DatabaseWriter } from "../_generated/server";
+import type { DatabaseWriter, MutationCtx } from "../_generated/server";
 import type { Id } from "../_generated/dataModel";
+import { recordWinnerIfDecided } from "./games";
 
 /**
  * Shared phase-transition helpers.
@@ -70,11 +71,18 @@ async function createNightSessionIfNeeded(
  * nomination / foul state, and ensures the matching `nightPhaseSessions` row
  * exists.
  *
- * TODO(win-conditions): before transitioning, run the `beforeNight` win check
- * here; if a faction has won, finish the game instead of advancing.
+ * Before transitioning, runs the `beforeNight` win check. If a faction has won,
+ * the pending winner is recorded and the transition is skipped (the game pauses
+ * on the win screen until the host clicks "Finish Game").
  * See docs/game-end-conditions.md.
+ *
+ * @returns the winning faction if the game is decided, otherwise `null`.
  */
-export async function enterNightPhase(db: DatabaseWriter, gameId: Id<"games">) {
+export async function enterNightPhase(ctx: MutationCtx, gameId: Id<"games">) {
+  const winner = await recordWinnerIfDecided(ctx, gameId, "beforeNight");
+  if (winner) return winner;
+
+  const db = ctx.db;
   const session = await getGameSessionOrThrow(db, gameId);
 
   await clearVotingSession(db, gameId);
@@ -92,6 +100,8 @@ export async function enterNightPhase(db: DatabaseWriter, gameId: Id<"games">) {
   });
 
   await createNightSessionIfNeeded(db, gameId, newNightNumber);
+
+  return null;
 }
 
 /**
@@ -99,11 +109,18 @@ export async function enterNightPhase(db: DatabaseWriter, gameId: Id<"games">) {
  *
  * Resets speaking state. Called after night kills (or the no-kill skip).
  *
- * TODO(win-conditions): before transitioning, run the `beforeDay` win check
- * here; if a faction has won, finish the game instead of advancing.
+ * Before transitioning, runs the `beforeDay` win check. If a faction has won,
+ * the pending winner is recorded and the transition is skipped (the game pauses
+ * on the win screen until the host clicks "Finish Game").
  * See docs/game-end-conditions.md.
+ *
+ * @returns the winning faction if the game is decided, otherwise `null`.
  */
-export async function enterDayPhase(db: DatabaseWriter, gameId: Id<"games">) {
+export async function enterDayPhase(ctx: MutationCtx, gameId: Id<"games">) {
+  const winner = await recordWinnerIfDecided(ctx, gameId, "beforeDay");
+  if (winner) return winner;
+
+  const db = ctx.db;
   const session = await getGameSessionOrThrow(db, gameId);
 
   await db.patch(session._id, {
@@ -112,4 +129,6 @@ export async function enterDayPhase(db: DatabaseWriter, gameId: Id<"games">) {
     currentSpeakerIndex: undefined,
     speakerStartedAt: undefined,
   });
+
+  return null;
 }

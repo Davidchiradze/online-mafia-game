@@ -31,6 +31,7 @@ type GameSessionDoc = {
   nominatedPlayers: number[];
   speakerStartedAt?: string;
   speakingOrder: number[];
+  winner?: "mafia" | "yakuza" | "citizens";
 } | null;
 
 type NightPhaseSessionDoc = {

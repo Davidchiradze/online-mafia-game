@@ -1,5 +1,10 @@
-import { DatabaseReader, DatabaseWriter } from "../_generated/server";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+  MutationCtx,
+} from "../_generated/server";
 import { Id } from "../_generated/dataModel";
+import { decideWinner, type WinContext, type Winner } from "./winConditions";
 
 export async function getGameById(db: DatabaseReader, gameId: Id<"games">) {
   const game = await db.get(gameId);
@@ -123,4 +128,66 @@ export async function deleteGameAndRelations(
   }
 
   await db.delete(gameId);
+}
+
+/**
+ * Roles of every alive player who holds a role (excludes the host, who has no
+ * `gamePlayerRoles` entry).
+ */
+async function getAliveRoles(
+  db: DatabaseReader,
+  gameId: Id<"games">,
+): Promise<string[]> {
+  const roleRows = await db
+    .query("gamePlayerRoles")
+    .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
+    .collect();
+  const roleByPlayer = new Map<Id<"profiles">, string>();
+  for (const r of roleRows) roleByPlayer.set(r.playerId, r.role);
+
+  const players = await getPlayersByGameId(db, gameId);
+  const aliveRoles: string[] = [];
+  for (const p of players) {
+    if (!p.isAlive) continue;
+    const role = roleByPlayer.get(p.playerId);
+    if (role) aliveRoles.push(role);
+  }
+  return aliveRoles;
+}
+
+/**
+ * Run the auto win-detection check for the given transition context. If a
+ * faction has won, **record** the pending winner on the session (`winner`) but
+ * do NOT finish the game — the host confirms the end via the "Finish Game"
+ * button (the existing `finishGame` mutation), which is what actually flips
+ * `isFinished` / `gameStatus` and schedules cleanup. Returns the winner so the
+ * caller can pause (skip the phase transition); `null` means continue.
+ *
+ * Idempotent: if a winner is already recorded, it is returned again (the game
+ * stays paused). No-op once the game is finished.
+ *
+ * See docs/game-end-conditions.md. Called from `enterNightPhase` (beforeNight),
+ * `enterDayPhase` (beforeDay), and the immediate `giveFoul` check (beforeNight).
+ */
+export async function recordWinnerIfDecided(
+  ctx: MutationCtx,
+  gameId: Id<"games">,
+  context: WinContext,
+): Promise<Winner | null> {
+  const session = await ctx.db
+    .query("gameSessions")
+    .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
+    .unique();
+  if (!session || session.isFinished) return null;
+
+  // Already decided on a previous transition — keep the game paused.
+  if (session.winner) return session.winner;
+
+  const aliveRoles = await getAliveRoles(ctx.db, gameId);
+  const winner = decideWinner(aliveRoles, context);
+  if (!winner) return null;
+
+  await ctx.db.patch(session._id, { winner });
+
+  return winner;
 }

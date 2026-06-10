@@ -61,6 +61,7 @@ type ConvexGameSession = {
   nominatedPlayers: number[];
   speakerStartedAt?: string;
   speakingOrder: number[];
+  winner?: "mafia" | "yakuza" | "citizens";
 };
 
 type ConvexNightPhaseSession = {

@@ -1,94 +1,76 @@
 ---
-description: Project architecture, folder structure, and naming conventions for the real-time chat app
+description: Project architecture, folder structure, and naming conventions for the Online Mafia game
 alwaysApply: true
 ---
 
 # Project Architecture
 
-This is a real-time chat application built with **Next.js 16 (App Router)**, **Convex** (backend/database), **React 19**, **Tailwind CSS 4**, and **TypeScript 5**.
+This is an online multiplayer Mafia game built with **Next.js 15 (App Router)**, **Convex** (backend/database), **LiveKit** (WebRTC video/audio), **TailwindCSS + shadcn/ui**, and **TypeScript** (strict mode).
 
-## Enforced Folder Structure
+## Folder Structure
 
 ```
-online-mafia-v2/
-├── app/                          # Next.js App Router (pages & layouts ONLY)
-│   ├── layout.tsx                # Root layout with ConvexClientProvider
-│   ├── page.tsx                  # Landing / home page
-│   ├── (auth)/                   # Auth route group
-│   │   ├── sign-in/page.tsx
-│   │   └── sign-up/page.tsx
-│   ├── chat/                     # Chat feature routes
-│   │   ├── layout.tsx
-│   │   ├── page.tsx              # Chat list
-│   │   └── [conversationId]/     # Dynamic conversation route
-│   │       └── page.tsx
-│   └── globals.css               # Global styles (Tailwind)
-├── components/                   # ALL React components live here
-│   ├── ui/                       # Primitives: Button, Input, Avatar, Badge, etc.
-│   ├── chat/                     # Chat feature components
-│   ├── auth/                     # Auth feature components
-│   ├── layout/                   # Sidebar, Header, MobileNav, etc.
-│   └── providers/                # ConvexClientProvider, ThemeProvider, etc.
-├── hooks/                        # Custom React hooks
-├── lib/                          # Utilities, helpers, constants
-│   ├── utils.ts                  # Generic utility functions
-│   └── constants.ts              # App-wide constants
-├── types/                        # Shared TypeScript types/interfaces
-├── convex/                       # Convex backend (see convex rule)
+online-mafia/
+├── src/
+│   ├── app/                      # Next.js App Router (pages & layouts ONLY)
+│   │   └── api/auth/             # Auth bridge API routes
+│   ├── components/               # React components (organized by feature)
+│   │   ├── ui/                   # shadcn/ui primitives
+│   │   ├── game/                 # In-game components
+│   │   ├── gameSession/          # Game session components
+│   │   ├── lobby/                # Lobby components
+│   │   ├── auth/                 # Auth components
+│   │   ├── dashboard/            # Dashboard components
+│   │   ├── liveKit/              # LiveKit video/audio components
+│   │   ├── participant/          # Player participant components
+│   │   ├── host-controls/        # Host control panel components
+│   │   ├── modals/               # Modal components
+│   │   └── providers/            # ConvexClientProvider, etc.
+│   ├── hooks/                    # Custom React hooks
+│   │   ├── auth/                 # Auth hooks
+│   │   ├── game/                 # Game state hooks
+│   │   ├── livekit/              # LiveKit hooks
+│   │   └── participant/          # Participant hooks
+│   ├── lib/                      # Utilities, constants, context
+│   │   ├── constants/game.ts     # Game phases, roles, statuses
+│   │   ├── game/visibility.ts    # Role-based visibility logic (pure functions)
+│   │   ├── time/serverTime.ts    # useServerTime() — server-corrected clock
+│   │   ├── context/              # React contexts
+│   │   ├── auth/                 # Auth utilities
+│   │   └── liveKit/              # LiveKit utilities
+│   ├── middlewares/              # Middleware helpers
+│   └── middleware.ts             # Next.js root middleware
+├── convex/                       # ALL backend logic
 │   ├── schema.ts                 # Database schema (single source of truth)
 │   ├── _generated/               # Auto-generated (NEVER edit)
-│   ├── messages.ts               # Message queries/mutations
-│   ├── conversations.ts          # Conversation queries/mutations
-│   ├── users.ts                  # User queries/mutations
+│   ├── auth.config.ts            # Convex Auth config
+│   ├── auth/                     # Auth functions
+│   ├── game/                     # Game phase logic
+│   ├── lobby/                    # Lobby functions
+│   ├── tables/                   # Per-table queries/mutations
+│   ├── refs/                     # Reference data
 │   └── lib/                      # Shared server-side helpers
-├── public/                       # Static assets
-└── middleware.ts                  # Root-level middleware
+└── docs/                         # Full documentation (read before implementing)
 ```
 
 ## Strict Rules
 
-1. **No component code in `app/`** — `app/` contains ONLY `page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`, and `not-found.tsx`. All UI components are imported from `components/`.
-2. **No business logic in components** — Components render UI. Logic lives in `hooks/` or `convex/`.
-3. **Feature-based grouping** — Group components by feature (`components/chat/`, `components/auth/`), not by type.
-4. **One component per file** — Each file exports exactly one component as the default export.
-5. **Index files for barrels** — Each feature folder in `components/` may have an `index.ts` barrel export.
+1. **All game logic in Convex** — `mutation` for writes, `query` for reads, `internalAction` for LiveKit calls
+2. **No component code in `app/`** — pages are thin wrappers only; all UI lives in `components/`
+3. **No business logic in components** — logic lives in `hooks/` or `convex/`
+4. **Feature-based grouping** — group by feature, not by type
+5. **Server-corrected time** — use `useServerTime()` from `src/lib/time/serverTime.ts` for any timer math; never raw `Date.now()`
 
 ## Naming Conventions
 
 | Item | Convention | Example |
 |------|-----------|---------|
-| Component files | PascalCase | `MessageBubble.tsx` |
-| Hook files | camelCase with `use` prefix | `useMessages.ts` |
-| Utility files | camelCase | `formatDate.ts` |
-| Convex functions | camelCase | `messages.ts` |
-| Types/interfaces | PascalCase with no `I` prefix | `Message`, `User` |
-| Constants | UPPER_SNAKE_CASE | `MAX_MESSAGE_LENGTH` |
-| CSS classes | Tailwind utilities only | No custom CSS unless absolutely necessary |
-| Route folders | kebab-case | `sign-in/`, `chat/` |
-| Route groups | parentheses | `(auth)/` |
+| Component files | PascalCase | `PlayerCard.tsx` |
+| Hook files | camelCase with `use` prefix | `useGamePhase.ts` |
+| Utility files | camelCase | `formatTime.ts` |
+| Convex functions | camelCase | `gameSessions.ts` |
+| Types/interfaces | PascalCase, no `I` prefix | `GamePlayer`, `GameRole` |
+| Constants | UPPER_SNAKE_CASE | `MAX_PLAYERS` |
+| Route folders | kebab-case | `game-room/` |
 
-## Import Order (enforced)
-
-```typescript
-// 1. React/Next.js
-import { useState } from "react";
-import Link from "next/link";
-
-// 2. Third-party libraries
-import { useQuery } from "convex/react";
-
-// 3. Convex API
-import { api } from "@/convex/_generated/api";
-
-// 4. Components
-import { Button } from "@/components/ui/Button";
-
-// 5. Hooks
-import { useMessages } from "@/hooks/useMessages";
-
-// 6. Utils / types / constants
-import { formatDate } from "@/lib/utils";
-import type { Message } from "@/types";
-```
-
-Always use the `@/` path alias. Never use relative imports that go more than one level up (`../../`).
+Always use the `@/` path alias. Never use relative imports going more than one level up.

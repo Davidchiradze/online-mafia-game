@@ -115,7 +115,7 @@ export const startFarewellSpeech = mutation({
     }
 
     if (killedPlayers.length === 0) {
-      await enterDayPhase(ctx.db, gameId);
+      await enterDayPhase(ctx, gameId);
       return { skipToDay: true };
     }
 
@@ -227,10 +227,10 @@ export const advanceFromFarewell = mutation({
     const nominatedPlayers = session.nominatedPlayers ?? [];
 
     if (nominatedPlayers.length > 0) {
-      await enterNightPhase(ctx.db, gameId);
+      await enterNightPhase(ctx, gameId);
       return;
     }
 
-    await enterDayPhase(ctx.db, gameId);
+    await enterDayPhase(ctx, gameId);
   },
 });

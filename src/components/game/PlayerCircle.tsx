@@ -8,6 +8,7 @@ import { useGameRoom } from "@/lib/context/gameRoomContext";
 import VotingDisplay from "./VotingDisplay";
 import { EmptySeat } from "@/components/participant/playerStates";
 import PhaseTitle from "@/components/ui/PhaseTitle";
+import WinnerBanner from "../host-controls/WinnerBanner";
 import { useSeatShuffleAnimation } from "@/hooks/game";
 
 const SHUFFLE_TRANSITION_SECONDS = 2.5;
@@ -129,6 +130,8 @@ export default function PlayerCircle({
         <div className="h-1/2 flex flex-col items-center justify-center gap-2 p-3 overflow-y-auto">
           {isHost ? (
             <GamePhaseControls />
+          ) : gameSessionState?.winner && gameSessionState.isFinished ? (
+            <WinnerBanner gameId={gameId} winner={gameSessionState.winner} />
           ) : (
             <>
               {gameSessionState && (

@@ -4,7 +4,11 @@ import { makeFunctionReference } from "convex/server";
 import type { Id } from "../_generated/dataModel";
 import { getAuthenticatedUser } from "../lib/auth";
 import { getGameById, assertIsHost, getPlayersByGameId } from "../lib/games";
-import { GAME_PHASES, JAPANESE_MAFIA_ROLE_DISTRIBUTION, GAME_CLEANUP } from "../lib/constants";
+import {
+  GAME_PHASES,
+  JAPANESE_MAFIA_ROLE_DISTRIBUTION,
+  GAME_CLEANUP,
+} from "../lib/constants";
 
 const removeGameInternal = makeFunctionReference<
   "mutation",
@@ -151,9 +155,7 @@ export const assignRandomRoles = mutation({
     const hostSeat = game.maxPlayers + 1;
 
     const playersWithSeats = players.filter(
-      (p) =>
-        p.seatNumber !== undefined &&
-        p.seatNumber !== hostSeat,
+      (p) => p.seatNumber !== undefined && p.seatNumber !== hostSeat,
     );
 
     const roles = [...JAPANESE_MAFIA_ROLE_DISTRIBUTION];
@@ -205,8 +207,8 @@ export const finishGame = mutation({
     await ctx.db.patch(gameId, { gameStatus: "finished" });
     await ctx.db.patch(session._id, { isFinished: true });
 
-    await ctx.scheduler.runAfter(GAME_CLEANUP.DELAY_MS, removeGameInternal, {
-      gameId,
-    });
+    // await ctx.scheduler.runAfter(GAME_CLEANUP.DELAY_MS, removeGameInternal, {
+    //   gameId,
+    // });
   },
 });

@@ -214,7 +214,7 @@ export const enterNight = mutation({
   handler: async (ctx, { gameId }) => {
     const userId = await getAuthenticatedUser(ctx);
     await assertIsHost(ctx.db, gameId, userId);
-    await enterNightPhase(ctx.db, gameId);
+    await enterNightPhase(ctx, gameId);
   },
 });
 

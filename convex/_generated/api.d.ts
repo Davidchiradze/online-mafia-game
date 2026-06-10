@@ -25,6 +25,7 @@ import type * as lib_games from "../lib/games.js";
 import type * as lib_phaseTransitions from "../lib/phaseTransitions.js";
 import type * as lib_profiles from "../lib/profiles.js";
 import type * as lib_speakingOrder from "../lib/speakingOrder.js";
+import type * as lib_winConditions from "../lib/winConditions.js";
 import type * as lobby_games from "../lobby/games.js";
 import type * as lobby_hostTransfer from "../lobby/hostTransfer.js";
 import type * as lobby_joinRequests from "../lobby/joinRequests.js";
@@ -67,6 +68,7 @@ declare const fullApi: ApiFromModules<{
   "lib/phaseTransitions": typeof lib_phaseTransitions;
   "lib/profiles": typeof lib_profiles;
   "lib/speakingOrder": typeof lib_speakingOrder;
+  "lib/winConditions": typeof lib_winConditions;
   "lobby/games": typeof lobby_games;
   "lobby/hostTransfer": typeof lobby_hostTransfer;
   "lobby/joinRequests": typeof lobby_joinRequests;
