@@ -207,8 +207,8 @@ export const finishGame = mutation({
     await ctx.db.patch(gameId, { gameStatus: "finished" });
     await ctx.db.patch(session._id, { isFinished: true });
 
-    // await ctx.scheduler.runAfter(GAME_CLEANUP.DELAY_MS, removeGameInternal, {
-    //   gameId,
-    // });
+    await ctx.scheduler.runAfter(GAME_CLEANUP.DELAY_MS, removeGameInternal, {
+      gameId,
+    });
   },
 });
