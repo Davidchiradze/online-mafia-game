@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { usePaginatedQuery, useConvexAuth } from "convex/react";
+import { usePaginatedQuery } from "convex/react";
 import { Swords, SearchX } from "lucide-react";
 import { gameLogs as historyRefs } from "@convex/refs/history";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
@@ -24,15 +24,9 @@ export default function MatchHistoryList({
 }: Props) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  // Skip until authenticated — the query throws "Not authenticated" if it runs
-  // during the auth-bootstrap window on a fresh load.
-  const { isAuthenticated } = useConvexAuth();
-
   const { results, status, loadMore } = usePaginatedQuery(
     historyRefs.listMine,
-    isAuthenticated
-      ? { outcome, gameType: gameType === "all" ? undefined : gameType }
-      : "skip",
+    { outcome, gameType: gameType === "all" ? undefined : gameType },
     { initialNumItems: PAGE_SIZE },
   );
 

@@ -1,3 +1,5 @@
+import AuthGate from "@/components/dashboard/AuthGate";
+
 export default function GameLayout({
   children,
 }: {
@@ -18,7 +20,9 @@ export default function GameLayout({
         className="absolute inset-0 w-full h-full object-cover opacity-20 pointer-events-none select-none"
       />
       <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black/80 pointer-events-none" />
-      <div className="relative z-10 h-full">{children}</div>
+      <div className="relative z-10 h-full">
+        <AuthGate>{children}</AuthGate>
+      </div>
     </div>
   );
 }

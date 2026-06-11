@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useConvexAuth } from "convex/react";
+import { useQuery } from "convex/react";
 import { gameLogs as historyRefs } from "@convex/refs/history";
 import { authProfiles } from "@convex/refs/lobby";
 import StatsHeader from "./StatsHeader";
@@ -16,11 +16,7 @@ export default function MatchHistoryContent() {
   const [outcome, setOutcome] = useState<OutcomeFilter>("all");
   const [gameType, setGameType] = useState<GameTypeFilter>("all");
 
-  // Wait until Convex reports authenticated — otherwise the query fires during
-  // the auth-bootstrap window and the server throws "Not authenticated".
-  const { isAuthenticated } = useConvexAuth();
-
-  const stats = useQuery(historyRefs.myStats, isAuthenticated ? {} : "skip");
+  const stats = useQuery(historyRefs.myStats);
   const profile = useQuery(authProfiles.currentProfile);
   const currentPlayerId = profile?._id;
 
