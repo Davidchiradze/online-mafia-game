@@ -13,6 +13,7 @@ import {
   cardPickingSessions,
   gameLogs,
   gameLogPlayers,
+  playerStats,
 } from "./tables";
 
 const schema = defineSchema({
@@ -29,6 +30,7 @@ const schema = defineSchema({
   cardPickingSessions,
   gameLogs,
   gameLogPlayers,
+  playerStats,
 });
 
 export default schema;

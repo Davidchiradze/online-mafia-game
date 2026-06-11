@@ -5,6 +5,7 @@ import {
 } from "../_generated/server";
 import { Id } from "../_generated/dataModel";
 import { describeWin, type WinContext, type Winner } from "./winConditions";
+import { roleToFaction } from "./roles";
 
 export async function getGameById(db: DatabaseReader, gameId: Id<"games">) {
   const game = await db.get(gameId);
@@ -252,6 +253,8 @@ export async function archiveGameLog(ctx: MutationCtx, gameId: Id<"games">) {
 
   const finishedAt = Date.now();
   const startedAt = session?.startedAt ?? session?._creationTime ?? finishedAt;
+  const winner: Winner | null = session?.winner ?? null;
+  const winMethod = session?.winMethod;
 
   const gameLogId = await ctx.db.insert("gameLogs", {
     gameId,
@@ -262,12 +265,16 @@ export async function archiveGameLog(ctx: MutationCtx, gameId: Id<"games">) {
     hostNickname,
     startedAt,
     finishedAt,
-    winner: session?.winner ?? null,
-    winMethod: session?.winMethod,
+    winner,
+    winMethod,
     players: roster,
   });
 
   for (const p of roster) {
+    const faction = roleToFaction(p.role);
+    const outcome: "win" | "loss" | "no_contest" =
+      winner === null ? "no_contest" : faction === winner ? "win" : "loss";
+
     await ctx.db.insert("gameLogPlayers", {
       gameLogId,
       gameId,
@@ -276,9 +283,73 @@ export async function archiveGameLog(ctx: MutationCtx, gameId: Id<"games">) {
       role: p.role,
       seatNumber: p.seatNumber,
       isAlive: p.isAlive,
+      startedAt,
       finishedAt,
+      faction,
+      outcome,
+      winner,
+      gameType: game.gameType,
+      gameName: game.name,
+      winMethod,
     });
+
+    await bumpPlayerStats(ctx, p.playerId, p.role, outcome);
   }
 
   return gameLogId;
+}
+
+/**
+ * Incrementally fold one finished-game result into a player's aggregate stats.
+ * Creates the row on first game; otherwise increments the overall counters and
+ * the per-role entry. Win rates are derived on read, not stored.
+ */
+async function bumpPlayerStats(
+  ctx: MutationCtx,
+  playerId: Id<"profiles">,
+  role: string,
+  outcome: "win" | "loss" | "no_contest",
+) {
+  const existing = await ctx.db
+    .query("playerStats")
+    .withIndex("by_playerId", (q) => q.eq("playerId", playerId))
+    .unique();
+
+  const w = outcome === "win" ? 1 : 0;
+  const l = outcome === "loss" ? 1 : 0;
+  const nc = outcome === "no_contest" ? 1 : 0;
+
+  if (!existing) {
+    await ctx.db.insert("playerStats", {
+      playerId,
+      totalMatches: 1,
+      wins: w,
+      losses: l,
+      noContests: nc,
+      roleStats: [{ role, matches: 1, wins: w, losses: l }],
+    });
+    return;
+  }
+
+  const roleStats = [...existing.roleStats];
+  const idx = roleStats.findIndex((r) => r.role === role);
+  if (idx === -1) {
+    roleStats.push({ role, matches: 1, wins: w, losses: l });
+  } else {
+    const cur = roleStats[idx];
+    roleStats[idx] = {
+      role,
+      matches: cur.matches + 1,
+      wins: cur.wins + w,
+      losses: cur.losses + l,
+    };
+  }
+
+  await ctx.db.patch(existing._id, {
+    totalMatches: existing.totalMatches + 1,
+    wins: existing.wins + w,
+    losses: existing.losses + l,
+    noContests: existing.noContests + nc,
+    roleStats,
+  });
 }

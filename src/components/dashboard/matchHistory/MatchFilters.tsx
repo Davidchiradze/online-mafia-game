@@ -1,0 +1,61 @@
+"use client";
+
+import { GAME_TYPES, GAME_TYPE_LABEL } from "@/lib/constants/game";
+
+export type OutcomeFilter = "all" | "win" | "loss" | "no_contest";
+export type GameTypeFilter = "all" | (typeof GAME_TYPES)[number];
+
+interface Props {
+  outcome: OutcomeFilter;
+  gameType: GameTypeFilter;
+  onOutcomeChange: (v: OutcomeFilter) => void;
+  onGameTypeChange: (v: GameTypeFilter) => void;
+}
+
+const SELECT_CLASS =
+  "min-w-[180px] cursor-pointer appearance-none rounded-xl border border-white/5 bg-[#13131a]/60 px-5 py-3.5 font-inter font-medium text-white backdrop-blur-md transition-all focus:border-[#00ff66]/50 focus:bg-[#13131a]/90 focus:outline-none";
+
+export default function MatchFilters({
+  outcome,
+  gameType,
+  onOutcomeChange,
+  onGameTypeChange,
+}: Props) {
+  return (
+    <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:justify-end">
+      <select
+        value={gameType}
+        onChange={(e) => onGameTypeChange(e.target.value as GameTypeFilter)}
+        className={SELECT_CLASS}
+      >
+        <option value="all" className="bg-[#0a0a12]">
+          All Modes
+        </option>
+        {GAME_TYPES.map((t) => (
+          <option key={t} value={t} className="bg-[#0a0a12]">
+            {GAME_TYPE_LABEL[t]}
+          </option>
+        ))}
+      </select>
+
+      <select
+        value={outcome}
+        onChange={(e) => onOutcomeChange(e.target.value as OutcomeFilter)}
+        className={SELECT_CLASS}
+      >
+        <option value="all" className="bg-[#0a0a12]">
+          All Outcomes
+        </option>
+        <option value="win" className="bg-[#0a0a12]">
+          Victories
+        </option>
+        <option value="loss" className="bg-[#0a0a12]">
+          Defeats
+        </option>
+        <option value="no_contest" className="bg-[#0a0a12]">
+          No Contest
+        </option>
+      </select>
+    </div>
+  );
+}
