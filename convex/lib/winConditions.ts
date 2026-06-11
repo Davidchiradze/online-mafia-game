@@ -15,6 +15,19 @@ import { MAFIA_TEAM_ROLES } from "./constants";
 export type WinContext = "beforeNight" | "beforeDay";
 export type Winner = "mafia" | "yakuza" | "citizens";
 
+/**
+ * Structured snapshot of the endgame state at the moment a winner is decided.
+ * The human label is derived separately via `winMethodLabel` — not stored.
+ */
+export type WinMethod = {
+  faction: Winner;
+  aliveTotal: number; // N
+  mafiaAlive: number; // m
+  yakuzaAlive: boolean;
+  shogunAlive: boolean;
+  decidedRole?: string; // headline role, e.g. "SHOGUN" in a 1v1
+};
+
 const MAFIA_ROLES: ReadonlySet<string> = new Set(MAFIA_TEAM_ROLES);
 
 /** Remove the first occurrence of `value` from `arr` (non-mutating). */
@@ -37,23 +50,38 @@ function multisetEquals(a: string[], b: string[]): boolean {
 }
 
 /**
- * Decide the winning faction from the roles of the alive players.
+ * Decide the winning faction from the roles of the alive players, returning a
+ * structured `WinMethod` snapshot of the endgame state, or `null` to continue.
+ *
+ * This is the single source of truth for the win decision; `decideWinner`
+ * delegates to it so the two never drift.
  *
  * @param aliveRoles roles of every alive player (e.g. `["DON", "MAFIA", "CITIZEN"]`)
  * @param context whether we are about to enter night or day — only matters at N = 5
- * @returns the winning faction, or `null` if the game should continue
  */
-export function decideWinner(
+export function describeWin(
   aliveRoles: string[],
   context: WinContext,
-): Winner | null {
+): WinMethod | null {
   const m = aliveRoles.filter((r) => MAFIA_ROLES.has(r)).length;
   const YA = aliveRoles.includes("YAKUZA");
   const SH = aliveRoles.includes("SHOGUN");
   const N = aliveRoles.length;
 
+  const base = {
+    aliveTotal: N,
+    mafiaAlive: m,
+    yakuzaAlive: YA,
+    shogunAlive: SH,
+  };
+  const win = (faction: Winner, decidedRole?: string): WinMethod => ({
+    faction,
+    decidedRole,
+    ...base,
+  });
+
   // Global Citizens sweep (highest priority, any N).
-  if (m === 0 && !YA && !SH) return "citizens";
+  if (m === 0 && !YA && !SH) return win("citizens");
 
   // Nothing else can be decided above 6 players.
   if (N > 6) return null;
@@ -61,7 +89,7 @@ export function decideWinner(
   switch (N) {
     case 6:
       // Mafia win iff m = 3 and Yakuza is dead (lone Shogun can't kill).
-      if (m === 3 && !YA) return "mafia";
+      if (m === 3 && !YA) return win("mafia");
       return null;
 
     case 5:
@@ -74,41 +102,73 @@ export function decideWinner(
         ) {
           return null;
         }
-        return "mafia";
+        return win("mafia");
       }
       return null;
 
     case 4: {
-      if (m === 3) return "mafia";
+      if (m === 3) return win("mafia");
       if (YA && SH) {
         // Exception: the other 2 are exactly DOCTOR + any one Mafia member.
         const others = removeOnce(removeOnce(aliveRoles, "YAKUZA"), "SHOGUN");
         const hasDoctor = others.includes("DOCTOR");
         const hasMafia = others.some((r) => MAFIA_ROLES.has(r));
         if (others.length === 2 && hasDoctor && hasMafia) return null;
-        return "yakuza";
+        return win("yakuza");
       }
-      if (m === 2 && !YA) return "mafia";
+      if (m === 2 && !YA) return win("mafia");
       return null;
     }
 
     case 3:
-      if (m === 2) return "mafia";
-      if (YA && SH) return "yakuza";
+      if (m === 2) return win("mafia");
+      if (YA && SH) return win("yakuza");
       return null;
 
     case 2:
-      if (m === 2) return "mafia";
+      if (m === 2) return win("mafia");
       // The Yakuza/Shogun clan always wins a 1-on-1: lone Yakuza or lone Shogun
       // beats a Townsperson and beats a lone Mafia. (docs §6 N=2 table — this is
       // a declared outcome that takes precedence over §7's lone-YA/SH fall-through.)
-      if (YA || SH) return "yakuza";
+      // Record the surviving clan member as the headline role (e.g. "Shogun in 1vs1").
+      if (YA || SH) return win("yakuza", SH ? "SHOGUN" : "YAKUZA");
       // Remaining: a lone Mafia vs one Townsperson → Mafia wins.
-      if (m === 1) return "mafia";
+      if (m === 1) return win("mafia");
       return null;
 
     default:
       // N <= 1: nothing to decide here (a sweep would already have returned).
       return null;
   }
+}
+
+/**
+ * Decide the winning faction from the roles of the alive players.
+ *
+ * @returns the winning faction, or `null` if the game should continue
+ */
+export function decideWinner(
+  aliveRoles: string[],
+  context: WinContext,
+): Winner | null {
+  return describeWin(aliveRoles, context)?.faction ?? null;
+}
+
+/**
+ * Derive a human-readable label for a win method, e.g. "Shogun in 1vs1",
+ * "Mafia in 2vs2", "Citizens sweep". Pure — safe to call from the UI later.
+ */
+export function winMethodLabel(method: WinMethod): string {
+  const { faction, aliveTotal, mafiaAlive } = method;
+
+  if (faction === "citizens") return "Citizens win";
+
+  // "evil vs town" framing: evil = the decided faction's surviving members.
+  const evil = faction === "mafia" ? mafiaAlive : aliveTotal - mafiaAlive;
+  const town = aliveTotal - evil;
+  const matchup = `${evil}vs${town}`;
+
+  const factionLabel = faction === "mafia" ? "Mafia" : "Yakuza and Shogun";
+
+  return `${factionLabel} in ${matchup}`;
 }

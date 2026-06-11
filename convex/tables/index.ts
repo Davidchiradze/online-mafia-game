@@ -9,3 +9,5 @@ export { nightPhaseSessions } from "./nightPhaseSessions";
 export { votingSessions } from "./votingSessions";
 export { votes } from "./votes";
 export { cardPickingSessions } from "./cardPickingSessions";
+export { gameLogs } from "./gameLogs";
+export { gameLogPlayers } from "./gameLogPlayers";

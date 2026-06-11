@@ -1,5 +1,6 @@
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
+import { winMethodValidator } from "./gameLogs";
 
 export const gameSessions = defineTable({
   gameId: v.id("games"),
@@ -12,6 +13,7 @@ export const gameSessions = defineTable({
   nominatedPlayers: v.array(v.number()),
   speakerStartedAt: v.optional(v.string()),
   speakingOrder: v.array(v.number()),
+  startedAt: v.optional(v.number()), // ms epoch — set when play begins (startGame)
   winner: v.optional(
     v.union(
       v.literal("mafia"),
@@ -19,4 +21,6 @@ export const gameSessions = defineTable({
       v.literal("citizens"),
     ),
   ),
+  // Structured endgame snapshot captured when the winner is first decided.
+  winMethod: v.optional(winMethodValidator),
 }).index("by_gameId", ["gameId"]);
