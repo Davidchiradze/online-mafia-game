@@ -156,19 +156,30 @@ export function decideWinner(
 
 /**
  * Derive a human-readable label for a win method, e.g. "Shogun in 1vs1",
- * "Mafia in 2vs2", "Citizens sweep". Pure — safe to call from the UI later.
+ * "Mafia in 2vs2", "Citizens in 3vs0". Pure — safe to call from the UI later.
+ *
+ * The matchup is always *winning clan alive* vs *everyone else alive*. The only
+ * per-faction difference is how many survivors make up the winning clan:
+ *   - mafia:  the alive mafia team
+ *   - yakuza: only the surviving Yakuza + Shogun
+ *   - citizens: a sweep, so every survivor is town
  */
 export function winMethodLabel(method: WinMethod): string {
-  const { faction, aliveTotal, mafiaAlive } = method;
+  const { faction, aliveTotal, mafiaAlive, yakuzaAlive, shogunAlive } = method;
 
-  if (faction === "citizens") return "Citizens win";
+  const clanAlive =
+    faction === "mafia"
+      ? mafiaAlive
+      : faction === "yakuza"
+        ? (yakuzaAlive ? 1 : 0) + (shogunAlive ? 1 : 0)
+        : aliveTotal;
 
-  // "evil vs town" framing: evil = the decided faction's surviving members.
-  const evil = faction === "mafia" ? mafiaAlive : aliveTotal - mafiaAlive;
-  const town = aliveTotal - evil;
-  const matchup = `${evil}vs${town}`;
+  const factionLabel =
+    faction === "mafia"
+      ? "Mafia"
+      : faction === "yakuza"
+        ? "Yakuza and Shogun"
+        : "Citizens";
 
-  const factionLabel = faction === "mafia" ? "Mafia" : "Yakuza and Shogun";
-
-  return `${factionLabel} in ${matchup}`;
+  return `${factionLabel} in ${clanAlive}vs${aliveTotal - clanAlive}`;
 }
