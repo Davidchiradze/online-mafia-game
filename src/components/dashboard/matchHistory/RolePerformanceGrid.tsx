@@ -18,8 +18,8 @@ interface Props {
 export default function RolePerformanceGrid({ stats }: Props) {
   if (stats === undefined) {
     return (
-      <div className="mb-10 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-        {Array.from({ length: 6 }).map((_, i) => (
+      <div className="mb-10 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+        {Array.from({ length: 8 }).map((_, i) => (
           <div
             key={i}
             className="h-[104px] animate-pulse rounded-xl border border-white/5 bg-[#13131a]/40"
@@ -47,7 +47,7 @@ export default function RolePerformanceGrid({ stats }: Props) {
       <h3 className="mb-4 flex items-center gap-2 font-inter text-xs font-bold uppercase tracking-widest text-zinc-500">
         <UserCircle className="h-4 w-4" /> Role Performance
       </h3>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
         {allRoles.map((stat) => {
           const faction = roleToFaction(stat.role);
           const Icon = factionIcon(faction);

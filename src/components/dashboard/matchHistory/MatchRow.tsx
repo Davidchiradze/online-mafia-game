@@ -82,7 +82,7 @@ export default function MatchRow({
         </div>
 
         {/* Outcome */}
-        <div className="flex items-center md:col-span-3">
+        <div className="flex items-center gap-3 md:col-span-3">
           <div
             className={cn(
               "inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 font-orbitron text-sm font-bold tracking-widest",
@@ -102,6 +102,11 @@ export default function MatchRow({
             )}
             {isWin ? "VICTORY" : isNC ? "NO CONTEST" : "DEFEAT"}
           </div>
+          {row.winMethodLabel && (
+            <span className="font-orbitron text-sm font-bold tracking-wider text-zinc-400">
+              {row.winMethodLabel}
+            </span>
+          )}
         </div>
 
         {/* Expand chevron */}

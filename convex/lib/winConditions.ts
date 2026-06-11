@@ -173,7 +173,6 @@ export function winMethodLabel(method: WinMethod): string {
       : faction === "yakuza"
         ? (yakuzaAlive ? 1 : 0) + (shogunAlive ? 1 : 0)
         : aliveTotal;
-
   const factionLabel =
     faction === "mafia"
       ? "Mafia"
@@ -181,5 +180,5 @@ export function winMethodLabel(method: WinMethod): string {
         ? "Yakuza and Shogun"
         : "Citizens";
 
-  return `${factionLabel} in ${clanAlive}vs${aliveTotal - clanAlive}`;
+  return `${clanAlive}vs${aliveTotal - clanAlive}`;
 }
