@@ -3,7 +3,12 @@ import { query, mutation } from "../_generated/server";
 import { makeFunctionReference } from "convex/server";
 import type { Id } from "../_generated/dataModel";
 import { getAuthenticatedUser } from "../lib/auth";
-import { getGameById, assertIsHost, getPlayersByGameId } from "../lib/games";
+import {
+  getGameById,
+  assertIsHost,
+  getPlayersByGameId,
+  archiveGameLog,
+} from "../lib/games";
 import {
   GAME_PHASES,
   JAPANESE_MAFIA_ROLE_DISTRIBUTION,
@@ -123,12 +128,19 @@ export const startGame = mutation({
 
     await ctx.db.patch(gameId, { gameStatus: "playing" });
 
+    const startedAt = Date.now();
+
     const existing = await ctx.db
       .query("gameSessions")
       .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
       .unique();
 
-    if (existing) return existing._id;
+    if (existing) {
+      if (existing.startedAt === undefined) {
+        await ctx.db.patch(existing._id, { startedAt });
+      }
+      return existing._id;
+    }
 
     return await ctx.db.insert("gameSessions", {
       gameId,
@@ -137,6 +149,7 @@ export const startGame = mutation({
       currentNightNumber: 0,
       nominatedPlayers: [],
       speakingOrder: [],
+      startedAt,
     });
   },
 });
@@ -203,6 +216,10 @@ export const finishGame = mutation({
 
     if (!session) throw new Error("Game session not found");
     if (session.isFinished) throw new Error("Game is already finished");
+
+    // Persist the permanent game-log snapshot BEFORE flipping status / scheduling
+    // cleanup — the cleanup cascade-deletes the live game and all its relations.
+    await archiveGameLog(ctx, gameId);
 
     await ctx.db.patch(gameId, { gameStatus: "finished" });
     await ctx.db.patch(session._id, { isFinished: true });

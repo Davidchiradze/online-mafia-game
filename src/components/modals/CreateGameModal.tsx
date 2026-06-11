@@ -70,10 +70,7 @@ export default function CreateGameModal(props: Props) {
   const hasChanges = useMemo(() => {
     if (!isEdit) return true;
     const init = (props as EditModeProps).initialValues;
-    return (
-      name.trim() !== init.name ||
-      isPrivate !== init.isPrivate
-    );
+    return name.trim() !== init.name || isPrivate !== init.isPrivate;
   }, [isEdit, name, isPrivate, props]);
 
   const handleCreate = async () => {
@@ -270,56 +267,6 @@ export default function CreateGameModal(props: Props) {
             </button>
           </div>
         </div>
-
-        {canFinish && (
-          <div className="pt-3 border-t border-white/10">
-            {!showFinishConfirm ? (
-              <button
-                type="button"
-                onClick={() => setShowFinishConfirm(true)}
-                className="w-full px-4 py-3 rounded-xl border border-red-500/30 bg-red-500/[0.08] text-red-400 font-sans text-sm font-semibold hover:bg-red-500/15 hover:border-red-500/50 transition-all cursor-pointer"
-              >
-                Finish Game
-              </button>
-            ) : (
-              <div className="space-y-3">
-                <p className="text-sm text-gray-400 font-sans">
-                  Are you sure? This will:
-                </p>
-                <ul className="text-sm text-gray-500 font-sans space-y-1.5 list-disc list-inside">
-                  <li>Turn on everyone&apos;s cameras</li>
-                  <li>Reveal all roles</li>
-                  <li>Delete the room in ~1 minute</li>
-                </ul>
-                <div className="flex gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowFinishConfirm(false)}
-                    disabled={isFinishing}
-                    className="flex-1 px-4 py-2.5 rounded-xl border border-white/10 text-gray-400 hover:text-white font-sans text-sm font-medium transition-all cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleFinishGame}
-                    disabled={isFinishing}
-                    className="flex-1 px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-sans text-sm font-semibold disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer transition-all flex items-center justify-center gap-2"
-                  >
-                    {isFinishing ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Finishing…
-                      </>
-                    ) : (
-                      "Finish Game"
-                    )}
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </Modal>
   );

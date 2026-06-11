@@ -4,7 +4,8 @@ import {
   MutationCtx,
 } from "../_generated/server";
 import { Id } from "../_generated/dataModel";
-import { decideWinner, type WinContext, type Winner } from "./winConditions";
+import { describeWin, type WinContext, type Winner } from "./winConditions";
+import { roleToFaction } from "./roles";
 
 export async function getGameById(db: DatabaseReader, gameId: Id<"games">) {
   const game = await db.get(gameId);
@@ -184,10 +185,171 @@ export async function recordWinnerIfDecided(
   if (session.winner) return session.winner;
 
   const aliveRoles = await getAliveRoles(ctx.db, gameId);
-  const winner = decideWinner(aliveRoles, context);
-  if (!winner) return null;
+  const method = describeWin(aliveRoles, context);
+  if (!method) return null;
 
-  await ctx.db.patch(session._id, { winner });
+  // Capture the structured endgame snapshot now — the game pauses once a winner
+  // is recorded, so this is the authoritative state for the eventual game log.
+  await ctx.db.patch(session._id, {
+    winner: method.faction,
+    winMethod: method,
+  });
 
-  return winner;
+  return method.faction;
+}
+
+/**
+ * Write the permanent game-log snapshot for a finished game. Denormalizes all
+ * data (game meta, host, roster + roles, winner, win method) into `gameLogs`
+ * plus one `gameLogPlayers` row per participant, so the record survives the
+ * cascade cleanup that deletes the live game.
+ *
+ * Idempotent: a no-op if a log already exists for this game. The host is
+ * recorded as metadata (`hostId`/`hostNickname`) and excluded from the roster,
+ * since the host holds no role. Games finished without a decided winner are
+ * still logged with `winner: null` and no `winMethod`.
+ *
+ * Call this from `finishGame` BEFORE flipping status / scheduling cleanup.
+ */
+export async function archiveGameLog(ctx: MutationCtx, gameId: Id<"games">) {
+  // Idempotency guard — never duplicate a log for the same game.
+  const existing = await ctx.db
+    .query("gameLogs")
+    .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
+    .unique();
+  if (existing) return existing._id;
+
+  const game = await getGameById(ctx.db, gameId);
+  const session = await ctx.db
+    .query("gameSessions")
+    .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
+    .unique();
+
+  const roleRows = await ctx.db
+    .query("gamePlayerRoles")
+    .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
+    .collect();
+  const roleByPlayer = new Map<Id<"profiles">, string>();
+  for (const r of roleRows) roleByPlayer.set(r.playerId, r.role);
+
+  const allPlayers = await getPlayersByGameId(ctx.db, gameId);
+
+  // Roster excludes the host (no role). Use the role-row presence as the test
+  // of "is a playing participant".
+  const roster = allPlayers
+    .filter((p) => p.playerId !== game.hostId)
+    .map((p) => ({
+      playerId: p.playerId,
+      nickname: p.nickname,
+      seatNumber: p.seatNumber,
+      role: roleByPlayer.get(p.playerId) ?? "UNKNOWN",
+      isAlive: p.isAlive,
+    }));
+
+  const hostPlayer = allPlayers.find((p) => p.playerId === game.hostId);
+  const hostProfile = hostPlayer ? null : await ctx.db.get(game.hostId);
+  const hostNickname =
+    hostPlayer?.nickname ?? hostProfile?.nickname ?? "Unknown host";
+
+  const finishedAt = Date.now();
+  const startedAt = session?.startedAt ?? session?._creationTime ?? finishedAt;
+  const winner: Winner | null = session?.winner ?? null;
+  const winMethod = session?.winMethod;
+
+  const gameLogId = await ctx.db.insert("gameLogs", {
+    gameId,
+    gameCode: game.code,
+    gameName: game.name,
+    gameType: game.gameType,
+    hostId: game.hostId,
+    hostNickname,
+    startedAt,
+    finishedAt,
+    winner,
+    winMethod,
+    players: roster,
+  });
+
+  for (const p of roster) {
+    const faction = roleToFaction(p.role);
+    const outcome: "win" | "loss" | "no_contest" =
+      winner === null ? "no_contest" : faction === winner ? "win" : "loss";
+
+    await ctx.db.insert("gameLogPlayers", {
+      gameLogId,
+      gameId,
+      playerId: p.playerId,
+      nickname: p.nickname,
+      role: p.role,
+      seatNumber: p.seatNumber,
+      isAlive: p.isAlive,
+      startedAt,
+      finishedAt,
+      faction,
+      outcome,
+      winner,
+      gameType: game.gameType,
+      gameName: game.name,
+      winMethod,
+    });
+
+    await bumpPlayerStats(ctx, p.playerId, p.role, outcome);
+  }
+
+  return gameLogId;
+}
+
+/**
+ * Incrementally fold one finished-game result into a player's aggregate stats.
+ * Creates the row on first game; otherwise increments the overall counters and
+ * the per-role entry. Win rates are derived on read, not stored.
+ */
+async function bumpPlayerStats(
+  ctx: MutationCtx,
+  playerId: Id<"profiles">,
+  role: string,
+  outcome: "win" | "loss" | "no_contest",
+) {
+  const existing = await ctx.db
+    .query("playerStats")
+    .withIndex("by_playerId", (q) => q.eq("playerId", playerId))
+    .unique();
+
+  const w = outcome === "win" ? 1 : 0;
+  const l = outcome === "loss" ? 1 : 0;
+  const nc = outcome === "no_contest" ? 1 : 0;
+
+  if (!existing) {
+    await ctx.db.insert("playerStats", {
+      playerId,
+      totalMatches: 1,
+      wins: w,
+      losses: l,
+      noContests: nc,
+      roleStats: [{ role, matches: 1, wins: w, losses: l }],
+    });
+    return;
+  }
+
+  const roleStats = [...existing.roleStats];
+  const idx = roleStats.findIndex((r) => r.role === role);
+  if (idx === -1) {
+    roleStats.push({ role, matches: 1, wins: w, losses: l });
+  } else {
+    const cur = roleStats[idx];
+    roleStats[idx] = {
+      role,
+      matches: cur.matches + 1,
+      wins: cur.wins + w,
+      losses: cur.losses + l,
+    };
+  }
+
+  await ctx.db.patch(existing._id, {
+    totalMatches: existing.totalMatches + 1,
+    wins: existing.wins + w,
+    losses: existing.losses + l,
+    noContests: existing.noContests + nc,
+    roleStats,
+  });
 }
