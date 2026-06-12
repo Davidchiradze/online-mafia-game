@@ -1,6 +1,7 @@
 "use client";
 
 import { TrackReferenceOrPlaceholder } from "@livekit/components-react";
+import { Check } from "lucide-react";
 import { useCallback, useMemo } from "react";
 import { FOULS } from "@/lib/constants/game";
 
@@ -296,10 +297,14 @@ export default function ParticipantComponent({
         />
       )}
 
-      {/* Ready indicator */}
+      {/* Ready indicator — centered glassy badge. For the local player the
+          interactive Ready/Cancel button renders on top of it at the same
+          spot (revealed on hover), so it doubles as the resting state. */}
       {!gameSessionState && isReady && (
-        <div className="absolute right-1 top-[34px] md:right-2 md:top-2 z-20 w-5 h-5 md:w-6 md:h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px] md:text-xs font-bold shadow">
-          ✓
+        <div className="absolute bottom-2 right-2 md:bottom-3 md:right-3 z-20 pointer-events-none">
+          <span className="flex items-center justify-center p-1 md:p-2 rounded-full border border-emerald-400/40 bg-emerald-500/15 backdrop-blur-md text-emerald-200 shadow-[0_0_16px_rgba(16,185,129,0.25)]">
+            <Check className="h-3.5 w-3.5 md:h-6 md:w-6" strokeWidth={3} />
+          </span>
         </div>
       )}
 

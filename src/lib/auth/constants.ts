@@ -1,6 +1,9 @@
-// export const PHP_API_BASE_URL = "https://mafia.ge";
-export const PHP_API_BASE_URL = "http://localhost:8000";
 export const IS_PROD = process.env.NEXT_PUBLIC_ENVIRONMENT === "production";
+const IS_LOCAL = process.env.NEXT_PUBLIC_ENVIRONMENT === "development";
+
+export const PHP_API_BASE_URL = IS_LOCAL
+  ? "http://localhost:8000"
+  : "https://mafia.ge";
 
 const ONLINE_MAFIA_ORIGIN = process.env.NEXT_PUBLIC_ONLINE_MAFIA_ORIGIN;
 

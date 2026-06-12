@@ -21,14 +21,14 @@ const LABEL_CLASS = "font-orbitron text-xs font-bold tracking-wider";
  * not from LiveKit metadata.
  */
 const StartGameButton = () => {
-  const { gameId, players, hostUserId } = useGameRoom();
+  const { gameId, players, hostUserId, maxPlayers } = useGameRoom();
   const startGameMutation = useMutation(gameSessions.startGame);
 
   const [isLoading, setIsLoading] = useState(false);
 
   const { readyCount, totalPlayers, allReady } = useMemo(() => {
     const lobbyPlayers = players.filter((p) => p.playerId !== hostUserId);
-    const total = lobbyPlayers.length;
+    const total = maxPlayers || lobbyPlayers.length;
     const ready = lobbyPlayers.filter((p) => p.isReady).length;
     return {
       readyCount: ready,
