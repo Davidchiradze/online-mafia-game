@@ -50,7 +50,7 @@ export const MAFIA_TEAM_ROLES = ["DON", "MAFIA_RIGHT_HAND", "MAFIA"] as const;
 export const YAKUZA_TEAM_ROLES = ["YAKUZA", "SHOGUN"] as const;
 
 export const VOTING = {
-  VOTE_WINDOW_MS: 10 * 1000,
+  VOTE_WINDOW_MS: 3 * 1000,
   BOTH_LEAVE_THRESHOLD: 0.5,
 } as const;
 

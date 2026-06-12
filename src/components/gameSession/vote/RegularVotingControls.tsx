@@ -32,7 +32,8 @@ export function RegularVotingControls({
   resultMessage,
   setResultMessage,
 }: Props) {
-  const { gameId, votingSession, voteData } = useGameRoom();
+  const { gameId, votingSession, voteData, players, hostUserId } =
+    useGameRoom();
   const { timeLeft, isLocalVoting, startLocalVoting, stopLocalVoting } =
     useVotingTimer();
 
@@ -71,10 +72,23 @@ export function RegularVotingControls({
     ? (voteData.votes[String(currentCandidate)] ?? []).length
     : 0;
 
+  // All eligible (alive, non-host) voters — mirrors backend getAliveNonHostSeats.
+  // Once every one of them has voted, remaining candidates can't gain any votes,
+  // so we skip straight to tally instead of stepping through empty candidates.
+  const eligibleVoterCount = players.filter(
+    (p) => p.isAlive && p.playerId !== hostUserId && p.seatNumber !== undefined,
+  ).length;
+  const distinctVoters = new Set(voteData.playersWhoVoted).size;
+  const allVotersVoted =
+    eligibleVoterCount > 0 && distinctVoters >= eligibleVoterCount;
+
   // Determine which button to show
   const voteEndedForCurrentCandidate =
     !isVoting && !!votingSession?.votingStartedAt;
-  const showTallyButton = allDone || isLastCandidate;
+  const showTallyButton =
+    allDone ||
+    isLastCandidate ||
+    (voteEndedForCurrentCandidate && allVotersVoted);
   const showNextCandidateButton =
     voteEndedForCurrentCandidate && !showTallyButton;
   const showVoteNowButton =
