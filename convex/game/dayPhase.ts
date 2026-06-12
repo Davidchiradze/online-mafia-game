@@ -85,11 +85,16 @@ export const advanceSpeaker = mutation({
       throw new Error("No active speaking session");
     }
 
+    const players = await getPlayersByGameId(ctx.db, gameId);
+    const aliveSeats = new Set(
+      players.filter((p) => p.isAlive).map((p) => p.seatNumber),
+    );
+
     const lastSpeaker = SPEAKING_STATE.isPaused(currentSpeaker)
       ? SPEAKING_STATE.getLastSpeakerFromPaused(currentSpeaker)
       : currentSpeaker;
 
-    const nextSpeaker = getNextSpeaker(lastSpeaker, speakingOrder);
+    const nextSpeaker = getNextSpeaker(lastSpeaker, speakingOrder, aliveSeats);
 
     if (nextSpeaker === null) {
       await ctx.db.patch(session._id, {
@@ -258,11 +263,16 @@ export const advanceNominatedSpeaker = mutation({
       throw new Error("No active speaking session");
     }
 
+    const players = await getPlayersByGameId(ctx.db, gameId);
+    const aliveSeats = new Set(
+      players.filter((p) => p.isAlive).map((p) => p.seatNumber),
+    );
+
     const lastSpeaker = SPEAKING_STATE.isPaused(currentSpeaker)
       ? SPEAKING_STATE.getLastSpeakerFromPaused(currentSpeaker)
       : currentSpeaker;
 
-    const nextSpeaker = getNextSpeaker(lastSpeaker, speakingOrder);
+    const nextSpeaker = getNextSpeaker(lastSpeaker, speakingOrder, aliveSeats);
 
     if (nextSpeaker === null) {
       const nominatedPlayers = session.nominatedPlayers ?? [];
