@@ -8,6 +8,9 @@ import { useGameRoom } from "@/lib/context/gameRoomContext";
 import PhaseButton from "@/components/ui/PhaseButton";
 import PhaseTitle from "@/components/ui/PhaseTitle";
 
+const CONTAINER_CLASS = "flex flex-col items-center gap-3 w-44";
+const LABEL_CLASS = "font-orbitron text-xs font-bold tracking-wider";
+
 /**
  * Button to start the game session.
  * Shows ready count while not everyone is ready.
@@ -46,14 +49,48 @@ const StartGameButton = () => {
     }
   };
 
-  return allReady ? (
-    <div className="flex flex-col items-center gap-2">
-      <PhaseTitle title="Ready to Play" />
-      <PhaseButton onClick={handleStartGame} isLoading={isLoading} label="Start" variant="success" />
-    </div>
-  ) : (
-    <div className="text-xs text-white/50">
-      {readyCount}/{totalPlayers} ready
+  if (allReady) {
+    return (
+      <div className={CONTAINER_CLASS}>
+        <PhaseTitle title="Ready to Play" />
+        <span className={`${LABEL_CLASS} text-emerald-400`}>
+          All {totalPlayers} players ready
+        </span>
+        <PhaseButton
+          onClick={handleStartGame}
+          isLoading={isLoading}
+          label="Start"
+          variant="success"
+        />
+      </div>
+    );
+  }
+
+  const progress = totalPlayers > 0 ? (readyCount / totalPlayers) * 100 : 0;
+
+  return (
+    <div className={CONTAINER_CLASS}>
+      <PhaseTitle
+        title={totalPlayers > 0 ? "Waiting for Players" : "Waiting to Join"}
+      />
+
+      {totalPlayers > 0 ? (
+        <div className="w-full flex flex-col items-center gap-2">
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-all duration-300"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <span className={`${LABEL_CLASS} text-white/70`}>
+            <span className="text-emerald-400">{readyCount}</span>
+            <span className="text-white/40"> / {totalPlayers} </span>
+            ready
+          </span>
+        </div>
+      ) : (
+        <span className={`${LABEL_CLASS} text-white/40`}>No players yet</span>
+      )}
     </div>
   );
 };

@@ -287,7 +287,7 @@ export default function ParticipantComponent({
             {
               label: "Kick player",
               onClick: onKick,
-              className: "text-red-600 dark:text-red-400",
+              destructive: true,
             },
             { label: "Make host", onClick: onMakeHost },
             { label: "Mute player", onClick: handleMutePlayer },
