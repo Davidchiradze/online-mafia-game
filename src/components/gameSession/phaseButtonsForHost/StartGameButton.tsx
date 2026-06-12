@@ -4,45 +4,35 @@ import React, { useMemo, useState } from "react";
 import { useMutation } from "convex/react";
 import { gameSessions } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
-import { useTracks } from "@livekit/components-react";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
-import { Track } from "livekit-client";
 import PhaseButton from "@/components/ui/PhaseButton";
 import PhaseTitle from "@/components/ui/PhaseTitle";
 
 /**
  * Button to start the game session.
- * Shows ready count when not all players are ready.
- * Shows title + "Start" button when everyone is ready.
+ * Shows ready count while not everyone is ready.
+ * Shows title + "Start" button once every player currently in the lobby
+ * (excluding the host) has marked themselves ready.
+ *
+ * Ready state is read from the reactive `players` query (gamePlayers.isReady),
+ * not from LiveKit metadata.
  */
 const StartGameButton = () => {
-  const tracks = useTracks(
-    [{ source: Track.Source.Camera, withPlaceholder: true }],
-    { onlySubscribed: false }
-  );
-  const maxPlayers = 2;
-  const { gameId } = useGameRoom();
+  const { gameId, players, hostUserId } = useGameRoom();
   const startGameMutation = useMutation(gameSessions.startGame);
 
   const [isLoading, setIsLoading] = useState(false);
-  const { readyCount, allReady } = useMemo(() => {
-    const nonHostTracks = tracks.filter((t) => !t?.participant?.isLocal);
-    const total = nonHostTracks.length;
-    const ready = nonHostTracks.filter((t) => {
-      const p = t?.participant;
-      try {
-        return Boolean(JSON.parse(p?.metadata || "{}")?.ready);
-      } catch {
-        return false;
-      }
-    }).length;
+
+  const { readyCount, totalPlayers, allReady } = useMemo(() => {
+    const lobbyPlayers = players.filter((p) => p.playerId !== hostUserId);
+    const total = lobbyPlayers.length;
+    const ready = lobbyPlayers.filter((p) => p.isReady).length;
     return {
       readyCount: ready,
       totalPlayers: total,
-      allReady:
-        maxPlayers !== null && total >= maxPlayers && ready >= maxPlayers,
+      allReady: total > 0 && ready === total,
     };
-  }, [tracks, maxPlayers]);
+  }, [players, hostUserId]);
 
   const handleStartGame = async () => {
     if (isLoading) return;
@@ -63,7 +53,7 @@ const StartGameButton = () => {
     </div>
   ) : (
     <div className="text-xs text-white/50">
-      {readyCount}/{maxPlayers} ready
+      {readyCount}/{totalPlayers} ready
     </div>
   );
 };

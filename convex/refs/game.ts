@@ -16,6 +16,7 @@ type GamePlayer = {
   fouls: number;
   foulSpeakStartedAt?: number;
   state?: string;
+  isReady?: boolean;
 };
 
 type GameSessionDoc = {
@@ -167,6 +168,11 @@ export const gamePlayers = {
   leave: makeFunctionReference<"mutation", { gameId: Id<"games"> }, null>(
     "game/players:leave",
   ),
+  setReady: makeFunctionReference<
+    "mutation",
+    { gameId: Id<"games">; ready: boolean },
+    null
+  >("game/players:setReady"),
   kill: makeFunctionReference<
     "mutation",
     { gameId: Id<"games">; targetPlayerId: Id<"profiles"> },

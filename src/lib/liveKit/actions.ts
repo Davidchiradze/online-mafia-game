@@ -106,38 +106,6 @@ export async function listParticipantsForRooms(roomIds: string[]) {
   return results;
 }
 
-export async function setParticipantReady(
-  roomId: string,
-  participantId: string,
-  ready: boolean
-) {
-  const roomService = new RoomServiceClient(
-    process.env.NEXT_PUBLIC_LIVEKIT_URL!,
-    process.env.LIVEKIT_API_KEY!,
-    process.env.LIVEKIT_API_SECRET!
-  );
-  // Merge with existing metadata so other fields are preserved
-  let existingMeta: Record<string, unknown> = {};
-  try {
-    const participants = await roomService.listParticipants(roomId);
-    const target = participants.find((p) => p.identity === participantId);
-    if (target?.metadata) {
-      try {
-        existingMeta = JSON.parse(target.metadata) as Record<string, unknown>;
-      } catch {
-        existingMeta = {};
-      }
-    }
-  } catch {
-    existingMeta = {};
-  }
-
-  await roomService.updateParticipant(roomId, participantId, {
-    metadata: JSON.stringify({ ...existingMeta, ready }),
-  });
-}
-
-
 export async function mutePublishedTrack(
   roomId: string,
   participantId: string,

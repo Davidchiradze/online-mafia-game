@@ -89,6 +89,16 @@ export const join = mutation({
   },
 });
 
+export const setReady = mutation({
+  args: { gameId: v.id("games"), ready: v.boolean() },
+  handler: async (ctx, { gameId, ready }) => {
+    const userId = await getAuthenticatedUser(ctx);
+    const player = await getPlayerInGame(ctx.db, gameId, userId);
+    if (!player) throw new Error("Player not found in game");
+    await ctx.db.patch(player._id, { isReady: ready });
+  },
+});
+
 export const leave = mutation({
   args: { gameId: v.id("games") },
   handler: async (ctx, { gameId }) => {

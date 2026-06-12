@@ -46,6 +46,7 @@ type ConvexGamePlayer = {
   fouls: number;
   foulSpeakStartedAt?: number;
   state?: string;
+  isReady?: boolean;
 };
 
 type ConvexGameSession = {

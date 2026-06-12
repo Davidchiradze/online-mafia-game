@@ -67,13 +67,13 @@ export default function ParticipantComponent({
     isTargetHost,
   } = useParticipantState(trackRef, player, currentProfileId, hostProfileId);
 
-  // Ready state
+  // Ready state (backed by the gamePlayers.isReady column in Convex)
   const {
     isReady,
     markReady,
     markUnready,
     isLoading: isLoadingReady,
-  } = useParticipantReady(gameId, participantId, trackRef);
+  } = useParticipantReady(gameId, player.isReady ?? false);
 
   // Visibility state
   const { visibilityState, isTargetDead } = useParticipantVisibility(
