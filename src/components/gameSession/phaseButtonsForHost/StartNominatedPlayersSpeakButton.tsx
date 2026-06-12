@@ -88,11 +88,14 @@ const StartNominatedPlayersSpeakButton = ({ gameSessionState }: Props) => {
     );
   }
 
+  // A single nominee skips self-justification and goes straight to voting.
+  const isSingleNominee = nominatedCount === 1;
+
   return (
     <PhaseButton
       onClick={handleStartSelfJustification}
       isLoading={isLoading}
-      label="Start self-justification"
+      label={isSingleNominee ? "Start voting" : "Start self-justification"}
       variant="warning"
     />
   );

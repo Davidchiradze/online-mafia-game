@@ -7,7 +7,7 @@ import {
   getPlayersByGameId,
   recordWinnerIfDecided,
 } from "../lib/games";
-import { enterNightPhase } from "../lib/phaseTransitions";
+import { enterNightPhase, enterVotingPhase } from "../lib/phaseTransitions";
 import { SPEAKING_STATE, FOULS } from "../lib/constants";
 import { computeSpeakingOrder, getNextSpeaker } from "../lib/speakingOrder";
 import type { Id } from "../_generated/dataModel";
@@ -215,6 +215,12 @@ export const startNominatedPlayersSpeaking = mutation({
       throw new Error("No players nominated");
     }
 
+    // Single nominee → no self-justification needed; skip straight to voting.
+    if (nominatedPlayers.length === 1) {
+      await enterVotingPhase(ctx, gameId, nominatedPlayers);
+      return;
+    }
+
     await ctx.db.patch(session._id, {
       gamePhase: "nominated_players_speak",
       speakingOrder: nominatedPlayers,
@@ -260,32 +266,7 @@ export const advanceNominatedSpeaker = mutation({
 
     if (nextSpeaker === null) {
       const nominatedPlayers = session.nominatedPlayers ?? [];
-
-      const existingVoting = await ctx.db
-        .query("votingSessions")
-        .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
-        .unique();
-
-      if (!existingVoting) {
-        await ctx.db.insert("votingSessions", {
-          gameId,
-          candidates: nominatedPlayers,
-          roundNumber: 1,
-          currentCandidateIndex: 0,
-          votingActive: false,
-          isTieBreak: false,
-          tieBreakRound: 0,
-          bothLeaveVoteActive: false,
-          playersWhoVoted: [],
-        });
-      }
-
-      await ctx.db.patch(session._id, {
-        gamePhase: "voting",
-        currentSpeakerIndex: undefined,
-        speakerStartedAt: undefined,
-        speakingOrder: [],
-      });
+      await enterVotingPhase(ctx, gameId, nominatedPlayers);
       return;
     }
 

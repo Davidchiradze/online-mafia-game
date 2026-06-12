@@ -105,6 +105,48 @@ export async function enterNightPhase(ctx: MutationCtx, gameId: Id<"games">) {
 }
 
 /**
+ * Enter `voting` (single source of truth).
+ *
+ * Creates the voting session (with the given nominees as candidates) if one does
+ * not already exist, and resets speaking state. Used both when self-justification
+ * speaking finishes and when it is skipped (single nominee).
+ */
+export async function enterVotingPhase(
+  ctx: MutationCtx,
+  gameId: Id<"games">,
+  candidates: number[],
+) {
+  const db = ctx.db;
+  const session = await getGameSessionOrThrow(db, gameId);
+
+  const existingVoting = await db
+    .query("votingSessions")
+    .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
+    .unique();
+
+  if (!existingVoting) {
+    await db.insert("votingSessions", {
+      gameId,
+      candidates,
+      roundNumber: 1,
+      currentCandidateIndex: 0,
+      votingActive: false,
+      isTieBreak: false,
+      tieBreakRound: 0,
+      bothLeaveVoteActive: false,
+      playersWhoVoted: [],
+    });
+  }
+
+  await db.patch(session._id, {
+    gamePhase: "voting",
+    currentSpeakerIndex: undefined,
+    speakerStartedAt: undefined,
+    speakingOrder: [],
+  });
+}
+
+/**
  * Enter `day_phase` (single source of truth).
  *
  * Resets speaking state. Called after night kills (or the no-kill skip).
