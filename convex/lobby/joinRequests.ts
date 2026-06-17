@@ -1,5 +1,6 @@
 import { v } from "convex/values";
-import { query, mutation } from "../_generated/server";
+import { query, mutation, QueryCtx } from "../_generated/server";
+import { Id } from "../_generated/dataModel";
 import { getAuthenticatedUser } from "../lib/auth";
 import {
   getGameById,
@@ -144,18 +145,36 @@ export const countPending = query({
 });
 
 /**
+ * Attaches the requester's current avatar (from their profile) to each join
+ * request. The nickname is snapshotted on the request itself, but the avatar
+ * is read live so it stays in sync with profile changes.
+ */
+async function withRequesterAvatar<T extends { requesterId: Id<"profiles"> }>(
+  ctx: QueryCtx,
+  requests: T[],
+) {
+  return await Promise.all(
+    requests.map(async (request) => {
+      const profile = await ctx.db.get(request.requesterId);
+      return { ...request, requesterAvatar: profile?.avatar };
+    }),
+  );
+}
+
+/**
  * List pending join requests for a game. Reactive — auto-updates in real time.
  * Used by the host notification system to track individual new requests.
  */
 export const listPending = query({
   args: { gameId: v.id("games") },
   handler: async (ctx, { gameId }) => {
-    return await ctx.db
+    const requests = await ctx.db
       .query("joinRequests")
       .withIndex("by_gameId_status", (q) =>
         q.eq("gameId", gameId).eq("status", "pending"),
       )
       .collect();
+    return await withRequesterAvatar(ctx, requests);
   },
 });
 
@@ -165,10 +184,11 @@ export const listPending = query({
 export const listByGame = query({
   args: { gameId: v.id("games") },
   handler: async (ctx, { gameId }) => {
-    return await ctx.db
+    const requests = await ctx.db
       .query("joinRequests")
       .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
       .collect();
+    return await withRequesterAvatar(ctx, requests);
   },
 });
 

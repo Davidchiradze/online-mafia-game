@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { joinRequests } from "@convex/refs/lobby";
 import Drawer from "@/components/ui/Drawer";
+import UserAvatar from "@/components/ui/UserAvatar";
 import { Check, X, UserPlus, Users } from "lucide-react";
 import type { Id } from "@convex/_generated/dataModel";
 
@@ -121,6 +122,11 @@ export default function JoinRequestsDrawer({ gameId, open, onClose }: Props) {
                 <div className="flex items-center gap-2.5 min-w-0">
                   <span
                     className={`w-2 h-2 rounded-full shrink-0 ${config.dot}`}
+                  />
+                  <UserAvatar
+                    src={r.requesterAvatar}
+                    name={r.requesterNickname}
+                    size={28}
                   />
                   <span className="text-white/90 text-sm font-medium font-inter truncate">
                     {r.requesterNickname}

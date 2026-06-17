@@ -14,6 +14,7 @@ import {
 import { LogOut, Settings } from "lucide-react";
 import { useFullscreen } from "@/hooks/game/useFullscreen";
 import ClickableTooltip from "@/components/ui/ClickableTooltip";
+import UserAvatar from "@/components/ui/UserAvatar";
 import JoinRequestsDrawer from "@/components/host-controls/JoinRequestsDrawer";
 import CreateGameModal from "@/components/modals/CreateGameModal";
 import type { GAME_TYPES } from "@/lib/constants/game";
@@ -25,7 +26,7 @@ function SpectatorTooltipContent({
   spectators,
   roomName,
 }: {
-  spectators: { _id: string; nickname: string }[];
+  spectators: { _id: string; nickname: string; avatar?: string }[];
   roomName: string;
 }) {
   return (
@@ -47,8 +48,12 @@ function SpectatorTooltipContent({
               key={spectator._id}
               className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
             >
-              <EyeIcon width={14} height={14} />
-              <span className="font-sans text-[0.85rem] font-medium text-white">
+              <UserAvatar
+                src={spectator.avatar}
+                name={spectator.nickname}
+                size={24}
+              />
+              <span className="font-sans text-[0.85rem] font-medium text-white truncate">
                 {spectator.nickname}
               </span>
             </div>

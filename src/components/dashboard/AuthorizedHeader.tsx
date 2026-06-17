@@ -3,6 +3,7 @@
 import { api } from "@convex/_generated/api";
 import { useQuery } from "convex/react";
 import { Coins, Menu } from "lucide-react";
+import UserAvatar from "../ui/UserAvatar";
 
 type AuthorizedHeaderProps = {
   onOpenMobileMenu: () => void;
@@ -26,16 +27,13 @@ export default function AuthorizedHeader({
 
       <div className="flex cursor-default items-center gap-3 rounded-lg border border-white/10 bg-white/5 px-4 py-2 backdrop-blur-md transition-all hover:border-white/20">
         <div className="relative">
-          <div className="h-9 w-9 overflow-hidden rounded-full bg-gradient-to-br from-purple-500 to-red-600 shadow-lg">
-            {profile?.avatar ? (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img
-                src={profile.avatar}
-                alt={profile.nickname ?? "Profile avatar"}
-                className="h-full w-full object-cover"
-              />
-            ) : null}
-          </div>
+          {/* <div className="h-9 w-9 overflow-hidden rounded-full bg-gradient-to-br from-purple-500 to-red-600 shadow-lg"> */}
+          <UserAvatar
+            src={profile?.avatar}
+            name={profile?.nickname}
+            size={30}
+          />
+          {/* </div> */}
           <div className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#0a0a12] bg-green-500" />
         </div>
 

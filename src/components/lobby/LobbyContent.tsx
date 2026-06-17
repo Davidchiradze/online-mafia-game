@@ -9,8 +9,8 @@ import { Search, Plus } from "lucide-react";
 import LobbyStats from "./LobbyStats";
 
 export type LobbyGame = Doc<"games"> & {
-  players: Doc<"gamePlayers">[];
-  spectators: Doc<"gameSpectators">[];
+  players: (Doc<"gamePlayers"> & { avatar?: string })[];
+  spectators: (Doc<"gameSpectators"> & { avatar?: string })[];
 };
 
 type Props = {

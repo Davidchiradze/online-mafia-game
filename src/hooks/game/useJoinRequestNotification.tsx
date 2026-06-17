@@ -7,6 +7,7 @@ import { toast } from "@/lib/utils/toast";
 import { toast as toastifyDismiss } from "react-toastify";
 import { Check, X } from "lucide-react";
 import type { Id } from "@convex/_generated/dataModel";
+import UserAvatar from "@/components/ui/UserAvatar";
 
 // ---------------------------------------------------------------------------
 // Notification sound for new join requests
@@ -28,11 +29,13 @@ function playNewRequestSound() {
 
 function JoinRequestToastBody({
   nickname,
+  avatar,
   requestId,
   onAccept,
   onReject,
 }: {
   nickname: string;
+  avatar?: string;
   requestId: Id<"joinRequests">;
   onAccept: (id: Id<"joinRequests">) => Promise<void>;
   onReject: (id: Id<"joinRequests">) => Promise<void>;
@@ -49,10 +52,13 @@ function JoinRequestToastBody({
 
   return (
     <div className="flex items-center justify-between gap-3 cursor-pointer">
-      <span className="text-white/90 truncate">
-        <span className="font-semibold text-white">{nickname}</span> wants to
-        join
-      </span>
+      <div className="flex items-center gap-2 min-w-0">
+        <UserAvatar src={avatar} name={nickname} size={28} />
+        <span className="text-white/90 truncate">
+          <span className="font-semibold text-white">{nickname}</span> wants to
+          join
+        </span>
+      </div>
       <div className="flex items-center gap-1.5 shrink-0">
         <button
           type="button"
@@ -144,6 +150,7 @@ export function useJoinRequestNotification(gameId: string, isHost: boolean) {
         const toastId = toast.info(
           <JoinRequestToastBody
             nickname={req.requesterNickname}
+            avatar={req.requesterAvatar}
             requestId={req._id}
             onAccept={handleAccept}
             onReject={handleReject}

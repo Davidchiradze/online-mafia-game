@@ -5,6 +5,7 @@ import { useQuery } from "convex/react";
 import { authProfiles } from "@convex/refs/lobby";
 import { LogOut, User, ChevronDown } from "lucide-react";
 import { LandingLogo } from "@/components/landing/LandingLogo";
+import UserAvatar from "../ui/UserAvatar";
 
 export default function LobbyHeader() {
   const profile = useQuery(authProfiles.currentProfile);
@@ -30,7 +31,11 @@ export default function LobbyHeader() {
             {/* Avatar */}
             <div className="relative shrink-0">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-red-600 flex items-center justify-center shadow-lg">
-                <User className="w-4 h-4 text-white" />
+                <UserAvatar
+                  src={profile?.avatar}
+                  name={profile?.nickname}
+                  size={28}
+                />
               </div>
               <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-[#0a0a12]" />
             </div>
@@ -39,7 +44,9 @@ export default function LobbyHeader() {
               <div className="text-white font-sans text-sm font-semibold leading-tight">
                 {displayName}
               </div>
-              <div className="text-gray-500 font-sans text-xs leading-tight">Online</div>
+              <div className="text-gray-500 font-sans text-xs leading-tight">
+                Online
+              </div>
             </div>
 
             <ChevronDown

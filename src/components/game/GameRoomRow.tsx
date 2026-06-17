@@ -11,6 +11,7 @@ import {
 } from "@/lib/constants/game";
 import GameStatusBadge from "./GameStatusBadge";
 import ClickableTooltip from "@/components/ui/ClickableTooltip";
+import UserAvatar from "@/components/ui/UserAvatar";
 import { LobbyConfirmModal } from "@/components/lobby/LobbyConfirmModal";
 import { SkullIcon } from "@/assets/icons";
 import { Eye, Info, Lock, LogIn, Users } from "lucide-react";
@@ -46,13 +47,22 @@ function PlayersTooltipContent({ room }: { room: LobbyGame }) {
               key={player.playerId ?? idx}
               className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
             >
-              <span
-                className={`font-sans text-[0.85rem] font-medium ${
-                  !player.isAlive ? "text-gray-500 line-through" : "text-white"
-                }`}
-              >
-                {player.nickname ?? "Player"}
-              </span>
+              <div className="flex items-center gap-2 min-w-0">
+                <UserAvatar
+                  src={player.avatar}
+                  name={player.nickname}
+                  size={24}
+                />
+                <span
+                  className={`font-sans text-[0.85rem] font-medium truncate ${
+                    !player.isAlive
+                      ? "text-gray-500 line-through"
+                      : "text-white"
+                  }`}
+                >
+                  {player.nickname ?? "Player"}
+                </span>
+              </div>
               {!player.isAlive && (
                 <SkullIcon size={14} className="text-red-400 shrink-0" />
               )}
@@ -97,7 +107,7 @@ function SpectatorTooltipContent({
   spectators,
   roomName,
 }: {
-  spectators: Doc<"gameSpectators">[];
+  spectators: (Doc<"gameSpectators"> & { avatar?: string })[];
   roomName: string;
 }) {
   return (
@@ -119,8 +129,12 @@ function SpectatorTooltipContent({
               key={spectator._id}
               className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
             >
-              <Eye className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-              <span className="font-sans text-[0.85rem] font-medium text-white">
+              <UserAvatar
+                src={spectator.avatar}
+                name={spectator.nickname}
+                size={24}
+              />
+              <span className="font-sans text-[0.85rem] font-medium text-white truncate">
                 {spectator.nickname}
               </span>
             </div>

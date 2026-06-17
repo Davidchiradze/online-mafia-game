@@ -26,7 +26,7 @@ function ToastBody({
 }) {
   return (
     <div className="flex items-start gap-3 px-1 py-0.5">
-      {ICON_MAP[type]}
+      {/* {ICON_MAP[type]} */}
       <div className="text-[0.85rem] leading-snug font-medium text-white/90 font-inter">
         {message}
       </div>

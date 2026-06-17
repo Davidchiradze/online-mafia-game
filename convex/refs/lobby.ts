@@ -15,6 +15,7 @@ type GamePlayer = {
   fouls: number;
   foulSpeakStartedAt?: number;
   state?: string;
+  avatar?: string;
 };
 
 type GameSpectator = {
@@ -23,6 +24,7 @@ type GameSpectator = {
   gameId: Id<"games">;
   userId: Id<"profiles">;
   nickname: string;
+  avatar?: string;
 };
 
 type GameWithRelations = {
@@ -85,6 +87,7 @@ type JoinRequestDoc = {
   gameId: Id<"games">;
   requesterId: Id<"profiles">;
   requesterNickname: string;
+  requesterAvatar?: string;
   status: JoinRequestStatus;
 };
 

@@ -11,6 +11,38 @@ import {
   deleteGameAndRelations,
 } from "../lib/games";
 import { gameType } from "../tables/games";
+import type { QueryCtx } from "../_generated/server";
+import type { Doc } from "../_generated/dataModel";
+
+/**
+ * Enriches a game's players and spectators with each user's current `avatar`
+ * (read live from their profile). Nicknames are snapshotted on the roster
+ * rows, but avatars are joined here so they stay in sync with profile changes.
+ */
+async function withRosterAvatars(
+  ctx: QueryCtx,
+  game: Doc<"games">,
+  players: Doc<"gamePlayers">[],
+  spectators: Doc<"gameSpectators">[],
+) {
+  const playersWithAvatar = await Promise.all(
+    players.map(async (player) => {
+      const profile = await ctx.db.get(player.playerId);
+      return { ...player, avatar: profile?.avatar };
+    }),
+  );
+  const spectatorsWithAvatar = await Promise.all(
+    spectators.map(async (spectator) => {
+      const profile = await ctx.db.get(spectator.userId);
+      return { ...spectator, avatar: profile?.avatar };
+    }),
+  );
+  return {
+    ...game,
+    players: playersWithAvatar,
+    spectators: spectatorsWithAvatar,
+  };
+}
 
 const GAME_TYPE_MAX_PLAYERS: Record<string, number> = {
   traditional: 10,
@@ -32,7 +64,7 @@ export const list = query({
       games.map(async (game) => {
         const players = await getPlayersByGameId(ctx.db, game._id);
         const spectators = await getSpectatorsByGameId(ctx.db, game._id);
-        return { ...game, players, spectators };
+        return await withRosterAvatars(ctx, game, players, spectators);
       }),
     );
   },
@@ -45,7 +77,7 @@ export const getById = query({
     if (!game) return null;
     const players = await getPlayersByGameId(ctx.db, game._id);
     const spectators = await getSpectatorsByGameId(ctx.db, game._id);
-    return { ...game, players, spectators };
+    return await withRosterAvatars(ctx, game, players, spectators);
   },
 });
 

@@ -113,6 +113,7 @@ type GameSpectator = {
   gameId: string;
   userId: string;
   nickname: string;
+  avatar?: string;
 };
 
 type GameRoomContextValue = {
