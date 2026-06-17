@@ -77,7 +77,7 @@ export default function FoulButton({
         aria-label="Give foul"
         title={getButtonTitle()}
         className={`
-          relative w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center
+          relative w-5 h-5 tsm:w-6 tsm:h-6 tmd:w-8 tmd:h-8 rounded-full flex items-center justify-center
           transition-all duration-200 shadow-lg bg-black/50 border border-white/20 text-white/80 hover:bg-red-600/80 hover:border-red-400 hover:text-white
           ${
             isLoading || isAlreadyEliminated
@@ -89,7 +89,7 @@ export default function FoulButton({
       >
         {isLoading ? (
           <svg
-            className="animate-spin h-4 w-4 text-gray-300"
+            className="animate-spin h-3 w-3 tsm:h-4 tsm:w-4 text-gray-300"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -109,10 +109,10 @@ export default function FoulButton({
             />
           </svg>
         ) : (
-          <FoulAlertIcon width="16" height="16" />
+          <FoulAlertIcon className="w-3 h-3 tsm:w-3.5 tsm:h-3.5 tmd:w-4 tmd:h-4" />
         )}
         {currentFouls > 0 && !isLoading && (
-          <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-600 text-white text-[9px] font-bold flex items-center justify-center shadow-sm">
+          <span className="absolute -top-1 -right-1 w-3 h-3 tsm:w-4 tsm:h-4 rounded-full bg-red-600 text-white text-[7px] tsm:text-[9px] font-bold flex items-center justify-center shadow-sm">
             {currentFouls}
           </span>
         )}

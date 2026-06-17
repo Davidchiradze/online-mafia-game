@@ -3,6 +3,15 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Height-aware "roomy" variants for participant-tile overlays.
+   Tiles live in a fixed 4×4 grid filling the board, so a wide-but-short
+   viewport (e.g. a phone in landscape) produces small tiles even though the
+   width is large. Gating the "grow" steps on BOTH width and height keeps
+   badges/buttons compact until the tile actually has room. */
+@custom-variant tsm (@media (min-width: 640px) and (min-height: 560px));
+@custom-variant tmd (@media (min-width: 768px) and (min-height: 640px));
+@custom-variant tlg (@media (min-width: 1024px) and (min-height: 760px));
+
 
 @theme inline {
   --color-background: var(--background);

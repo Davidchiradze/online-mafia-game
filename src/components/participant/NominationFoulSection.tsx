@@ -45,14 +45,14 @@ export default function NominationFoulSection({
     <>
       {/* Nomination button */}
       {canShowNominationButton && seatNumber != null && !isTargetDead && (
-        <div className="absolute left-[30px] -translate-x-1/2 top-1 md:top-2 z-20">
+        <div className="absolute left-1 tsm:left-[22px] tmd:left-[30px] tsm:-translate-x-1/2 top-1 tmd:top-2 z-20">
           <NominationButton seatNumber={seatNumber} isNominated={isNominated} />
         </div>
       )}
 
       {/* Foul button */}
       {canShowFoulButton && seatNumber != null && !isTargetDead && (
-        <div className="absolute right-[0px] -translate-x-1/2 top-1 md:top-2 z-20">
+        <div className="absolute right-1 tmd:right-0 tmd:-translate-x-1/2 top-1 tmd:top-2 z-20">
           <FoulButton seatNumber={seatNumber} currentFouls={currentFouls} />
         </div>
       )}
@@ -62,7 +62,7 @@ export default function NominationFoulSection({
 
       {/* Foul speak button */}
       {canShowFoulSpeakButton && !isTargetDead && (
-        <div className="absolute right-1 top-1 md:right-2 md:top-2 z-20">
+        <div className="absolute right-1 top-1 tmd:right-2 tmd:top-2 z-20">
           <FoulSpeakButton
             onStartFoulSpeak={startFoulSpeak}
             isFoulSpeaking={isFoulSpeaking}

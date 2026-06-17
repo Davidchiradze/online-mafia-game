@@ -45,7 +45,7 @@ export default function NominationButton({
       aria-label={isNominated ? "Remove nomination" : "Nominate player"}
       title={isNominated ? "Click to remove nomination" : "Click to nominate"}
       className={`
-        w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center
+        w-5 h-5 tsm:w-6 tsm:h-6 tmd:w-8 tmd:h-8 rounded-full flex items-center justify-center
         transition-all duration-200 shadow-lg
         ${
           isLoading
@@ -61,7 +61,7 @@ export default function NominationButton({
     >
       {isLoading ? (
         <svg
-          className="animate-spin h-4 w-4"
+          className="animate-spin h-3 w-3 tsm:h-4 tsm:w-4"
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
@@ -82,7 +82,7 @@ export default function NominationButton({
         </svg>
       ) : (
         <svg
-          className="w-3 h-3 md:w-4 md:h-4"
+          className="w-2.5 h-2.5 tsm:w-3 tsm:h-3 tmd:w-4 tmd:h-4"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"

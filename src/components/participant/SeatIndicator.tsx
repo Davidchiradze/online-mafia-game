@@ -52,7 +52,7 @@ export default function SeatIndicator({
       {showSpeakingRing && (
         <svg
           viewBox="0 0 36 36"
-          className="absolute -inset-[3px] lg:-inset-1 w-[calc(100%+6px)] h-[calc(100%+6px)] lg:w-[calc(100%+8px)] lg:h-[calc(100%+8px)] -rotate-90 pointer-events-none"
+          className="absolute -inset-[3px] tlg:-inset-1 w-[calc(100%+6px)] h-[calc(100%+6px)] tlg:w-[calc(100%+8px)] tlg:h-[calc(100%+8px)] -rotate-90 pointer-events-none"
           style={{ filter: `drop-shadow(0 0 4px ${ringStroke})` }}
         >
           {/* Track */}
@@ -82,12 +82,12 @@ export default function SeatIndicator({
 
       {/* Seat number badge */}
       <div
-        className={`w-5 h-5 lg:w-6 lg:h-6 aspect-square rounded-full flex items-center justify-center transition-all border ${
+        className={`w-4 h-4 tsm:w-5 tsm:h-5 tlg:w-6 tlg:h-6 aspect-square rounded-full flex items-center justify-center transition-all border ${
           showSpeakingRing ? "border-transparent bg-black/70" : badgeClass
         }`}
       >
         <span
-          className={`font-orbitron text-[0.55rem] lg:text-[0.7rem] font-bold leading-none ${
+          className={`font-orbitron text-[0.45rem] tsm:text-[0.55rem] tlg:text-[0.7rem] font-bold leading-none ${
             showSpeakingRing ? "text-white" : labelClass
           }`}
         >
