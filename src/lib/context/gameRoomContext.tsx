@@ -27,6 +27,7 @@ import {
   useLivekitCleanup,
 } from "@/hooks/livekit";
 import { JOIN_REQUEST_STATUSES } from "@/lib/constants/game";
+import { useErrorMessage } from "@/lib/i18n/errorMessage";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 // ---------------------------------------------------------------------------
@@ -198,6 +199,7 @@ export function GameRoomProvider({
   const leavePlayerMutation = useMutation(gamePlayers.leave);
   const leaveSpectatorMutation = useMutation(gameSpectators.leave);
   const startGameMutation = useMutation(gameSessions.startGame);
+  const getErrorMessage = useErrorMessage();
 
   // ---------------------------------------------------------------------------
   // Derived state
@@ -422,10 +424,10 @@ export function GameRoomProvider({
     } catch (err) {
       return {
         ok: false,
-        message: err instanceof Error ? err.message : "Failed to start game",
+        message: getErrorMessage(err),
       };
     }
-  }, [isSpectator, startGameMutation, gameId]);
+  }, [isSpectator, startGameMutation, gameId, getErrorMessage]);
 
   // ---------------------------------------------------------------------------
   // Context value

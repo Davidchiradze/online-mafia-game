@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMutation } from "convex/react";
 import { gameSpectators } from "@convex/refs/game";
 import { ArrowLeft, Eye, Loader2, Lock } from "lucide-react";
+import { useErrorMessage } from "@/lib/i18n/errorMessage";
 import type { Id } from "@convex/_generated/dataModel";
 
 type GameSummary = {
@@ -30,6 +31,7 @@ export default function SpectatorJoinPrompt({ gameId, game, isPrivate }: Props) 
   const [error, setError] = useState<string | null>(null);
 
   const joinSpectator = useMutation(gameSpectators.join);
+  const getErrorMessage = useErrorMessage();
 
   const handleJoinAsSpectator = async () => {
     if (isJoining) return;
@@ -39,9 +41,7 @@ export default function SpectatorJoinPrompt({ gameId, game, isPrivate }: Props) 
       await joinSpectator({ gameId: gameId as Id<"games"> });
       setHasJoined(true);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to join as spectator",
-      );
+      setError(getErrorMessage(err));
       setIsJoining(false);
     }
   };

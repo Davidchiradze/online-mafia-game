@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { query, mutation } from "../_generated/server";
 import { getAuthenticatedUser } from "../lib/auth";
 import { assertIsHost, getPlayersByGameId } from "../lib/games";
@@ -15,7 +15,7 @@ async function getGameSession(db: DatabaseReader, gameId: Id<"games">) {
     .query("gameSessions")
     .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
     .unique();
-  if (!session) throw new Error("Game session not found");
+  if (!session) throw new ConvexError("Game session not found");
   return session;
 }
 
@@ -96,7 +96,7 @@ export const startFarewellSpeech = mutation({
       )
       .unique();
 
-    if (!nightSession) throw new Error("Night phase session not found");
+    if (!nightSession) throw new ConvexError("Night phase session not found");
 
     const mafiaTarget = nightSession.mafiaTarget;
     const yakuzaTarget = nightSession.yakuzaTarget;
@@ -144,14 +144,14 @@ export const grantFarewellTime = mutation({
     const session = await getGameSession(ctx.db, gameId);
 
     if (session.gamePhase !== "farewell_speech") {
-      throw new Error("Not in farewell speech phase");
+      throw new ConvexError("Not in farewell speech phase");
     }
 
     const speakingOrder = session.speakingOrder ?? [];
-    if (speakingOrder.length === 0) throw new Error("No farewell speakers");
+    if (speakingOrder.length === 0) throw new ConvexError("No farewell speakers");
 
     if (session.currentSpeakerIndex !== undefined) {
-      throw new Error("Speaker already has time granted");
+      throw new ConvexError("Speaker already has time granted");
     }
 
     const players = await getPlayersByGameId(ctx.db, gameId);
@@ -166,7 +166,7 @@ export const grantFarewellTime = mutation({
       (seat) => aliveMap.get(seat) === true,
     );
     if (nextSpeaker === undefined) {
-      throw new Error("All farewell speeches are done");
+      throw new ConvexError("All farewell speeches are done");
     }
 
     await ctx.db.patch(session._id, {
@@ -187,12 +187,12 @@ export const markDeadAndAdvance = mutation({
     const session = await getGameSession(ctx.db, gameId);
 
     if (session.gamePhase !== "farewell_speech") {
-      throw new Error("Not in farewell speech phase");
+      throw new ConvexError("Not in farewell speech phase");
     }
 
     const currentSpeaker = session.currentSpeakerIndex;
     if (currentSpeaker === undefined || (session.speakingOrder ?? []).length === 0) {
-      throw new Error("No active farewell speaker");
+      throw new ConvexError("No active farewell speaker");
     }
 
     const players = await getPlayersByGameId(ctx.db, gameId);
@@ -221,7 +221,7 @@ export const advanceFromFarewell = mutation({
     const session = await getGameSession(ctx.db, gameId);
 
     if (session.gamePhase !== "farewell_speech") {
-      throw new Error("Not in farewell speech phase");
+      throw new ConvexError("Not in farewell speech phase");
     }
 
     const nominatedPlayers = session.nominatedPlayers ?? [];

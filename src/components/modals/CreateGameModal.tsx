@@ -2,12 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useMutation } from "convex/react";
+import { useTranslations } from "next-intl";
 import { lobbyGames } from "@convex/refs/lobby";
 import { gameSessions } from "@convex/refs/game";
 import { createLivekitRoom } from "@/lib/liveKit/actions";
 import { GAME_TYPES, GAME_TYPE_LABEL } from "@/lib/constants/game";
 import { Globe, Loader2, Lock } from "lucide-react";
 import Modal from "@/components/ui/Modal";
+import { useErrorMessage } from "@/lib/i18n/errorMessage";
 import type { Id } from "@convex/_generated/dataModel";
 
 type CreateModeProps = {
@@ -49,6 +51,9 @@ export default function CreateGameModal(props: Props) {
   const createGame = useMutation(lobbyGames.create);
   const updateGame = useMutation(lobbyGames.update);
   const finishGameMutation = useMutation(gameSessions.finishGame);
+  const getErrorMessage = useErrorMessage();
+  const t = useTranslations("lobby");
+  const tc = useTranslations("common");
 
   useEffect(() => {
     if (!open) return;
@@ -87,7 +92,7 @@ export default function CreateGameModal(props: Props) {
       (props as CreateModeProps).onCreated?.(gameId);
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create game");
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -106,7 +111,7 @@ export default function CreateGameModal(props: Props) {
       });
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update room");
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -120,7 +125,7 @@ export default function CreateGameModal(props: Props) {
       await finishGameMutation({ gameId: editProps.gameId as Id<"games"> });
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to finish game");
+      setError(getErrorMessage(err));
     } finally {
       setIsFinishing(false);
       setShowFinishConfirm(false);
@@ -131,11 +136,11 @@ export default function CreateGameModal(props: Props) {
 
   const submitLabel = isEdit
     ? loading
-      ? "Saving…"
-      : "Save Changes"
+      ? t("saving")
+      : t("saveChanges")
     : loading
-      ? "Creating…"
-      : "Create Room";
+      ? t("creating")
+      : t("createRoom");
 
   const canFinish = isEdit && (props as EditModeProps).canFinishGame;
 
@@ -143,7 +148,7 @@ export default function CreateGameModal(props: Props) {
     <Modal
       open={open}
       onClose={onClose}
-      title={isEdit ? "Room Settings" : "Create Room"}
+      title={isEdit ? t("roomSettingsTitle") : t("createRoomTitle")}
       variant="dark"
       footer={
         <>
@@ -151,7 +156,7 @@ export default function CreateGameModal(props: Props) {
             onClick={onClose}
             className="px-5 py-2.5 rounded-xl border border-white/10 text-gray-400 hover:text-white hover:border-white/20 font-sans text-sm font-medium transition-all cursor-pointer"
           >
-            Cancel
+            {tc("cancel")}
           </button>
           <button
             onClick={handleSubmit}
@@ -174,13 +179,13 @@ export default function CreateGameModal(props: Props) {
 
         <div className="space-y-1.5">
           <label className="block text-sm font-medium text-gray-400 font-sans">
-            Room Name
+            {t("roomName")}
           </label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-            placeholder="Enter room name…"
+            placeholder={t("roomNamePlaceholder")}
             autoFocus
             className="w-full px-4 py-3 rounded-xl bg-white/[0.05] border border-white/[0.08] text-white placeholder-gray-600 font-sans text-sm focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 transition-all"
           />
@@ -189,7 +194,7 @@ export default function CreateGameModal(props: Props) {
         {!isEdit && (
           <div className="space-y-1.5">
             <label className="block text-sm font-medium text-gray-400 font-sans">
-              Game Mode
+              {t("gameMode")}
             </label>
             <select
               value={type}
@@ -211,7 +216,7 @@ export default function CreateGameModal(props: Props) {
 
         <div className="space-y-1.5">
           <label className="block text-sm font-medium text-gray-400 font-sans">
-            Room Visibility
+            {t("roomVisibility")}
           </label>
           <div className="grid grid-cols-2 gap-3">
             <button
@@ -230,12 +235,12 @@ export default function CreateGameModal(props: Props) {
                 <p
                   className={`font-sans text-sm font-semibold transition-colors ${!isPrivate ? "text-white" : "text-gray-500"}`}
                 >
-                  Public
+                  {t("public")}
                 </p>
                 <p
                   className={`font-sans text-[0.7rem] mt-0.5 transition-colors ${!isPrivate ? "text-gray-400" : "text-gray-600"}`}
                 >
-                  Anyone can spectate
+                  {t("publicDesc")}
                 </p>
               </div>
             </button>
@@ -256,12 +261,12 @@ export default function CreateGameModal(props: Props) {
                 <p
                   className={`font-sans text-sm font-semibold transition-colors ${isPrivate ? "text-white" : "text-gray-500"}`}
                 >
-                  Private
+                  {t("private")}
                 </p>
                 <p
                   className={`font-sans text-[0.7rem] mt-0.5 transition-colors ${isPrivate ? "text-gray-400" : "text-gray-600"}`}
                 >
-                  No spectators allowed
+                  {t("privateDesc")}
                 </p>
               </div>
             </button>

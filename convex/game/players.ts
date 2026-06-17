@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { query, mutation, internalMutation } from "../_generated/server";
 import { getAuthenticatedUser } from "../lib/auth";
 import { getGameById, assertIsHost, getPlayerInGame } from "../lib/games";
@@ -69,7 +69,7 @@ export const join = mutation({
           break;
         }
       }
-      if (seatNumber === undefined) throw new Error("Room is full");
+      if (seatNumber === undefined) throw new ConvexError("Room is full");
     }
 
     const profile = await ctx.db.get(userId);
@@ -94,7 +94,7 @@ export const setReady = mutation({
   handler: async (ctx, { gameId, ready }) => {
     const userId = await getAuthenticatedUser(ctx);
     const player = await getPlayerInGame(ctx.db, gameId, userId);
-    if (!player) throw new Error("Player not found in game");
+    if (!player) throw new ConvexError("Player not found in game");
     await ctx.db.patch(player._id, { isReady: ready });
   },
 });
@@ -141,7 +141,7 @@ async function leaveByUserId(
 ) {
   const game = await getGameById(ctx.db, gameId);
   const player = await getPlayerInGame(ctx.db, gameId, userId);
-  if (!player) throw new Error("Player not found in game");
+  if (!player) throw new ConvexError("Player not found in game");
 
   if (!isGameStarted(game.gameStatus)) {
     await ctx.db.delete(player._id);
@@ -160,8 +160,8 @@ export const kill = mutation({
     await assertIsHost(ctx.db, gameId, userId);
 
     const target = await getPlayerInGame(ctx.db, gameId, targetPlayerId);
-    if (!target) throw new Error("Player not found in this game");
-    if (!target.isAlive) throw new Error("Player is already dead");
+    if (!target) throw new ConvexError("Player not found in this game");
+    if (!target.isAlive) throw new ConvexError("Player is already dead");
 
     await ctx.db.patch(target._id, { isAlive: false });
   },

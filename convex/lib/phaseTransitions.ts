@@ -1,3 +1,4 @@
+import { ConvexError } from "convex/values";
 import type { DatabaseWriter, MutationCtx } from "../_generated/server";
 import type { Id } from "../_generated/dataModel";
 import { recordWinnerIfDecided } from "./games";
@@ -20,7 +21,7 @@ async function getGameSessionOrThrow(db: DatabaseWriter, gameId: Id<"games">) {
     .query("gameSessions")
     .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
     .unique();
-  if (!session) throw new Error("Game session not found");
+  if (!session) throw new ConvexError("Game session not found");
   return session;
 }
 

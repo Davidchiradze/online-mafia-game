@@ -1,0 +1,48 @@
+{
+  "common": {
+    "language": "Language",
+    "loading": "Loading…",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "close": "Close"
+  },
+  "auth": {},
+  "landing": {},
+  "lobby": {
+    "createRoomTitle": "Create Room",
+    "roomSettingsTitle": "Room Settings",
+    "creating": "Creating…",
+    "saving": "Saving…",
+    "createRoom": "Create Room",
+    "saveChanges": "Save Changes",
+    "roomName": "Room Name",
+    "roomNamePlaceholder": "Enter room name…",
+    "gameMode": "Game Mode",
+    "roomVisibility": "Room Visibility",
+    "public": "Public",
+    "publicDesc": "Anyone can spectate",
+    "private": "Private",
+    "privateDesc": "No spectators allowed"
+  },
+  "game": {},
+  "errors": {
+    "_fallback": "Something went wrong. Please try again.",
+    "NOT_AUTHENTICATED": "You need to sign in to do that.",
+    "PROFILE_SYNC_REQUIRED": "Your profile isn't ready yet. Please refresh and try again.",
+    "GAME_NOT_FOUND": "Game not found.",
+    "HOST_ONLY": "Only the host can do that.",
+    "GAME_NAME_REQUIRED": "Game name is required.",
+    "INVALID_GAME_TYPE": "Invalid game type.",
+    "GAME_CODE_GEN_FAILED": "Couldn't generate a unique game code. Please try again.",
+    "ROOM_NAME_EMPTY": "Room name cannot be empty.",
+    "NO_PLAYERS_JOINED": "No players have joined yet.",
+    "GAME_NOT_PLAYING": "This game isn't currently in progress.",
+    "GAME_ALREADY_FINISHED": "This game has already finished.",
+    "SESSION_NOT_FOUND": "Game session not found.",
+    "SPECTATE_NOT_IN_PROGRESS": "You can only spectate games that are in progress.",
+    "SPECTATE_PRIVATE": "This game is private — spectators can't join.",
+    "ALREADY_PLAYER": "You're already a player in this game.",
+    "SPECTATOR_LIMIT": "This game has reached its spectator limit."
+  }
+}

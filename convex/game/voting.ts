@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { query, mutation, internalMutation } from "../_generated/server";
 import { getAuthenticatedUser } from "../lib/auth";
 import { assertIsHost, getPlayerInGame } from "../lib/games";
@@ -27,7 +27,7 @@ async function requireVotingSession(
   gameId: Id<"games">,
 ) {
   const session = await getVotingSessionByGameId(db, gameId);
-  if (!session) throw new Error("Voting session not found");
+  if (!session) throw new ConvexError("Voting session not found");
   return session;
 }
 
@@ -109,7 +109,7 @@ export const createSession = mutation({
     const existing = await getVotingSessionByGameId(ctx.db, gameId);
     if (existing) return existing._id;
 
-    if (candidates.length === 0) throw new Error("No candidates to vote on");
+    if (candidates.length === 0) throw new ConvexError("No candidates to vote on");
 
     return await ctx.db.insert("votingSessions", {
       gameId,
@@ -139,11 +139,11 @@ export const initializeVoting = mutation({
       .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
       .unique();
 
-    if (!session) throw new Error("Game session not found");
-    if (session.gamePhase !== "voting") throw new Error("Not in voting phase");
+    if (!session) throw new ConvexError("Game session not found");
+    if (session.gamePhase !== "voting") throw new ConvexError("Not in voting phase");
 
     const candidates = session.nominatedPlayers ?? [];
-    if (candidates.length === 0) throw new Error("No candidates to vote on");
+    if (candidates.length === 0) throw new ConvexError("No candidates to vote on");
 
     return await ctx.db.insert("votingSessions", {
       gameId,
@@ -170,7 +170,7 @@ export const startVoteWindow = mutation({
     await assertIsHost(ctx.db, gameId, userId);
 
     const session = await requireVotingSession(ctx.db, gameId);
-    if (session.votingActive) throw new Error("Voting is already active");
+    if (session.votingActive) throw new ConvexError("Voting is already active");
 
     await ctx.db.patch(session._id, {
       votingActive: true,
@@ -202,7 +202,7 @@ export const endVoteWindow = mutation({
     await assertIsHost(ctx.db, gameId, userId);
 
     const session = await requireVotingSession(ctx.db, gameId);
-    if (!session.votingActive) throw new Error("Voting is not active");
+    if (!session.votingActive) throw new ConvexError("Voting is not active");
 
     await ctx.db.patch(session._id, { votingActive: false });
   },
@@ -219,14 +219,14 @@ export const castVote = mutation({
 
     const player = await getPlayerInGame(ctx.db, gameId, userId);
     if (!player || player.seatNumber === undefined) {
-      throw new Error("Player not found in game");
+      throw new ConvexError("Player not found in game");
     }
-    if (!player.isAlive) throw new Error("Dead players cannot vote");
+    if (!player.isAlive) throw new ConvexError("Dead players cannot vote");
 
     const session = await requireVotingSession(ctx.db, gameId);
     const candidates = session.candidates ?? [];
     const currentCandidate = candidates[session.currentCandidateIndex ?? 0];
-    if (currentCandidate === undefined) throw new Error("No candidate to vote for");
+    if (currentCandidate === undefined) throw new ConvexError("No candidate to vote for");
 
     // Check for duplicate vote
     const existingVote = await ctx.db
@@ -236,7 +236,7 @@ export const castVote = mutation({
       )
       .unique();
 
-    if (existingVote) throw new Error("You have already voted this round");
+    if (existingVote) throw new ConvexError("You have already voted this round");
 
     await ctx.db.insert("votes", {
       votingSessionId: session._id,
@@ -255,9 +255,9 @@ export const castBothLeaveVote = mutation({
 
     const player = await getPlayerInGame(ctx.db, gameId, userId);
     if (!player || player.seatNumber === undefined) {
-      throw new Error("Player not found in game");
+      throw new ConvexError("Player not found in game");
     }
-    if (!player.isAlive) throw new Error("Dead players cannot vote");
+    if (!player.isAlive) throw new ConvexError("Dead players cannot vote");
 
     const session = await requireVotingSession(ctx.db, gameId);
 
@@ -268,7 +268,7 @@ export const castBothLeaveVote = mutation({
       )
       .unique();
 
-    if (existingVote) throw new Error("Already voted");
+    if (existingVote) throw new ConvexError("Already voted");
 
     await ctx.db.insert("votes", {
       votingSessionId: session._id,
@@ -290,7 +290,7 @@ export const advanceCandidate = mutation({
     const game = await assertIsHost(ctx.db, gameId, userId);
 
     const session = await requireVotingSession(ctx.db, gameId);
-    if (session.votingActive) throw new Error("Cannot advance while voting is active");
+    if (session.votingActive) throw new ConvexError("Cannot advance while voting is active");
 
     const candidates = session.candidates ?? [];
     const currentIndex = session.currentCandidateIndex ?? 0;

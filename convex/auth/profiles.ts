@@ -1,5 +1,5 @@
 import { query, mutation } from "../_generated/server";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { getAuthenticatedUser } from "../lib/auth";
 import {
   getNicknameOwner,
@@ -68,12 +68,12 @@ export const upsertFromPhp = mutation({
   },
   handler: async (ctx, { secret, accountId, ...fields }) => {
     if (secret !== process.env.CONVEX_SYNC_SECRET) {
-      throw new Error("Forbidden");
+      throw new ConvexError("Forbidden");
     }
 
     const identity = await ctx.auth.getUserIdentity();
     if (!identity || identity.subject !== accountId) {
-      throw new Error("Identity mismatch");
+      throw new ConvexError("Identity mismatch");
     }
 
     const now = Date.now();
@@ -104,12 +104,12 @@ export const updateNickname = mutation({
     const profileId = await getAuthenticatedUser(ctx);
     const profile = await ctx.db.get(profileId);
     if (!profile) {
-      throw new Error("Profile not found");
+      throw new ConvexError("Profile not found");
     }
 
     const owner = await getNicknameOwner(ctx.db, args.nickname);
     if (owner && owner._id !== profile._id) {
-      throw new Error("Nickname is already taken");
+      throw new ConvexError("Nickname is already taken");
     }
 
     await ctx.db.patch(profile._id, {

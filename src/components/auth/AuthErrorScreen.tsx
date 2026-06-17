@@ -1,8 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
-import { ShieldAlert, ChevronRight, Home } from "lucide-react";
-import Link from "next/link";
+import { ShieldAlert, ChevronRight } from "lucide-react";
 import { PHP_LOGIN_REDIRECT_URL } from "@/lib/auth/constants";
 
 const BG_IMG = "https://www.mafia.ge/templates/newassets/img/mafiabg.jpg";

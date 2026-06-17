@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { query, mutation, internalMutation } from "../_generated/server";
 import { getAuthenticatedUser } from "../lib/auth";
 import { getGameById, getPlayerInGame } from "../lib/games";
@@ -36,19 +36,19 @@ export const join = mutation({
     const game = await getGameById(ctx.db, gameId);
 
     if (game.gameStatus !== "playing") {
-      throw new Error("Can only spectate games that are in progress");
+      throw new ConvexError({ code: "SPECTATE_NOT_IN_PROGRESS", message: "Can only spectate games that are in progress" });
     }
 
     const isPrivilegedSpectator =
       SPECTATOR.PRIVILEGED_PROFILE_IDS.includes(userId);
 
     if (game.isPrivate && !isPrivilegedSpectator) {
-      throw new Error("This game is private. Spectators cannot join.");
+      throw new ConvexError({ code: "SPECTATE_PRIVATE", message: "This game is private. Spectators cannot join." });
     }
 
     const existingPlayer = await getPlayerInGame(ctx.db, gameId, userId);
     if (existingPlayer) {
-      throw new Error("You are already a player in this game");
+      throw new ConvexError({ code: "ALREADY_PLAYER", message: "You are already a player in this game" });
     }
 
     const existing = await ctx.db
@@ -71,7 +71,7 @@ export const join = mutation({
       !isPrivilegedSpectator &&
       spectators.length >= SPECTATOR.MAX_SPECTATORS_PER_GAME
     ) {
-      throw new Error("Maximum spectator limit reached");
+      throw new ConvexError({ code: "SPECTATOR_LIMIT", message: "Maximum spectator limit reached" });
     }
 
     const profile = await ctx.db.get(userId);

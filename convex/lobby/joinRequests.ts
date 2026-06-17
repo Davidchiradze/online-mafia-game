@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { query, mutation, QueryCtx } from "../_generated/server";
 import { Id } from "../_generated/dataModel";
 import { getAuthenticatedUser } from "../lib/auth";
@@ -78,7 +78,7 @@ export const request = mutation({
     const nickname = profile?.nickname ?? "Player";
 
     if (existing && existing.status === "rejected") {
-      throw new Error("Your join request was rejected");
+      throw new ConvexError("Your join request was rejected");
     }
 
     const requestId = await ctx.db.insert("joinRequests", {
@@ -201,7 +201,7 @@ export const accept = mutation({
     const userId = await getAuthenticatedUser(ctx);
     const joinRequest = await ctx.db.get(requestId);
     if (!joinRequest) {
-      throw new Error("Join request not found");
+      throw new ConvexError("Join request not found");
     }
 
     await assertIsHost(ctx.db, joinRequest.gameId, userId);
@@ -219,7 +219,7 @@ export const reject = mutation({
     const userId = await getAuthenticatedUser(ctx);
     const joinRequest = await ctx.db.get(requestId);
     if (!joinRequest) {
-      throw new Error("Join request not found");
+      throw new ConvexError("Join request not found");
     }
 
     await assertIsHost(ctx.db, joinRequest.gameId, userId);
@@ -245,7 +245,7 @@ export const kick = mutation({
     await assertIsHost(ctx.db, gameId, userId);
 
     if (targetUserId === userId) {
-      throw new Error("Cannot kick yourself");
+      throw new ConvexError("Cannot kick yourself");
     }
 
     const joinRequest = await getJoinRequestByRequester(ctx.db, gameId, targetUserId);

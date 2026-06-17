@@ -1,3 +1,4 @@
+import { ConvexError } from "convex/values";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -10,7 +11,7 @@ import { roleToFaction } from "./roles";
 export async function getGameById(db: DatabaseReader, gameId: Id<"games">) {
   const game = await db.get(gameId);
   if (!game) {
-    throw new Error("Game not found");
+    throw new ConvexError({ code: "GAME_NOT_FOUND", message: "Game not found" });
   }
   return game;
 }
@@ -22,7 +23,7 @@ export async function assertIsHost(
 ) {
   const game = await getGameById(db, gameId);
   if (game.hostId !== userId) {
-    throw new Error("Only the host can perform this action");
+    throw new ConvexError({ code: "HOST_ONLY", message: "Only the host can perform this action" });
   }
   return game;
 }

@@ -6,11 +6,11 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .font-orbitron {
-  font-family: var(--font-orbitron), sans-serif;
+  font-family: var(--font-orbitron), var(--font-noto-georgian), sans-serif;
 }
 
 .font-inter {
-  font-family: var(--font-inter), sans-serif;
+  font-family: var(--font-inter), var(--font-noto-georgian), sans-serif;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -21,7 +21,7 @@
   @apply w-full px-6 py-3 rounded-xl cursor-pointer text-white border-2 
          transition-all duration-200 flex items-center justify-center gap-2
          disabled:cursor-not-allowed disabled:opacity-50;
-  font-family: var(--font-orbitron), sans-serif;
+  font-family: var(--font-orbitron), var(--font-noto-georgian), sans-serif;
   font-weight: 700;
   font-size: 0.85rem;
 }
@@ -102,7 +102,7 @@
 
 .badge {
   @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium;
-  font-family: var(--font-inter), sans-serif;
+  font-family: var(--font-inter), var(--font-noto-georgian), sans-serif;
 }
 
 .badge-speaker-active {
