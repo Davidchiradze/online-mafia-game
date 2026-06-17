@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   DAY_PHASE_SPEAKING,
   NOMINATED_PLAYERS_SPEAKING,
@@ -26,15 +26,48 @@ function getSpeakingDuration(gamePhase: string | null | undefined): number {
 }
 
 /**
- * Play a "time's up" bell sound.
+ * How long before the end the countdown sound should start, by phase.
+ * Each countdown clip already ends with the "time's up" gong, so the lead
+ * time matches the clip length:
+ *
+ * - Self-justification (30s) uses the 5-second clip, started with 5s left.
+ * - Longer speeches (60s) use the 10-second clip, started with 10s left.
  */
-function playTimeUpSound(): void {
+function getCountdownLeadMs(gamePhase: string | null | undefined): number {
+  switch (gamePhase) {
+    case "nominated_players_speak":
+      return 5 * 1000;
+    default:
+      return 10 * 1000;
+  }
+}
+
+/**
+ * The countdown clip to play, by phase. Each clip ends with the "time's up"
+ * gong, so no separate bell is needed.
+ */
+function getCountdownSoundSrc(gamePhase: string | null | undefined): string {
+  switch (gamePhase) {
+    case "nominated_players_speak":
+      return "/audio/five-seconds-sound.m4a";
+    default:
+      return "/audio/ten-second-sound.mp3";
+  }
+}
+
+/**
+ * Play the end-of-speech countdown sound, returning the element so the caller
+ * can pause it (e.g. when speaking is stopped mid-window).
+ */
+function playCountdownSound(src: string): HTMLAudioElement | null {
   try {
-    const audio = new Audio("/audio/bell-sound.mp3");
+    const audio = new Audio(src);
     audio.volume = 0.5;
     void audio.play();
+    return audio;
   } catch {
     // Audio not supported or blocked - fail silently
+    return null;
   }
 }
 
@@ -49,28 +82,32 @@ export function useSpeakingProgress(
   gamePhase?: string | null
 ): number {
   const [progress, setProgress] = useState(0);
-  const hasPlayedSoundRef = useRef(false);
+  const hasPlayedCountdownRef = useRef(false);
+  const countdownAudioRef = useRef<HTMLAudioElement | null>(null);
   const getServerTime = useServerTime();
 
-  // Reset sound flag when speaker changes
+  // Reset the countdown flag (and stop any countdown audio) when speaker changes
   useEffect(() => {
-    hasPlayedSoundRef.current = false;
-  }, [speakerStartedAt]);
-
-  const handleTimeUp = useCallback(() => {
-    if (!hasPlayedSoundRef.current) {
-      hasPlayedSoundRef.current = true;
-      playTimeUpSound();
+    hasPlayedCountdownRef.current = false;
+    if (countdownAudioRef.current) {
+      countdownAudioRef.current.pause();
+      countdownAudioRef.current = null;
     }
-  }, []);
+  }, [speakerStartedAt]);
 
   useEffect(() => {
     if (!isActive || !speakerStartedAt) {
       setProgress(0);
+      // Stop the countdown clip if speaking is paused/stopped mid-window.
+      if (countdownAudioRef.current) {
+        countdownAudioRef.current.pause();
+        countdownAudioRef.current = null;
+      }
       return;
     }
 
     const duration = getSpeakingDuration(gamePhase);
+    const countdownLead = getCountdownLeadMs(gamePhase);
 
     const updateProgress = () => {
       const remaining = calculateRemainingTime(
@@ -83,15 +120,23 @@ export function useSpeakingProgress(
       const clampedPct = Math.min(100, Math.max(0, pct));
       setProgress(clampedPct);
 
-      if (clampedPct >= 100) {
-        handleTimeUp();
+      // Start the end-of-speech countdown sound once we hit the lead window.
+      if (
+        !hasPlayedCountdownRef.current &&
+        remaining > 0 &&
+        remaining <= countdownLead
+      ) {
+        hasPlayedCountdownRef.current = true;
+        countdownAudioRef.current = playCountdownSound(
+          getCountdownSoundSrc(gamePhase),
+        );
       }
     };
 
     updateProgress();
     const interval = setInterval(updateProgress, 100);
     return () => clearInterval(interval);
-  }, [isActive, speakerStartedAt, gamePhase, handleTimeUp, getServerTime]);
+  }, [isActive, speakerStartedAt, gamePhase, getServerTime]);
 
   return progress;
 }

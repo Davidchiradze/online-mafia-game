@@ -28,7 +28,8 @@ const StartGameButton = () => {
 
   const { readyCount, totalPlayers, allReady } = useMemo(() => {
     const lobbyPlayers = players.filter((p) => p.playerId !== hostUserId);
-    const total = maxPlayers || lobbyPlayers.length;
+    // const total = maxPlayers || lobbyPlayers.length;
+    const total = 4;
     const ready = lobbyPlayers.filter((p) => p.isReady).length;
     return {
       readyCount: ready,
