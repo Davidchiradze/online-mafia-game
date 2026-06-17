@@ -3,6 +3,7 @@
 import { MicOffIcon, MicOnIcon } from "@/assets/icons";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { MAFIA_TEAM_ROLES, YAKUZA_TEAM_ROLES } from "@/lib/constants/game";
+import SeatIndicator from "./SeatIndicator";
 
 type GameSessionState = NonNullable<
   ReturnType<typeof useGameRoom>["gameSessionState"]
@@ -20,6 +21,8 @@ interface ParticipantBadgesProps {
   showNominationEffect: boolean;
   playerId: string;
   onToggleMic?: () => void;
+  /** Active speaker timer progress (0 → 100). 0 when not the speaker. */
+  speakingProgress?: number;
 }
 
 const MAFIA_ROLE_SET = new Set<string>(MAFIA_TEAM_ROLES);
@@ -56,6 +59,7 @@ export default function ParticipantBadges({
   showNominationEffect,
   playerId,
   onToggleMic,
+  speakingProgress = 0,
 }: ParticipantBadgesProps) {
   const { getRoleForUser, playerRolesMap, maxPlayers } = useGameRoom();
 
@@ -81,18 +85,6 @@ export default function ParticipantBadges({
     !gameSessionState ||
     gameSessionState?.isFinished ||
     (isLocal && isTargetHost);
-
-  const seatBadgeClass = showNominationEffect
-    ? "bg-red-700/50 border-red-500/70 shadow-[0_0_10px_rgba(239,68,68,0.5)] animate-pulse"
-    : isTargetHost
-      ? "bg-yellow-600/40 border-yellow-500/60 shadow-[0_0_8px_rgba(251,191,36,0.5)]"
-      : "bg-black/70 border-white/20";
-
-  const seatNumberClass = showNominationEffect
-    ? "text-red-300"
-    : isTargetHost
-      ? "text-yellow-200"
-      : "text-white/90";
 
   const resolvedName = displayName;
 
@@ -163,16 +155,14 @@ export default function ParticipantBadges({
       <div className="absolute bottom-0 left-0 right-0 z-20">
         <div className="px-2 py-1.5 lg:px-3 lg:py-2 bg-gradient-to-t from-black/50 to-transparent shadow-[inset_0_-4px_8px_-2px_rgba(0,0,0,0.4)]">
           <div className="flex items-center gap-1.5 lg:gap-2">
-            {/* Seat number badge */}
-            <div
-              className={`w-5 h-5 lg:w-6 lg:h-6 aspect-square rounded-md flex items-center justify-center shrink-0 transition-all border ${seatBadgeClass}`}
-            >
-              <span
-                className={`font-orbitron text-[0.55rem] lg:text-[0.7rem] font-bold leading-none ${seatNumberClass}`}
-              >
-                {playerIndex === (maxPlayers ?? 13) + 1 ? "H" : playerIndex}
-              </span>
-            </div>
+            {/* Seat number dial — circular badge wrapped by a speaking
+                countdown ring that depletes as the speaker's time runs out. */}
+            <SeatIndicator
+              label={playerIndex === (maxPlayers ?? 13) + 1 ? "H" : playerIndex}
+              showNominationEffect={showNominationEffect}
+              isTargetHost={isTargetHost}
+              speakingProgress={speakingProgress}
+            />
 
             <div className="flex-1" />
 

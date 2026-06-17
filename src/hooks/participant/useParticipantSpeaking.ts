@@ -8,7 +8,13 @@ type GameSessionState = NonNullable<ReturnType<typeof useGameRoom>["gameSessionS
 export interface ParticipantSpeakingResult {
   isSpeaking: boolean;
   isParticipantFoulSpeaking: boolean;
-  boxShadowClass: string;
+  /**
+   * Border treatment for the tile. Always a `border-2` so the box never
+   * reflows — only the look changes: a steady emerald border + glow for the
+   * active speaker, a red one for foul speaking, transparent otherwise
+   * (see `.speaker-active` / `.speaker-foul` in globals.css).
+   */
+  speakerBorderClass: string;
 }
 
 /**
@@ -41,20 +47,16 @@ export function useParticipantSpeaking(
     !isTargetDead &&
     !!gameSessionState;
 
-  const boxShadowClass = useMemo(() => {
-    if (isTargetDead) return "";
-    if (isParticipantFoulSpeaking) {
-      return "shadow-[0_0_35px_rgba(220,38,38,0.8)]";
-    }
-    if (isSpeaking) {
-      return "shadow-[0_0_30px_rgba(34,197,94,0.7)]";
-    }
-    return "";
+  const speakerBorderClass = useMemo(() => {
+    if (isTargetDead) return "border-2 border-transparent";
+    if (isParticipantFoulSpeaking) return "speaker-foul";
+    if (isSpeaking) return "speaker-active";
+    return "border-2 border-transparent";
   }, [isParticipantFoulSpeaking, isSpeaking, isTargetDead]);
 
   return {
     isSpeaking,
     isParticipantFoulSpeaking,
-    boxShadowClass,
+    speakerBorderClass,
   };
 }

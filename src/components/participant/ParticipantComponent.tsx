@@ -33,7 +33,6 @@ import { useFoulNotification } from "@/hooks/game/useFoulNotification";
 // Components
 import ReadyButton from "@/components/ui/ReadyButton";
 import ParticipantMenuButton from "./ParticipantMenuButton";
-import SpeakingProgressBar from "./SpeakingProgressBar";
 import ParticipantOverlay from "./ParticipantOverlay";
 import ParticipantBadges from "./ParticipantBadges";
 import NominationFoulSection from "./NominationFoulSection";
@@ -117,7 +116,7 @@ export default function ParticipantComponent({
   }, [gameSessionState?.gamePhase]);
 
   // Speaking state
-  const { isSpeaking, isParticipantFoulSpeaking, boxShadowClass } =
+  const { isSpeaking, isParticipantFoulSpeaking, speakerBorderClass } =
     useParticipantSpeaking(
       gameSessionState,
       player.seatNumber ?? null,
@@ -250,7 +249,7 @@ export default function ParticipantComponent({
   return (
     <div
       tabIndex={0}
-      className={`relative w-full h-full flex flex-col items-stretch justify-stretch text-sm text-gray-200 group transition-shadow duration-300 rounded-xl overflow-hidden outline-none ${boxShadowClass}`}
+      className={`relative w-full h-full flex flex-col items-stretch justify-stretch text-sm text-gray-200 group transition-all duration-300 rounded-xl overflow-hidden outline-none ${speakerBorderClass}`}
       onMouseLeave={() => setMenuOpen(false)}
       onClick={handleTileClick}
     >
@@ -276,6 +275,7 @@ export default function ParticipantComponent({
         showNominationEffect={showNominationEffect}
         playerId={(player.playerId as string) || ""}
         onToggleMic={handleToggleMic}
+        speakingProgress={isSpeaking && !isTargetDead ? speakingProgress : 0}
       />
 
       {/* Lobby menu - kick/make host */}
@@ -356,10 +356,6 @@ export default function ParticipantComponent({
         </div>
       )}
 
-      {/* Speaking progress bar */}
-      {isSpeaking && !isTargetDead && (
-        <SpeakingProgressBar progress={speakingProgress} />
-      )}
     </div>
   );
 }
