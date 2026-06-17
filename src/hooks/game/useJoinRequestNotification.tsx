@@ -9,6 +9,20 @@ import { Check, X } from "lucide-react";
 import type { Id } from "@convex/_generated/dataModel";
 
 // ---------------------------------------------------------------------------
+// Notification sound for new join requests
+// ---------------------------------------------------------------------------
+
+function playNewRequestSound() {
+  try {
+    const audio = new Audio("/audio/new-request-notification.mp3");
+    audio.volume = 0.5;
+    void audio.play();
+  } catch {
+    // Audio not supported or blocked - fail silently
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Toast body rendered inside each join-request notification
 // ---------------------------------------------------------------------------
 
@@ -122,9 +136,11 @@ export function useJoinRequestNotification(gameId: string, isHost: boolean) {
       return;
     }
 
+    let hasNewRequest = false;
     for (const req of pendingRequests) {
       const id = req._id as string;
       if (!knownIdsRef.current.has(id)) {
+        hasNewRequest = true;
         const toastId = toast.info(
           <JoinRequestToastBody
             nickname={req.requesterNickname}
@@ -138,6 +154,10 @@ export function useJoinRequestNotification(gameId: string, isHost: boolean) {
           toastIdsRef.current.set(id, toastId);
         }
       }
+    }
+
+    if (hasNewRequest) {
+      playNewRequestSound();
     }
 
     for (const id of toastIdsRef.current.keys()) {
