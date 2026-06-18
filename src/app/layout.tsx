@@ -7,6 +7,7 @@ import {
 } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
+import AudioUnlockBootstrap from "@/components/providers/AudioUnlockBootstrap";
 import ConvexClientProvider from "@/components/providers/ConvexClientProvider";
 import ProfileSyncBootstrap from "@/components/providers/ProfileSyncBootstrap";
 import ServerTimeProvider from "@/components/providers/ServerTimeProvider";
@@ -62,6 +63,7 @@ export default async function RootLayout({
         <NextIntlClientProvider locale={locale} messages={messages}>
           <ConvexClientProvider>
             <ProfileSyncBootstrap />
+            <AudioUnlockBootstrap />
             <ServerTimeProvider>
               <ThemeProvider
                 attribute="class"

@@ -8,20 +8,7 @@ import { toast as toastifyDismiss } from "react-toastify";
 import { Check, X } from "lucide-react";
 import type { Id } from "@convex/_generated/dataModel";
 import UserAvatar from "@/components/ui/UserAvatar";
-
-// ---------------------------------------------------------------------------
-// Notification sound for new join requests
-// ---------------------------------------------------------------------------
-
-function playNewRequestSound() {
-  try {
-    const audio = new Audio("/audio/new-request-notification.mp3");
-    audio.volume = 0.5;
-    void audio.play();
-  } catch {
-    // Audio not supported or blocked - fail silently
-  }
-}
+import { playSound } from "@/lib/audio/audioUnlock";
 
 // ---------------------------------------------------------------------------
 // Toast body rendered inside each join-request notification
@@ -164,7 +151,7 @@ export function useJoinRequestNotification(gameId: string, isHost: boolean) {
     }
 
     if (hasNewRequest) {
-      playNewRequestSound();
+      playSound("/audio/new-request-notification.mp3");
     }
 
     for (const id of toastIdsRef.current.keys()) {

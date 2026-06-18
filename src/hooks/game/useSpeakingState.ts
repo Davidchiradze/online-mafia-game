@@ -7,6 +7,7 @@ import {
   FAREWELL_SPEECH,
 } from "@/lib/constants/game";
 import { calculateRemainingTime } from "@/lib/game/speakingOrder";
+import { playSound } from "@/lib/audio/audioUnlock";
 import { useServerTime } from "@/lib/time/serverTime";
 
 /**
@@ -52,22 +53,6 @@ function getCountdownSoundSrc(gamePhase: string | null | undefined): string {
       return "/audio/five-seconds-sound.m4a";
     default:
       return "/audio/ten-second-sound.mp3";
-  }
-}
-
-/**
- * Play the end-of-speech countdown sound, returning the element so the caller
- * can pause it (e.g. when speaking is stopped mid-window).
- */
-function playCountdownSound(src: string): HTMLAudioElement | null {
-  try {
-    const audio = new Audio(src);
-    audio.volume = 0.5;
-    void audio.play();
-    return audio;
-  } catch {
-    // Audio not supported or blocked - fail silently
-    return null;
   }
 }
 
@@ -127,7 +112,7 @@ export function useSpeakingProgress(
         remaining <= countdownLead
       ) {
         hasPlayedCountdownRef.current = true;
-        countdownAudioRef.current = playCountdownSound(
+        countdownAudioRef.current = playSound(
           getCountdownSoundSrc(gamePhase),
         );
       }
