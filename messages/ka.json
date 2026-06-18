@@ -133,7 +133,7 @@
       "right_hand_checks_for_yakuza": "მარჯვენა ხელი ამოწმებს იაკუძას",
       "yakuza_and_shogun_chooses_target": "იაკუძა და შოგუნი ირჩევს სამიზნეს",
       "detective_checks_for_mafia": "დეტექტივი ამოწმებს მოთამაშეს",
-      "doctor_heals_player": "ექიმი კურნავს მოთამაშეს",
+      "doctor_heals_player": "ექიმი ჰილავს მოთამაშეს",
       "farewell_speech": "გამომშვიდობების სიტყვა",
       "day_phase": "დღის ფაზა",
       "nominated_players_speak": "თავის მართლება",
@@ -337,8 +337,8 @@
       "clickToNominate": "დააჭირე დასახელებისთვის"
     },
     "actions": {
-      "heal": "კურნება",
-      "healed": "განკურნებულია",
+      "heal": "დაჰილვა",
+      "healed": "დაჰილულია",
       "alreadyHealed": "უკვე განკურნებულია",
       "alreadyHealedThisGame": "ამ თამაშში უკვე განკურნებულია",
       "playerHealed": "მოთამაშე განკურნებულია",
