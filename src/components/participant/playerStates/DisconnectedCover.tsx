@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import { WifiOffIcon } from "@/assets/icons";
 
 interface DisconnectedCoverProps {
@@ -7,6 +10,7 @@ interface DisconnectedCoverProps {
 export default function DisconnectedCover({
   className = "",
 }: DisconnectedCoverProps) {
+  const tg = useTranslations("game");
   return (
     <div className={`absolute inset-0 z-10 ${className}`}>
       {/* Dark cold overlay */}
@@ -32,10 +36,10 @@ export default function DisconnectedCover({
         {/* CONNECTION LOST label */}
         <div className="flex flex-col items-center gap-1">
           <span className="block font-orbitron text-[0.62rem] font-extrabold tracking-[0.18em] text-amber-500/90">
-            CONNECTION LOST
+            {tg("connectionLost")}
           </span>
           <span className="block animate-pulse duration-1400 font-inter text-[0.58rem] font-medium tracking-[0.1em] text-amber-700/65">
-            ● RECONNECTING...
+            {tg("reconnecting")}
           </span>
         </div>
       </div>

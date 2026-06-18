@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect } from "react";
 import { useMutation } from "convex/react";
+import { useTranslations } from "next-intl";
 import { voting } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
@@ -32,6 +33,7 @@ export function RegularVotingControls({
   resultMessage,
   setResultMessage,
 }: Props) {
+  const t = useTranslations("game");
   const { gameId, votingSession, voteData, players, hostUserId } =
     useGameRoom();
   const { timeLeft, isLocalVoting, startLocalVoting, stopLocalVoting } =
@@ -150,17 +152,19 @@ export function RegularVotingControls({
           gameId: gameId as Id<"games">,
           winnerSeatNumber: result.winner,
         });
-        setResultMessage(`#${result.winner} farewell...`);
+        setResultMessage(t("winnerFarewellResult", { seat: result.winner }));
       } else {
         const tieResult = await startTieBreakMutation({
           gameId: gameId as Id<"games">,
           tiedCandidates: result.tiedCandidates,
         });
         if (tieResult.bothLeaveVote) {
-          setResultMessage(`Same tie! Vote: should all leave?`);
+          setResultMessage(t("sameTieResult"));
         } else {
           setResultMessage(
-            `Tie! #${result.tiedCandidates.join(", #")} justify...`,
+            t("tieResult", {
+              seats: result.tiedCandidates.map((s: number) => `#${s}`).join(", "),
+            }),
           );
         }
       }
@@ -190,12 +194,16 @@ export function RegularVotingControls({
 
   // Get status text for when not voting
   const getStatusText = () => {
-    if (allDone) return "All candidates voted";
+    if (allDone) return t("allCandidatesVoted");
     if (isLastCandidate)
-      return `#${currentCandidate} • Auto-voted (${currentVotes} votes)`;
+      return t("candidateAutoVoted", { seat: currentCandidate, votes: currentVotes });
     if (voteEndedForCurrentCandidate)
-      return `#${currentCandidate} • ${currentVotes} votes`;
-    return `#${currentCandidate} (${currentIdx + 1}/${candidates.length})`;
+      return t("candidateVotes", { seat: currentCandidate, votes: currentVotes });
+    return t("candidateProgress", {
+      seat: currentCandidate,
+      current: currentIdx + 1,
+      total: candidates.length,
+    });
   };
 
   return (
@@ -214,7 +222,7 @@ export function RegularVotingControls({
             className="text-[10px] text-amber-300 uppercase tracking-widest font-bold"
             style={{ fontFamily: "var(--font-orbitron), sans-serif" }}
           >
-            Tie-break #{tieBreakRound}
+            {t("tieBreakLabel", { round: tieBreakRound })}
           </span>
         </div>
       )}
@@ -231,7 +239,7 @@ export function RegularVotingControls({
       {isVoting ? (
         <VotingTimer
           timeLeft={timeLeft}
-          subtitle={`#${currentCandidate} • ${currentVotes} votes`}
+          subtitle={t("candidateVotes", { seat: currentCandidate, votes: currentVotes })}
         />
       ) : (
         <StatusText text={getStatusText()} />

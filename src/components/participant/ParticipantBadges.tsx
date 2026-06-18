@@ -1,8 +1,9 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { MicOffIcon, MicOnIcon } from "@/assets/icons";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
-import { MAFIA_TEAM_ROLES, YAKUZA_TEAM_ROLES } from "@/lib/constants/game";
+import { JAPANESE_MAFIA_ROLES, MAFIA_TEAM_ROLES, YAKUZA_TEAM_ROLES } from "@/lib/constants/game";
 import SeatIndicator from "./SeatIndicator";
 
 type GameSessionState = NonNullable<
@@ -36,12 +37,7 @@ function getRoleColorClass(role: string): string {
   return "text-white font-semibold bg-red-600 ring-1 ring-red-400/50 shadow-[0_0_8px_rgba(239,68,68,0.4)]";
 }
 
-function formatRole(role: string): string {
-  return role
-    .split("_")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(" ");
-}
+const KNOWN_ROLES = new Set<string>(JAPANESE_MAFIA_ROLES);
 
 /**
  * ParticipantBadges - Displays microphone indicator, player name tooltip,
@@ -61,6 +57,7 @@ export default function ParticipantBadges({
   onToggleMic,
   speakingProgress = 0,
 }: ParticipantBadgesProps) {
+  const tg = useTranslations("game");
   const { getRoleForUser, playerRolesMap, maxPlayers } = useGameRoom();
 
   const playerRole = playerRolesMap.size > 0 ? getRoleForUser(playerId) : null;
@@ -171,7 +168,9 @@ export default function ParticipantBadges({
               <span
                 className={`font-inter text-[7px] tsm:text-[9px] tlg:text-[11px] font-medium shrink-0 px-1 py-0.5 tsm:px-1.5 rounded ${getRoleColorClass(playerRole)}`}
               >
-                {formatRole(playerRole)}
+                {KNOWN_ROLES.has(playerRole)
+                  ? tg(`roles.${playerRole as (typeof JAPANESE_MAFIA_ROLES)[number]}`)
+                  : playerRole}
               </span>
             )}
           </div>

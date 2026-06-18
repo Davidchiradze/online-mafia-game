@@ -1,8 +1,13 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 interface DeadCoverProps {
   className?: string;
 }
 
 export default function DeadCover({ className = "" }: DeadCoverProps) {
+  const tg = useTranslations("game");
   return (
     <div className={`absolute inset-0 z-10 pointer-events-none ${className}`}>
       {/* Blood-red atmospheric overlay */}
@@ -148,7 +153,7 @@ export default function DeadCover({ className = "" }: DeadCoverProps) {
           {/* ELIMINATED label */}
           <div className="mt-2 px-3 py-1 relative bg-dead-label border-t border-b border-red-900/40">
             <span className="block font-orbitron text-[0.6rem] font-black tracking-[0.25em] text-red-700/75 text-shadow-red-glow">
-              ELIMINATED
+              {tg("eliminated")}
             </span>
           </div>
         </div>

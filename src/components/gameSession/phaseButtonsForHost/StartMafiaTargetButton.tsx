@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useMutation } from "convex/react";
 import { gameSessions } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
+import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { GAME_PHASES } from "@/lib/constants/game";
 import PhaseButton from "@/components/ui/PhaseButton";
@@ -22,6 +23,7 @@ type StartMafiaTargetButtonProps = {
 const StartMafiaTargetButton = ({
   gameSessionState,
 }: StartMafiaTargetButtonProps) => {
+  const t = useTranslations("game.host");
   const { gameId: _gameId } = useGameRoom();
   const [isLoading, setIsLoading] = useState(false);
   const updateSession = useMutation(gameSessions.update);
@@ -47,7 +49,7 @@ const StartMafiaTargetButton = ({
     <PhaseButton
       onClick={handleStartMafiaTarget}
       isLoading={isLoading}
-      label="Start Mafia Phase"
+      label={t("startMafiaPhase")}
       variant="danger"
     />
   );

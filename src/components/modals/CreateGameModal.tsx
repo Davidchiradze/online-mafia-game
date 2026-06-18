@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { lobbyGames } from "@convex/refs/lobby";
 import { gameSessions } from "@convex/refs/game";
 import { createLivekitRoom } from "@/lib/liveKit/actions";
-import { GAME_TYPES, GAME_TYPE_LABEL } from "@/lib/constants/game";
+import { GAME_TYPES } from "@/lib/constants/game";
 import { Globe, Loader2, Lock } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import { useErrorMessage } from "@/lib/i18n/errorMessage";
@@ -54,6 +54,7 @@ export default function CreateGameModal(props: Props) {
   const getErrorMessage = useErrorMessage();
   const t = useTranslations("lobby");
   const tc = useTranslations("common");
+  const tg = useTranslations("game");
 
   useEffect(() => {
     if (!open) return;
@@ -207,7 +208,7 @@ export default function CreateGameModal(props: Props) {
                 (gt) => gt !== "traditional" && gt !== "city_mafia",
               ).map((gt) => (
                 <option key={gt} value={gt} className="bg-[#0f0f1a]">
-                  {GAME_TYPE_LABEL[gt]}
+                  {tg(`gameTypes.${gt}` as Parameters<typeof tg>[0])}
                 </option>
               ))}
             </select>

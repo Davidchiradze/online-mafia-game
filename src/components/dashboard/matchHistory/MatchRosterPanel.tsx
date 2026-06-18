@@ -3,14 +3,15 @@
 import { motion, AnimatePresence } from "motion/react";
 import { Users, Trophy } from "lucide-react";
 import { useQuery } from "convex/react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { gameLogs as historyRefs } from "@convex/refs/history";
 import {
   roleToFaction,
   factionIcon,
   factionBadgeClass,
-  roleLabel,
 } from "@/lib/game/roleDisplay";
+import { useRoleLabel } from "@/lib/game/useRoleLabel";
 import type { Id } from "@convex/_generated/dataModel";
 
 interface Props {
@@ -24,6 +25,8 @@ export default function MatchRosterPanel({
   expanded,
   currentPlayerId,
 }: Props) {
+  const t = useTranslations("matchHistory");
+  const roleLabel = useRoleLabel();
   const detail = useQuery(
     historyRefs.getOne,
     expanded ? { gameLogId } : "skip",
@@ -42,7 +45,7 @@ export default function MatchRosterPanel({
           <div className="border-t border-white/5 px-7 py-6">
             <div className="mb-5 flex items-center justify-between">
               <h4 className="flex items-center gap-2 font-inter text-xs font-bold uppercase tracking-widest text-zinc-400">
-                <Users className="h-4 w-4 text-blue-400" /> Operation Roster
+                <Users className="h-4 w-4 text-blue-400" /> {t("operationRoster")}
               </h4>
               {detail?.winMethodLabel && (
                 <span className="font-inter text-xs text-zinc-500">
@@ -62,7 +65,7 @@ export default function MatchRosterPanel({
               </div>
             ) : detail === null ? (
               <p className="font-inter text-sm text-zinc-500">
-                Roster unavailable.
+                {t("rosterUnavailable")}
               </p>
             ) : (
               <div className="grid grid-cols-1 gap-x-12 gap-y-1 md:grid-cols-2">
@@ -104,7 +107,7 @@ export default function MatchRosterPanel({
                           {player.nickname}
                           {isYou && (
                             <span className="ml-1 text-xs font-normal text-zinc-500">
-                              (You)
+                              {t("you")}
                             </span>
                           )}
                         </span>
@@ -126,11 +129,11 @@ export default function MatchRosterPanel({
                       <div className="flex w-16 items-center justify-end">
                         {player.isAlive ? (
                           <span className="text-xs font-bold uppercase tracking-widest text-[#2a5cff]">
-                            Alive
+                            {t("alive")}
                           </span>
                         ) : (
                           <span className="text-xs font-bold uppercase tracking-widest text-[#ff2a2a]">
-                            Dead
+                            {t("dead")}
                           </span>
                         )}
                       </div>

@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Doc } from "@convex/_generated/dataModel";
 import GameTable from "@/components/game/GameTable";
 import CreateGameModal from "@/components/modals/CreateGameModal";
@@ -22,6 +23,7 @@ export default function LobbyContent({ games }: Props) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const router = useRouter();
+  const t = useTranslations("lobby");
 
   const handleCreated = (gameId: string) => {
     router.push(`/game/${gameId}`);
@@ -60,10 +62,10 @@ export default function LobbyContent({ games }: Props) {
             className="mb-1.5 bg-gradient-to-r from-white via-red-100 to-white bg-clip-text font-orbitron text-transparent"
             style={{ fontSize: "clamp(1.6rem, 3vw, 2.2rem)", fontWeight: 700 }}
           >
-            Game Lobby
+            {t("gameLobbyTitle")}
           </h1>
           <p className="font-sans text-sm text-gray-500">
-            Choose a room to join or create your own
+            {t("gameLobbySubtitle")}
           </p>
         </div>
 
@@ -76,7 +78,7 @@ export default function LobbyContent({ games }: Props) {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search rooms..."
+              placeholder={t("searchRoomsPlaceholder")}
               className="w-full rounded-xl border border-white/[0.08] bg-white/[0.05] py-2.5 pl-11 pr-4 font-sans text-sm text-white placeholder-gray-600 transition-all focus:border-red-500/40 focus:outline-none focus:ring-1 focus:ring-red-500/20"
             />
           </div>
@@ -87,16 +89,16 @@ export default function LobbyContent({ games }: Props) {
             className="cursor-pointer appearance-none rounded-xl border border-white/[0.08] bg-white/[0.05] px-4 py-2.5 font-sans text-sm text-white transition-all focus:border-red-500/40 focus:outline-none"
           >
             <option value="all" className="bg-[#0a0a12]">
-              All Status
+              {t("statusAll")}
             </option>
             <option value="not_started" className="bg-[#0a0a12]">
-              Not Started
+              {t("statusNotStarted")}
             </option>
             <option value="playing" className="bg-[#0a0a12]">
-              Playing
+              {t("statusPlaying")}
             </option>
             <option value="finished" className="bg-[#0a0a12]">
-              Finished
+              {t("statusFinished")}
             </option>
           </select>
 
@@ -105,7 +107,7 @@ export default function LobbyContent({ games }: Props) {
             className="flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-red-700 px-5 py-2.5 font-sans text-sm font-semibold text-white shadow-[0_0_20px_rgba(220,38,38,0.3)] transition-all hover:from-red-500 hover:to-red-600 hover:shadow-[0_0_30px_rgba(220,38,38,0.5)]"
           >
             <Plus className="h-4 w-4" />
-            Create Room
+            {t("createRoom")}
           </button>
         </div>
 

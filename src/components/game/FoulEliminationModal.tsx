@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import Modal from "@/components/ui/Modal";
 
 interface FoulEliminationModalProps {
@@ -21,11 +22,14 @@ export default function FoulEliminationModal({
   isEliminating,
   seatNumber,
 }: FoulEliminationModalProps) {
+  const t = useTranslations("game.foul");
+  const tCommon = useTranslations("common");
+
   return (
     <Modal
       open={open}
       onClose={() => !isEliminating && onClose()}
-      title="Eliminate Player by Foul"
+      title={t("eliminateByFoulTitle")}
       footer={
         <>
           <button
@@ -36,7 +40,7 @@ export default function FoulEliminationModal({
             disabled={isEliminating}
             className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Cancel
+            {tCommon("cancel")}
           </button>
           <button
             onClick={(e) => {
@@ -46,23 +50,21 @@ export default function FoulEliminationModal({
             disabled={isEliminating}
             className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isEliminating ? "Eliminating..." : "Confirm Elimination"}
+            {isEliminating ? t("eliminating") : t("confirmElimination")}
           </button>
         </>
       }
     >
       <div className="space-y-3">
         <p className="text-gray-700 dark:text-gray-300">
-          Are you sure you want to give <span className="font-semibold">Player {seatNumber}</span> their 4th foul?
+          {t("eliminateFoulBody", { seat: seatNumber ?? "" })}
         </p>
         <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
           <p className="text-amber-800 dark:text-amber-200 text-sm">
-            <strong>Warning:</strong> This will immediately eliminate the player without a farewell speech. 
-            All nominations will be cleared and no voting will occur this round.
+            {t("eliminateFoulWarning")}
           </p>
         </div>
       </div>
     </Modal>
   );
 }
-

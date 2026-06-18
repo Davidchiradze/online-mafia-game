@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useMutation } from "convex/react";
 import { gameSessions } from "@convex/refs/game";
+import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { GAME_PHASES } from "@/lib/constants/game";
 
@@ -14,6 +15,7 @@ type EndVotingButtonProps = {
  * Button to end voting and process results
  */
 const EndVotingButton = ({ gameSessionState }: EndVotingButtonProps) => {
+  const t = useTranslations("game.host");
   const [isLoading, setIsLoading] = useState(false);
   const updateSession = useMutation(gameSessions.update);
 
@@ -42,7 +44,7 @@ const EndVotingButton = ({ gameSessionState }: EndVotingButtonProps) => {
       disabled={isLoading}
       onClick={handleEndVoting}
     >
-      {isLoading ? "Ending..." : "End Voting"}
+      {isLoading ? t("endingVoting") : t("endVoting")}
     </button>
   );
 };

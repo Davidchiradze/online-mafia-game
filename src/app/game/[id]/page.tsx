@@ -4,6 +4,7 @@ import { use } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { lobbyGames, joinRequests } from "@convex/refs/lobby";
 import { gamePlayers, gameSpectators } from "@convex/refs/game";
 import { GameRoomProvider } from "@/lib/context/gameRoomContext";
@@ -17,6 +18,7 @@ type PageProps = {
 };
 
 export default function GamePage({ params }: PageProps) {
+  const t = useTranslations("game.session");
   const { id } = use(params);
   const router = useRouter();
   const gameId = id as Id<"games">;
@@ -48,7 +50,7 @@ export default function GamePage({ params }: PageProps) {
   ) {
     return (
       <div className="h-screen flex items-center justify-center">
-        <LoadingSpinner message="Loading game..." />
+        <LoadingSpinner message={t("loadingGame")} />
       </div>
     );
   }

@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useMutation } from "convex/react";
+import { useTranslations } from "next-intl";
 import { dayPhase } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
@@ -19,6 +20,7 @@ export default function NominationButton({
   seatNumber,
   isNominated,
 }: NominationButtonProps) {
+  const t = useTranslations("game.nomination");
   const { gameId } = useGameRoom();
   const [isLoading, setIsLoading] = useState(false);
   const nominateMutation = useMutation(dayPhase.nominatePlayer);
@@ -42,8 +44,8 @@ export default function NominationButton({
       type="button"
       onClick={handleClick}
       disabled={isLoading}
-      aria-label={isNominated ? "Remove nomination" : "Nominate player"}
-      title={isNominated ? "Click to remove nomination" : "Click to nominate"}
+      aria-label={isNominated ? t("removeNomination") : t("nominatePlayer")}
+      title={isNominated ? t("clickToRemoveNomination") : t("clickToNominate")}
       className={`
         w-5 h-5 tsm:w-6 tsm:h-6 tmd:w-8 tmd:h-8 rounded-full flex items-center justify-center
         transition-all duration-200 shadow-lg

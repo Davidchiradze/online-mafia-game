@@ -1,10 +1,12 @@
+import { getTranslations } from "next-intl/server";
 import ComingSoonPage from "@/components/dashboard/ComingSoonPage";
 
-export default function CommunityChatPage() {
+export default async function CommunityChatPage() {
+  const t = await getTranslations("headquarters");
   return (
     <ComingSoonPage
-      title="Community Chat"
-      description="Connect with other players, find groups, and discuss strategies in the official Mafia channels."
+      title={t("communityChatTitle")}
+      description={t("communityChatDescription")}
     />
   );
 }

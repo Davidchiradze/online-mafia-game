@@ -2,13 +2,11 @@
 
 import { useState } from "react";
 import { useQuery } from "convex/react";
+import { useTranslations } from "next-intl";
 import { Doc } from "@convex/_generated/dataModel";
 import { authProfiles } from "@convex/refs/lobby";
 import { LobbyGame } from "@/components/lobby/LobbyContent";
-import {
-  GAME_TYPE_LABEL,
-  GAME_TYPE_MAX_PLAYER_NUMBER,
-} from "@/lib/constants/game";
+import { GAME_TYPE_MAX_PLAYER_NUMBER } from "@/lib/constants/game";
 import GameStatusBadge from "./GameStatusBadge";
 import ClickableTooltip from "@/components/ui/ClickableTooltip";
 import UserAvatar from "@/components/ui/UserAvatar";
@@ -24,6 +22,7 @@ type Props = {
 };
 
 function PlayersTooltipContent({ room }: { room: LobbyGame }) {
+  const t = useTranslations("game");
   const maxPlayers = GAME_TYPE_MAX_PLAYER_NUMBER[room.gameType] + 1;
   const { players } = room;
   const slots = maxPlayers - players.length;
@@ -32,14 +31,17 @@ function PlayersTooltipContent({ room }: { room: LobbyGame }) {
     <div>
       <div className="px-4 py-3 border-b border-white/10">
         <h3 className="text-white font-orbitron font-bold text-[0.9rem] mb-0.5">
-          Players ({players.length}/{maxPlayers})
+          {t("row.playersTooltipTitle", {
+            count: players.length,
+            max: maxPlayers,
+          })}
         </h3>
         <p className="text-gray-500 font-sans text-[0.75rem]">{room.name}</p>
       </div>
       <div className="px-2 py-2 space-y-1 max-h-48 overflow-y-auto">
         {players.length === 0 ? (
           <p className="px-2 py-2 text-gray-600 font-sans text-sm">
-            No players yet
+            {t("row.noPlayersYetTooltip")}
           </p>
         ) : (
           players.map((player, idx) => (
@@ -73,7 +75,7 @@ function PlayersTooltipContent({ room }: { room: LobbyGame }) {
       {slots > 0 && (
         <div className="px-4 py-2.5 border-t border-white/10">
           <span className="text-gray-500 font-sans text-[0.75rem]">
-            {slots} slot{slots !== 1 ? "s" : ""} available
+            {t("row.slotsAvailable", { count: slots })}
           </span>
         </div>
       )}
@@ -110,18 +112,19 @@ function SpectatorTooltipContent({
   spectators: (Doc<"gameSpectators"> & { avatar?: string })[];
   roomName: string;
 }) {
+  const t = useTranslations("game");
   return (
     <div>
       <div className="px-4 py-3 border-b border-white/10">
         <h3 className="text-white font-orbitron font-bold text-[0.9rem] mb-0.5">
-          Spectators ({spectators.length})
+          {t("row.spectatorsTooltipTitle", { count: spectators.length })}
         </h3>
         <p className="text-gray-500 font-sans text-[0.75rem]">{roomName}</p>
       </div>
       <div className="px-2 py-2 space-y-1 max-h-48 overflow-y-auto">
         {spectators.length === 0 ? (
           <p className="px-2 py-2 text-gray-600 font-sans text-sm">
-            No spectators yet
+            {t("row.noSpectatorsYet")}
           </p>
         ) : (
           spectators.map((spectator) => (
@@ -185,6 +188,7 @@ function RoomActionButton({
   isPlayer: boolean;
   fullWidth?: boolean;
 }) {
+  const t = useTranslations("game");
   const base = fullWidth ? "w-full justify-center" : "ml-auto";
 
   if (room.gameStatus === "finished") {
@@ -193,7 +197,7 @@ function RoomActionButton({
         disabled
         className={`${fullWidth ? "w-full" : ""} px-4 py-2${fullWidth ? ".5" : ""} rounded-lg bg-white/5 text-gray-500 border border-white/10 cursor-not-allowed font-sans text-[0.85rem] font-medium`}
       >
-        Ended
+        {t("row.ended")}
       </button>
     );
   }
@@ -206,7 +210,7 @@ function RoomActionButton({
           className={`px-4 py-2${fullWidth ? ".5" : ""} rounded-lg bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white shadow-[0_0_20px_rgba(220,38,38,0.3)] hover:shadow-[0_0_30px_rgba(220,38,38,0.5)] transition-all flex items-center gap-2 ${base} font-sans text-[0.85rem] font-semibold cursor-pointer`}
         >
           <LogIn className="w-4 h-4" />
-          {fullWidth ? "Rejoin Game" : "Rejoin"}
+          {fullWidth ? t("row.rejoinGame") : t("row.rejoin")}
         </button>
       );
     }
@@ -218,7 +222,7 @@ function RoomActionButton({
           className={`px-4 py-2${fullWidth ? ".5" : ""} rounded-lg bg-white/5 text-gray-500 border border-white/10 cursor-not-allowed font-sans text-[0.85rem] font-medium flex items-center gap-2 ${base}`}
         >
           <Lock className="w-3.5 h-3.5" />
-          Private
+          {t("row.private")}
         </button>
       );
     }
@@ -229,7 +233,7 @@ function RoomActionButton({
         className={`px-4 py-2${fullWidth ? ".5" : ""} rounded-lg bg-white/10 hover:bg-white/20 text-white border border-white/20 hover:border-white/30 transition-all flex items-center gap-2 ${base} font-sans text-[0.85rem] font-medium cursor-pointer`}
       >
         <Eye className="w-4 h-4" />
-        Spectate
+        {t("row.spectate")}
       </button>
     );
   }
@@ -239,7 +243,7 @@ function RoomActionButton({
       onClick={onJoin}
       className={`${fullWidth ? "w-full" : ""} px-4 py-2${fullWidth ? ".5" : ""} rounded-lg bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white shadow-[0_0_20px_rgba(220,38,38,0.3)] hover:shadow-[0_0_30px_rgba(220,38,38,0.5)] transition-all font-sans text-[0.85rem] font-semibold cursor-pointer`}
     >
-      {fullWidth ? "Join Game" : "Join"}
+      {fullWidth ? t("row.joinGame") : t("row.join")}
     </button>
   );
 }
@@ -257,6 +261,7 @@ function DesktopRoomRow({
 }) {
   const hostNickname =
     room.players.find((p) => p.playerId === room.hostId)?.nickname ?? "—";
+  const t = useTranslations("game");
 
   return (
     <tr className="transition-all duration-200">
@@ -275,7 +280,7 @@ function DesktopRoomRow({
       </td>
       <td className="px-6 py-4">
         <span className="px-3 py-1 rounded-lg bg-white/10 border border-white/20 text-gray-300 font-sans text-[0.85rem] font-medium">
-          {GAME_TYPE_LABEL[room.gameType]}
+          {t(`gameTypes.${room.gameType}` as Parameters<typeof t>[0])}
         </span>
       </td>
       <td className="px-6 py-4">
@@ -310,6 +315,7 @@ function MobileRoomRow({
   onSpectate: () => void;
   isPlayer: boolean;
 }) {
+  const t = useTranslations("game");
   const hostNickname =
     room.players.find((p) => p.playerId === room.hostId)?.nickname ?? "—";
 
@@ -332,7 +338,7 @@ function MobileRoomRow({
             )}
           </h3>
           <p className="text-gray-400 font-sans text-[0.85rem]">
-            Host: {hostNickname}
+            {t("row.host")}: {hostNickname}
           </p>
         </div>
         <GameStatusBadge status={room.gameStatus} />
@@ -341,22 +347,22 @@ function MobileRoomRow({
       <div className="grid grid-cols-3 gap-3 mb-4">
         <div>
           <div className="text-gray-400 font-sans text-[0.75rem] mb-1">
-            Players
+            {t("table.colPlayers")}
           </div>
           <PlayerCountWithTooltip room={room} />
         </div>
         <div>
           <div className="text-gray-400 font-sans text-[0.75rem] mb-1">
-            Spectators
+            {t("table.colSpectators")}
           </div>
           <SpectatorCountWithTooltip room={room} />
         </div>
         <div>
           <div className="text-gray-400 font-sans text-[0.75rem] mb-1">
-            Mode
+            {t("table.colMode")}
           </div>
           <span className="inline-block px-3 py-1 rounded-lg bg-white/10 border border-white/20 text-gray-300 font-sans text-[0.85rem] font-medium">
-            {GAME_TYPE_LABEL[room.gameType]}
+            {t(`gameTypes.${room.gameType}` as Parameters<typeof t>[0])}
           </span>
         </div>
       </div>

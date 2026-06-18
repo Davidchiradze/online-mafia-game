@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useMutation } from "convex/react";
 import { gameSessions } from "@convex/refs/game";
+import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { GAME_PHASES } from "@/lib/constants/game";
 
@@ -14,6 +15,7 @@ type StartVotingButtonProps = {
  * Button to start voting phase during day
  */
 const StartVotingButton = ({ gameSessionState }: StartVotingButtonProps) => {
+  const t = useTranslations("game.host");
   const [isLoading, setIsLoading] = useState(false);
   const updateSession = useMutation(gameSessions.update);
 
@@ -39,7 +41,7 @@ const StartVotingButton = ({ gameSessionState }: StartVotingButtonProps) => {
       disabled={isLoading}
       onClick={handleStartVoting}
     >
-      {isLoading ? "Starting..." : "Start Voting Phase"}
+      {isLoading ? t("startingVoting") : t("startVotingPhase")}
     </button>
   );
 };

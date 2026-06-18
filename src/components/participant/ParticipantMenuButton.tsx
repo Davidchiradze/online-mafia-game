@@ -1,6 +1,7 @@
 "use client";
 
 import * as PopoverPrimitive from "@radix-ui/react-popover";
+import { useTranslations } from "next-intl";
 import { MoreVerticalIcon } from "@/assets/icons";
 
 interface MenuItem {
@@ -28,8 +29,10 @@ export default function ParticipantMenuButton({
   onToggleMenu,
   onCloseMenu,
   items,
-  ariaLabel = "Participant settings",
+  ariaLabel,
 }: ParticipantMenuButtonProps) {
+  const tg = useTranslations("game");
+  const resolvedAriaLabel = ariaLabel ?? tg("participantSettings");
   return (
     <PopoverPrimitive.Root
       open={menuOpen}
@@ -39,7 +42,7 @@ export default function ParticipantMenuButton({
         <PopoverPrimitive.Trigger asChild>
           <button
             type="button"
-            aria-label={ariaLabel}
+            aria-label={resolvedAriaLabel}
             onClick={(e) => e.stopPropagation()}
             className="rounded-lg border border-white/10 bg-black/50 backdrop-blur p-1 md:p-1.5 text-white/80 opacity-0 group-hover:opacity-100 hover:text-white hover:bg-black/70 transition data-[state=open]:opacity-100 data-[state=open]:text-white"
           >

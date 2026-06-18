@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useMutation } from "convex/react";
+import { useTranslations } from "next-intl";
 import { nightPhase } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
@@ -15,6 +16,7 @@ export default function DoctorHealButton({
   seatNumber,
   isAlreadyHealed,
 }: DoctorHealButtonProps) {
+  const t = useTranslations("game.actions");
   const { gameId } = useGameRoom();
   const [isLoading, setIsLoading] = useState(false);
   const [hasHealed, setHasHealed] = useState(false);
@@ -64,21 +66,21 @@ export default function DoctorHealButton({
       `}
       aria-label={
         hasHealed
-          ? "Player healed"
+          ? t("playerHealed")
           : isAlreadyHealed
-            ? "Already healed this game"
-            : "Heal this player"
+            ? t("alreadyHealedThisGame")
+            : t("heal")
       }
-      title={isAlreadyHealed ? "Already healed this game" : undefined}
+      title={isAlreadyHealed ? t("alreadyHealedThisGame") : undefined}
     >
       {isLoading ? (
         <span className="w-3 h-3 border-[1.5px] border-emerald-300/20 border-t-emerald-300 rounded-full animate-spin" />
       ) : hasHealed ? (
-        <span>Healed</span>
+        <span>{t("healed")}</span>
       ) : isAlreadyHealed ? (
-        <span>Already healed</span>
+        <span>{t("alreadyHealed")}</span>
       ) : (
-        <span>Heal</span>
+        <span>{t("heal")}</span>
       )}
       <div
         className={`absolute bottom-0 left-0 right-0 h-[2px] ${

@@ -3,6 +3,7 @@
 import { TrackReferenceOrPlaceholder } from "@livekit/components-react";
 import { Check } from "lucide-react";
 import { useCallback, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { FOULS } from "@/lib/constants/game";
 
 // Context
@@ -56,6 +57,8 @@ export default function ParticipantComponent({
   player: NonNullable<ReturnType<typeof useGameRoom>["players"]>[number];
 }) {
   const { gameSessionState, room } = useGameRoom();
+  const tg = useTranslations("game");
+  const tc = useTranslations("common");
 
   // Basic participant state
   const {
@@ -286,14 +289,14 @@ export default function ParticipantComponent({
           onCloseMenu={() => setMenuOpen(false)}
           items={[
             {
-              label: "Kick player",
+              label: tg("kickPlayer"),
               onClick: onKick,
               destructive: true,
             },
-            { label: "Make host", onClick: onMakeHost },
-            { label: "Mute player", onClick: handleMutePlayer },
+            { label: tg("makeHost"), onClick: onMakeHost },
+            { label: tg("mutePlayer"), onClick: handleMutePlayer },
           ]}
-          ariaLabel="Participant settings"
+          ariaLabel={tg("participantSettings")}
         />
       )}
 
@@ -349,6 +352,8 @@ export default function ParticipantComponent({
             onReady={onReady}
             onUnready={onUnready}
             disabled={isLoadingReady}
+            labelReady={tg("ready")}
+            labelUnready={tc("cancel")}
             className={`${
               isMobileReadyVisible ? "flex" : "hidden"
             } md:group-hover:flex flex items-center justify-center`}

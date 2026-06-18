@@ -10,14 +10,15 @@ import {
   wrap,
 } from "motion/react";
 import { UserCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { JAPANESE_MAFIA_ROLES } from "@/lib/constants/game";
 import {
   roleToFaction,
   factionIcon,
   factionBadgeClass,
-  roleLabel,
 } from "@/lib/game/roleDisplay";
+import { useRoleLabel } from "@/lib/game/useRoleLabel";
 import type { PlayerStats, RoleStat } from "@convex/refs/history";
 
 interface Props {
@@ -39,6 +40,9 @@ const FLING_DECAY = 0.92;
 const MAX_FLING = 220;
 
 export default function RolePerformanceGrid({ stats }: Props) {
+  const t = useTranslations("matchHistory");
+  const roleLabel = useRoleLabel();
+
   if (stats === undefined) {
     return (
       <div className="mb-10 flex gap-3 overflow-hidden">
@@ -68,7 +72,7 @@ export default function RolePerformanceGrid({ stats }: Props) {
   return (
     <div className="mb-10">
       <h3 className="mb-4 flex items-center gap-2 font-inter text-xs font-bold uppercase tracking-widest text-zinc-500">
-        <UserCircle className="h-4 w-4" /> Role Performance
+        <UserCircle className="h-4 w-4" /> {t("rolePerformance")}
       </h3>
       <RolePerformanceMarquee roles={allRoles} />
     </div>
@@ -176,11 +180,15 @@ function AnimatedMarquee({ roles }: { roles: RoleStat[] }) {
       {/* Edge fades — cards dissolve into the page background at both ends. */}
       <div
         className="pointer-events-none absolute inset-y-0 left-0 w-16"
-        style={{ background: `linear-gradient(90deg, ${PAGE_BG}, transparent)` }}
+        style={{
+          background: `linear-gradient(90deg, ${PAGE_BG}, transparent)`,
+        }}
       />
       <div
         className="pointer-events-none absolute inset-y-0 right-0 w-16"
-        style={{ background: `linear-gradient(270deg, ${PAGE_BG}, transparent)` }}
+        style={{
+          background: `linear-gradient(270deg, ${PAGE_BG}, transparent)`,
+        }}
       />
     </div>
   );
@@ -190,6 +198,8 @@ function RoleCard({
   stat,
   ...rest
 }: { stat: RoleStat } & React.HTMLAttributes<HTMLDivElement>) {
+  const t = useTranslations("matchHistory");
+  const roleLabel = useRoleLabel();
   const faction = roleToFaction(stat.role);
   const Icon = factionIcon(faction);
   return (
@@ -198,7 +208,9 @@ function RoleCard({
       className="relative flex w-44 shrink-0 flex-col overflow-hidden rounded-xl border border-white/5 bg-[#13131a]/60 p-4 backdrop-blur-md transition-colors hover:bg-[#1a1a24]"
     >
       <div className="mb-3 flex items-center gap-2">
-        <div className={cn("rounded-md border p-1.5", factionBadgeClass(faction))}>
+        <div
+          className={cn("rounded-md border p-1.5", factionBadgeClass(faction))}
+        >
           <Icon className="h-3.5 w-3.5" />
         </div>
         <span className="truncate text-sm font-bold text-white">
@@ -208,7 +220,7 @@ function RoleCard({
       <div className="mt-auto flex items-end justify-between">
         <div className="flex flex-col">
           <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-            Plays
+            {t("plays")}
           </span>
           <span className="font-orbitron text-lg font-bold text-zinc-300">
             {stat.matches}
@@ -216,7 +228,7 @@ function RoleCard({
         </div>
         <div className="flex flex-col text-right">
           <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-            Win Rate
+            {t("winRate")}
           </span>
           <span
             className={cn(
