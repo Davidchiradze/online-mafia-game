@@ -30,7 +30,7 @@
     "public": "საჯარო",
     "publicDesc": "ნებისმიერს შეუძლია დაკვირვება",
     "private": "დახურული",
-    "privateDesc": "დამკვირვებლები დაუშვებელია",
+    "privateDesc": "მაყურებლები დაუშვებელია",
     "gameLobbyTitle": "თამაშის ლობი",
     "gameLobbySubtitle": "აირჩიეთ ოთახი შესასვლელად ან შექმენით საკუთარი",
     "searchRoomsPlaceholder": "ოთახების ძიება…",
@@ -41,14 +41,14 @@
     "online": "ონლაინ",
     "signOut": "გასვლა",
     "statPlayersInRooms": "მოთამაშეები ოთახებში",
-    "statSpectating": "დამკვირვებლები",
+    "statSpectating": "მაყურებლები",
     "statActiveRooms": "აქტიური ოთახები",
     "statGamesPlaying": "მიმდინარე თამაშები",
     "joinRoomTitle": "ოთახში შესვლა",
     "joinRoomBody": "თქვენ აპირებთ შეუერთდეთ <strong>{name}</strong>-ს.",
     "joinGame": "თამაშში შესვლა",
-    "spectateRoomTitle": "ოთახის დაკვირვება",
-    "spectateRoomBody": "თქვენ აპირებთ უყუროთ <strong>{name}</strong>-ს დამკვირვებლის სახით. შეგიძლიათ დაკვირვება, მაგრამ მონაწილეობა — არა.",
+    "spectateRoomTitle": "ოთახის ყურება",
+    "spectateRoomBody": "თქვენ აპირებთ უყუროთ <strong>{name}</strong>-ს მაყურებლების სახით. შეგიძლიათ დაკვირვება, მაგრამ მონაწილეობა — არა.",
     "watchGame": "თამაშის ყურება"
   },
   "nav": {
@@ -243,7 +243,7 @@
       "pickRoles": "როლების არჩევა"
     },
     "session": {
-      "connectingAsSpectator": "დამკვირვებლად დაკავშირება...",
+      "connectingAsSpectator": "მაყურებლად დაკავშირება...",
       "joiningGame": "თამაშში შესვლა...",
       "waitingForPlayers": "მოთამაშეების მოლოდინი...",
       "loadingGame": "თამაში იტვირთება..."
@@ -257,7 +257,7 @@
       "colRoomName": "ოთახის სახელი",
       "colMode": "რეჟიმი",
       "colPlayers": "მოთამაშეები",
-      "colSpectators": "დამკვირვებლები",
+      "colSpectators": "მაყურებლები",
       "colStatus": "სტატუსი",
       "colAction": "მოქმედება",
       "noRoomsFound": "ოთახები ვერ მოიძებნა"
@@ -265,31 +265,31 @@
     "row": {
       "host": "ჰოსტი",
       "noPlayersYetTooltip": "მაგიდა ცარიელია",
-      "noSpectatorsYet": "დამკვირვებლები ჯერ არ არიან",
+      "noSpectatorsYet": "მაყურებლები ჯერ არ არიან",
       "slotsAvailable": "{count} ადგილი თავისუფალია",
       "ended": "დასრულდა",
       "rejoin": "ხელახლა შესვლა",
       "rejoinGame": "ხელახლა შესვლა თამაშში",
       "private": "დახურული",
-      "spectate": "დაკვირვება",
+      "spectate": "ყურება",
       "join": "შესვლა",
       "joinGame": "თამაშში შესვლა",
-      "spectatorsTooltipTitle": "დამკვირვებლები ({count})",
+      "spectatorsTooltipTitle": "მაყურებლები ({count})",
       "playersTooltipTitle": "მოთამაშეები ({count}/{max})"
     },
     "header": {
-      "spectating": "დამკვირვებელი",
-      "viewSpectators": "დამკვირვებლების ნახვა",
+      "spectating": "მაყურებელი",
+      "viewSpectators": "მაყურებლების ნახვა",
       "manageJoinRequests": "შესვლის მოთხოვნების მართვა",
       "joinRequests": "შესვლის მოთხოვნები",
       "roomSettings": "ოთახის პარამეტრები",
       "exitFullscreen": "სრულ ეკრანზე გასვლა",
       "enterFullscreen": "სრულ ეკრანზე გადასვლა",
-      "stopSpectating": "დაკვირვების შეწყვეტა",
+      "stopSpectating": "ყურების შეწყვეტა",
       "leaveRoom": "ოთახის დატოვება"
     },
     "waitingRoom": {
-      "leaveRoom": "სალოდინო ოთახის დატოვება",
+      "leaveRoom": "მოსაცდელი ოთახის დატოვება",
       "tipTitle": "რჩევა",
       "tip": "ჰოსტი მალე განიხილავს თქვენს მოთხოვნას. შეგიძლიათ დატოვოთ და სცადოთ სხვა ოთახი, თუ მოლოდინი დიდია.",
       "awaitingApproval": "მოწონების მოლოდინი",
@@ -304,13 +304,13 @@
       "leaveRoomTitle": "ოთახის დატოვება"
     },
     "spectatorJoin": {
-      "connectingAsSpectator": "დამკვირვებლად დაკავშირება…",
+      "connectingAsSpectator": "მაყურებლად დაკავშირება…",
       "privateGame": "დახურული თამაში",
-      "privateGameDesc": "{name} არის დახურული ოთახი. დამკვირვებლებს არ აქვთ შესვლის უფლება.",
+      "privateGameDesc": "{name} არის დახურული ოთახი. მაყურებლებს არ აქვთ შესვლის უფლება.",
       "backToLobby": "ლობიში დაბრუნება",
       "gameInProgress": "თამაში მიმდინარეობს",
-      "gameInProgressDesc": "{name} უკვე დაიწყო. შემოდი დამკვირვებლად, რომ ნახო მოქმედება.",
-      "asASpectatorYouWill": "დამკვირვებლის სახით შენ:",
+      "gameInProgressDesc": "{name} უკვე დაიწყო. შემოდი მაყურებლად, რომ ნახო მოქმედება.",
+      "asASpectatorYouWill": "მაყურებლის სახით შენ:",
       "willWatchDayPhase": "ნახავ დღის ფაზის ყველა მოქმედებას",
       "willSeeDiscussions": "ნახავ მოთამაშეების განხილვასა და კენჭისყრას",
       "nightPhasesHidden": "ღამის ფაზები დაფარულია (მკვდრების მსგავსად)",
@@ -361,9 +361,9 @@
       "voteAgainst": "ხმა საწინააღმდეგოდ",
       "voted": "ხმა მიეცა",
       "autoVoted": "ავტო-ხმა",
-      "waitForHost": "ელოდე ჰოსტს...",
-      "voteYes": "👍 დიახ ({seconds}წმ)",
-      "voteNow": "👍 კენჭი ({seconds}წმ)"
+      "waitForHost": "დაელოდე ჰოსტს...",
+      "voteYes": "დიახ ({seconds}წმ)",
+      "voteNow": "ხმის მიცემა ({seconds}წმ)"
     },
     "hostActions": {
       "manageJoinRequests": "შესვლის მოთხოვნების მართვა"
@@ -426,8 +426,8 @@
     "GAME_ALREADY_FINISHED": "ეს თამაში უკვე დასრულდა.",
     "SESSION_NOT_FOUND": "თამაშის სესია ვერ მოიძებნა.",
     "SPECTATE_NOT_IN_PROGRESS": "დაკვირვება შესაძლებელია მხოლოდ მიმდინარე თამაშებზე.",
-    "SPECTATE_PRIVATE": "ეს თამაში დახურულია — დამკვირვებლები ვერ შემოვლენ.",
+    "SPECTATE_PRIVATE": "ეს თამაში დახურულია — მაყურებლები ვერ შემოვლენ.",
     "ALREADY_PLAYER": "თქვენ უკვე ხართ ამ თამაშის მოთამაშე.",
-    "SPECTATOR_LIMIT": "ამ თამაშმა დამკვირვებლების ლიმიტს მიაღწია."
+    "SPECTATOR_LIMIT": "ამ თამაშმა მაყურებლების ლიმიტს მიაღწია."
   }
 }

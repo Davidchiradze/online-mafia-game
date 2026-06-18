@@ -55,7 +55,7 @@ export const VOTING = {
 } as const;
 
 export const SPECTATOR = {
-  MAX_SPECTATORS_PER_GAME: 5,
+  MAX_SPECTATORS_PER_GAME: 10,
   /** Profile IDs allowed to spectate private games and bypass the capacity limit. */
   PRIVILEGED_PROFILE_IDS: [
     "k578tt29gk1nhmnp7v3mqcjc15880wrr", // Chiri
