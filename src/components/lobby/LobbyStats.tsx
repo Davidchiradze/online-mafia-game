@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import { Users, Gamepad2, Activity, Eye } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -8,10 +11,10 @@ export type LobbyStatsData = {
   playing: number;
 };
 
-const STAT_CARDS: Array<{
+const STAT_CARD_CONFIGS: Array<{
   key: keyof LobbyStatsData;
   icon: LucideIcon;
-  label: string;
+  labelKey: string;
   gradient: string;
   border: string;
   glow: string;
@@ -21,7 +24,7 @@ const STAT_CARDS: Array<{
   {
     key: "totalPlayers",
     icon: Users,
-    label: "Players in Rooms",
+    labelKey: "statPlayersInRooms",
     gradient: "from-blue-500/20 to-blue-600/20",
     border: "border-blue-400/20",
     glow: "rgba(59,130,246,0.15)",
@@ -31,7 +34,7 @@ const STAT_CARDS: Array<{
   {
     key: "totalSpectators",
     icon: Eye,
-    label: "Spectating",
+    labelKey: "statSpectating",
     gradient: "from-cyan-500/20 to-cyan-600/20",
     border: "border-cyan-400/20",
     glow: "rgba(6,182,212,0.15)",
@@ -41,7 +44,7 @@ const STAT_CARDS: Array<{
   {
     key: "activeRooms",
     icon: Gamepad2,
-    label: "Active Rooms",
+    labelKey: "statActiveRooms",
     gradient: "from-purple-500/20 to-purple-600/20",
     border: "border-purple-400/20",
     glow: "rgba(168,85,247,0.15)",
@@ -51,7 +54,7 @@ const STAT_CARDS: Array<{
   {
     key: "playing",
     icon: Activity,
-    label: "Games Playing",
+    labelKey: "statGamesPlaying",
     gradient: "from-red-500/20 to-red-600/20",
     border: "border-red-400/20",
     glow: "rgba(220,38,38,0.15)",
@@ -61,9 +64,10 @@ const STAT_CARDS: Array<{
 ];
 
 export default function LobbyStats({ stats }: { stats: LobbyStatsData }) {
+  const t = useTranslations("lobby");
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-      {STAT_CARDS.map(({ key, icon: Icon, label, gradient, border, glow, iconColor, bg }) => (
+      {STAT_CARD_CONFIGS.map(({ key, icon: Icon, labelKey, gradient, border, glow, iconColor, bg }) => (
         <div
           key={key}
           className={`flex items-center gap-4 p-4 rounded-xl border ${border} backdrop-blur-sm`}
@@ -82,7 +86,7 @@ export default function LobbyStats({ stats }: { stats: LobbyStatsData }) {
             <div className="text-white font-orbitron font-bold text-2xl leading-tight">
               {stats[key]}
             </div>
-            <div className="text-gray-500 font-sans text-xs">{label}</div>
+            <div className="text-gray-500 font-sans text-xs">{t(labelKey)}</div>
           </div>
         </div>
       ))}

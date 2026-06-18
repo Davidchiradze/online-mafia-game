@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useMutation } from "convex/react";
 import { nightPhase } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
+import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import PhaseButton from "@/components/ui/PhaseButton";
 
@@ -19,6 +20,7 @@ type StartNightPhaseButtonProps = {
 const StartNightPhaseButton = ({
   gameSessionState: _gameSessionState,
 }: StartNightPhaseButtonProps) => {
+  const t = useTranslations("game.host");
   const { gameId } = useGameRoom();
   const [isLoading, setIsLoading] = useState(false);
   const enterNight = useMutation(nightPhase.enterNight);
@@ -39,7 +41,7 @@ const StartNightPhaseButton = ({
     <PhaseButton
       onClick={handleStartNightPhase}
       isLoading={isLoading}
-      label="Start Night"
+      label={t("startNight")}
       variant="secondary"
     />
   );

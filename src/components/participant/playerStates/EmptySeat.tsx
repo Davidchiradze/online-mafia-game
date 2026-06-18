@@ -1,3 +1,7 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 interface EmptySeatProps {
   seatIndex: number;
   className?: string;
@@ -7,6 +11,7 @@ export default function EmptySeat({
   seatIndex,
   className = "",
 }: EmptySeatProps) {
+  const tg = useTranslations("game");
   return (
     <div
       className={`absolute inset-0 flex flex-col items-center justify-center ${className}`}
@@ -27,7 +32,7 @@ export default function EmptySeat({
         className="font-orbitron text-white/25 font-semibold uppercase tracking-[0.22em] mt-1 select-none"
         style={{ fontSize: "clamp(0.35rem, 1vw, 0.55rem)" }}
       >
-        waiting
+        {tg("waitingForPlayer")}
       </span>
     </div>
   );

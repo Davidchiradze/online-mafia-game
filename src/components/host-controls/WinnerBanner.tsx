@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import FinishGameButton from "./FinishGameButton";
 
 type Winner = "mafia" | "yakuza" | "citizens";
@@ -9,12 +10,6 @@ type WinnerBannerProps = {
   winner: Winner;
   /** When true, show the host's "Finish Game" button (pending-win state). */
   canFinish?: boolean;
-};
-
-const WINNER_LABELS: Record<Winner, string> = {
-  mafia: "Mafia",
-  yakuza: "Yakuza and Shogun",
-  citizens: "Citizens",
 };
 
 const WINNER_ACCENT: Record<Winner, string> = {
@@ -34,16 +29,24 @@ export default function WinnerBanner({
   winner,
   canFinish = false,
 }: WinnerBannerProps) {
+  const t = useTranslations("game.winnerBanner");
+
+  const WINNER_LABELS: Record<Winner, string> = {
+    mafia: t("mafiaWinner"),
+    yakuza: t("yakuzaWinner"),
+    citizens: t("citizensWinner"),
+  };
+
   return (
     <div className="w-full h-full flex flex-col items-center justify-center gap-4 text-center">
       <div className="space-y-1">
         <p className="font-orbitron text-[10px] uppercase tracking-[0.3em] text-slate-400">
-          Game Over
+          {t("gameOver")}
         </p>
         <h2
           className={`font-orbitron text-2xl font-bold uppercase tracking-wider ${WINNER_ACCENT[winner]}`}
         >
-          {WINNER_LABELS[winner]} Win
+          {t("winSuffix")} - {WINNER_LABELS[winner]}
         </h2>
       </div>
 

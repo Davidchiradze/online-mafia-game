@@ -1,6 +1,7 @@
 "use client";
 
-import { GAME_TYPES, GAME_TYPE_LABEL } from "@/lib/constants/game";
+import { useTranslations } from "next-intl";
+import { GAME_TYPES } from "@/lib/constants/game";
 
 export type OutcomeFilter = "all" | "win" | "loss" | "no_contest";
 export type GameTypeFilter = "all" | (typeof GAME_TYPES)[number];
@@ -21,6 +22,9 @@ export default function MatchFilters({
   onOutcomeChange,
   onGameTypeChange,
 }: Props) {
+  const t = useTranslations("matchHistory");
+  const tg = useTranslations("game");
+
   return (
     <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:justify-end">
       <select
@@ -29,11 +33,11 @@ export default function MatchFilters({
         className={SELECT_CLASS}
       >
         <option value="all" className="bg-[#0a0a12]">
-          All Modes
+          {t("filterAllModes")}
         </option>
-        {GAME_TYPES.map((t) => (
-          <option key={t} value={t} className="bg-[#0a0a12]">
-            {GAME_TYPE_LABEL[t]}
+        {GAME_TYPES.map((gt) => (
+          <option key={gt} value={gt} className="bg-[#0a0a12]">
+            {tg(`gameTypes.${gt}` as Parameters<typeof tg>[0])}
           </option>
         ))}
       </select>
@@ -44,16 +48,16 @@ export default function MatchFilters({
         className={SELECT_CLASS}
       >
         <option value="all" className="bg-[#0a0a12]">
-          All Outcomes
+          {t("filterAllOutcomes")}
         </option>
         <option value="win" className="bg-[#0a0a12]">
-          Victories
+          {t("filterVictories")}
         </option>
         <option value="loss" className="bg-[#0a0a12]">
-          Defeats
+          {t("filterDefeats")}
         </option>
         <option value="no_contest" className="bg-[#0a0a12]">
-          No Contest
+          {t("filterNoContest")}
         </option>
       </select>
     </div>

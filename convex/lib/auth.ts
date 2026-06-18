@@ -1,3 +1,4 @@
+import { ConvexError } from "convex/values";
 import { QueryCtx, MutationCtx } from "../_generated/server";
 import { Id } from "../_generated/dataModel";
 
@@ -13,7 +14,7 @@ export async function getAuthenticatedAccountId(
 ): Promise<string> {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) {
-    throw new Error("Not authenticated");
+    throw new ConvexError({ code: "NOT_AUTHENTICATED", message: "Not authenticated" });
   }
   return identity.subject;
 }
@@ -35,7 +36,7 @@ export async function getAuthenticatedUser(
     .withIndex("by_accountId", (q) => q.eq("accountId", accountId))
     .unique();
   if (!profile) {
-    throw new Error("Profile not found. Please complete profile sync.");
+    throw new ConvexError({ code: "PROFILE_SYNC_REQUIRED", message: "Profile not found. Please complete profile sync." });
   }
   return profile._id;
 }

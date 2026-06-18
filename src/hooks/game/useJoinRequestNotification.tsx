@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useCallback, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useQuery, useMutation } from "convex/react";
 import { joinRequests } from "@convex/refs/lobby";
 import { toast } from "@/lib/utils/toast";
@@ -8,20 +9,7 @@ import { toast as toastifyDismiss } from "react-toastify";
 import { Check, X } from "lucide-react";
 import type { Id } from "@convex/_generated/dataModel";
 import UserAvatar from "@/components/ui/UserAvatar";
-
-// ---------------------------------------------------------------------------
-// Notification sound for new join requests
-// ---------------------------------------------------------------------------
-
-function playNewRequestSound() {
-  try {
-    const audio = new Audio("/audio/new-request-notification.mp3");
-    audio.volume = 0.5;
-    void audio.play();
-  } catch {
-    // Audio not supported or blocked - fail silently
-  }
-}
+import { playSound } from "@/lib/audio/audioUnlock";
 
 // ---------------------------------------------------------------------------
 // Toast body rendered inside each join-request notification
@@ -41,6 +29,7 @@ function JoinRequestToastBody({
   onReject: (id: Id<"joinRequests">) => Promise<void>;
 }) {
   const [loading, setLoading] = useState<"accept" | "reject" | null>(null);
+  const t = useTranslations("game.joinRequests");
 
   const handle = (e: React.MouseEvent, action: "accept" | "reject") => {
     e.stopPropagation();
@@ -55,8 +44,12 @@ function JoinRequestToastBody({
       <div className="flex items-center gap-2 min-w-0">
         <UserAvatar src={avatar} name={nickname} size={28} />
         <span className="text-white/90 truncate">
-          <span className="font-semibold text-white">{nickname}</span> wants to
-          join
+          {t.rich("wantsToJoin", {
+            nickname,
+            b: (chunks) => (
+              <span className="font-semibold text-white">{chunks}</span>
+            ),
+          })}
         </span>
       </div>
       <div className="flex items-center gap-1.5 shrink-0">
@@ -65,7 +58,7 @@ function JoinRequestToastBody({
           disabled={loading !== null}
           onClick={(e) => handle(e, "accept")}
           className="flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/30 transition-colors disabled:opacity-50 cursor-pointer"
-          aria-label={`Accept ${nickname}`}
+          aria-label={t("acceptAriaLabel", { name: nickname })}
         >
           {loading === "accept" ? (
             <span className="spinner spinner-sm border-emerald-400/30 border-t-emerald-400" />
@@ -78,7 +71,7 @@ function JoinRequestToastBody({
           disabled={loading !== null}
           onClick={(e) => handle(e, "reject")}
           className="flex items-center justify-center w-7 h-7 rounded-lg bg-red-500/20 border border-red-500/40 text-red-400 hover:bg-red-500/30 transition-colors disabled:opacity-50 cursor-pointer"
-          aria-label={`Reject ${nickname}`}
+          aria-label={t("rejectAriaLabel", { name: nickname })}
         >
           {loading === "reject" ? (
             <span className="spinner spinner-sm border-red-400/30 border-t-red-400" />
@@ -164,7 +157,7 @@ export function useJoinRequestNotification(gameId: string, isHost: boolean) {
     }
 
     if (hasNewRequest) {
-      playNewRequestSound();
+      playSound("/audio/new-request-notification.mp3");
     }
 
     for (const id of toastIdsRef.current.keys()) {

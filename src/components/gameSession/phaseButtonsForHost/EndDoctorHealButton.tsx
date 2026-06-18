@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useMutation } from "convex/react";
 import { farewellSpeech } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
+import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import PhaseButton from "@/components/ui/PhaseButton";
 import { useNightPhaseReadiness } from "@/hooks/game/useNightPhaseReadiness";
@@ -18,6 +19,7 @@ import { useNightPhaseReadiness } from "@/hooks/game/useNightPhaseReadiness";
  *   - Otherwise, transitions to farewell_speech with randomized speaker order
  */
 const EndDoctorHealButton = () => {
+  const t = useTranslations("game.host");
   const { gameId } = useGameRoom();
   const [isLoading, setIsLoading] = useState(false);
   const { canEndDoctorPhase } = useNightPhaseReadiness();
@@ -41,7 +43,7 @@ const EndDoctorHealButton = () => {
       onClick={handleEndDoctorHeal}
       isLoading={isLoading}
       disabled={!canEndDoctorPhase}
-      label={canEndDoctorPhase ? "End Doctor Phase" : "Waiting for Doctor..."}
+      label={canEndDoctorPhase ? t("endDoctorPhase") : t("waitingForDoctor")}
       variant="success"
     />
   );

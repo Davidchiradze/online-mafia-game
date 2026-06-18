@@ -8,14 +8,14 @@ import {
 } from "lucide-react";
 
 export type NavigationSidebarItem = {
-  label: string;
+  labelKey: string;
   href: string;
   icon: LucideIcon;
 };
 
 export const NAVIGATION_SIDEBAR_ITEMS: NavigationSidebarItem[] = [
-  { label: "Lobby", href: "/lobby", icon: Gamepad2 },
-  { label: "Match History", href: "/match-history", icon: History },
-  { label: "Community Chat", href: "/community-chat", icon: MessageSquare },
-  { label: "Leaderboard", href: "/leaderboard", icon: Trophy },
+  { labelKey: "lobby", href: "/lobby", icon: Gamepad2 },
+  { labelKey: "matchHistory", href: "/match-history", icon: History },
+  { labelKey: "communityChat", href: "/community-chat", icon: MessageSquare },
+  { labelKey: "leaderboard", href: "/leaderboard", icon: Trophy },
 ];

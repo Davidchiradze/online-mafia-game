@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "convex/react";
+import { useTranslations } from "next-intl";
 import { authProfiles } from "@convex/refs/lobby";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
@@ -19,12 +20,13 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
  */
 export default function AuthGate({ children }: { children: React.ReactNode }) {
   const profile = useQuery(authProfiles.currentProfile);
+  const tc = useTranslations("common");
 
   // undefined = query loading; null = not authenticated / profile not synced.
   if (!profile) {
     return (
       <div className="flex h-full items-center justify-center">
-        <LoadingSpinner message="Loading..." />
+        <LoadingSpinner message={tc("loading")} />
       </div>
     );
   }

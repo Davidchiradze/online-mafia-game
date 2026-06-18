@@ -1,10 +1,12 @@
+import { getTranslations } from "next-intl/server";
 import ComingSoonPage from "@/components/dashboard/ComingSoonPage";
 
-export default function LeaderboardPage() {
+export default async function LeaderboardPage() {
+  const t = await getTranslations("headquarters");
   return (
     <ComingSoonPage
-      title="Leaderboard"
-      description="See who the top players are in the Mafia underworld. Climb the ranks to prove your mastery."
+      title={t("leaderboardTitle")}
+      description={t("leaderboardDescription")}
     />
   );
 }

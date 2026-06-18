@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { mutation } from "../_generated/server";
 import { getAuthenticatedUser } from "../lib/auth";
 import {
@@ -17,12 +17,12 @@ export const transfer = mutation({
     const game = await assertIsHost(ctx.db, gameId, userId);
 
     if (newHostId === userId) {
-      throw new Error("You are already the host");
+      throw new ConvexError("You are already the host");
     }
 
     const newHostProfile = await ctx.db.get(newHostId);
     if (!newHostProfile) {
-      throw new Error("New host user not found");
+      throw new ConvexError("New host user not found");
     }
 
     const previousHostId = game.hostId;
@@ -48,7 +48,7 @@ export const transfer = mutation({
 
     const prevHostProfile = await ctx.db.get(previousHostId);
     if (!prevHostProfile) {
-      throw new Error("Previous host profile not found");
+      throw new ConvexError("Previous host profile not found");
     }
 
     const existingPrevHostRequest = await getJoinRequestByRequester(

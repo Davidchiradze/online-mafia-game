@@ -30,7 +30,12 @@ export default function SeatIndicator({
   // climbs 0 → 100, so the visible arc is the remainder.
   const showSpeakingRing = speakingProgress > 0 && speakingProgress < 100;
   const remainingPct = Math.max(0, 100 - speakingProgress);
-  const ringDashOffset = (RING_CIRCUMFERENCE * speakingProgress) / 100;
+  // Draw the remaining arc via the dash *length* (with a zero offset) rather
+  // than a negative dash-offset. WebKit/iOS Safari renders the dash-offset
+  // direction opposite to Blink, which inverted the ring on iPhones; sizing
+  // the visible dash directly is direction-agnostic and identical on all
+  // engines.
+  const ringDashArray = `${(RING_CIRCUMFERENCE * remainingPct) / 100} ${RING_CIRCUMFERENCE}`;
   const ringStroke =
     remainingPct <= 20 ? "#ef4444" : remainingPct <= 50 ? "#fbbf24" : "#34d399";
 
@@ -48,11 +53,14 @@ export default function SeatIndicator({
 
   return (
     <div className="relative shrink-0 flex items-center justify-center">
-      {/* Countdown ring (only while this player is the active speaker) */}
+      {/* Countdown ring (only while this player is the active speaker).
+          `-rotate-90` puts the arc start at 12 o'clock; `-scale-y-100`
+          reverses the circle's winding so the dash depletes clockwise from
+          the right rather than the left. */}
       {showSpeakingRing && (
         <svg
           viewBox="0 0 36 36"
-          className="absolute -inset-[3px] tlg:-inset-1 w-[calc(100%+6px)] h-[calc(100%+6px)] tlg:w-[calc(100%+8px)] tlg:h-[calc(100%+8px)] -rotate-90 pointer-events-none"
+          className="absolute -inset-[3px] tlg:-inset-1 w-[calc(100%+6px)] h-[calc(100%+6px)] tlg:w-[calc(100%+8px)] tlg:h-[calc(100%+8px)] -rotate-90 -scale-y-100 pointer-events-none"
           style={{ filter: `drop-shadow(0 0 4px ${ringStroke})` }}
         >
           {/* Track */}
@@ -73,9 +81,8 @@ export default function SeatIndicator({
             stroke={ringStroke}
             strokeWidth="3"
             strokeLinecap="round"
-            strokeDasharray={RING_CIRCUMFERENCE}
-            strokeDashoffset={-ringDashOffset}
-            style={{ transition: "stroke-dashoffset 0.2s linear, stroke 0.3s ease" }}
+            strokeDasharray={ringDashArray}
+            style={{ transition: "stroke-dasharray 0.2s linear, stroke 0.3s ease" }}
           />
         </svg>
       )}

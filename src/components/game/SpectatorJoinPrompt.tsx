@@ -3,8 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "convex/react";
+import { useTranslations } from "next-intl";
 import { gameSpectators } from "@convex/refs/game";
 import { ArrowLeft, Eye, Loader2, Lock } from "lucide-react";
+import { useErrorMessage } from "@/lib/i18n/errorMessage";
 import type { Id } from "@convex/_generated/dataModel";
 
 type GameSummary = {
@@ -24,12 +26,14 @@ type Props = {
 };
 
 export default function SpectatorJoinPrompt({ gameId, game, isPrivate }: Props) {
+  const t = useTranslations("game.spectatorJoin");
   const router = useRouter();
   const [isJoining, setIsJoining] = useState(false);
   const [hasJoined, setHasJoined] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const joinSpectator = useMutation(gameSpectators.join);
+  const getErrorMessage = useErrorMessage();
 
   const handleJoinAsSpectator = async () => {
     if (isJoining) return;
@@ -39,9 +43,7 @@ export default function SpectatorJoinPrompt({ gameId, game, isPrivate }: Props) 
       await joinSpectator({ gameId: gameId as Id<"games"> });
       setHasJoined(true);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to join as spectator",
-      );
+      setError(getErrorMessage(err));
       setIsJoining(false);
     }
   };
@@ -51,7 +53,7 @@ export default function SpectatorJoinPrompt({ gameId, game, isPrivate }: Props) 
       <div className="w-full max-w-md mx-auto flex flex-col items-center justify-center gap-4">
         <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
         <p className="text-gray-400 font-sans text-sm">
-          Connecting as spectator…
+          {t("connectingAsSpectator")}
         </p>
       </div>
     );
@@ -77,11 +79,10 @@ export default function SpectatorJoinPrompt({ gameId, game, isPrivate }: Props) 
           </div>
 
           <h2 className="text-white font-orbitron font-bold text-xl tracking-tight mb-2">
-            Private Game
+            {t("privateGame")}
           </h2>
           <p className="text-gray-500 font-sans text-sm leading-relaxed mb-7">
-            <span className="text-white font-medium">{game.name}</span> is a
-            private room. Spectators are not allowed to join this game.
+            {t("privateGameDesc", { name: game.name })}
           </p>
 
           <div className="h-px bg-white/[0.06] mb-6" />
@@ -91,12 +92,19 @@ export default function SpectatorJoinPrompt({ gameId, game, isPrivate }: Props) 
             className="w-full py-3 rounded-xl border border-white/10 text-gray-400 hover:text-white hover:border-white/20 font-sans text-sm font-medium transition-all cursor-pointer flex items-center justify-center gap-2"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Lobby
+            {t("backToLobby")}
           </button>
         </div>
       </div>
     );
   }
+
+  const spectatorRules = [
+    { icon: "✓", color: "text-green-400", textKey: "willWatchDayPhase" as const },
+    { icon: "✓", color: "text-green-400", textKey: "willSeeDiscussions" as const },
+    { icon: "○", color: "text-amber-400", textKey: "nightPhasesHidden" as const },
+    { icon: "✗", color: "text-red-400", textKey: "cannotParticipate" as const },
+  ];
 
   return (
     <div className="w-full max-w-md mx-auto">
@@ -120,11 +128,10 @@ export default function SpectatorJoinPrompt({ gameId, game, isPrivate }: Props) 
 
         {/* Title */}
         <h2 className="text-white font-orbitron font-bold text-xl tracking-tight mb-2">
-          Game in Progress
+          {t("gameInProgress")}
         </h2>
         <p className="text-gray-500 font-sans text-sm leading-relaxed mb-7">
-          <span className="text-white font-medium">{game.name}</span> has
-          already started. Join as a spectator to watch the action unfold.
+          {t("gameInProgressDesc", { name: game.name })}
         </p>
 
         {/* Error */}
@@ -141,35 +148,14 @@ export default function SpectatorJoinPrompt({ gameId, game, isPrivate }: Props) 
           style={{ background: "rgba(255,255,255,0.03)" }}
         >
           <p className="text-gray-500 font-sans text-xs uppercase tracking-wider mb-3">
-            As a spectator you will
+            {t("asASpectatorYouWill")}
           </p>
-          {[
-            {
-              icon: "✓",
-              color: "text-green-400",
-              text: "Watch all day phase activities",
-            },
-            {
-              icon: "✓",
-              color: "text-green-400",
-              text: "See player discussions and voting",
-            },
-            {
-              icon: "○",
-              color: "text-amber-400",
-              text: "Night phases hidden (like dead players)",
-            },
-            {
-              icon: "✗",
-              color: "text-red-400",
-              text: "Cannot participate or interact",
-            },
-          ].map(({ icon, color, text }) => (
-            <div key={text} className="flex items-center gap-3">
+          {spectatorRules.map(({ icon, color, textKey }) => (
+            <div key={textKey} className="flex items-center gap-3">
               <span className={`font-bold text-sm ${color} w-4 shrink-0`}>
                 {icon}
               </span>
-              <span className="text-gray-400 font-sans text-sm">{text}</span>
+              <span className="text-gray-400 font-sans text-sm">{t(textKey)}</span>
             </div>
           ))}
         </div>
@@ -185,7 +171,7 @@ export default function SpectatorJoinPrompt({ gameId, game, isPrivate }: Props) 
             className="flex-1 py-3 rounded-xl border border-white/10 text-gray-400 hover:text-white hover:border-white/20 font-sans text-sm font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back
+            {t("back")}
           </button>
           <button
             onClick={handleJoinAsSpectator}
@@ -195,12 +181,12 @@ export default function SpectatorJoinPrompt({ gameId, game, isPrivate }: Props) 
             {isJoining ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                Joining…
+                {t("joining")}
               </>
             ) : (
               <>
                 <Eye className="w-4 h-4" />
-                Watch Game
+                {t("watchGame")}
               </>
             )}
           </button>

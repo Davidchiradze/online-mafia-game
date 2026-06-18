@@ -4,6 +4,7 @@ import React, { useState, useCallback } from "react";
 import { useMutation } from "convex/react";
 import { dayPhase } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
+import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { SPEAKING_STATE } from "@/lib/constants/game";
 import PhaseButton from "@/components/ui/PhaseButton";
@@ -25,6 +26,7 @@ export default function DayPhaseSpeakingControls({
   gameId,
   gameSessionState,
 }: Props) {
+  const t = useTranslations("game.host");
   const [isLoading, setIsLoading] = useState(false);
   const startSpeaking = useMutation(dayPhase.startDaySpeaking);
   const advanceSpeaker = useMutation(dayPhase.advanceSpeaker);
@@ -76,7 +78,7 @@ export default function DayPhaseSpeakingControls({
         isLoading={isLoading}
         disableOnMountMs={BUTTON_RENDER_DELAY_MS}
         disableResetKey={disableResetKey}
-        label="Start"
+        label={t("start")}
         variant="success"
       />
     );
@@ -89,7 +91,7 @@ export default function DayPhaseSpeakingControls({
         isLoading={isLoading}
         disableOnMountMs={BUTTON_RENDER_DELAY_MS}
         disableResetKey={disableResetKey}
-        label="Start"
+        label={t("start")}
         variant="success"
       />
     );
@@ -101,7 +103,7 @@ export default function DayPhaseSpeakingControls({
       isLoading={isLoading}
       disableOnMountMs={BUTTON_RENDER_DELAY_MS}
       disableResetKey={disableResetKey}
-      label="Finish"
+      label={t("finish")}
       variant="danger"
     />
   );

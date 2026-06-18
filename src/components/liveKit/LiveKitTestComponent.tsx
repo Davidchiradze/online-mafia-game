@@ -7,6 +7,7 @@ import {
 } from "@livekit/components-react";
 import { Room, Track } from "livekit-client";
 import "@livekit/components-styles";
+import { useTranslations } from "next-intl";
 import PlayerCircle from "@/components/game/PlayerCircle";
 import GameRoomHeader from "@/components/game/GameRoomHeader";
 import { useRef } from "react";
@@ -73,6 +74,7 @@ function MyVideoConference({
   hostUserId: string | null;
   userId: string;
 }) {
+  const tLivekit = useTranslations("game.livekit");
   const tracks = useTracks(
     [{ source: Track.Source.Camera, withPlaceholder: true }],
     { onlySubscribed: false },
@@ -80,7 +82,7 @@ function MyVideoConference({
   const track = tracks.find((t) => t.participant.identity === userId);
   return (
     <div className="w-full h-full flex items-center justify-center">
-      {!track && <LoadingSpinner message="Loading..." />}
+      {!track && <LoadingSpinner message={tLivekit("loadingVideo")} />}
       {track && (
         <div className="game-grid-container w-full h-full">
           <PlayerCircle

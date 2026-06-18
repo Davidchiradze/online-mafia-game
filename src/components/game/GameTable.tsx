@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { LobbyGame } from "@/components/lobby/LobbyContent";
 import GameRoomRow from "./GameRoomRow";
 
@@ -8,17 +9,18 @@ type Props = {
   rooms: LobbyGame[];
 };
 
-const COL_HEADERS = [
-  { label: "Room Name", className: "w-[28%]" },
-  { label: "Mode", className: "w-[14%]" },
-  { label: "Players", className: "w-[16%]" },
-  { label: "Spectators", className: "w-[16%]" },
-  { label: "Status", className: "w-[14%]" },
-  { label: "Action", className: "w-[12%] text-right" },
-];
-
 export default function GameTable({ rooms }: Props) {
   const router = useRouter();
+  const t = useTranslations("game");
+
+  const COL_HEADERS = [
+    { label: t("table.colRoomName"), className: "w-[28%]" },
+    { label: t("table.colMode"), className: "w-[14%]" },
+    { label: t("table.colPlayers"), className: "w-[16%]" },
+    { label: t("table.colSpectators"), className: "w-[16%]" },
+    { label: t("table.colStatus"), className: "w-[14%]" },
+    { label: t("table.colAction"), className: "w-[12%] text-right" },
+  ];
 
   const navigateToRoom = (roomId: string) => {
     router.push(`/game/${roomId}`);
@@ -37,7 +39,7 @@ export default function GameTable({ rooms }: Props) {
       {/* Mobile */}
       <div className="p-4 lg:hidden">
         {rooms.length === 0 ? (
-          <EmptyState />
+          <EmptyState noRoomsFound={t("table.noRoomsFound")} />
         ) : (
           <div className="space-y-3">
             {rooms.map((room) => (
@@ -74,7 +76,7 @@ export default function GameTable({ rooms }: Props) {
             {rooms.length === 0 ? (
               <tr>
                 <td colSpan={6}>
-                  <EmptyState />
+                  <EmptyState noRoomsFound={t("table.noRoomsFound")} />
                 </td>
               </tr>
             ) : (
@@ -94,13 +96,13 @@ export default function GameTable({ rooms }: Props) {
   );
 }
 
-function EmptyState() {
+function EmptyState({ noRoomsFound }: { noRoomsFound: string }) {
   return (
     <div className="flex flex-col items-center justify-center py-16 gap-3">
       <div className="w-12 h-12 rounded-xl border border-white/10 bg-white/[0.03] flex items-center justify-center">
         <span className="text-gray-600 font-orbitron font-bold text-lg">?</span>
       </div>
-      <p className="text-gray-600 font-sans text-sm">No rooms found</p>
+      <p className="text-gray-600 font-sans text-sm">{noRoomsFound}</p>
     </div>
   );
 }

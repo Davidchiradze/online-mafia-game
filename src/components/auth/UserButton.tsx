@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "convex/react";
+import { useTranslations } from "next-intl";
 import { api } from "@convex/_generated/api";
 
 type Profile = {
@@ -8,6 +9,7 @@ type Profile = {
 } | null;
 
 export default function UserButton() {
+  const t = useTranslations("lobby");
   const profile = useQuery(api.auth.profiles.currentProfile) as Profile | undefined;
 
   if (!profile) return null;
@@ -24,7 +26,7 @@ export default function UserButton() {
         href="/api/auth/logout"
         className="rounded-lg border border-white/[0.1] bg-white/[0.04] px-3 py-1.5 text-xs font-medium text-gray-400 hover:text-white hover:bg-white/[0.08] font-sans transition-all"
       >
-        Sign out
+        {t("signOut")}
       </a>
     </div>
   );

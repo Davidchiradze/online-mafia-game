@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import {
   query,
   mutation,
@@ -151,7 +151,7 @@ export const start = mutation({
       .query("gameSessions")
       .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
       .unique();
-    if (!session) throw new Error("Game session not found");
+    if (!session) throw new ConvexError("Game session not found");
 
     const existing = await ctx.db
       .query("cardPickingSessions")
@@ -172,10 +172,10 @@ export const start = mutation({
       .sort((a, b) => a.seatNumber - b.seatNumber);
 
     if (seatedPlayers.length === 0) {
-      throw new Error("No seated players to deal cards to");
+      throw new ConvexError("No seated players to deal cards to");
     }
     if (seatedPlayers.length > JAPANESE_MAFIA_ROLE_DISTRIBUTION.length) {
-      throw new Error(
+      throw new ConvexError(
         `Too many seated players (${seatedPlayers.length}); deck only supports up to ${JAPANESE_MAFIA_ROLE_DISTRIBUTION.length}`,
       );
     }
@@ -235,9 +235,9 @@ export const pickCard = mutation({
       .query("cardPickingSessions")
       .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
       .unique();
-    if (!session) throw new Error("Card-picking session not found");
+    if (!session) throw new ConvexError("Card-picking session not found");
     if (session.isComplete) {
-      throw new Error("Card-picking is already complete");
+      throw new ConvexError("Card-picking is already complete");
     }
 
     const player = await ctx.db
@@ -247,19 +247,19 @@ export const pickCard = mutation({
       )
       .unique();
     if (!player || player.seatNumber === undefined) {
-      throw new Error("You are not a seated player in this game");
+      throw new ConvexError("You are not a seated player in this game");
     }
     const seatNumber = player.seatNumber;
 
     const currentSeat = session.pickOrder[session.currentPickIndex];
     if (seatNumber !== currentSeat) {
-      throw new Error("Not your turn");
+      throw new ConvexError("Not your turn");
     }
 
     const cardIndex = session.deck.findIndex((c) => c.cardId === cardId);
-    if (cardIndex === -1) throw new Error("Card not found");
+    if (cardIndex === -1) throw new ConvexError("Card not found");
     if (session.deck[cardIndex].claimedByPlayerId !== undefined) {
-      throw new Error("Card already taken");
+      throw new ConvexError("Card already taken");
     }
 
     await applyCardClaim(ctx, {
@@ -382,7 +382,7 @@ export const getState = query({
     const userId = await getAuthenticatedUser(ctx);
 
     const game = await ctx.db.get(gameId);
-    if (!game) throw new Error("Game not found");
+    if (!game) throw new ConvexError("Game not found");
 
     const session = await ctx.db
       .query("cardPickingSessions")

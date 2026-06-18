@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useMutation } from "convex/react";
+import { useTranslations } from "next-intl";
 import { dayPhase } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
@@ -23,6 +24,7 @@ export default function FoulButton({
   seatNumber,
   currentFouls,
 }: FoulButtonProps) {
+  const t = useTranslations("game.foul");
   const { gameId } = useGameRoom();
   const [isLoading, setIsLoading] = useState(false);
   const [showEliminationModal, setShowEliminationModal] = useState(false);
@@ -63,9 +65,9 @@ export default function FoulButton({
   );
 
   const getButtonTitle = () => {
-    if (isAlreadyEliminated) return "Player eliminated by fouls";
-    if (wouldBeEliminationFoul) return "4th foul will eliminate player";
-    return "Give foul to player";
+    if (isAlreadyEliminated) return t("playerEliminatedByFouls");
+    if (wouldBeEliminationFoul) return t("fourthFoulWillEliminate");
+    return t("giveFoulToPlayer");
   };
 
   return (
@@ -74,7 +76,7 @@ export default function FoulButton({
         type="button"
         onClick={handleClick}
         disabled={isLoading || isAlreadyEliminated}
-        aria-label="Give foul"
+        aria-label={t("giveFoul")}
         title={getButtonTitle()}
         className={`
           relative w-5 h-5 tsm:w-6 tsm:h-6 tmd:w-8 tmd:h-8 rounded-full flex items-center justify-center

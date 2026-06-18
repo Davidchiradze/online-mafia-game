@@ -4,6 +4,7 @@ import React, { useMemo, useState } from "react";
 import { useMutation } from "convex/react";
 import { gameSessions } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
+import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import PhaseButton from "@/components/ui/PhaseButton";
 import PhaseTitle from "@/components/ui/PhaseTitle";
@@ -21,6 +22,7 @@ const LABEL_CLASS = "font-orbitron text-xs font-bold tracking-wider";
  * not from LiveKit metadata.
  */
 const StartGameButton = () => {
+  const t = useTranslations("game.host");
   const { gameId, players, hostUserId, maxPlayers } = useGameRoom();
   const startGameMutation = useMutation(gameSessions.startGame);
 
@@ -29,7 +31,8 @@ const StartGameButton = () => {
   const { readyCount, totalPlayers, allReady } = useMemo(() => {
     const lobbyPlayers = players.filter((p) => p.playerId !== hostUserId);
     const total = maxPlayers || lobbyPlayers.length;
-    // const total = 4;
+
+    // const total = lobbyPlayers.length;
     const ready = lobbyPlayers.filter((p) => p.isReady).length;
     return {
       readyCount: ready,
@@ -53,14 +56,14 @@ const StartGameButton = () => {
   if (allReady) {
     return (
       <div className={CONTAINER_CLASS}>
-        <PhaseTitle title="Ready to Play" />
+        <PhaseTitle title={t("readyToPlay")} />
         <span className={`${LABEL_CLASS} text-emerald-400`}>
-          All {totalPlayers} players ready
+          {t("allPlayersReady", { count: totalPlayers })}
         </span>
         <PhaseButton
           onClick={handleStartGame}
           isLoading={isLoading}
-          label="Start"
+          label={t("start")}
           variant="success"
         />
       </div>
@@ -72,7 +75,7 @@ const StartGameButton = () => {
   return (
     <div className={CONTAINER_CLASS}>
       <PhaseTitle
-        title={totalPlayers > 0 ? "Waiting for Players" : "Waiting to Join"}
+        title={totalPlayers > 0 ? t("waitingForPlayers") : t("waitingToJoin")}
       />
 
       {totalPlayers > 0 ? (
@@ -86,11 +89,13 @@ const StartGameButton = () => {
           <span className={`${LABEL_CLASS} text-white/70`}>
             <span className="text-emerald-400">{readyCount}</span>
             <span className="text-white/40"> / {totalPlayers} </span>
-            ready
+            {t("readyLabel")}
           </span>
         </div>
       ) : (
-        <span className={`${LABEL_CLASS} text-white/40`}>No players yet</span>
+        <span className={`${LABEL_CLASS} text-white/40`}>
+          {t("noPlayersYet")}
+        </span>
       )}
     </div>
   );

@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { query, mutation } from "../_generated/server";
 import { getAuthenticatedUser } from "../lib/auth";
 import { getGameById, assertIsHost } from "../lib/games";
@@ -135,16 +135,16 @@ export const promoteToRightHand = mutation({
       )
       .unique();
     if (!callerRole || callerRole.role !== "DON") {
-      throw new Error("Only the Don can promote the Right Hand");
+      throw new ConvexError("Only the Don can promote the Right Hand");
     }
 
     const session = await ctx.db
       .query("gameSessions")
       .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
       .unique();
-    if (!session) throw new Error("Game session not found");
+    if (!session) throw new ConvexError("Game session not found");
     if (session.gamePhase !== GAME_PHASES[3]) {
-      throw new Error("Not in don_chooses_right_hand phase");
+      throw new ConvexError("Not in don_chooses_right_hand phase");
     }
 
     const targetRole = await ctx.db
@@ -154,10 +154,10 @@ export const promoteToRightHand = mutation({
       )
       .unique();
     if (!targetRole) {
-      throw new Error("Target player has no role assigned");
+      throw new ConvexError("Target player has no role assigned");
     }
     if (targetRole.role !== "MAFIA") {
-      throw new Error("Only MAFIA players can be promoted to Right Hand");
+      throw new ConvexError("Only MAFIA players can be promoted to Right Hand");
     }
 
     const allRolesInGame = await ctx.db
@@ -168,7 +168,7 @@ export const promoteToRightHand = mutation({
       (r) => r.role === "MAFIA_RIGHT_HAND",
     );
     if (alreadyHasRightHand) {
-      throw new Error("Right Hand has already been chosen");
+      throw new ConvexError("Right Hand has already been chosen");
     }
 
     await ctx.db.patch(targetRole._id, { role: "MAFIA_RIGHT_HAND" });

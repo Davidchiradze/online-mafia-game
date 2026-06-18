@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useMutation } from "convex/react";
+import { useTranslations } from "next-intl";
 import { gameRoles } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
@@ -22,6 +23,7 @@ interface PromoteToRightHandButtonProps {
 export default function PromoteToRightHandButton({
   targetPlayerId,
 }: PromoteToRightHandButtonProps) {
+  const t = useTranslations("game.actions");
   const { gameId } = useGameRoom();
   const [isLoading, setIsLoading] = useState(false);
   const promote = useMutation(gameRoles.promoteToRightHand);
@@ -60,12 +62,12 @@ export default function PromoteToRightHandButton({
         cursor-pointer active:scale-95
         ${isLoading ? "opacity-50 cursor-wait" : ""}
       `}
-      aria-label="Promote to Right Hand"
+      aria-label={t("promoteToRightHand")}
     >
       {isLoading ? (
         <span className="w-3 h-3 border-[1.5px] border-amber-300/20 border-t-amber-300 rounded-full animate-spin" />
       ) : (
-        <span>Promote</span>
+        <span>{t("promote")}</span>
       )}
       <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-amber-400/40" />
     </button>

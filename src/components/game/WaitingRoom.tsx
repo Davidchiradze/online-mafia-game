@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Clock, CheckCircle, X, LogOut } from "lucide-react";
-import { JOIN_REQUEST_STATUSES, GAME_TYPE_LABEL } from "@/lib/constants/game";
+import { JOIN_REQUEST_STATUSES } from "@/lib/constants/game";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 
 type Props = {
@@ -79,38 +80,12 @@ export default function WaitingRoom({ status, gameId }: Props) {
 
         {/* Footer — leave button only for pending */}
         {isPending && (
-          <div
-            className="px-6 sm:px-8 py-5 border-t border-white/10"
-            style={{ background: "rgba(0,0,0,0.3)" }}
-          >
-            <button
-              onClick={handleLeave}
-              disabled={isLeaving}
-              className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white border border-white/10 hover:border-white/20 font-sans text-sm font-semibold transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <LogOut className="w-4 h-4" />
-              Leave Waiting Room
-            </button>
-          </div>
+          <WaitingRoomFooter handleLeave={handleLeave} isLeaving={isLeaving} />
         )}
       </div>
 
       {/* Tip */}
-      {isPending && (
-        <div
-          className="mt-4 px-5 py-3 rounded-xl border border-white/10 text-center"
-          style={{
-            background:
-              "linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)",
-          }}
-        >
-          <p className="text-gray-500 font-sans text-[0.8rem]">
-            <span className="text-gray-400">Tip:</span> The host will review
-            your request shortly. You can leave and try another room if the wait
-            is too long.
-          </p>
-        </div>
-      )}
+      {isPending && <WaitingRoomTip />}
     </div>
   );
 }
@@ -127,9 +102,11 @@ function RoomHeader({
   onLeave: () => void;
   isLeaving: boolean;
 }) {
+  const t = useTranslations("game.waitingRoom");
+  const tg = useTranslations("game");
   const { gameData } = useGameRoom();
   const modeLabel = gameData
-    ? GAME_TYPE_LABEL[gameData.gameType as keyof typeof GAME_TYPE_LABEL]
+    ? tg(`gameTypes.${gameData.gameType}` as Parameters<typeof tg>[0])
     : null;
   const roomName = gameData?.name ?? `Room #${gameId.slice(0, 6)}`;
 
@@ -154,7 +131,7 @@ function RoomHeader({
         <button
           onClick={onLeave}
           disabled={isLeaving}
-          title="Leave room"
+          title={t("leaveRoomTitle")}
           className="p-2 rounded-lg bg-white/5 hover:bg-red-500/20 border border-white/10 hover:border-red-500/30 text-gray-400 hover:text-red-400 transition-all cursor-pointer disabled:opacity-40 shrink-0 group"
         >
           <X className="w-5 h-5" />
@@ -165,9 +142,58 @@ function RoomHeader({
 }
 
 // ---------------------------------------------------------------------------
+// Footer leave button (pending state)
+// ---------------------------------------------------------------------------
+function WaitingRoomFooter({
+  handleLeave,
+  isLeaving,
+}: {
+  handleLeave: () => void;
+  isLeaving: boolean;
+}) {
+  const t = useTranslations("game.waitingRoom");
+  return (
+    <div
+      className="px-6 sm:px-8 py-5 border-t border-white/10"
+      style={{ background: "rgba(0,0,0,0.3)" }}
+    >
+      <button
+        onClick={handleLeave}
+        disabled={isLeaving}
+        className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white border border-white/10 hover:border-white/20 font-sans text-sm font-semibold transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <LogOut className="w-4 h-4" />
+        {t("leaveRoom")}
+      </button>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Tip box (pending state)
+// ---------------------------------------------------------------------------
+function WaitingRoomTip() {
+  const t = useTranslations("game.waitingRoom");
+  return (
+    <div
+      className="mt-4 px-5 py-3 rounded-xl border border-white/10 text-center"
+      style={{
+        background:
+          "linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)",
+      }}
+    >
+      <p className="text-gray-500 font-sans text-[0.8rem]">
+        <span className="text-gray-400">{t("tipTitle")}:</span> {t("tip")}
+      </p>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Pending state
 // ---------------------------------------------------------------------------
 function PendingState({ waitingSeconds }: { waitingSeconds: number }) {
+  const t = useTranslations("game.waitingRoom");
   return (
     <>
       {/* Animated clock icon */}
@@ -187,11 +213,11 @@ function PendingState({ waitingSeconds }: { waitingSeconds: number }) {
       {/* Status text */}
       <div className="text-center mb-8">
         <h2 className="font-orbitron font-bold text-xl sm:text-2xl text-white mb-2">
-          Awaiting Approval
+          {t("awaitingApproval")}
           <AnimatedDots />
         </h2>
         <p className="text-gray-400 font-sans text-sm mb-3">
-          Your join request has been sent to the host
+          {t("joinRequestSent")}
         </p>
         <div className="flex items-center justify-center gap-2 text-gray-500 font-sans text-[0.85rem]">
           <Clock className="w-3.5 h-3.5" />
@@ -209,6 +235,7 @@ function PendingState({ waitingSeconds }: { waitingSeconds: number }) {
 // Accepted state
 // ---------------------------------------------------------------------------
 function AcceptedState() {
+  const t = useTranslations("game.waitingRoom");
   return (
     <div className="flex flex-col items-center text-center py-4">
       <div
@@ -218,17 +245,17 @@ function AcceptedState() {
         <CheckCircle className="w-10 h-10 text-white" />
       </div>
       <h2 className="font-orbitron font-bold text-xl sm:text-2xl text-white mb-2">
-        You&apos;re In!
+        {t("youreIn")}
       </h2>
       <p className="text-gray-400 font-sans text-sm mb-6">
-        Host approved your request. Connecting to the game…
+        {t("hostApproved")}
       </p>
       <div className="flex items-center gap-3 text-gray-500 font-sans text-sm">
         <div className="relative w-5 h-5">
           <div className="absolute inset-0 rounded-full border-2 border-white/10" />
           <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-red-500 animate-spin" />
         </div>
-        Setting up your seat…
+        {t("settingUpSeat")}
       </div>
     </div>
   );
@@ -244,6 +271,7 @@ function RejectedState({
   onLeave: () => void;
   isLeaving: boolean;
 }) {
+  const t = useTranslations("game.waitingRoom");
   return (
     <div className="flex flex-col items-center text-center">
       <div
@@ -253,16 +281,15 @@ function RejectedState({
         <X className="w-10 h-10 text-white" />
       </div>
       <h2 className="font-orbitron font-bold text-xl sm:text-2xl text-white mb-2">
-        Request Declined
+        {t("requestDeclined")}
       </h2>
       <p className="text-gray-400 font-sans text-sm mb-6">
-        The host has declined your join request.
+        {t("hostDeclined")}
       </p>
 
       <div className="w-full rounded-xl border border-amber-500/20 bg-amber-500/[0.06] px-4 py-3 mb-7 text-left">
         <p className="text-amber-400/80 font-sans text-[0.8rem] leading-relaxed">
-          This may happen when the room is full or the host has closed
-          registration.
+          {t("declinedReason")}
         </p>
       </div>
 
@@ -272,7 +299,7 @@ function RejectedState({
         className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-sans text-sm font-semibold shadow-[0_0_20px_rgba(220,38,38,0.3)] hover:shadow-[0_0_30px_rgba(220,38,38,0.5)] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <LogOut className="w-4 h-4" />
-        Back to Lobby
+        {t("backToLobby")}
       </button>
     </div>
   );

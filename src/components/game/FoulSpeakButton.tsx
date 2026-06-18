@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { FoulAlertIcon } from "@/assets/icons";
 
 type FoulSpeakButtonProps = {
@@ -23,6 +24,7 @@ export default function FoulSpeakButton({
   canFoulSpeak,
   currentFouls,
 }: FoulSpeakButtonProps) {
+  const t = useTranslations("game.actions");
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
@@ -39,13 +41,13 @@ export default function FoulSpeakButton({
       disabled={!canFoulSpeak}
       aria-label={
         isFoulSpeaking
-          ? `Speaking: ${foulSpeakTimeLeft}s left`
-          : "Speak with foul"
+          ? t("foulSpeaking", { seconds: foulSpeakTimeLeft })
+          : t("speakWithFoul")
       }
       title={
         isFoulSpeaking
-          ? `${foulSpeakTimeLeft}s remaining`
-          : "Click to speak for 5 seconds"
+          ? t("secondsRemaining", { seconds: foulSpeakTimeLeft })
+          : t("clickToSpeakFiveSeconds")
       }
       className={`
         relative w-5 h-5 tsm:w-6 tsm:h-6 tmd:w-8 tmd:h-8 rounded-full flex items-center justify-center

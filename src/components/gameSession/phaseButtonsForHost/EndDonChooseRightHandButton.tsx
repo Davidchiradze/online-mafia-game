@@ -3,6 +3,7 @@
 import React, { useMemo, useState } from "react";
 import { useMutation } from "convex/react";
 import { gameSessions } from "@convex/refs/game";
+import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { GAME_PHASES } from "@/lib/constants/game";
 import PhaseButton from "@/components/ui/PhaseButton";
@@ -24,6 +25,7 @@ type EndDonChooseRightHandButtonProps = {
 const EndDonChooseRightHandButton = ({
   gameSessionState,
 }: EndDonChooseRightHandButtonProps) => {
+  const t = useTranslations("game.host");
   const [isLoading, setIsLoading] = useState(false);
   const updateSession = useMutation(gameSessions.update);
   const { playerRolesMap } = useGameRoom();
@@ -57,8 +59,8 @@ const EndDonChooseRightHandButton = ({
       onClick={handleEndDonChoice}
       isLoading={isLoading}
       disabled={!canConfirm}
-      label={canConfirm ? "Confirm" : "Waiting for Don's pick..."}
-      title={canConfirm ? undefined : "Don has not promoted Right Hand yet"}
+      label={canConfirm ? t("confirm") : t("waitingForDonPick")}
+      title={canConfirm ? undefined : t("donNotPromotedRightHand")}
       variant="success"
     />
   );

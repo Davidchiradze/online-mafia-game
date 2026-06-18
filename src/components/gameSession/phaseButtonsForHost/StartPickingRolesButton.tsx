@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useMutation } from "convex/react";
 import { cardPicking } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
+import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import PhaseButton from "@/components/ui/PhaseButton";
 
@@ -24,6 +25,7 @@ type StartPickingRolesButtonProps = {
 const StartPickingRolesButton = ({
   gameSessionState,
 }: StartPickingRolesButtonProps) => {
+  const t = useTranslations("game.host");
   const [isLoading, setIsLoading] = useState(false);
   const startCardPicking = useMutation(cardPicking.start);
 
@@ -46,7 +48,7 @@ const StartPickingRolesButton = ({
       onClick={handleStartPickingRoles}
       isLoading={isLoading}
       disableOnMountMs={3000}
-      label="Pick Roles"
+      label={t("pickRoles")}
       variant="primary"
     />
   );

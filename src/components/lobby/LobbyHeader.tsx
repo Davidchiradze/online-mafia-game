@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useQuery } from "convex/react";
+import { useTranslations } from "next-intl";
 import { authProfiles } from "@convex/refs/lobby";
 import { LogOut, User, ChevronDown } from "lucide-react";
 import { LandingLogo } from "@/components/landing/LandingLogo";
@@ -10,6 +11,7 @@ import UserAvatar from "../ui/UserAvatar";
 export default function LobbyHeader() {
   const profile = useQuery(authProfiles.currentProfile);
   const [menuOpen, setMenuOpen] = useState(false);
+  const t = useTranslations("lobby");
 
   const handleSignOut = () => {
     window.location.href = "/api/auth/logout";
@@ -45,7 +47,7 @@ export default function LobbyHeader() {
                 {displayName}
               </div>
               <div className="text-gray-500 font-sans text-xs leading-tight">
-                Online
+                {t("online")}
               </div>
             </div>
 
@@ -67,7 +69,7 @@ export default function LobbyHeader() {
                   className="w-full flex items-center gap-2.5 px-4 py-3 text-gray-400 hover:text-white hover:bg-white/5 transition-colors font-sans text-sm"
                 >
                   <LogOut className="w-4 h-4" />
-                  Sign Out
+                  {t("signOut")}
                 </button>
               </div>
             </>

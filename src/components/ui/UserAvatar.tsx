@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 type Props = {
   src?: string | null;
   name?: string | null;
@@ -19,6 +21,7 @@ export default function UserAvatar({
   size = 28,
   className = "",
 }: Props) {
+  const t = useTranslations("common");
   const initial = name?.trim()?.[0]?.toUpperCase() ?? "?";
 
   return (
@@ -30,7 +33,7 @@ export default function UserAvatar({
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={src}
-          alt={name ?? "Avatar"}
+          alt={name ?? t("avatar")}
           className="h-full w-full object-cover"
         />
       ) : (

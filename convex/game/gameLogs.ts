@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { paginationOptsValidator } from "convex/server";
 import { query } from "../_generated/server";
 import { getAuthenticatedUser } from "../lib/auth";
@@ -83,7 +83,7 @@ export const getGameLog = query({
     const isHost = log.hostId === userId;
     const isParticipant = log.players.some((p) => p.playerId === userId);
     if (!isHost && !isParticipant) {
-      throw new Error("Not authorized to view this game log");
+      throw new ConvexError("Not authorized to view this game log");
     }
 
     // Avatars aren't part of the frozen snapshot — join the player's current

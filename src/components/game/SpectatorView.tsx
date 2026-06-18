@@ -7,6 +7,7 @@ import {
 } from "@livekit/components-react";
 import { Room, Track } from "livekit-client";
 import "@livekit/components-styles";
+import { useTranslations } from "next-intl";
 import PlayerCircle from "@/components/game/PlayerCircle";
 import GameRoomHeader from "@/components/game/GameRoomHeader";
 import { useRef } from "react";
@@ -61,6 +62,7 @@ function SpectatorVideoConference({
   hostUserId: string | null;
   userId: string;
 }) {
+  const t = useTranslations("game.session");
   const tracks = useTracks(
     [{ source: Track.Source.Camera, withPlaceholder: true }],
     { onlySubscribed: false },
@@ -70,7 +72,7 @@ function SpectatorVideoConference({
 
   return (
     <div className="w-full h-full flex items-center justify-center">
-      {!hasAnyTracks && <LoadingSpinner message="Waiting for players..." />}
+      {!hasAnyTracks && <LoadingSpinner message={t("waitingForPlayers")} />}
       {hasAnyTracks && (
         <div className="game-grid-container w-full h-full">
           <PlayerCircle

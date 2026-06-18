@@ -1,9 +1,11 @@
+import { getTranslations } from "next-intl/server";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
-export default function Loading() {
+export default async function Loading() {
+  const tc = await getTranslations("common");
   return (
     <div className="min-h-screen bg-[#0a0a12] flex items-center justify-center">
-      <LoadingSpinner message="Loading…" />
+      <LoadingSpinner message={tc("loading")} />
     </div>
   );
 }

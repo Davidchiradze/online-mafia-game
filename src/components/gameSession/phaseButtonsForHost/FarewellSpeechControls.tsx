@@ -4,6 +4,7 @@ import React, { useState, useCallback, useMemo } from "react";
 import { useMutation } from "convex/react";
 import { farewellSpeech } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
+import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import PhaseButton from "@/components/ui/PhaseButton";
 
@@ -24,6 +25,7 @@ type Props = {
  * who was killed by mafia vs yakuza.
  */
 export default function FarewellSpeechControls({ gameSessionState }: Props) {
+  const t = useTranslations("game.host");
   const { gameId, players } = useGameRoom();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -115,7 +117,7 @@ export default function FarewellSpeechControls({ gameSessionState }: Props) {
 
   if (speakingOrder.length === 0) {
     return (
-      <div className="text-sm text-white/50">No farewell speeches needed</div>
+      <div className="text-sm text-white/50">{t("noFarewellNeeded")}</div>
     );
   }
 
@@ -142,11 +144,11 @@ export default function FarewellSpeechControls({ gameSessionState }: Props) {
               title={
                 isCurrent
                   ? speakerIsActive
-                    ? "Currently speaking"
-                    : "Waiting for time"
+                    ? t("currentlySpeaking")
+                    : t("waitingForTime")
                   : isCompleted
-                    ? "Farewell completed (dead)"
-                    : "Waiting"
+                    ? t("farewellCompleted")
+                    : t("waiting")
               }
             >
               {seat}
@@ -159,23 +161,23 @@ export default function FarewellSpeechControls({ gameSessionState }: Props) {
       <div className="flex items-center gap-2 text-sm">
         {speakerIsActive && (
           <>
-            <span className="text-white/50">Player</span>
+            <span className="text-white/50">{t("playerLabel")}</span>
             <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 font-bold rounded-full text-xs border border-emerald-500/30">
               #{currentSpeaker}
             </span>
-            <span className="text-white/50">is saying goodbye</span>
+            <span className="text-white/50">{t("isSayingGoodbye")}</span>
           </>
         )}
         {waitingForGrant && (
           <>
-            <span className="text-white/50">Next:</span>
+            <span className="text-white/50">{t("next")}</span>
             <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 font-bold rounded-full text-xs border border-emerald-500/30">
               #{nextSpeakerToGrant}
             </span>
           </>
         )}
         {allDone && (
-          <span className="text-white/50">All farewell speeches completed</span>
+          <span className="text-white/50">{t("allFarewellCompleted")}</span>
         )}
       </div>
 
@@ -184,21 +186,21 @@ export default function FarewellSpeechControls({ gameSessionState }: Props) {
         <PhaseButton
           onClick={handleGrantTime}
           isLoading={isLoading}
-          label="Start"
+          label={t("start")}
           variant="success"
         />
       ) : speakerIsActive ? (
         <PhaseButton
           onClick={handleMarkDead}
           isLoading={isLoading}
-          label="Finish"
+          label={t("finish")}
           variant="danger"
         />
       ) : allDone ? (
         <PhaseButton
           onClick={handleAdvance}
           isLoading={isLoading}
-          label="Advance to Next Phase"
+          label={t("advanceToNextPhase")}
           variant="primary"
         />
       ) : null}

@@ -1,13 +1,14 @@
 "use client";
 
 import { motion } from "motion/react";
-import { ShieldAlert, ChevronRight, Home } from "lucide-react";
-import Link from "next/link";
+import { ShieldAlert, ChevronRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { PHP_LOGIN_REDIRECT_URL } from "@/lib/auth/constants";
 
 const BG_IMG = "https://www.mafia.ge/templates/newassets/img/mafiabg.jpg";
 
 export default function AuthErrorScreen() {
+  const t = useTranslations("auth");
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0a0a12] text-white">
       <div className="pointer-events-none absolute inset-0">
@@ -90,7 +91,7 @@ export default function AuthErrorScreen() {
             >
               <span className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
               <span className="font-sans text-[0.7rem] font-semibold uppercase tracking-widest text-red-300">
-                Access Denied
+                {t("accessDenied")}
               </span>
             </motion.div>
 
@@ -101,11 +102,11 @@ export default function AuthErrorScreen() {
               className="mb-4 font-orbitron text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl"
             >
               <span className="bg-gradient-to-br from-white via-gray-200 to-gray-500 bg-clip-text text-transparent">
-                Authentication
+                {t("authIssueTitle")}
               </span>
               <br />
               <span className="bg-gradient-to-r from-red-500 via-red-400 to-orange-400 bg-clip-text text-transparent">
-                Issue
+                {t("authIssueTitleHighlight")}
               </span>
             </motion.h1>
 
@@ -115,9 +116,7 @@ export default function AuthErrorScreen() {
               transition={{ duration: 0.6, delay: 0.3 }}
               className="mx-auto mb-9 max-w-md font-sans text-base leading-relaxed text-gray-400"
             >
-              We couldn&apos;t verify your identity for this session. To enter
-              the family&apos;s headquarters, please sign in again on{" "}
-              <span className="text-white">mafia.ge</span>.
+              {t("authIssueBody")}
             </motion.p>
 
             <motion.div
@@ -130,7 +129,7 @@ export default function AuthErrorScreen() {
                 href={PHP_LOGIN_REDIRECT_URL}
                 className="group relative flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-600 via-red-500 to-red-600 px-7 py-3.5 font-sans text-base font-semibold text-white shadow-[0_0_30px_rgba(220,38,38,0.4)] transition-all hover:shadow-[0_0_45px_rgba(220,38,38,0.65)] sm:w-auto"
               >
-                Sign In on mafia.ge
+                {t("signInOnSite")}
                 <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </a>
             </motion.div>

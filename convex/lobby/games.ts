@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { query, mutation, internalMutation } from "../_generated/server";
 import { getAuthenticatedUser } from "../lib/auth";
 import {
@@ -92,19 +92,19 @@ export const create = mutation({
 
     const trimmedName = name.trim();
     if (trimmedName.length === 0) {
-      throw new Error("Game name is required");
+      throw new ConvexError({ code: "GAME_NAME_REQUIRED", message: "Game name is required" });
     }
 
     const maxPlayers = GAME_TYPE_MAX_PLAYERS[gameType];
     if (!maxPlayers) {
-      throw new Error("Invalid game type");
+      throw new ConvexError({ code: "INVALID_GAME_TYPE", message: "Invalid game type" });
     }
 
     let code = generateGameCode();
     let attempts = 0;
     while (await isCodeTaken(ctx.db, code)) {
       if (++attempts >= MAX_CODE_ATTEMPTS) {
-        throw new Error("Unable to generate a unique game code. Try again.");
+        throw new ConvexError({ code: "GAME_CODE_GEN_FAILED", message: "Unable to generate a unique game code. Try again." });
       }
       code = generateGameCode();
     }
@@ -147,7 +147,7 @@ export const update = mutation({
 
     if (name !== undefined) {
       const trimmed = name.trim();
-      if (trimmed.length === 0) throw new Error("Room name cannot be empty");
+      if (trimmed.length === 0) throw new ConvexError({ code: "ROOM_NAME_EMPTY", message: "Room name cannot be empty" });
       patch.name = trimmed;
     }
 
