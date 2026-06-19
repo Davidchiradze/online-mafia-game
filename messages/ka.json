@@ -354,8 +354,8 @@
       "clickToSpeakFiveSeconds": "დააჭირე 5 წამის სასაუბრებლად"
     },
     "voting": {
-      "bothLeaveVote": "ორივე მიდის — კენჭისყრა",
-      "shouldAllLeave": "უნდა დატოვოს ყველა {count}?",
+      "bothLeaveVote": "ორივე ტოვებს თამაშს — კენჭისყრა",
+      "shouldAllLeave": "უნდა დატოვოს ყველა კანდიდატურამ ?",
       "waitingForResults": "შედეგების მოლოდინი...",
       "lastCandidate": "ბოლო კანდიდატი",
       "voteAgainst": "ხმა საწინააღმდეგოდ",
