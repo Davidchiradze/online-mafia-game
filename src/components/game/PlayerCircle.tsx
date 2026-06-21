@@ -130,8 +130,11 @@ export default function PlayerCircle({
         <div className="h-1/2 flex flex-col items-center justify-center gap-2 p-3 overflow-y-auto">
           {isHost ? (
             <GamePhaseControls />
-          ) : gameSessionState?.winner && gameSessionState.isFinished ? (
-            <WinnerBanner gameId={gameId} winner={gameSessionState.winner} />
+          ) : gameSessionState?.isFinished ? (
+            <WinnerBanner
+              gameId={gameId}
+              winner={gameSessionState.winner ?? null}
+            />
           ) : (
             <>
               {gameSessionState && (

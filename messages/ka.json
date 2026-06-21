@@ -489,6 +489,7 @@
     "winnerBanner": {
       "gameOver": "თამაში დასრულდა",
       "winSuffix": "გამარჯვებულია",
+      "noContest": "ანულირებულია",
       "mafiaWinner": "მაფია",
       "yakuzaWinner": "იაკუძა და შოგუნი",
       "citizensWinner": "მოქალაქეები"

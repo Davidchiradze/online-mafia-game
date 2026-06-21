@@ -489,6 +489,7 @@
     "winnerBanner": {
       "gameOver": "Game Over",
       "winSuffix": "Win",
+      "noContest": "No Contest",
       "mafiaWinner": "Mafia",
       "yakuzaWinner": "Yakuza and Shogun",
       "citizensWinner": "Citizens"

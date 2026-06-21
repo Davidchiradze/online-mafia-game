@@ -59,6 +59,12 @@ const GamePhaseControls = () => {
     );
   }
 
+  // The game was finished with no decided winner (e.g. an admin force-ended it):
+  // show the "No Contest" end state instead of stale live-phase controls.
+  if (gameSessionState.isFinished) {
+    return <WinnerBanner gameId={gameId} winner={null} />;
+  }
+
   const currentPhase = gameSessionState.gamePhase;
 
   const renderPhaseControls = () => {
