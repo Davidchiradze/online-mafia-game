@@ -10,7 +10,8 @@ This documentation describes the architecture, patterns, and conventions used in
 2. **Implementing a feature?** Check [frontend.md](./frontend.md) and [backend.md](./backend.md)
 3. **Working with real-time updates?** Read [realtime.md](./realtime.md)
 4. **Understanding game logic?** See [game-design.md](./game-design.md)
-5. **Making architectural decisions?** Review [decisions.md](./decisions.md)
+5. **Adding roles, permissions, or the admin panel?** Read [authorization.md](./authorization.md)
+6. **Making architectural decisions?** Review [decisions.md](./decisions.md)
 
 ## Documentation Structure
 
@@ -20,6 +21,7 @@ This documentation describes the architecture, patterns, and conventions used in
 - **[game-end-conditions.md](./game-end-conditions.md)** - Auto win-detection rules (when a game ends automatically)
 - **[frontend.md](./frontend.md)** - React conventions, component patterns, UI guidelines
 - **[backend.md](./backend.md)** - Convex mutations, queries, database patterns
+- **[authorization.md](./authorization.md)** - Access roles (admin/moderator), permissions, `/admin` route gating
 - **[server-time.md](./server-time.md)** - Server-corrected client clock (use `useServerTime()` for any timer math involving a server timestamp)
 - **[decisions.md](./decisions.md)** - Architectural Decision Records (ADRs)
 - **[livekit-server.md](./livekit-server.md)** - Self-hosted LiveKit server (VPS setup, monitoring, maintenance)

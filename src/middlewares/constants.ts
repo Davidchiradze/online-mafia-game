@@ -5,8 +5,13 @@ import {
   PHP_LOGIN_REDIRECT_URL,
   PHP_SESSION_COOKIE_NAME,
 } from "@/lib/auth/constants";
+import { AUTH_ERROR_PATH } from "@convex/lib/access";
 
-export const AUTH_ERROR_PATH = "/auth/required";
+// Route policy (public prefixes, protected routes) is owned by the central
+// access-control source of truth (`@convex/lib/access`) so the middleware,
+// layouts, and Convex authorization never drift. Re-exported here to keep
+// existing middleware imports (`./constants`) stable.
+export { AUTH_ERROR_PATH, PUBLIC_PATH_PREFIXES } from "@convex/lib/access";
 
 export const middlewareConfig = {
   phpSessionCookieName: PHP_SESSION_COOKIE_NAME,
@@ -16,13 +21,3 @@ export const middlewareConfig = {
   authErrorPath: AUTH_ERROR_PATH,
   isProd: IS_PROD,
 } as const;
-
-export const PUBLIC_PATH_PREFIXES = [
-  "/api/auth/",
-  "/api/livekit/webhook",
-  "/api/time",
-  "/.well-known/",
-  "/_next/",
-  "/favicon.ico",
-  AUTH_ERROR_PATH,
-] as const;

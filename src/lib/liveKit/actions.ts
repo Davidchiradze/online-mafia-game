@@ -15,7 +15,7 @@ export async function generateLivekitAccessToken(
     roomAdmin: boolean;
     isSpectator?: boolean;
   },
-  participantName?: string
+  participantName?: string,
 ) {
   const displayName = participantName || participantId;
 
@@ -25,7 +25,7 @@ export async function generateLivekitAccessToken(
     {
       identity: participantId,
       name: displayName,
-    }
+    },
   );
 
   // Spectators can only subscribe (view-only), not publish
@@ -50,13 +50,13 @@ export async function createLivekitRoom(roomId: string) {
   const roomService = new RoomServiceClient(
     process.env.NEXT_PUBLIC_LIVEKIT_URL!,
     process.env.LIVEKIT_API_KEY!,
-    process.env.LIVEKIT_API_SECRET!
+    process.env.LIVEKIT_API_SECRET!,
   );
 
   const opts = {
     name: roomId,
     emptyTimeout: 10 * 60, // 10 minutes
-    maxParticipants: 23,
+    maxParticipants: 31,
   };
   roomService.createRoom(opts).then((room: Room) => {
     console.log("room created", room);
@@ -67,7 +67,7 @@ export async function deleteLivekitRoom(roomId: string) {
   const roomService = new RoomServiceClient(
     process.env.NEXT_PUBLIC_LIVEKIT_URL!,
     process.env.LIVEKIT_API_KEY!,
-    process.env.LIVEKIT_API_SECRET!
+    process.env.LIVEKIT_API_SECRET!,
   );
   roomService.deleteRoom(roomId).then(() => {
     console.log("room deleted");
@@ -76,12 +76,12 @@ export async function deleteLivekitRoom(roomId: string) {
 
 export async function removeParticipantFromRoom(
   roomId: string,
-  participantId: string
+  participantId: string,
 ) {
   const roomService = new RoomServiceClient(
     process.env.NEXT_PUBLIC_LIVEKIT_URL!,
     process.env.LIVEKIT_API_KEY!,
-    process.env.LIVEKIT_API_SECRET!
+    process.env.LIVEKIT_API_SECRET!,
   );
   await roomService.removeParticipant(roomId, participantId);
 }
@@ -90,7 +90,7 @@ export async function listParticipantsForRooms(roomIds: string[]) {
   const roomService = new RoomServiceClient(
     process.env.NEXT_PUBLIC_LIVEKIT_URL!,
     process.env.LIVEKIT_API_KEY!,
-    process.env.LIVEKIT_API_SECRET!
+    process.env.LIVEKIT_API_SECRET!,
   );
 
   const results: Record<string, { count: number; names: string[] }> = {};
@@ -110,12 +110,12 @@ export async function mutePublishedTrack(
   roomId: string,
   participantId: string,
   trackSid: string,
-  muted: boolean
+  muted: boolean,
 ) {
   const roomService = new RoomServiceClient(
     process.env.NEXT_PUBLIC_LIVEKIT_URL!,
     process.env.LIVEKIT_API_KEY!,
-    process.env.LIVEKIT_API_SECRET!
+    process.env.LIVEKIT_API_SECRET!,
   );
   await roomService.mutePublishedTrack(roomId, participantId, trackSid, muted);
 }
@@ -127,20 +127,23 @@ export async function mutePublishedTrack(
 export async function muteParticipantMicrophone(
   roomName: string,
   participantIdentity: string,
-  muted: boolean
+  muted: boolean,
 ) {
   const roomService = new RoomServiceClient(
     process.env.NEXT_PUBLIC_LIVEKIT_URL!,
     process.env.LIVEKIT_API_KEY!,
-    process.env.LIVEKIT_API_SECRET!
+    process.env.LIVEKIT_API_SECRET!,
   );
 
   // Get participant info from server
-  const participant = await roomService.getParticipant(roomName, participantIdentity);
+  const participant = await roomService.getParticipant(
+    roomName,
+    participantIdentity,
+  );
 
   // Find the microphone track
   const audioTrack = participant.tracks.find(
-    (track) => track.source === TrackSource.MICROPHONE
+    (track) => track.source === TrackSource.MICROPHONE,
   );
 
   if (!audioTrack?.sid) {
@@ -151,6 +154,6 @@ export async function muteParticipantMicrophone(
     roomName,
     participantIdentity,
     audioTrack.sid,
-    muted
+    muted,
   );
 }

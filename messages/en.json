@@ -1,4 +1,61 @@
 {
+  "admin": {
+    "title": "Admin Panel",
+    "loading": "Loading…",
+    "nav": {
+      "dashboard": "Dashboard",
+      "users": "Users",
+      "games": "Games"
+    },
+    "dashboard": {
+      "heading": "Admin Dashboard",
+      "signedInAs": "Signed in as {role}",
+      "usersDesc": "View users, assign roles, and manage bans.",
+      "gamesDesc": "View all games and force-end or cancel them."
+    },
+    "roles": {
+      "user": "User",
+      "moderator": "Moderator",
+      "admin": "Admin"
+    },
+    "status": {
+      "not_started": "Not started",
+      "playing": "Playing",
+      "finished": "Finished"
+    },
+    "users": {
+      "title": "Users",
+      "user": "User",
+      "role": "Role",
+      "status": "Status",
+      "actions": "Actions",
+      "active": "Active",
+      "banned": "Banned",
+      "ban": "Ban",
+      "unban": "Unban",
+      "banReasonPrompt": "Reason for ban (optional):",
+      "roleUpdated": "Role updated",
+      "bannedDone": "User banned",
+      "unbannedDone": "User unbanned"
+    },
+    "games": {
+      "title": "Games",
+      "name": "Game",
+      "host": "Host",
+      "players": "Players",
+      "status": "Status",
+      "actions": "Actions",
+      "forceEnd": "Force end",
+      "refund": "Refund",
+      "refundSoon": "Refunds are not enabled yet",
+      "empty": "No games right now.",
+      "confirmForceEnd": "Force-end this game? This cannot be undone.",
+      "endedDone": "Game ended"
+    },
+    "errors": {
+      "generic": "Something went wrong"
+    }
+  },
   "common": {
     "language": "Language",
     "loading": "Loading…",

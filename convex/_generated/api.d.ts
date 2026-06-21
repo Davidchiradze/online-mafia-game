@@ -8,6 +8,8 @@
  * @module
  */
 
+import type * as admin_games from "../admin/games.js";
+import type * as admin_users from "../admin/users.js";
 import type * as auth_profiles from "../auth/profiles.js";
 import type * as game_cardPicking from "../game/cardPicking.js";
 import type * as game_dayPhase from "../game/dayPhase.js";
@@ -20,6 +22,8 @@ import type * as game_sessions from "../game/sessions.js";
 import type * as game_spectators from "../game/spectators.js";
 import type * as game_voting from "../game/voting.js";
 import type * as game_webhookHandler from "../game/webhookHandler.js";
+import type * as lib_access from "../lib/access.js";
+import type * as lib_admin from "../lib/admin.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_constants from "../lib/constants.js";
 import type * as lib_games from "../lib/games.js";
@@ -31,9 +35,11 @@ import type * as lib_winConditions from "../lib/winConditions.js";
 import type * as lobby_games from "../lobby/games.js";
 import type * as lobby_hostTransfer from "../lobby/hostTransfer.js";
 import type * as lobby_joinRequests from "../lobby/joinRequests.js";
+import type * as migrations from "../migrations.js";
 import type * as refs_game from "../refs/game.js";
 import type * as refs_history from "../refs/history.js";
 import type * as refs_lobby from "../refs/lobby.js";
+import type * as tables_adminAuditLog from "../tables/adminAuditLog.js";
 import type * as tables_cardPickingSessions from "../tables/cardPickingSessions.js";
 import type * as tables_gameLogPlayers from "../tables/gameLogPlayers.js";
 import type * as tables_gameLogs from "../tables/gameLogs.js";
@@ -57,6 +63,8 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "admin/games": typeof admin_games;
+  "admin/users": typeof admin_users;
   "auth/profiles": typeof auth_profiles;
   "game/cardPicking": typeof game_cardPicking;
   "game/dayPhase": typeof game_dayPhase;
@@ -69,6 +77,8 @@ declare const fullApi: ApiFromModules<{
   "game/spectators": typeof game_spectators;
   "game/voting": typeof game_voting;
   "game/webhookHandler": typeof game_webhookHandler;
+  "lib/access": typeof lib_access;
+  "lib/admin": typeof lib_admin;
   "lib/auth": typeof lib_auth;
   "lib/constants": typeof lib_constants;
   "lib/games": typeof lib_games;
@@ -80,9 +90,11 @@ declare const fullApi: ApiFromModules<{
   "lobby/games": typeof lobby_games;
   "lobby/hostTransfer": typeof lobby_hostTransfer;
   "lobby/joinRequests": typeof lobby_joinRequests;
+  migrations: typeof migrations;
   "refs/game": typeof refs_game;
   "refs/history": typeof refs_history;
   "refs/lobby": typeof refs_lobby;
+  "tables/adminAuditLog": typeof tables_adminAuditLog;
   "tables/cardPickingSessions": typeof tables_cardPickingSessions;
   "tables/gameLogPlayers": typeof tables_gameLogPlayers;
   "tables/gameLogs": typeof tables_gameLogs;

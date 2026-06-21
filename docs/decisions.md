@@ -216,6 +216,48 @@ components/
 
 ---
 
+## ADR-010: Authorization - Convex-owned Roles & Permission-based RBAC
+
+**Status**: Accepted
+
+**Decision**: App-level access control uses a single Convex-owned role per user
+(`user`/`moderator`/`admin`) mapped to permissions; authorization is enforced
+authoritatively in Convex functions; the `/admin` route is gated in layers.
+
+**Context**:
+
+- Going to production with real users; need an `/admin` panel and staff roles
+- `profiles.role` existed but was a free-form string overwritten by the PHP sync
+- "Role" already means two other things here (in-game roles, PHP account roles)
+
+**Decision**:
+
+- **Source of truth** is Convex `profiles.role` — unrelated to PHP `accounts.role`
+  (no longer synced) and to in-game roles (`gamePlayerRoles`)
+- **Single role enum per user**; permissions derived via a role→permission map.
+  Roles/permissions/route policy live in one file, `convex/lib/access.ts`, because
+  `convex/` is the authoritative gate and `src/` can import it (one-way boundary)
+- **Layered route protection**: middleware = authenticated-only; `/admin` layout =
+  redirect non-admins (UX); Convex `requirePermission(...)` = authoritative
+- Role is **not** put in the JWT (see Rejected); admin actions write an audit log
+
+**Consequences**:
+
+- One place to add a role/permission; checks read role live from Convex (no staleness)
+- Brief `/admin` shell flash possible for non-admins, but no privileged data loads
+  (every admin function enforces `requirePermission`)
+- See [authorization.md](./authorization.md) for the full spec
+
+**Rejected**:
+
+- **Role claim in the JWT**: would let middleware hard-block at the edge, but a
+  promote/demote wouldn't take effect until the token refreshes (staleness)
+- **Direct role checks at call sites** (`if role === "admin"`): doesn't scale to new
+  roles; permission checks decouple capability from role
+- **PHP-owned roles**: admin/moderator are app concepts, not account/billing concepts
+
+---
+
 ## Summary
 
 | Decision | Key Technology |
@@ -229,3 +271,4 @@ components/
 | Component Org | Feature-based |
 | Role Filtering | Server-side (Convex queries) |
 | Database | Convex (document DB) |
+| Authorization | Convex-owned roles + permission-based RBAC |
