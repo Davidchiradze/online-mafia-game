@@ -1,10 +1,7 @@
 import { query, mutation } from "../_generated/server";
 import { ConvexError, v } from "convex/values";
 import { getAuthenticatedUser } from "../lib/auth";
-import {
-  getNicknameOwner,
-  getProfileByAccountId,
-} from "../lib/profiles";
+import { getNicknameOwner, getProfileByAccountId } from "../lib/profiles";
 
 /**
  * Returns the PHP account id from the validated JWT, or null if the
@@ -29,7 +26,6 @@ export const currentProfile = query({
     return await getProfileByAccountId(ctx.db, identity.subject);
   },
 });
-
 
 export const isNicknameTaken = query({
   args: { nickname: v.string() },
@@ -63,7 +59,6 @@ export const upsertFromPhp = mutation({
     username: v.optional(v.string()),
     name: v.optional(v.string()),
     avatar: v.optional(v.string()),
-    role: v.optional(v.string()),
     amount: v.optional(v.string()),
   },
   handler: async (ctx, { secret, accountId, ...fields }) => {

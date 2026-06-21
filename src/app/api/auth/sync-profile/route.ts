@@ -39,10 +39,7 @@ export async function POST(req: NextRequest) {
     user = await fetchUserBySession(sessionId);
   } catch (err) {
     console.error("[auth/sync-profile] PHP fetch failed", err);
-    return NextResponse.json(
-      { ok: false, error: "upstream" },
-      { status: 502 },
-    );
+    return NextResponse.json({ ok: false, error: "upstream" }, { status: 502 });
   }
 
   if (!user) {
@@ -60,16 +57,12 @@ export async function POST(req: NextRequest) {
       username: user.username ?? undefined,
       name: user.name ?? undefined,
       avatar: normalizeAvatarUrl(user.avatar) ?? undefined,
-      role: user.role ?? undefined,
       amount: user.amount != null ? String(user.amount) : undefined,
     });
 
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("[auth/sync-profile] Convex upsert failed", err);
-    return NextResponse.json(
-      { ok: false, error: "upsert" },
-      { status: 500 },
-    );
+    return NextResponse.json({ ok: false, error: "upsert" }, { status: 500 });
   }
 }
