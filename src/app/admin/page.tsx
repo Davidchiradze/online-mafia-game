@@ -2,12 +2,15 @@
 
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { useQuery } from "convex/react";
+import { api } from "@convex/_generated/api";
 import { useAccess } from "@/hooks/auth/useAccess";
 import { PERMISSIONS } from "@convex/lib/access";
 
 export default function AdminDashboardPage() {
   const t = useTranslations("admin");
   const { can, role } = useAccess();
+  const online = useQuery(api.presence.onlineNow);
 
   const cards = [
     {
@@ -36,6 +39,16 @@ export default function AdminDashboardPage() {
       <p className="mt-1 text-sm text-gray-400">
         {t("dashboard.signedInAs", { role: t(`roles.${role}`) })}
       </p>
+
+      <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-sm">
+        <span className="relative flex h-2.5 w-2.5">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-60" />
+          <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-green-500" />
+        </span>
+        <span className="text-gray-300">
+          {online === undefined ? "…" : online.count} online now
+        </span>
+      </div>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2">
         {cards.map((c) => (

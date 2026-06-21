@@ -11,6 +11,7 @@
     "auth:keygen": "node scripts/generate-jwt-keypair.mjs"
   },
   "dependencies": {
+    "@convex-dev/presence": "^0.3.1",
     "@hookform/resolvers": "^5.2.1",
     "@livekit/components-react": "^2.9.15",
     "@livekit/components-styles": "^1.1.6",

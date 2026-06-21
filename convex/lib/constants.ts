@@ -85,6 +85,17 @@ export const CARD_PICK = {
   TIMEOUT_SECONDS: 15,
 } as const;
 
+export const PRESENCE = {
+  /**
+   * Single site-wide presence room. "Online" means a user is on the site
+   * anywhere, not in a specific game/chat room. Heartbeat is 60s; the
+   * component marks a session offline after 2.5x the interval of silence
+   * (~150s) or on a graceful tab-close disconnect.
+   */
+  GLOBAL_ROOM: "global",
+  HEARTBEAT_INTERVAL_MS: 60_000,
+} as const;
+
 export const FOULS = {
   MAX_FOULS: 3,
   ELIMINATION_THRESHOLD: 4,
