@@ -11,6 +11,7 @@
 - **`/docs/game-end-conditions.md`** — Auto win-detection rules
 - **`/docs/frontend.md`** — React / UI conventions
 - **`/docs/backend.md`** — Server patterns
+- **`/docs/authorization.md`** — Access roles (admin/moderator), permissions, `/admin` gating
 - **`/docs/server-time.md`** — Server-corrected client clock for timers
 - **`/docs/decisions.md`** — Architectural decisions (ADR)
 - **`/docs/livekit-server.md`** — Self-hosted LiveKit VPS setup

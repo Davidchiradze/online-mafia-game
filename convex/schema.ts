@@ -14,6 +14,7 @@ import {
   gameLogs,
   gameLogPlayers,
   playerStats,
+  adminAuditLog,
 } from "./tables";
 
 const schema = defineSchema({
@@ -31,6 +32,7 @@ const schema = defineSchema({
   gameLogs,
   gameLogPlayers,
   playerStats,
+  adminAuditLog,
 });
 
 export default schema;

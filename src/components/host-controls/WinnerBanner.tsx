@@ -7,7 +7,8 @@ type Winner = "mafia" | "yakuza" | "citizens";
 
 type WinnerBannerProps = {
   gameId: string;
-  winner: Winner;
+  /** Decided winning faction, or `null` when the game ended with no contest. */
+  winner: Winner | null;
   /** When true, show the host's "Finish Game" button (pending-win state). */
   canFinish?: boolean;
 };
@@ -19,10 +20,11 @@ const WINNER_ACCENT: Record<Winner, string> = {
 };
 
 /**
- * Banner shown when the auto win-detection has decided a winner. The host sees
- * it while the win is pending (`canFinish`) with a "Finish Game" button to
- * confirm the end; everyone sees the title-only version once the game is
- * finished.
+ * Banner shown when a game ends. The host sees it while a win is pending
+ * (`canFinish`) with a "Finish Game" button to confirm the end; everyone sees
+ * the title-only version once the game is finished. When `winner` is `null`
+ * (e.g. an admin force-ended the game), it shows a "No Contest" end state
+ * instead of a faction win.
  */
 export default function WinnerBanner({
   gameId,
@@ -44,13 +46,17 @@ export default function WinnerBanner({
           {t("gameOver")}
         </p>
         <h2
-          className={`font-orbitron text-2xl font-bold uppercase tracking-wider ${WINNER_ACCENT[winner]}`}
+          className={`font-orbitron text-2xl font-bold uppercase tracking-wider ${
+            winner ? WINNER_ACCENT[winner] : "text-slate-300"
+          }`}
         >
-          {t("winSuffix")} - {WINNER_LABELS[winner]}
+          {winner
+            ? `${t("winSuffix")} - ${WINNER_LABELS[winner]}`
+            : t("noContest")}
         </h2>
       </div>
 
-      {canFinish && <FinishGameButton gameId={gameId} />}
+      {canFinish && winner && <FinishGameButton gameId={gameId} />}
     </div>
   );
 }

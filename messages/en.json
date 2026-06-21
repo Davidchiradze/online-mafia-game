@@ -1,4 +1,160 @@
 {
+  "admin": {
+    "title": "Admin Panel",
+    "loading": "Loading…",
+    "nav": {
+      "dashboard": "Dashboard",
+      "users": "Users",
+      "games": "Games",
+      "archive": "Archive"
+    },
+    "dashboard": {
+      "heading": "Admin Dashboard",
+      "signedInAs": "Signed in as {role}",
+      "usersDesc": "View users, assign roles, and manage bans.",
+      "gamesDesc": "View all games and force-end or cancel them.",
+      "archiveDesc": "Browse every finished game and reveal all roles.",
+      "sections": {
+        "overview": "Overview",
+        "players": "Players & Activity",
+        "analytics": "Game Analytics",
+        "activity": "Recent Activity"
+      },
+      "online": {
+        "title": "Online now",
+        "subtitle": "Users on the site right now"
+      },
+      "kpi": {
+        "users": "Total users",
+        "activeGames": "Active games",
+        "matchesPlayed": "Matches played",
+        "finishedGames": "Finished games",
+        "banned": "Banned",
+        "newThisWeekLabel": "New this week",
+        "newThisWeek": "+{count} this week",
+        "waiting": "{count} waiting"
+      },
+      "leaderboard": {
+        "title": "Top players",
+        "byWins": "Wins",
+        "byWinRate": "Win rate",
+        "byMatches": "Matches",
+        "empty": "No player stats yet.",
+        "gamesShort": "{count} games"
+      },
+      "live": {
+        "title": "Live games",
+        "empty": "No active games right now.",
+        "host": "Host: {name}",
+        "inGame": "{count} in game",
+        "watching": "{count} watching"
+      },
+      "charts": {
+        "factionWins": "Wins by faction",
+        "gamesOverTime": "Games over time (30 days)",
+        "gamesByType": "Games by mode",
+        "noWinner": "No winner",
+        "empty": "No data yet.",
+        "gamesUnit": "Games"
+      },
+      "roleStats": {
+        "title": "Role analytics",
+        "role": "Role",
+        "matches": "Matches",
+        "winRate": "Win rate",
+        "empty": "No role stats yet."
+      },
+      "winMethods": {
+        "title": "Win methods",
+        "empty": "No finished games yet."
+      },
+      "recent": {
+        "title": "Recent activity",
+        "games": "Latest games",
+        "actions": "Admin actions",
+        "emptyGames": "No finished games yet.",
+        "emptyActions": "No admin actions yet.",
+        "actionLabels": {
+          "role": { "assign": "changed a role" },
+          "user": { "ban": "banned a user", "unban": "unbanned a user" },
+          "game": { "force_end": "force-ended a game", "refund": "issued a refund" }
+        }
+      }
+    },
+    "roles": {
+      "user": "User",
+      "moderator": "Moderator",
+      "admin": "Admin"
+    },
+    "status": {
+      "not_started": "Not started",
+      "playing": "Playing",
+      "finished": "Finished"
+    },
+    "users": {
+      "title": "Users",
+      "user": "User",
+      "role": "Role",
+      "status": "Status",
+      "actions": "Actions",
+      "active": "Active",
+      "banned": "Banned",
+      "ban": "Ban",
+      "unban": "Unban",
+      "banReasonPrompt": "Reason for ban (optional):",
+      "roleUpdated": "Role updated",
+      "bannedDone": "User banned",
+      "unbannedDone": "User unbanned",
+      "search": "Search by nickname…",
+      "noResults": "No users found"
+    },
+    "games": {
+      "title": "Games",
+      "name": "Game",
+      "host": "Host",
+      "players": "Players",
+      "status": "Status",
+      "actions": "Actions",
+      "forceEnd": "Force end",
+      "refund": "Refund",
+      "refundSoon": "Refunds are not enabled yet",
+      "empty": "No games right now.",
+      "confirmForceEnd": "Force-end this game? This cannot be undone.",
+      "endedDone": "Game ended"
+    },
+    "gameType": {
+      "traditional": "Traditional",
+      "city_mafia": "City Mafia",
+      "japanese_mafia": "Japanese"
+    },
+    "archive": {
+      "title": "Game Archive",
+      "subtitle": "Every finished game, with full rosters and roles.",
+      "empty": "No games in the archive yet.",
+      "search": "Search by game name…",
+      "roster": "Roster",
+      "colDate": "Date",
+      "colGame": "Game",
+      "colWinner": "Winner",
+      "emptyTitle": "No games yet",
+      "emptyBody": "Finished games will appear here.",
+      "noResultsTitle": "No games found",
+      "noResultsBody": "Try a different search term or game mode.",
+      "host": "Host",
+      "alive": "Alive",
+      "dead": "Dead",
+      "noWinner": "No winner",
+      "filterAll": "All modes",
+      "faction": {
+        "mafia": "Mafia",
+        "yakuza": "Yakuza",
+        "citizens": "Citizens"
+      }
+    },
+    "errors": {
+      "generic": "Something went wrong"
+    }
+  },
   "common": {
     "language": "Language",
     "loading": "Loading…",
@@ -399,6 +555,7 @@
     "winnerBanner": {
       "gameOver": "Game Over",
       "winSuffix": "Win",
+      "noContest": "No Contest",
       "mafiaWinner": "Mafia",
       "yakuzaWinner": "Yakuza and Shogun",
       "citizensWinner": "Citizens"

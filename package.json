@@ -11,6 +11,7 @@
     "auth:keygen": "node scripts/generate-jwt-keypair.mjs"
   },
   "dependencies": {
+    "@convex-dev/presence": "^0.3.1",
     "@hookform/resolvers": "^5.2.1",
     "@livekit/components-react": "^2.9.15",
     "@livekit/components-styles": "^1.1.6",
@@ -32,6 +33,7 @@
     "react-hook-form": "^7.62.0",
     "react-modal": "^3.16.3",
     "react-toastify": "^11.0.5",
+    "recharts": "^3.8.1",
     "server-only": "^0.0.1",
     "tailwind-merge": "^3.4.0",
     "zod": "^4.0.17"
