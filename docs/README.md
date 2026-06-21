@@ -22,6 +22,7 @@ This documentation describes the architecture, patterns, and conventions used in
 - **[frontend.md](./frontend.md)** - React conventions, component patterns, UI guidelines
 - **[backend.md](./backend.md)** - Convex mutations, queries, database patterns
 - **[authorization.md](./authorization.md)** - Access roles (admin/moderator), permissions, `/admin` route gating
+- **[admin-dashboard.md](./admin-dashboard.md)** - Admin panel routes + the analytics dashboard (KPIs, leaderboards, charts, presence)
 - **[server-time.md](./server-time.md)** - Server-corrected client clock (use `useServerTime()` for any timer math involving a server timestamp)
 - **[decisions.md](./decisions.md)** - Architectural Decision Records (ADRs)
 - **[livekit-server.md](./livekit-server.md)** - Self-hosted LiveKit server (VPS setup, monitoring, maintenance)
