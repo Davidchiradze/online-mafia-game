@@ -9,6 +9,7 @@ const NAV = [
   { href: "/admin", key: "nav.dashboard" as const, exact: true },
   { href: "/admin/users", key: "nav.users" as const, exact: false },
   { href: "/admin/games", key: "nav.games" as const, exact: false },
+  { href: "/admin/archive", key: "nav.archive" as const, exact: false },
 ];
 
 export default function AdminShell({ children }: { children: ReactNode }) {

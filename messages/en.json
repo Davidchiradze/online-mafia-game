@@ -5,13 +5,15 @@
     "nav": {
       "dashboard": "Dashboard",
       "users": "Users",
-      "games": "Games"
+      "games": "Games",
+      "archive": "Archive"
     },
     "dashboard": {
       "heading": "Admin Dashboard",
       "signedInAs": "Signed in as {role}",
       "usersDesc": "View users, assign roles, and manage bans.",
-      "gamesDesc": "View all games and force-end or cancel them."
+      "gamesDesc": "View all games and force-end or cancel them.",
+      "archiveDesc": "Browse every finished game and reveal all roles."
     },
     "roles": {
       "user": "User",
@@ -36,7 +38,9 @@
       "banReasonPrompt": "Reason for ban (optional):",
       "roleUpdated": "Role updated",
       "bannedDone": "User banned",
-      "unbannedDone": "User unbanned"
+      "unbannedDone": "User unbanned",
+      "search": "Search by nickname…",
+      "noResults": "No users found"
     },
     "games": {
       "title": "Games",
@@ -51,6 +55,35 @@
       "empty": "No games right now.",
       "confirmForceEnd": "Force-end this game? This cannot be undone.",
       "endedDone": "Game ended"
+    },
+    "gameType": {
+      "traditional": "Traditional",
+      "city_mafia": "City Mafia",
+      "japanese_mafia": "Japanese"
+    },
+    "archive": {
+      "title": "Game Archive",
+      "subtitle": "Every finished game, with full rosters and roles.",
+      "empty": "No games in the archive yet.",
+      "search": "Search by game name…",
+      "roster": "Roster",
+      "colDate": "Date",
+      "colGame": "Game",
+      "colWinner": "Winner",
+      "emptyTitle": "No games yet",
+      "emptyBody": "Finished games will appear here.",
+      "noResultsTitle": "No games found",
+      "noResultsBody": "Try a different search term or game mode.",
+      "host": "Host",
+      "alive": "Alive",
+      "dead": "Dead",
+      "noWinner": "No winner",
+      "filterAll": "All modes",
+      "faction": {
+        "mafia": "Mafia",
+        "yakuza": "Yakuza",
+        "citizens": "Citizens"
+      }
     },
     "errors": {
       "generic": "Something went wrong"

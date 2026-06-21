@@ -22,6 +22,12 @@ export default function AdminDashboardPage() {
       desc: t("dashboard.gamesDesc"),
       show: can(PERMISSIONS.GAME_VIEW_ALL),
     },
+    {
+      href: "/admin/archive",
+      title: t("nav.archive"),
+      desc: t("dashboard.archiveDesc"),
+      show: can(PERMISSIONS.GAME_VIEW_ALL),
+    },
   ].filter((c) => c.show);
 
   return (

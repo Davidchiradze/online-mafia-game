@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as admin_gameLogs from "../admin/gameLogs.js";
 import type * as admin_games from "../admin/games.js";
 import type * as admin_users from "../admin/users.js";
 import type * as auth_profiles from "../auth/profiles.js";
@@ -36,6 +37,7 @@ import type * as lobby_games from "../lobby/games.js";
 import type * as lobby_hostTransfer from "../lobby/hostTransfer.js";
 import type * as lobby_joinRequests from "../lobby/joinRequests.js";
 import type * as migrations from "../migrations.js";
+import type * as refs_admin from "../refs/admin.js";
 import type * as refs_game from "../refs/game.js";
 import type * as refs_history from "../refs/history.js";
 import type * as refs_lobby from "../refs/lobby.js";
@@ -63,6 +65,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "admin/gameLogs": typeof admin_gameLogs;
   "admin/games": typeof admin_games;
   "admin/users": typeof admin_users;
   "auth/profiles": typeof auth_profiles;
@@ -91,6 +94,7 @@ declare const fullApi: ApiFromModules<{
   "lobby/hostTransfer": typeof lobby_hostTransfer;
   "lobby/joinRequests": typeof lobby_joinRequests;
   migrations: typeof migrations;
+  "refs/admin": typeof refs_admin;
   "refs/game": typeof refs_game;
   "refs/history": typeof refs_history;
   "refs/lobby": typeof refs_lobby;

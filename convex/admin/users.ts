@@ -1,4 +1,5 @@
 import { ConvexError, v } from "convex/values";
+import { paginationOptsValidator } from "convex/server";
 import { mutation, query } from "../_generated/server";
 import {
   getAuthenticatedProfile,
@@ -49,14 +50,33 @@ export const myAccess = query({
   },
 });
 
-/** List all users for the admin panel. Requires USER_VIEW. */
+/**
+ * Paginated user list for the admin panel. Requires USER_VIEW.
+ * With a `search` term, matches nicknames via the full-text index; otherwise
+ * lists everyone newest-first.
+ */
 export const listUsers = query({
-  args: {},
-  handler: async (ctx) => {
+  args: {
+    paginationOpts: paginationOptsValidator,
+    search: v.optional(v.string()),
+  },
+  handler: async (ctx, { paginationOpts, search }) => {
     await requirePermission(ctx, PERMISSIONS.USER_VIEW);
-    const profiles = await ctx.db.query("profiles").collect();
-    return profiles
-      .map((p) => ({
+
+    const term = search?.trim();
+    const base = term
+      ? ctx.db
+          .query("profiles")
+          .withSearchIndex("search_nickname", (q) =>
+            q.search("nickname", term),
+          )
+      : ctx.db.query("profiles").order("desc");
+
+    const result = await base.paginate(paginationOpts);
+
+    return {
+      ...result,
+      page: result.page.map((p) => ({
         _id: p._id,
         accountId: p.accountId,
         nickname: p.nickname,
@@ -66,8 +86,8 @@ export const listUsers = query({
         bannedAt: p.bannedAt ?? null,
         banReason: p.banReason ?? null,
         createdAt: p.createdAt,
-      }))
-      .sort((a, b) => b.createdAt - a.createdAt);
+      })),
+    };
   },
 });
 

@@ -23,4 +23,6 @@ export const profiles = defineTable({
 })
   .index("by_accountId", ["accountId"])
   .index("by_email", ["email"])
-  .index("by_nickname", ["nickname"]);
+  .index("by_nickname", ["nickname"])
+  // Full-text search over nickname for the admin user list.
+  .searchIndex("search_nickname", { searchField: "nickname" });
