@@ -46,17 +46,11 @@ export const overviewKpis = query({
       (g) => g.gameStatus === "not_started",
     ).length;
 
-    const totalMatchesPlayed = stats.reduce(
-      (sum, s) => sum + s.totalMatches,
-      0,
-    );
-
     return {
       totalUsers: profiles.length,
       newThisWeek,
       banned,
       finishedGames: gameLogs.length,
-      totalMatchesPlayed,
       activeGames,
       waitingGames,
     };

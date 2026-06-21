@@ -104,12 +104,6 @@ export default function KpiStrip() {
           }
         />
         <Stat
-          icon={Swords}
-          accent="violet"
-          value={v(kpi?.totalMatchesPlayed)}
-          label={t("dashboard.kpi.matchesPlayed")}
-        />
-        <Stat
           icon={Trophy}
           accent="sky"
           value={v(kpi?.finishedGames)}
