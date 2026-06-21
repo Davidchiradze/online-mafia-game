@@ -1,67 +1,78 @@
 "use client";
 
-import Link from "next/link";
+import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
-import { useQuery } from "convex/react";
-import { api } from "@convex/_generated/api";
 import { useAccess } from "@/hooks/auth/useAccess";
 import { PERMISSIONS } from "@convex/lib/access";
+import KpiStrip from "@/components/admin/dashboard/KpiStrip";
+import TopPlayersLeaderboard from "@/components/admin/dashboard/TopPlayersLeaderboard";
+import FactionWinDonut from "@/components/admin/dashboard/FactionWinDonut";
+import GamesOverTimeArea from "@/components/admin/dashboard/GamesOverTimeArea";
+import GamesByTypeBar from "@/components/admin/dashboard/GamesByTypeBar";
+import RoleAnalyticsTable from "@/components/admin/dashboard/RoleAnalyticsTable";
+import WinMethodBreakdown from "@/components/admin/dashboard/WinMethodBreakdown";
+import RecentActivityFeed from "@/components/admin/dashboard/RecentActivityFeed";
+
+function SectionLabel({ children }: { children: ReactNode }) {
+  return (
+    <div className="mb-3 flex items-center gap-3">
+      <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+        {children}
+      </h2>
+      <span className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
+    </div>
+  );
+}
 
 export default function AdminDashboardPage() {
   const t = useTranslations("admin");
   const { can, role } = useAccess();
-  const online = useQuery(api.presence.onlineNow);
 
-  const cards = [
-    {
-      href: "/admin/users",
-      title: t("nav.users"),
-      desc: t("dashboard.usersDesc"),
-      show: can(PERMISSIONS.USER_VIEW),
-    },
-    {
-      href: "/admin/games",
-      title: t("nav.games"),
-      desc: t("dashboard.gamesDesc"),
-      show: can(PERMISSIONS.GAME_VIEW_ALL),
-    },
-    {
-      href: "/admin/archive",
-      title: t("nav.archive"),
-      desc: t("dashboard.archiveDesc"),
-      show: can(PERMISSIONS.GAME_VIEW_ALL),
-    },
-  ].filter((c) => c.show);
+  const canViewUsers = can(PERMISSIONS.USER_VIEW);
+  const canViewGames = can(PERMISSIONS.GAME_VIEW_ALL);
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold">{t("dashboard.heading")}</h1>
-      <p className="mt-1 text-sm text-gray-400">
-        {t("dashboard.signedInAs", { role: t(`roles.${role}`) })}
-      </p>
+    <div className="space-y-6">
+      <header>
+        <h1 className="font-orbitron text-2xl font-bold sm:text-3xl">
+          {t("dashboard.heading")}
+        </h1>
+        <p className="mt-1 text-sm text-slate-400">
+          {t("dashboard.signedInAs", { role: t(`roles.${role}`) })}
+        </p>
+      </header>
 
-      <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-sm">
-        <span className="relative flex h-2.5 w-2.5">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-60" />
-          <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-green-500" />
-        </span>
-        <span className="text-gray-300">
-          {online === undefined ? "…" : online.count} online now
-        </span>
-      </div>
+      {/* Compact headline stat bar (includes live online count) */}
+      {canViewUsers && <KpiStrip />}
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2">
-        {cards.map((c) => (
-          <Link
-            key={c.href}
-            href={c.href}
-            className="rounded-xl border border-white/10 bg-white/[0.03] p-5 transition-colors hover:border-white/20 hover:bg-white/[0.06]"
-          >
-            <h2 className="text-lg font-medium">{c.title}</h2>
-            <p className="mt-1 text-sm text-gray-400">{c.desc}</p>
-          </Link>
-        ))}
-      </div>
+      {/* Top players — list scrolls internally */}
+      {canViewGames && <TopPlayersLeaderboard />}
+
+      {/* Game analytics */}
+      {canViewGames && (
+        <section className="space-y-4">
+          <SectionLabel>{t("dashboard.sections.analytics")}</SectionLabel>
+          <div className="grid gap-4 lg:grid-cols-3">
+            <FactionWinDonut />
+            <div className="lg:col-span-2">
+              <GamesOverTimeArea />
+            </div>
+          </div>
+          <div className="grid gap-4 lg:grid-cols-3">
+            <GamesByTypeBar />
+            <RoleAnalyticsTable />
+            <WinMethodBreakdown />
+          </div>
+        </section>
+      )}
+
+      {/* Recent activity feed */}
+      {canViewUsers && (
+        <section>
+          <SectionLabel>{t("dashboard.sections.activity")}</SectionLabel>
+          <RecentActivityFeed />
+        </section>
+      )}
     </div>
   );
 }

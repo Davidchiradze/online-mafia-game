@@ -13,7 +13,73 @@
       "signedInAs": "Signed in as {role}",
       "usersDesc": "View users, assign roles, and manage bans.",
       "gamesDesc": "View all games and force-end or cancel them.",
-      "archiveDesc": "Browse every finished game and reveal all roles."
+      "archiveDesc": "Browse every finished game and reveal all roles.",
+      "sections": {
+        "overview": "Overview",
+        "players": "Players & Activity",
+        "analytics": "Game Analytics",
+        "activity": "Recent Activity"
+      },
+      "online": {
+        "title": "Online now",
+        "subtitle": "Users on the site right now"
+      },
+      "kpi": {
+        "users": "Total users",
+        "activeGames": "Active games",
+        "matchesPlayed": "Matches played",
+        "finishedGames": "Finished games",
+        "banned": "Banned",
+        "newThisWeekLabel": "New this week",
+        "newThisWeek": "+{count} this week",
+        "waiting": "{count} waiting"
+      },
+      "leaderboard": {
+        "title": "Top players",
+        "byWins": "Wins",
+        "byWinRate": "Win rate",
+        "byMatches": "Matches",
+        "empty": "No player stats yet.",
+        "gamesShort": "{count} games"
+      },
+      "live": {
+        "title": "Live games",
+        "empty": "No active games right now.",
+        "host": "Host: {name}",
+        "inGame": "{count} in game",
+        "watching": "{count} watching"
+      },
+      "charts": {
+        "factionWins": "Wins by faction",
+        "gamesOverTime": "Games over time (30 days)",
+        "gamesByType": "Games by mode",
+        "noWinner": "No winner",
+        "empty": "No data yet.",
+        "gamesUnit": "Games"
+      },
+      "roleStats": {
+        "title": "Role analytics",
+        "role": "Role",
+        "matches": "Matches",
+        "winRate": "Win rate",
+        "empty": "No role stats yet."
+      },
+      "winMethods": {
+        "title": "Win methods",
+        "empty": "No finished games yet."
+      },
+      "recent": {
+        "title": "Recent activity",
+        "games": "Latest games",
+        "actions": "Admin actions",
+        "emptyGames": "No finished games yet.",
+        "emptyActions": "No admin actions yet.",
+        "actionLabels": {
+          "role": { "assign": "changed a role" },
+          "user": { "ban": "banned a user", "unban": "unbanned a user" },
+          "game": { "force_end": "force-ended a game", "refund": "issued a refund" }
+        }
+      }
     },
     "roles": {
       "user": "User",

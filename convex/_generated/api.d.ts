@@ -10,6 +10,7 @@
 
 import type * as admin_gameLogs from "../admin/gameLogs.js";
 import type * as admin_games from "../admin/games.js";
+import type * as admin_stats from "../admin/stats.js";
 import type * as admin_users from "../admin/users.js";
 import type * as auth_profiles from "../auth/profiles.js";
 import type * as game_cardPicking from "../game/cardPicking.js";
@@ -68,6 +69,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   "admin/gameLogs": typeof admin_gameLogs;
   "admin/games": typeof admin_games;
+  "admin/stats": typeof admin_stats;
   "admin/users": typeof admin_users;
   "auth/profiles": typeof auth_profiles;
   "game/cardPicking": typeof game_cardPicking;
