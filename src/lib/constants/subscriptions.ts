@@ -20,13 +20,14 @@ export type SubscriptionPackage = {
 };
 
 /**
- * The user's current subscription. Placeholder until wired to backend data —
- * `packageId` matches a `SubscriptionPackage.id`, `expiresAt` is an ISO-like
- * local datetime (`YYYY-MM-DDTHH:mm:ss`). `null` renders the inactive banner.
+ * The user's current subscription, derived from `profile.subscription` (the
+ * PHP-synced snapshot) — NOT static config. `packageId` matches a
+ * `SubscriptionPackage.id`; `expiresAt` is the raw `subscription.to` datetime.
+ * `null` renders the inactive banner.
  */
 export type ActiveSubscription = {
   packageId: string;
-  expiresAt: string;
+  expiresAt?: string;
 };
 
 export type SubscriptionsConfig = {
@@ -37,8 +38,23 @@ export type SubscriptionsConfig = {
   };
   purchasePath: string;
   playPath: string;
-  activeSubscription: ActiveSubscription | null;
   packages: SubscriptionPackage[];
 };
 
 export const SUBSCRIPTIONS_CONFIG = subscriptionsConfig as SubscriptionsConfig;
+
+/**
+ * Maps a PHP numeric `subscription.packageId` (1/2/3) to the matching config
+ * `SubscriptionPackage.id`. Single place these two id schemes are bridged.
+ */
+const PACKAGE_ID_BY_TIER: Record<number, string> = {
+  1: "basic",
+  2: "standard",
+  3: "premium",
+};
+
+export function packageConfigIdForTier(
+  packageId: number | null | undefined,
+): string | undefined {
+  return packageId ? PACKAGE_ID_BY_TIER[packageId] : undefined;
+}

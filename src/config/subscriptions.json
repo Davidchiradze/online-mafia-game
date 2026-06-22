@@ -6,10 +6,6 @@
   },
   "purchasePath": "/ka/subscription",
   "playPath": "/lobby",
-  "activeSubscription": {
-    "packageId": "basic",
-    "expiresAt": "2026-06-29T10:42:00"
-  },
   "packages": [
     {
       "id": "basic",

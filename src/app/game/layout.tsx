@@ -1,4 +1,6 @@
 import AuthGate from "@/components/dashboard/AuthGate";
+import { SubscriptionRouteGuard } from "@/components/auth/SubscriptionRouteGuard";
+import { FEATURES } from "@convex/lib/entitlements";
 
 export default function GameLayout({
   children,
@@ -21,7 +23,13 @@ export default function GameLayout({
       />
       <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black/80 pointer-events-none" />
       <div className="relative z-10 h-full">
-        <AuthGate>{children}</AuthGate>
+        <AuthGate>
+          <SubscriptionRouteGuard
+            anyOf={[FEATURES.PLAY_GAME, FEATURES.SPECTATE_GAME]}
+          >
+            {children}
+          </SubscriptionRouteGuard>
+        </AuthGate>
       </div>
     </div>
   );

@@ -11,7 +11,8 @@ This documentation describes the architecture, patterns, and conventions used in
 3. **Working with real-time updates?** Read [realtime.md](./realtime.md)
 4. **Understanding game logic?** See [game-design.md](./game-design.md)
 5. **Adding roles, permissions, or the admin panel?** Read [authorization.md](./authorization.md)
-6. **Making architectural decisions?** Review [decisions.md](./decisions.md)
+6. **Gating features by paid subscription?** Read [subscriptions.md](./subscriptions.md)
+7. **Making architectural decisions?** Review [decisions.md](./decisions.md)
 
 ## Documentation Structure
 
@@ -22,6 +23,7 @@ This documentation describes the architecture, patterns, and conventions used in
 - **[frontend.md](./frontend.md)** - React conventions, component patterns, UI guidelines
 - **[backend.md](./backend.md)** - Convex mutations, queries, database patterns
 - **[authorization.md](./authorization.md)** - Access roles (admin/moderator), permissions, `/admin` route gating
+- **[subscriptions.md](./subscriptions.md)** - Subscription tiers, feature entitlements, and gating create/join/spectate + the game route
 - **[admin-dashboard.md](./admin-dashboard.md)** - Admin panel routes + the analytics dashboard (KPIs, leaderboards, charts, presence)
 - **[server-time.md](./server-time.md)** - Server-corrected client clock (use `useServerTime()` for any timer math involving a server timestamp)
 - **[decisions.md](./decisions.md)** - Architectural Decision Records (ADRs)

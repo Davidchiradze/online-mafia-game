@@ -1,7 +1,8 @@
 import { ConvexError, v } from "convex/values";
 import { query, mutation, QueryCtx } from "../_generated/server";
 import { Id } from "../_generated/dataModel";
-import { getAuthenticatedUser } from "../lib/auth";
+import { getAuthenticatedUser, requireFeature } from "../lib/auth";
+import { FEATURES } from "../lib/entitlements";
 import {
   getGameById,
   assertIsHost,
@@ -17,7 +18,7 @@ import {
 export const checkOrRequest = mutation({
   args: { gameId: v.id("games") },
   handler: async (ctx, { gameId }) => {
-    const userId = await getAuthenticatedUser(ctx);
+    const { _id: userId } = await requireFeature(ctx, FEATURES.PLAY_GAME);
     const game = await getGameById(ctx.db, gameId);
 
     if (game.hostId === userId) {
@@ -66,7 +67,7 @@ export const checkOrRequest = mutation({
 export const request = mutation({
   args: { gameId: v.id("games") },
   handler: async (ctx, { gameId }) => {
-    const userId = await getAuthenticatedUser(ctx);
+    const { _id: userId } = await requireFeature(ctx, FEATURES.PLAY_GAME);
     await getGameById(ctx.db, gameId);
 
     const existing = await getJoinRequestByRequester(ctx.db, gameId, userId);

@@ -8,6 +8,11 @@ import GameTable from "@/components/game/GameTable";
 import CreateGameModal from "@/components/modals/CreateGameModal";
 import { Search, Plus } from "lucide-react";
 import LobbyStats from "./LobbyStats";
+import {
+  SubscriptionGuard,
+  SubscriptionUpsell,
+} from "@/components/auth/SubscriptionGuard";
+import { FEATURES } from "@convex/lib/entitlements";
 
 export type LobbyGame = Doc<"games"> & {
   players: (Doc<"gamePlayers"> & { avatar?: string })[];
@@ -102,13 +107,18 @@ export default function LobbyContent({ games }: Props) {
             </option>
           </select>
 
-          <button
-            onClick={() => setIsCreateOpen(true)}
-            className="flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-red-700 px-5 py-2.5 font-sans text-sm font-semibold text-white shadow-[0_0_20px_rgba(220,38,38,0.3)] transition-all hover:from-red-500 hover:to-red-600 hover:shadow-[0_0_30px_rgba(220,38,38,0.5)]"
+          <SubscriptionGuard
+            feature={FEATURES.PLAY_GAME}
+            fallback={<SubscriptionUpsell className="flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/[0.08] px-5 py-2.5 font-sans text-sm font-semibold text-amber-300 transition-all hover:border-amber-500/50 hover:bg-amber-500/[0.14]" />}
           >
-            <Plus className="h-4 w-4" />
-            {t("createRoom")}
-          </button>
+            <button
+              onClick={() => setIsCreateOpen(true)}
+              className="flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-red-700 px-5 py-2.5 font-sans text-sm font-semibold text-white shadow-[0_0_20px_rgba(220,38,38,0.3)] transition-all hover:from-red-500 hover:to-red-600 hover:shadow-[0_0_30px_rgba(220,38,38,0.5)]"
+            >
+              <Plus className="h-4 w-4" />
+              {t("createRoom")}
+            </button>
+          </SubscriptionGuard>
         </div>
 
         <GameTable rooms={filtered} />

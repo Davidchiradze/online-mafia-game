@@ -1,6 +1,7 @@
 import { ConvexError, v } from "convex/values";
 import { query, mutation, internalMutation } from "../_generated/server";
-import { getAuthenticatedUser } from "../lib/auth";
+import { getAuthenticatedUser, requireFeature } from "../lib/auth";
+import { FEATURES } from "../lib/entitlements";
 import { getGameById, assertIsHost, getPlayerInGame } from "../lib/games";
 
 function isGameStarted(status: string) {
@@ -33,7 +34,7 @@ export const isPlayer = query({
 export const join = mutation({
   args: { gameId: v.id("games") },
   handler: async (ctx, { gameId }) => {
-    const userId = await getAuthenticatedUser(ctx);
+    const { _id: userId } = await requireFeature(ctx, FEATURES.PLAY_GAME);
     const game = await getGameById(ctx.db, gameId);
 
     const players = await ctx.db

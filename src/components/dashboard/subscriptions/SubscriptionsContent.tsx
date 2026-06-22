@@ -1,15 +1,24 @@
 "use client";
 
 import Link from "next/link";
+import { useQuery } from "convex/react";
 import { ArrowRight, Check } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { authProfiles } from "@convex/refs/lobby";
 import { cn } from "@/lib/utils";
 import { PHP_API_BASE_URL } from "@/lib/auth/constants";
-import { SUBSCRIPTIONS_CONFIG } from "@/lib/constants/subscriptions";
+import {
+  SUBSCRIPTIONS_CONFIG,
+  packageConfigIdForTier,
+  type ActiveSubscription,
+} from "@/lib/constants/subscriptions";
 
-/** "2026-06-29T10:42:00" -> "29.06.2026 10:42" (timezone-agnostic). */
+/**
+ * "2026-06-29T10:42:00" or "2026-06-29 10:42:00" -> "29.06.2026 10:42"
+ * (timezone-agnostic; accepts both the ISO `T` and MySQL space separators).
+ */
 function formatExpiry(value: string): string {
-  const [date, time = ""] = value.split("T");
+  const [date, time = ""] = value.split(/[T ]/);
   const [year, month, day] = date.split("-");
   const [hours, minutes] = time.split(":");
   const base = `${day}.${month}.${year}`;
@@ -18,8 +27,21 @@ function formatExpiry(value: string): string {
 
 export default function SubscriptionsContent() {
   const t = useTranslations("subscriptions");
-  const { banner, packages, purchasePath, playPath, activeSubscription } =
-    SUBSCRIPTIONS_CONFIG;
+  const { banner, packages, purchasePath, playPath } = SUBSCRIPTIONS_CONFIG;
+
+  // Real subscription from the PHP-synced profile snapshot — never static
+  // config. Note: this intentionally uses the raw subscription (not the
+  // entitlements staff-override), so a staff member with no purchase still
+  // sees the inactive state on their own billing page.
+  const profile = useQuery(authProfiles.currentProfile);
+  const subscription = profile?.subscription;
+  const activeConfigId = subscription?.active
+    ? packageConfigIdForTier(subscription.packageId)
+    : undefined;
+
+  const activeSubscription: ActiveSubscription | null = activeConfigId
+    ? { packageId: activeConfigId, expiresAt: subscription?.to }
+    : null;
 
   const activePackage = activeSubscription
     ? packages.find((pkg) => pkg.id === activeSubscription.packageId)
@@ -43,11 +65,13 @@ export default function SubscriptionsContent() {
                 <h2 className="text-lg font-bold tracking-wide text-white sm:text-xl">
                   {t(activePackage.titleKey)}
                 </h2>
-                <span className="text-sm font-medium text-[#00ff66]">
-                  {t("banner.activeStatus", {
-                    date: formatExpiry(activeSubscription.expiresAt),
-                  })}
-                </span>
+                {activeSubscription.expiresAt && (
+                  <span className="text-sm font-medium text-[#00ff66]">
+                    {t("banner.activeStatus", {
+                      date: formatExpiry(activeSubscription.expiresAt),
+                    })}
+                  </span>
+                )}
               </div>
             </div>
             <Link

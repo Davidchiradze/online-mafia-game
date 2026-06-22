@@ -28,6 +28,7 @@ import type * as lib_access from "../lib/access.js";
 import type * as lib_admin from "../lib/admin.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_constants from "../lib/constants.js";
+import type * as lib_entitlements from "../lib/entitlements.js";
 import type * as lib_games from "../lib/games.js";
 import type * as lib_phaseTransitions from "../lib/phaseTransitions.js";
 import type * as lib_profiles from "../lib/profiles.js";
@@ -87,6 +88,7 @@ declare const fullApi: ApiFromModules<{
   "lib/admin": typeof lib_admin;
   "lib/auth": typeof lib_auth;
   "lib/constants": typeof lib_constants;
+  "lib/entitlements": typeof lib_entitlements;
   "lib/games": typeof lib_games;
   "lib/phaseTransitions": typeof lib_phaseTransitions;
   "lib/profiles": typeof lib_profiles;

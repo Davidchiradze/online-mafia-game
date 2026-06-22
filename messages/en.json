@@ -235,6 +235,13 @@
       "activeStatus": "Active · valid until {date}",
       "playNow": "Play now"
     },
+    "gate": {
+      "subscribeToPlay": "Subscribe to play",
+      "lockedTitle": "Subscription required",
+      "lockedBody": "An active subscription is required to play. Choose a package to start.",
+      "viewPlans": "View plans",
+      "noAccessToast": "An active subscription is required to access that page."
+    },
     "yourPackage": "Your Package",
     "owned": "Purchased",
     "footerNote": "Once your active subscription expires, you can purchase a new package. Online play —",
@@ -639,6 +646,7 @@
     "SPECTATE_NOT_IN_PROGRESS": "You can only spectate games that are in progress.",
     "SPECTATE_PRIVATE": "This game is private — spectators can't join.",
     "ALREADY_PLAYER": "You're already a player in this game.",
-    "SPECTATOR_LIMIT": "This game has reached its spectator limit."
+    "SPECTATOR_LIMIT": "This game has reached its spectator limit.",
+    "SUBSCRIPTION_REQUIRED": "An active subscription is required. Choose a package to start."
   }
 }
