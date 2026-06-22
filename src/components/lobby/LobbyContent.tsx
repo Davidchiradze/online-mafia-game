@@ -8,6 +8,7 @@ import GameTable from "@/components/game/GameTable";
 import CreateGameModal from "@/components/modals/CreateGameModal";
 import { Search, Plus } from "lucide-react";
 import LobbyStats from "./LobbyStats";
+import { LobbySubscriptionModal } from "./LobbySubscriptionModal";
 import {
   SubscriptionGuard,
   SubscriptionUpsell,
@@ -129,6 +130,8 @@ export default function LobbyContent({ games }: Props) {
         onClose={() => setIsCreateOpen(false)}
         onCreated={handleCreated}
       />
+
+      <LobbySubscriptionModal />
     </div>
   );
 }

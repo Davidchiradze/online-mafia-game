@@ -242,6 +242,14 @@
       "viewPlans": "View plans",
       "noAccessToast": "An active subscription is required to access that page."
     },
+    "upsellModal": {
+      "badge": "Premium Access",
+      "title": "Unlock the",
+      "titleHighlight": "Full Game",
+      "body": "You don't have an active subscription. Subscribe to create and join games, spectate live matches, and more.",
+      "cta": "View plans",
+      "dismiss": "Maybe later"
+    },
     "yourPackage": "Your Package",
     "owned": "Purchased",
     "footerNote": "Once your active subscription expires, you can purchase a new package. Online play —",
