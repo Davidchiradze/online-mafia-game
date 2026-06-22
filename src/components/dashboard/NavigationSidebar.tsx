@@ -53,7 +53,7 @@ function NavItem({
       <span
         className={cn(
           "ml-0 max-w-0 flex-1 overflow-hidden whitespace-nowrap font-medium opacity-0 transition-all duration-300 ease-in-out",
-          expanded && "ml-3 max-w-[150px] opacity-100",
+          expanded && "ml-3 max-w-[200px] opacity-100",
         )}
       >
         {t(item.labelKey)}

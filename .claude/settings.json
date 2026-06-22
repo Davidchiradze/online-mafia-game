@@ -3,7 +3,8 @@
     "allow": [
       "Bash(grep -n \"subscription\\\\|function \\\\|respondJSON\\\\|user-by-session\\\\|userBySession\\\\|public function\" \"/Users/david/Desktop/Online mafia bag/mafia-php/controllers/ApiController.php\" 2>/dev/null | head -60)",
       "Read(//Users/david/Desktop/Online mafia bag/mafia-php/controllers/**)",
-      "Bash(node -e \"JSON.parse\\(require\\('fs'\\).readFileSync\\('messages/en.json'\\)\\); JSON.parse\\(require\\('fs'\\).readFileSync\\('messages/ka.json'\\)\\); JSON.parse\\(require\\('fs'\\).readFileSync\\('src/config/subscriptions.json'\\)\\); console.log\\('all JSON OK'\\)\")"
+      "Bash(node -e \"JSON.parse\\(require\\('fs'\\).readFileSync\\('messages/en.json'\\)\\); JSON.parse\\(require\\('fs'\\).readFileSync\\('messages/ka.json'\\)\\); JSON.parse\\(require\\('fs'\\).readFileSync\\('src/config/subscriptions.json'\\)\\); console.log\\('all JSON OK'\\)\")",
+      "Bash(node -e \"const ka=require\\('./messages/ka.json'\\); const en=require\\('./messages/en.json'\\); console.log\\('KA nav:', JSON.stringify\\(ka.nav,null,2\\)\\); console.log\\('EN nav:', JSON.stringify\\(en.nav,null,2\\)\\);\")"
     ]
   }
 }

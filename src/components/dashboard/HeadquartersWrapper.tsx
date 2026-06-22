@@ -45,7 +45,7 @@ export default function HeadquartersWrapper({
       <aside
         onMouseEnter={() => setIsSidebarHovered(true)}
         onMouseLeave={() => setIsSidebarHovered(false)}
-        className={`fixed left-0 top-0 z-30 hidden h-screen shrink-0 flex-col overflow-hidden border-r border-white/5 bg-black/80 backdrop-blur-xl transition-all duration-300 ease-in-out md:flex ${isSidebarHovered ? "w-[240px]" : "w-[72px]"}`}
+        className={`fixed left-0 top-0 z-30 hidden h-screen shrink-0 flex-col overflow-hidden border-r border-white/5 bg-black/80 backdrop-blur-xl transition-all duration-300 ease-in-out md:flex ${isSidebarHovered ? "w-[280px]" : "w-[72px]"}`}
       >
         <NavigationSidebar
           expanded={isSidebarHovered}
@@ -68,7 +68,7 @@ export default function HeadquartersWrapper({
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", bounce: 0, duration: 0.3 }}
-              className="fixed inset-y-0 left-0 z-50 flex w-[240px] flex-col overflow-hidden border-r border-white/10 bg-black/90 backdrop-blur-xl md:hidden"
+              className="fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col overflow-hidden border-r border-white/10 bg-black/90 backdrop-blur-xl md:hidden"
             >
               <NavigationSidebar expanded onSignOut={handleSignOut} />
             </motion.aside>
