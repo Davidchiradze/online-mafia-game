@@ -1,12 +1,11 @@
-import { getTranslations } from "next-intl/server";
-import ComingSoonPage from "@/components/dashboard/ComingSoonPage";
+import { FEATURES } from "@convex/lib/entitlements";
+import { SubscriptionRouteGuard } from "@/components/auth/SubscriptionRouteGuard";
+import { CommunityChat } from "@/components/dashboard/community-chat/CommunityChat";
 
-export default async function CommunityChatPage() {
-  const t = await getTranslations("headquarters");
+export default function CommunityChatPage() {
   return (
-    <ComingSoonPage
-      title={t("communityChatTitle")}
-      description={t("communityChatDescription")}
-    />
+    <SubscriptionRouteGuard anyOf={[FEATURES.COMMUNITY_CHAT]}>
+      <CommunityChat />
+    </SubscriptionRouteGuard>
   );
 }

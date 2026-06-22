@@ -9,6 +9,7 @@ import {
   Trophy,
   Ban,
   UserPlus,
+  Crown,
   type LucideIcon,
 } from "lucide-react";
 import { api } from "@convex/_generated/api";
@@ -114,6 +115,12 @@ export default function KpiStrip() {
           accent="amber"
           value={v(kpi?.newThisWeek)}
           label={t("dashboard.kpi.newThisWeekLabel")}
+        />
+        <Stat
+          icon={Crown}
+          accent="violet"
+          value={v(kpi?.subscribers)}
+          label={t("dashboard.kpi.subscribers")}
         />
         <Stat
           icon={Ban}

@@ -1,4 +1,5 @@
 import {
+  CreditCard,
   Gamepad2,
   History,
   MessageSquare,
@@ -18,4 +19,5 @@ export const NAVIGATION_SIDEBAR_ITEMS: NavigationSidebarItem[] = [
   { labelKey: "matchHistory", href: "/match-history", icon: History },
   { labelKey: "communityChat", href: "/community-chat", icon: MessageSquare },
   { labelKey: "leaderboard", href: "/leaderboard", icon: Trophy },
+  { labelKey: "subscriptions", href: "/subscriptions", icon: CreditCard },
 ];

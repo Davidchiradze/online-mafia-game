@@ -1,10 +1,6 @@
 import type { Metadata } from "next";
-import {
-  Inter,
-  Geist_Mono,
-  Orbitron,
-  Noto_Sans_Georgian,
-} from "next/font/google";
+import { Inter, Geist_Mono, Orbitron } from "next/font/google";
+import localFont from "next/font/local";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import AudioUnlockBootstrap from "@/components/providers/AudioUnlockBootstrap";
@@ -34,12 +30,14 @@ const orbitron = Orbitron({
   weight: ["400", "500", "600", "700", "800", "900"],
 });
 
-// Georgian-capable font: Inter/Orbitron ship Latin-only subsets, so Georgian
-// glyphs fall back to this per-glyph via the CSS font stacks.
-const notoGeorgian = Noto_Sans_Georgian({
+// Georgian font (BPG Banner ExtraSquare Caps, via npm): Inter/Orbitron ship
+// Latin-only subsets, so Georgian glyphs fall back to this per-glyph via the CSS
+// font stacks. When the Georgian locale is active it's promoted to the primary
+// face (see globals.css).
+const ninoGeorgian = localFont({
+  src: "../../node_modules/bpg-banner-extrasquare-caps/fonts/bpg-banner-extrasquare-caps-webfont.woff2",
   variable: "--font-noto-georgian",
-  subsets: ["georgian"],
-  weight: ["400", "500", "600", "700"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -59,7 +57,7 @@ export default async function RootLayout({
   return (
     <html lang={locale} suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${geistMono.variable} ${orbitron.variable} ${notoGeorgian.variable} antialiased`}
+        className={`${inter.variable} ${geistMono.variable} ${orbitron.variable} ${ninoGeorgian.variable} antialiased`}
       >
         <NextIntlClientProvider locale={locale} messages={messages}>
           <ConvexClientProvider>

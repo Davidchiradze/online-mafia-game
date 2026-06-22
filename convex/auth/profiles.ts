@@ -60,6 +60,14 @@ export const upsertFromPhp = mutation({
     name: v.optional(v.string()),
     avatar: v.optional(v.string()),
     amount: v.optional(v.string()),
+    subscription: v.optional(
+      v.object({
+        packageId: v.number(),
+        from: v.optional(v.string()),
+        to: v.optional(v.string()),
+        active: v.boolean(),
+      }),
+    ),
   },
   handler: async (ctx, { secret, accountId, ...fields }) => {
     if (secret !== process.env.CONVEX_SYNC_SECRET) {

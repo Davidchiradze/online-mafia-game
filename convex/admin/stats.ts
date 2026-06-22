@@ -40,6 +40,9 @@ export const overviewKpis = query({
       (p) => p.createdAt > now - WEEK_MS,
     ).length;
     const banned = profiles.filter((p) => p.bannedAt != null).length;
+    const subscribers = profiles.filter(
+      (p) => p.subscription?.active === true,
+    ).length;
 
     const activeGames = games.filter((g) => g.gameStatus === "playing").length;
     const waitingGames = games.filter(
@@ -50,6 +53,7 @@ export const overviewKpis = query({
       totalUsers: profiles.length,
       newThisWeek,
       banned,
+      subscribers,
       finishedGames: gameLogs.length,
       activeGames,
       waitingGames,

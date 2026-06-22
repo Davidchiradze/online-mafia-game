@@ -1,6 +1,7 @@
 import { ConvexError, v } from "convex/values";
 import { query, mutation, internalMutation } from "../_generated/server";
-import { getAuthenticatedUser } from "../lib/auth";
+import { getAuthenticatedUser, requireFeature } from "../lib/auth";
+import { FEATURES } from "../lib/entitlements";
 import {
   getGameById,
   getPlayersByGameId,
@@ -88,7 +89,7 @@ export const create = mutation({
     isPrivate: v.boolean(),
   },
   handler: async (ctx, { name, gameType, isPrivate }) => {
-    const userId = await getAuthenticatedUser(ctx);
+    const { _id: userId } = await requireFeature(ctx, FEATURES.PLAY_GAME);
 
     const trimmedName = name.trim();
     if (trimmedName.length === 0) {

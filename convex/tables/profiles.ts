@@ -14,6 +14,17 @@ export const profiles = defineTable({
   // tighten to `accessRoleValidator` afterward (see convex/migrations.ts).
   role: v.optional(v.string()),
   amount: v.optional(v.string()),
+  // Subscription synced from PHP (mafia.ge). `active` is PHP's snapshot
+  // (packageId>0 && to>now), refreshed on every profile sync; `from`/`to`
+  // are MySQL datetime strings kept for display only. See convex/auth/profiles.ts.
+  subscription: v.optional(
+    v.object({
+      packageId: v.number(),
+      from: v.optional(v.string()),
+      to: v.optional(v.string()),
+      active: v.boolean(),
+    }),
+  ),
   // Convex-owned moderation fields (never synced from PHP).
   bannedAt: v.optional(v.number()),
   banReason: v.optional(v.string()),

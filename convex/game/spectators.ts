@@ -1,6 +1,7 @@
 import { ConvexError, v } from "convex/values";
 import { query, mutation, internalMutation } from "../_generated/server";
-import { getAuthenticatedUser } from "../lib/auth";
+import { getAuthenticatedUser, requireFeature } from "../lib/auth";
+import { FEATURES } from "../lib/entitlements";
 import { getGameById, getPlayerInGame } from "../lib/games";
 import { SPECTATOR } from "../lib/constants";
 
@@ -32,7 +33,7 @@ export const isSpectator = query({
 export const join = mutation({
   args: { gameId: v.id("games") },
   handler: async (ctx, { gameId }) => {
-    const userId = await getAuthenticatedUser(ctx);
+    const { _id: userId } = await requireFeature(ctx, FEATURES.SPECTATE_GAME);
     const game = await getGameById(ctx.db, gameId);
 
     if (game.gameStatus !== "playing") {

@@ -30,6 +30,7 @@
         "matchesPlayed": "Matches played",
         "finishedGames": "Finished games",
         "banned": "Banned",
+        "subscribers": "Subscribers",
         "newThisWeekLabel": "New this week",
         "newThisWeek": "+{count} this week",
         "waiting": "{count} waiting"
@@ -75,9 +76,17 @@
         "emptyGames": "No finished games yet.",
         "emptyActions": "No admin actions yet.",
         "actionLabels": {
-          "role": { "assign": "changed a role" },
-          "user": { "ban": "banned a user", "unban": "unbanned a user" },
-          "game": { "force_end": "force-ended a game", "refund": "issued a refund" }
+          "role": {
+            "assign": "changed a role"
+          },
+          "user": {
+            "ban": "banned a user",
+            "unban": "unbanned a user"
+          },
+          "game": {
+            "force_end": "force-ended a game",
+            "refund": "issued a refund"
+          }
         }
       }
     },
@@ -98,6 +107,17 @@
       "status": "Status",
       "actions": "Actions",
       "active": "Active",
+      "subscription": "Subscription",
+      "subActive": "Active",
+      "subExpired": "Expired",
+      "subNone": "None",
+      "filter": "Filter",
+      "filterAll": "All users",
+      "filterAdmins": "Admins only",
+      "filterModerators": "Moderators only",
+      "filterSubscribers": "Subscribers",
+      "filterBanned": "Banned",
+      "resultCount": "{count, plural, =1 {# result} other {# results}}",
       "banned": "Banned",
       "ban": "Ban",
       "unban": "Unban",
@@ -212,13 +232,86 @@
     "matchHistory": "Match History",
     "communityChat": "Community Chat",
     "leaderboard": "Leaderboard",
+    "subscriptions": "Subscriptions",
     "logout": "Logout"
+  },
+  "subscriptions": {
+    "banner": {
+      "label": "Your Subscription",
+      "inactiveTitle": "You don't have an active package",
+      "inactiveSubtitle": "Choose a package below and start playing online",
+      "activeStatus": "Active · valid until {date}",
+      "playNow": "Play now"
+    },
+    "gate": {
+      "subscribeToPlay": "Subscribe to play",
+      "lockedTitle": "Subscription required",
+      "lockedBody": "An active subscription is required to play. Choose a package to start.",
+      "viewPlans": "View plans",
+      "noAccessToast": "An active subscription is required to access that page."
+    },
+    "upsellModal": {
+      "badge": "Premium Access",
+      "title": "Unlock the",
+      "titleHighlight": "Full Game",
+      "body": "You don't have an active subscription. Subscribe to create and join games, spectate live matches, and more.",
+      "cta": "View plans",
+      "dismiss": "Maybe later"
+    },
+    "yourPackage": "Your Package",
+    "owned": "Purchased",
+    "footerNote": "Once your active subscription expires, you can purchase a new package. Online play —",
+    "footerLink": "online.mafia.ge",
+    "features": {
+      "fullAccess": "Online Mafia — Full access",
+      "balanceOnly": "Payment from balance only",
+      "noAutoPayments": "No automatic payments"
+    },
+    "packages": {
+      "basic": {
+        "label": "Basic",
+        "badge": "-100%",
+        "title": "Basic — 1 Week",
+        "period": "/ 7 days",
+        "button": "Purchase"
+      },
+      "standard": {
+        "label": "Standard",
+        "badge": "Soon",
+        "title": "Standard — 2 Weeks",
+        "period": "/ 14 days",
+        "button": "Will be available soon"
+      },
+      "premium": {
+        "label": "Premium",
+        "badge": "Soon",
+        "title": "Premium — 1 Month",
+        "period": "/ 30 days",
+        "button": "Will be available soon"
+      }
+    }
   },
   "headquarters": {
     "leaderboardTitle": "Leaderboard",
     "leaderboardDescription": "See who the top players are in the Mafia underworld. Climb the ranks to prove your mastery.",
     "communityChatTitle": "Community Chat",
     "communityChatDescription": "Connect with other players, find groups, and discuss strategies in the official Mafia channels."
+  },
+  "communityChat": {
+    "title": "Community Chat",
+    "selfLabel": "You",
+    "you": "(you)",
+    "statusOnline": "Online",
+    "onlineCount": "Online — {count}",
+    "playersOnline": "{count, plural, one {# player online} other {# players online}}",
+    "searchPlayers": "Search players…",
+    "noPlayers": "No players found",
+    "composerPlaceholder": "Message the community…",
+    "emptyChannel": "No messages yet — say hello!",
+    "messageRemoved": "Message removed",
+    "deleteMessage": "Delete message",
+    "badgeAdmin": "Admin",
+    "badgeMod": "Mod"
   },
   "matchHistory": {
     "pageTitle": "Match History",
@@ -585,6 +678,12 @@
     "SPECTATE_NOT_IN_PROGRESS": "You can only spectate games that are in progress.",
     "SPECTATE_PRIVATE": "This game is private — spectators can't join.",
     "ALREADY_PLAYER": "You're already a player in this game.",
-    "SPECTATOR_LIMIT": "This game has reached its spectator limit."
+    "SPECTATOR_LIMIT": "This game has reached its spectator limit.",
+    "SUBSCRIPTION_REQUIRED": "An active subscription is required. Choose a package to start.",
+    "CHAT_BANNED": "Your account is banned from chat.",
+    "CHAT_EMPTY": "Message cannot be empty.",
+    "CHAT_TOO_LONG": "Your message is too long.",
+    "CHAT_RATE_LIMITED": "You're sending messages too quickly. Please slow down.",
+    "CHAT_MESSAGE_NOT_FOUND": "Message not found."
   }
 }

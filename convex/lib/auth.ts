@@ -7,6 +7,7 @@ import {
   normalizeRole,
   roleHasPermission,
 } from "./access";
+import { type Feature, hasFeature } from "./entitlements";
 
 /**
  * Returns the external PHP `accounts.id` from the validated JWT.
@@ -71,6 +72,34 @@ export async function requirePermission(
     throw new ConvexError({
       code: "FORBIDDEN",
       message: "You do not have permission to perform this action.",
+    });
+  }
+  return profile;
+}
+
+/**
+ * Authoritative subscription gate. Call at the start of any mutation/query that
+ * a paid feature unlocks. Throws `SUBSCRIPTION_REQUIRED` if the user's tier (or
+ * staff override) does not grant `feature`. Returns the profile for reuse.
+ *
+ * Distinct from `requirePermission` (access roles): this is the subscription
+ * axis. Moderators/admins are granted the highest tier's features — see
+ * convex/lib/entitlements.ts.
+ */
+export async function requireFeature(
+  ctx: QueryCtx | MutationCtx,
+  feature: Feature,
+): Promise<Doc<"profiles">> {
+  const profile = await getAuthenticatedProfile(ctx);
+  if (
+    !hasFeature(
+      { role: profile.role, subscription: profile.subscription },
+      feature,
+    )
+  ) {
+    throw new ConvexError({
+      code: "SUBSCRIPTION_REQUIRED",
+      message: "An active subscription is required to perform this action.",
     });
   }
   return profile;

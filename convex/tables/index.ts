@@ -13,3 +13,4 @@ export { gameLogs } from "./gameLogs";
 export { gameLogPlayers } from "./gameLogPlayers";
 export { playerStats } from "./playerStats";
 export { adminAuditLog } from "./adminAuditLog";
+export { communityMessages } from "./communityMessages";

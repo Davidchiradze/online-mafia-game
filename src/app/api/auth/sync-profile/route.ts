@@ -58,6 +58,14 @@ export async function POST(req: NextRequest) {
       name: user.name ?? undefined,
       avatar: normalizeAvatarUrl(user.avatar) ?? undefined,
       amount: user.amount != null ? String(user.amount) : undefined,
+      subscription: user.subscription
+        ? {
+            packageId: user.subscription.packageId,
+            from: user.subscription.from ?? undefined,
+            to: user.subscription.to ?? undefined,
+            active: user.subscription.active,
+          }
+        : undefined,
     });
 
     return NextResponse.json({ ok: true });

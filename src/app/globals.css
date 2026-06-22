@@ -154,6 +154,12 @@
     @apply bg-background text-foreground;
     font-family: var(--font-inter), var(--font-noto-georgian), ui-sans-serif, system-ui, sans-serif;
   }
+
+  /* Georgian locale: use BPG Nino Mtavruli as the primary face everywhere. */
+  html[lang="ka"] body,
+  html[lang="ka"] {
+    font-family: var(--font-noto-georgian), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  }
 }
 
 /*
