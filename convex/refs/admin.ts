@@ -67,7 +67,11 @@ export type AdminGameLogRow = {
 export const adminUsers = {
   list: makeFunctionReference<
     "query",
-    { paginationOpts: PaginationOptions; search?: string },
+    {
+      paginationOpts: PaginationOptions;
+      search?: string;
+      filter?: "admins" | "moderators" | "subscribers" | "banned";
+    },
     PaginationResult<AdminUserRow>
   >("admin/users:listUsers"),
 };

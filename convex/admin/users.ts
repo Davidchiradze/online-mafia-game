@@ -59,8 +59,16 @@ export const listUsers = query({
   args: {
     paginationOpts: paginationOptsValidator,
     search: v.optional(v.string()),
+    filter: v.optional(
+      v.union(
+        v.literal("admins"),
+        v.literal("moderators"),
+        v.literal("subscribers"),
+        v.literal("banned"),
+      ),
+    ),
   },
-  handler: async (ctx, { paginationOpts, search }) => {
+  handler: async (ctx, { paginationOpts, search, filter }) => {
     await requirePermission(ctx, PERMISSIONS.USER_VIEW);
 
     const term = search?.trim();
@@ -72,7 +80,20 @@ export const listUsers = query({
           )
       : ctx.db.query("profiles").order("desc");
 
-    const result = await base.paginate(paginationOpts);
+    // Narrow to the selected group. `.filter()` composes with both the search
+    // index and `.order("desc")`, and is fine at admin-only data volume.
+    const filtered = filter
+      ? base.filter((q) => {
+          if (filter === "admins") return q.eq(q.field("role"), "admin");
+          if (filter === "moderators")
+            return q.eq(q.field("role"), "moderator");
+          if (filter === "subscribers")
+            return q.eq(q.field("subscription.active"), true);
+          return q.neq(q.field("bannedAt"), undefined); // banned
+        })
+      : base;
+
+    const result = await filtered.paginate(paginationOpts);
 
     return {
       ...result,

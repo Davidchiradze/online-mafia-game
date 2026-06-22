@@ -19,12 +19,27 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 const PAGE_SIZE = 20;
 
+type UserFilter = "all" | "admins" | "moderators" | "subscribers" | "banned";
+
+const FILTER_OPTIONS: { value: UserFilter; labelKey: string }[] = [
+  { value: "all", labelKey: "users.filterAll" },
+  { value: "admins", labelKey: "users.filterAdmins" },
+  { value: "moderators", labelKey: "users.filterModerators" },
+  { value: "subscribers", labelKey: "users.filterSubscribers" },
+  { value: "banned", labelKey: "users.filterBanned" },
+];
+
 export default function UsersTable() {
   const t = useTranslations("admin");
   const { can } = useAccess();
 
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<UserFilter>("all");
+
+  const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setFilter(e.target.value as UserFilter);
+  };
 
   // Debounce the search input so we don't re-query on every keystroke.
   useEffect(() => {
@@ -34,7 +49,10 @@ export default function UsersTable() {
 
   const { results, status, loadMore } = usePaginatedQuery(
     adminUsers.list,
-    { search: search || undefined },
+    {
+      search: search || undefined,
+      filter: filter === "all" ? undefined : filter,
+    },
     { initialNumItems: PAGE_SIZE },
   );
 
@@ -78,15 +96,36 @@ export default function UsersTable() {
 
   return (
     <div>
-      <div className="relative mb-4 max-w-sm">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
-        <input
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-          placeholder={t("users.search")}
-          className="w-full rounded-lg border border-white/10 bg-white/[0.03] py-2 pl-9 pr-3 text-sm text-white placeholder:text-gray-500 focus:border-white/20 focus:outline-none"
-        />
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <div className="relative max-w-sm flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+          <input
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder={t("users.search")}
+            className="w-full rounded-lg border border-white/10 bg-white/[0.03] py-2 pl-9 pr-3 text-sm text-white placeholder:text-gray-500 focus:border-white/20 focus:outline-none"
+          />
+        </div>
+        <select
+          value={filter}
+          onChange={handleFilterChange}
+          aria-label={t("users.filter")}
+          className="rounded-lg border border-white/10 bg-neutral-900 px-3 py-2 text-sm text-white focus:border-white/20 focus:outline-none"
+        >
+          {FILTER_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {t(option.labelKey)}
+            </option>
+          ))}
+        </select>
       </div>
+
+      {status !== "LoadingFirstPage" && (
+        <p className="mb-3 text-xs text-gray-400">
+          {t("users.resultCount", { count: results.length })}
+          {status === "CanLoadMore" || status === "LoadingMore" ? "+" : ""}
+        </p>
+      )}
 
       {status === "LoadingFirstPage" ? (
         <div className="flex justify-center py-16">
