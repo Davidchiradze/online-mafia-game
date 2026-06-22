@@ -76,9 +76,17 @@
         "emptyGames": "No finished games yet.",
         "emptyActions": "No admin actions yet.",
         "actionLabels": {
-          "role": { "assign": "changed a role" },
-          "user": { "ban": "banned a user", "unban": "unbanned a user" },
-          "game": { "force_end": "force-ended a game", "refund": "issued a refund" }
+          "role": {
+            "assign": "changed a role"
+          },
+          "user": {
+            "ban": "banned a user",
+            "unban": "unbanned a user"
+          },
+          "game": {
+            "force_end": "force-ended a game",
+            "refund": "issued a refund"
+          }
         }
       }
     },
@@ -288,6 +296,22 @@
     "leaderboardDescription": "See who the top players are in the Mafia underworld. Climb the ranks to prove your mastery.",
     "communityChatTitle": "Community Chat",
     "communityChatDescription": "Connect with other players, find groups, and discuss strategies in the official Mafia channels."
+  },
+  "communityChat": {
+    "title": "Community Chat",
+    "selfLabel": "You",
+    "you": "(you)",
+    "statusOnline": "Online",
+    "onlineCount": "Online — {count}",
+    "playersOnline": "{count, plural, one {# player online} other {# players online}}",
+    "searchPlayers": "Search players…",
+    "noPlayers": "No players found",
+    "composerPlaceholder": "Message the community…",
+    "emptyChannel": "No messages yet — say hello!",
+    "messageRemoved": "Message removed",
+    "deleteMessage": "Delete message",
+    "badgeAdmin": "Admin",
+    "badgeMod": "Mod"
   },
   "matchHistory": {
     "pageTitle": "Match History",
@@ -655,6 +679,11 @@
     "SPECTATE_PRIVATE": "This game is private — spectators can't join.",
     "ALREADY_PLAYER": "You're already a player in this game.",
     "SPECTATOR_LIMIT": "This game has reached its spectator limit.",
-    "SUBSCRIPTION_REQUIRED": "An active subscription is required. Choose a package to start."
+    "SUBSCRIPTION_REQUIRED": "An active subscription is required. Choose a package to start.",
+    "CHAT_BANNED": "Your account is banned from chat.",
+    "CHAT_EMPTY": "Message cannot be empty.",
+    "CHAT_TOO_LONG": "Your message is too long.",
+    "CHAT_RATE_LIMITED": "You're sending messages too quickly. Please slow down.",
+    "CHAT_MESSAGE_NOT_FOUND": "Message not found."
   }
 }

@@ -96,6 +96,19 @@ export const PRESENCE = {
   HEARTBEAT_INTERVAL_MS: 60_000,
 } as const;
 
+export const COMMUNITY_CHAT = {
+  /** Max characters per message (validated server-side after trimming). */
+  MAX_MESSAGE_LENGTH: 500,
+  /** Minimum gap between a single author's messages — anti-spam throttle. */
+  SEND_COOLDOWN_MS: 2_000,
+  /** How many recent messages `list` returns (and the prune retention floor). */
+  LIST_LIMIT: 100,
+  /** Daily prune keeps at most this many most-recent messages. */
+  RETENTION_LIMIT: 200,
+  /** Generous cap when listing online users for the sidebar. */
+  ONLINE_CAP: 1000,
+} as const;
+
 export const FOULS = {
   MAX_FOULS: 3,
   ELIMINATION_THRESHOLD: 4,

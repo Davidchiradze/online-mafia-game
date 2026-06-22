@@ -64,6 +64,8 @@ export const PERMISSIONS = {
   GAME_FORCE_END: "game.force_end",
   /** Issue a balance refund (calls the PHP refund endpoint). */
   GAME_REFUND: "game.refund",
+  /** Delete any message in the community chat (soft-delete). */
+  CHAT_MESSAGE_DELETE: "chat.message_delete",
 } as const;
 
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
@@ -81,6 +83,7 @@ export const ROLE_PERMISSIONS: Record<AccessRole, readonly Permission[]> = {
     PERMISSIONS.USER_VIEW,
     PERMISSIONS.GAME_VIEW_ALL,
     PERMISSIONS.GAME_FORCE_END,
+    PERMISSIONS.CHAT_MESSAGE_DELETE,
   ],
   admin: ALL_PERMISSIONS, // full access
 };

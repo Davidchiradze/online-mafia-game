@@ -54,6 +54,8 @@ export const FEATURES = {
   PLAY_GAME: "game.play",
   /** Watch a game as a spectator. */
   SPECTATE_GAME: "game.spectate",
+  /** Read and post in the global community chat. */
+  COMMUNITY_CHAT: "community.chat",
 } as const;
 
 export type Feature = (typeof FEATURES)[keyof typeof FEATURES];
@@ -127,4 +129,5 @@ export function isSubscriptionActive(input: EntitlementInput): boolean {
 export const featureValidator = v.union(
   v.literal(FEATURES.PLAY_GAME),
   v.literal(FEATURES.SPECTATE_GAME),
+  v.literal(FEATURES.COMMUNITY_CHAT),
 );
