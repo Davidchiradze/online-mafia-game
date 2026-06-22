@@ -224,7 +224,49 @@
     "matchHistory": "მატჩების ისტორია",
     "communityChat": "საზოგადოების ჩატი",
     "leaderboard": "ლიდერბორდი",
+    "subscriptions": "გამოწერები",
     "logout": "გასვლა"
+  },
+  "subscriptions": {
+    "banner": {
+      "label": "შენი გამოწერა",
+      "inactiveTitle": "თქვენ არ გაქვთ აქტიური პაკეტი",
+      "inactiveSubtitle": "აირჩიეთ პაკეტი ქვემოთ და დაიწყეთ ონლაინ თამაში",
+      "activeStatus": "აქტიური · ვადა {date}-მდე",
+      "playNow": "ითამაშე ახლავე"
+    },
+    "yourPackage": "შენი პაკეტი",
+    "owned": "ნაყიდი გაქვს",
+    "footerNote": "აქტიური გამოწერის ვადის გასვლის შემდეგ შეგიძლიათ ახალი პაკეტის შეძენა. ონლაინ თამაში —",
+    "footerLink": "online.mafia.ge",
+    "features": {
+      "fullAccess": "ონლაინ მაფია — სრული წვდომა",
+      "balanceOnly": "გადახდა მხოლოდ ბალანსიდან",
+      "noAutoPayments": "ავტომატური გადახდების გარეშე"
+    },
+    "packages": {
+      "basic": {
+        "label": "ბაზისური",
+        "badge": "-100%",
+        "title": "ბაზისური — 1 კვირა",
+        "period": "/ 7 დღე",
+        "button": "შეძენა"
+      },
+      "standard": {
+        "label": "სტანდარტული",
+        "badge": "მალე",
+        "title": "სტანდარტული — 2 კვირა",
+        "period": "/ 14 დღე",
+        "button": "მალე იქნება ხელმისაწვდომი"
+      },
+      "premium": {
+        "label": "პრემიუმი",
+        "badge": "მალე",
+        "title": "პრემიუმი — 1 თვე",
+        "period": "/ 30 დღე",
+        "button": "მალე იქნება ხელმისაწვდომი"
+      }
+    }
   },
   "headquarters": {
     "leaderboardTitle": "ლიდერბორდი",

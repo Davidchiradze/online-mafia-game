@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(grep -n \"subscription\\\\|function \\\\|respondJSON\\\\|user-by-session\\\\|userBySession\\\\|public function\" \"/Users/david/Desktop/Online mafia bag/mafia-php/controllers/ApiController.php\" 2>/dev/null | head -60)",
-      "Read(//Users/david/Desktop/Online mafia bag/mafia-php/controllers/**)"
+      "Read(//Users/david/Desktop/Online mafia bag/mafia-php/controllers/**)",
+      "Bash(node -e \"JSON.parse\\(require\\('fs'\\).readFileSync\\('messages/en.json'\\)\\); JSON.parse\\(require\\('fs'\\).readFileSync\\('messages/ka.json'\\)\\); JSON.parse\\(require\\('fs'\\).readFileSync\\('src/config/subscriptions.json'\\)\\); console.log\\('all JSON OK'\\)\")"
     ]
   }
 }

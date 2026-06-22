@@ -224,7 +224,49 @@
     "matchHistory": "Match History",
     "communityChat": "Community Chat",
     "leaderboard": "Leaderboard",
+    "subscriptions": "Subscriptions",
     "logout": "Logout"
+  },
+  "subscriptions": {
+    "banner": {
+      "label": "Your Subscription",
+      "inactiveTitle": "You don't have an active package",
+      "inactiveSubtitle": "Choose a package below and start playing online",
+      "activeStatus": "Active · valid until {date}",
+      "playNow": "Play now"
+    },
+    "yourPackage": "Your Package",
+    "owned": "Purchased",
+    "footerNote": "Once your active subscription expires, you can purchase a new package. Online play —",
+    "footerLink": "online.mafia.ge",
+    "features": {
+      "fullAccess": "Online Mafia — Full access",
+      "balanceOnly": "Payment from balance only",
+      "noAutoPayments": "No automatic payments"
+    },
+    "packages": {
+      "basic": {
+        "label": "Basic",
+        "badge": "-100%",
+        "title": "Basic — 1 Week",
+        "period": "/ 7 days",
+        "button": "Purchase"
+      },
+      "standard": {
+        "label": "Standard",
+        "badge": "Soon",
+        "title": "Standard — 2 Weeks",
+        "period": "/ 14 days",
+        "button": "Will be available soon"
+      },
+      "premium": {
+        "label": "Premium",
+        "badge": "Soon",
+        "title": "Premium — 1 Month",
+        "period": "/ 30 days",
+        "button": "Will be available soon"
+      }
+    }
   },
   "headquarters": {
     "leaderboardTitle": "Leaderboard",
