@@ -51,6 +51,13 @@ type Profile = {
   nickname: string;
   avatar?: string;
   role?: string;
+  amount?: string;
+  subscription?: {
+    packageId: number;
+    from?: string;
+    to?: string;
+    active: boolean;
+  };
   verified: boolean;
   createdAt: number;
   updatedAt: number;
@@ -65,6 +72,12 @@ type UpsertFromPhpArgs = {
   avatar?: string;
   role?: string;
   amount?: string;
+  subscription?: {
+    packageId: number;
+    from?: string;
+    to?: string;
+    active: boolean;
+  };
 };
 
 export const authProfiles = {

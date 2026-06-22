@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -n \"subscription\\\\|function \\\\|respondJSON\\\\|user-by-session\\\\|userBySession\\\\|public function\" \"/Users/david/Desktop/Online mafia bag/mafia-php/controllers/ApiController.php\" 2>/dev/null | head -60)",
+      "Read(//Users/david/Desktop/Online mafia bag/mafia-php/controllers/**)"
+    ]
+  }
+}

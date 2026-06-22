@@ -21,6 +21,12 @@ export type AdminUserRow = {
   role: AccessRole;
   bannedAt: number | null;
   banReason: string | null;
+  subscription: {
+    packageId: number;
+    from?: string;
+    to?: string;
+    active: boolean;
+  } | null;
   createdAt: number;
 };
 

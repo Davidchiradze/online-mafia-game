@@ -19,6 +19,12 @@ export interface PhpUser {
   roleId: number;
   status: number | null;
   amount: number | null;
+  subscription?: {
+    packageId: number;
+    from: string | null;
+    to: string | null;
+    active: boolean;
+  };
 }
 
 export interface ConvexJwtClaims {

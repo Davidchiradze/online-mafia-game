@@ -85,6 +85,7 @@ export const listUsers = query({
         role: normalizeRole(p.role),
         bannedAt: p.bannedAt ?? null,
         banReason: p.banReason ?? null,
+        subscription: p.subscription ?? null,
         createdAt: p.createdAt,
       })),
     };

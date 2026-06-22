@@ -103,6 +103,9 @@ export default function UsersTable() {
               <tr>
                 <th className="px-4 py-3 font-medium">{t("users.user")}</th>
                 <th className="px-4 py-3 font-medium">{t("users.role")}</th>
+                <th className="px-4 py-3 font-medium">
+                  {t("users.subscription")}
+                </th>
                 <th className="px-4 py-3 font-medium">{t("users.status")}</th>
                 <th className="px-4 py-3 font-medium">{t("users.actions")}</th>
               </tr>
@@ -133,6 +136,33 @@ export default function UsersTable() {
                       </select>
                     ) : (
                       <span>{t(`roles.${u.role}`)}</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    {u.subscription && u.subscription.packageId > 0 ? (
+                      <div>
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-xs ${
+                            u.subscription.active
+                              ? "bg-emerald-500/15 text-emerald-400"
+                              : "bg-amber-500/15 text-amber-400"
+                          }`}
+                        >
+                          {u.subscription.active
+                            ? t("users.subActive")
+                            : t("users.subExpired")}
+                        </span>
+                        <div className="mt-1 text-xs text-gray-500">
+                          #{u.subscription.packageId}
+                          {u.subscription.to
+                            ? ` · ${formatSubDate(u.subscription.to)}`
+                            : ""}
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-gray-500">
+                        {t("users.subNone")}
+                      </span>
                     )}
                   </td>
                   <td className="px-4 py-3">
@@ -171,6 +201,15 @@ export default function UsersTable() {
       )}
     </div>
   );
+}
+
+/**
+ * Formats a PHP MySQL datetime string ("2026-07-20 12:00:00") as a short
+ * local date for display. Falls back to the raw string if unparseable.
+ */
+function formatSubDate(raw: string): string {
+  const d = new Date(raw.replace(" ", "T"));
+  return Number.isNaN(d.getTime()) ? raw : d.toLocaleDateString();
 }
 
 function errorMessage(e: unknown, fallback: string): string {
