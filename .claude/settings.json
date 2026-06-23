@@ -18,7 +18,8 @@
       "Bash(python3 -c \"import json;d=json.load\\(open\\('messages/en.json'\\)\\);print\\(json.dumps\\(d.get\\('errors',{}\\),indent=1,ensure_ascii=False\\)\\);print\\('--- headquarters ---'\\);print\\(json.dumps\\(d.get\\('headquarters',{}\\),indent=1,ensure_ascii=False\\)\\);print\\('--- common ---'\\);print\\(json.dumps\\(d.get\\('common',{}\\),indent=1,ensure_ascii=False\\)[:600]\\);print\\('--- top-level keys ---'\\);print\\(list\\(d.keys\\(\\)\\)\\)\")",
       "Bash(python3 -c \"import json;d=json.load\\(open\\('messages/ka.json'\\)\\);print\\('ka top keys',list\\(d.keys\\(\\)\\)\\);print\\('errors keys',list\\(d.get\\('errors',{}\\).keys\\(\\)\\)\\);print\\('headquarters',json.dumps\\(d.get\\('headquarters',{}\\),ensure_ascii=False\\)\\)\")",
       "Bash(python3 -)",
-      "Bash(echo \"lint exit: $?\")"
+      "Bash(echo \"lint exit: $?\")",
+      "Bash(sort -t: -k2 -rn)"
     ],
     "additionalDirectories": [
       "/Users/david/Desktop/online-mafia/messages"

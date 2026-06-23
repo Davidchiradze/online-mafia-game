@@ -44,12 +44,12 @@ export function MessageItem({ message, self, canModerate, onRemove }: Props) {
         <div className={cn("flex items-center gap-2", self && "flex-row-reverse")}>
           <div
             className={cn(
-              "px-4 py-2.5 rounded-2xl text-sm leading-relaxed border backdrop-blur-md",
+              "px-4 py-2.5 rounded-2xl text-sm leading-relaxed border",
               message.deleted
-                ? "bg-white/5 border-white/10 text-zinc-500 italic"
+                ? "bg-white/[0.07] border-white/10 text-zinc-500 italic"
                 : self
-                  ? "bg-red-600/15 border-red-500/30 text-zinc-100 rounded-tr-sm"
-                  : "bg-white/5 border-white/10 text-zinc-200 rounded-tl-sm",
+                  ? "bg-red-600/25 border-red-500/30 text-zinc-100 rounded-tr-sm"
+                  : "bg-white/[0.07] border-white/10 text-zinc-200 rounded-tl-sm",
             )}
           >
             {message.deleted ? t("messageRemoved") : message.text}
