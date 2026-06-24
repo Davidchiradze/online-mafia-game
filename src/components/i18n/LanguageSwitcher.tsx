@@ -16,7 +16,14 @@ type LanguageSwitcherProps = {
  * Locale picker. Writes the choice to the NEXT_LOCALE cookie (the source of
  * truth) and refreshes to re-render server components with the new locale.
  */
-export default function LanguageSwitcher({ className = "" }: LanguageSwitcherProps) {
+// Temporarily hidden while the UI is forced to Georgian. To restore the
+// picker, return <LanguageSwitcherInner {...props} /> instead of null.
+export default function LanguageSwitcher() {
+  return null;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- parked while the language picker is hidden
+function LanguageSwitcherInner({ className = "" }: LanguageSwitcherProps) {
   const activeLocale = useLocale() as Locale;
   const router = useRouter();
   const [open, setOpen] = useState(false);
