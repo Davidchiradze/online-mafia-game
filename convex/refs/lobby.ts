@@ -46,7 +46,6 @@ type Profile = {
   _creationTime: number;
   accountId: string;
   email?: string;
-  username?: string;
   name?: string;
   nickname: string;
   avatar?: string;
@@ -67,7 +66,7 @@ type UpsertFromPhpArgs = {
   secret: string;
   accountId: string;
   email?: string;
-  username?: string;
+  nickname?: string;
   name?: string;
   avatar?: string;
   role?: string;

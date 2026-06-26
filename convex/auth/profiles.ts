@@ -48,15 +48,15 @@ export const isNicknameTaken = query({
  *    match `accountId`, so even a leaked secret cannot write to
  *    arbitrary profiles.
  *
- * `nickname` is seeded from `username`/`name` on first insert,
- * then never overwritten so users can customise it independently.
+ * `nickname` mirrors the PHP `username` (falling back to `name`) and is
+ * refreshed on every sync so it always reflects the upstream account.
  */
 export const upsertFromPhp = mutation({
   args: {
     secret: v.string(),
     accountId: v.string(),
     email: v.optional(v.string()),
-    username: v.optional(v.string()),
+    nickname: v.optional(v.string()),
     name: v.optional(v.string()),
     avatar: v.optional(v.string()),
     amount: v.optional(v.string()),
@@ -69,7 +69,10 @@ export const upsertFromPhp = mutation({
       }),
     ),
   },
-  handler: async (ctx, { secret, accountId, ...fields }) => {
+  handler: async (
+    ctx,
+    { secret, accountId, nickname: phpNickname, ...fields },
+  ) => {
     if (secret !== process.env.CONVEX_SYNC_SECRET) {
       throw new ConvexError("Forbidden");
     }
@@ -82,18 +85,18 @@ export const upsertFromPhp = mutation({
     const now = Date.now();
     const existing = await getProfileByAccountId(ctx.db, accountId);
 
+    const nickname =
+      phpNickname?.trim() || fields.name?.trim() || `Player-${accountId}`;
+
     if (existing) {
-      await ctx.db.patch(existing._id, { ...fields, updatedAt: now });
+      await ctx.db.patch(existing._id, { ...fields, nickname, updatedAt: now });
       return existing._id;
     }
-
-    const fallbackNickname =
-      fields.username?.trim() || fields.name?.trim() || `Player-${accountId}`;
 
     return await ctx.db.insert("profiles", {
       accountId,
       ...fields,
-      nickname: fallbackNickname,
+      nickname,
       verified: true,
       createdAt: now,
       updatedAt: now,

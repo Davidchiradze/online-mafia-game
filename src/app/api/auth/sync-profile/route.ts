@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
       secret: serverEnv.convexSyncSecret,
       accountId: user.id,
       email: user.email ?? undefined,
-      username: user.username ?? undefined,
+      nickname: user.username ?? undefined,
       name: user.name ?? undefined,
       avatar: normalizeAvatarUrl(user.avatar) ?? undefined,
       amount: user.amount != null ? String(user.amount) : undefined,

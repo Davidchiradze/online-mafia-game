@@ -4,9 +4,13 @@ import { v } from "convex/values";
 export const profiles = defineTable({
   accountId: v.string(),
   email: v.optional(v.string()),
-  username: v.optional(v.string()),
   name: v.optional(v.string()),
+  // Display name, synced from PHP `username` on every profile sync.
   nickname: v.string(),
+  // DEPRECATED: merged into `nickname`; no longer written. Kept optional so
+  // existing rows validate until the clear migration runs, then remove this
+  // line and deploy. See convex/migrations.ts:clearLegacyUsername.
+  username: v.optional(v.string()),
   avatar: v.optional(v.string()),
   // App-level ACCESS role (Convex-owned: user/moderator/admin), unrelated to
   // PHP account role or in-game roles. Absent ⇒ "user". See convex/lib/access.ts.

@@ -32,3 +32,32 @@ export const clearLegacyRoles = internalMutation({
     return { total: profiles.length, cleared };
   },
 });
+
+/**
+ * One-time migration: drop the legacy `profiles.username` field. The column was
+ * merged into `nickname` (now synced from PHP `username` on every profile sync),
+ * so the separate stored value is dead. Existing rows must be cleared before the
+ * field is removed from the schema, or schema validation rejects them on read.
+ *
+ * Run order:
+ *   1. Deploy code that no longer writes `username` (current).
+ *   2. `npx convex run migrations:clearLegacyUsername`
+ *
+ * Idempotent — safe to run multiple times.
+ */
+export const clearLegacyUsername = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const profiles = await ctx.db.query("profiles").collect();
+    let cleared = 0;
+    for (const profile of profiles) {
+      if ((profile as { username?: string }).username !== undefined) {
+        await ctx.db.patch(profile._id, {
+          username: undefined,
+        } as Partial<typeof profile>);
+        cleared++;
+      }
+    }
+    return { total: profiles.length, cleared };
+  },
+});
