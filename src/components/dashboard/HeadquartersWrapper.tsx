@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "motion/react";
 import AuthorizedHeader from "@/components/dashboard/AuthorizedHeader";
 import NavigationSidebar from "@/components/dashboard/NavigationSidebar";
 import AuthGate from "@/components/dashboard/AuthGate";
+import FloatingChatWidget from "@/components/dashboard/community-chat/FloatingChatWidget";
 
 type HeadquartersWrapperProps = {
   children: React.ReactNode;
@@ -84,6 +85,8 @@ export default function HeadquartersWrapper({
           </div>
         </main>
       </div>
+
+      <FloatingChatWidget />
     </div>
   );
 }

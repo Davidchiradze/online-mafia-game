@@ -238,7 +238,6 @@
   "nav": {
     "lobby": "ლობი",
     "matchHistory": "მატჩების ისტორია",
-    "communityChat": "საერთო ჩატი",
     "leaderboard": "ლიდერბორდი",
     "subscriptions": "გამოწერები",
     "logout": "გასვლა"
@@ -319,7 +318,13 @@
     "messageRemoved": "შეტყობინება წაიშალა",
     "deleteMessage": "შეტყობინების წაშლა",
     "badgeAdmin": "ადმინი",
-    "badgeMod": "მოდერატორი"
+    "badgeMod": "მოდერატორი",
+    "globalChatTitle": "საერთო ჩატი",
+    "openChat": "ჩატის გახსნა",
+    "minimizeChat": "ჩატის ჩაკეცვა",
+    "closeChat": "ჩატის დახურვა",
+    "expandPanel": "გადიდება",
+    "shrinkPanel": "ჩაკეცვა"
   },
   "matchHistory": {
     "pageTitle": "მატჩების ისტორია",

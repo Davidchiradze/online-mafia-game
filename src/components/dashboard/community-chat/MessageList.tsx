@@ -13,18 +13,28 @@ type Props = {
   messages: ChatMessage[] | undefined;
   myId: Id<"profiles"> | undefined;
   canModerate: boolean;
+  /** Profile ids of currently-online users (for the per-message status dot). */
+  onlineIds: Set<string>;
   onRemove: (id: Id<"communityMessages">) => void;
 };
 
-export function MessageList({ messages, myId, canModerate, onRemove }: Props) {
+export function MessageList({ messages, myId, canModerate, onlineIds, onRemove }: Props) {
   const t = useTranslations("communityChat");
   const scrollRef = useRef<HTMLDivElement>(null);
+  const didInitialScroll = useRef(false);
 
   // Auto-scroll to the newest message. (A DOM side effect, not a data
-  // subscription — the live data comes from `useCommunityChat`.)
+  // subscription — the live data comes from `useCommunityChat`.) The first
+  // scroll jumps instantly (so opening the chat lands at the bottom with no
+  // visible top-to-bottom animation); later new messages animate smoothly.
   useEffect(() => {
     const el = scrollRef.current;
-    if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+    if (!el) return;
+    el.scrollTo({
+      top: el.scrollHeight,
+      behavior: didInitialScroll.current ? "smooth" : "auto",
+    });
+    if (messages && messages.length > 0) didInitialScroll.current = true;
   }, [messages]);
 
   return (
@@ -48,6 +58,7 @@ export function MessageList({ messages, myId, canModerate, onRemove }: Props) {
               message={msg}
               self={msg.authorId === myId}
               canModerate={canModerate}
+              isOnline={msg.authorId === myId || onlineIds.has(msg.authorId)}
               onRemove={onRemove}
             />
           ))}

@@ -20,10 +20,12 @@ type Props = {
   message: ChatMessage;
   self: boolean;
   canModerate: boolean;
+  /** Whether the author is currently online (shows a green status dot). */
+  isOnline: boolean;
   onRemove: (id: Id<"communityMessages">) => void;
 };
 
-export function MessageItem({ message, self, canModerate, onRemove }: Props) {
+export function MessageItem({ message, self, canModerate, isOnline, onRemove }: Props) {
   const t = useTranslations("communityChat");
 
   return (
@@ -32,7 +34,12 @@ export function MessageItem({ message, self, canModerate, onRemove }: Props) {
       animate={{ opacity: 1, y: 0 }}
       className={cn("flex gap-3 group", self && "flex-row-reverse")}
     >
-      <UserAvatar src={message.authorAvatar} name={message.authorNickname} size={40} />
+      <UserAvatar
+        src={message.authorAvatar}
+        name={message.authorNickname}
+        size={40}
+        online={isOnline}
+      />
       <div className={cn("flex flex-col gap-1 max-w-[78%] sm:max-w-[65%]", self && "items-end")}>
         <div className={cn("flex items-baseline gap-2", self && "flex-row-reverse")}>
           <span className={cn("text-sm font-semibold", self ? "text-white" : "text-zinc-200")}>

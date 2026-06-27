@@ -100,7 +100,7 @@ export const COMMUNITY_CHAT = {
   /** Max characters per message (validated server-side after trimming). */
   MAX_MESSAGE_LENGTH: 500,
   /** Minimum gap between a single author's messages — anti-spam throttle. */
-  SEND_COOLDOWN_MS: 2_000,
+  SEND_COOLDOWN_MS: 1_000,
   /** How many recent messages `list` returns (and the prune retention floor). */
   LIST_LIMIT: 100,
   /** Daily prune keeps at most this many most-recent messages. */

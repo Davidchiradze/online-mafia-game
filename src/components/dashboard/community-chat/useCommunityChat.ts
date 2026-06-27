@@ -12,13 +12,23 @@ import { useErrorMessage } from "@/lib/i18n/errorMessage";
  * Live community-chat data + actions. Wraps the reactive `useQuery`
  * subscriptions and the send/remove mutations (with toast-on-error) so the
  * view components stay purely presentational.
+ *
+ * `active` gates the heavy `list`/`online` subscriptions: the floating widget
+ * passes `false` while collapsed so closed pages only hold the lightweight
+ * unread-count subscription, not the full message feed.
  */
-export function useCommunityChat() {
+export function useCommunityChat({ active = true }: { active?: boolean } = {}) {
   const getErrorMessage = useErrorMessage();
 
   const profile = useQuery(api.auth.profiles.currentProfile);
-  const messages = useQuery(api.community.messages.list);
-  const online = useQuery(api.community.messages.onlineInCommunity);
+  const messages = useQuery(
+    api.community.messages.list,
+    active ? {} : "skip",
+  );
+  const online = useQuery(
+    api.community.messages.onlineInCommunity,
+    active ? {} : "skip",
+  );
   const sendMutation = useMutation(api.community.messages.send);
   const removeMutation = useMutation(api.community.messages.remove);
 

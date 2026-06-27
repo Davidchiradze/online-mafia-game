@@ -238,7 +238,6 @@
   "nav": {
     "lobby": "Lobby",
     "matchHistory": "Match History",
-    "communityChat": "Community Chat",
     "leaderboard": "Leaderboard",
     "subscriptions": "Subscriptions",
     "logout": "Logout"
@@ -319,7 +318,13 @@
     "messageRemoved": "Message removed",
     "deleteMessage": "Delete message",
     "badgeAdmin": "Admin",
-    "badgeMod": "Mod"
+    "badgeMod": "Mod",
+    "globalChatTitle": "Community Chat",
+    "openChat": "Open chat",
+    "minimizeChat": "Minimize chat",
+    "closeChat": "Close chat",
+    "expandPanel": "Expand",
+    "shrinkPanel": "Shrink"
   },
   "matchHistory": {
     "pageTitle": "Match History",
