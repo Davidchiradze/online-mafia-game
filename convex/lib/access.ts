@@ -112,6 +112,9 @@ export function roleHasPermission(
 /** Shown when an authenticated user is missing a required permission. */
 export const AUTH_ERROR_PATH = "/auth/required";
 
+/** Shown when an authenticated user's PHP account is not yet verified. */
+export const NOT_VERIFIED_PATH = "/auth/not-verified";
+
 export const PUBLIC_PATH_PREFIXES = [
   "/api/auth/",
   "/api/livekit/webhook",
@@ -120,6 +123,7 @@ export const PUBLIC_PATH_PREFIXES = [
   "/_next/",
   "/favicon.ico",
   AUTH_ERROR_PATH,
+  NOT_VERIFIED_PATH,
 ] as const;
 
 /** Routes that require a permission beyond just being authenticated. */

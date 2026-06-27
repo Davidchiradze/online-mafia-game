@@ -71,6 +71,7 @@ type UpsertFromPhpArgs = {
   avatar?: string;
   role?: string;
   amount?: string;
+  verified?: boolean;
   subscription?: {
     packageId: number;
     from?: string;

@@ -58,6 +58,8 @@ export async function POST(req: NextRequest) {
       name: user.name ?? undefined,
       avatar: normalizeAvatarUrl(user.avatar) ?? undefined,
       amount: user.amount != null ? String(user.amount) : undefined,
+      // PHP status_id 0 = unverified account; null -> treated as verified.
+      verified: user.status !== 0,
       subscription: user.subscription
         ? {
             packageId: user.subscription.packageId,

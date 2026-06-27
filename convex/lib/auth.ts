@@ -59,6 +59,33 @@ export async function getAuthenticatedProfile(
 }
 
 /**
+ * Throws `NOT_VERIFIED` if the PHP account behind `profile` is not verified
+ * (`status_id === 0`, synced into `profiles.verified`). Pure assertion on an
+ * already-loaded profile so the authoritative gates below can reuse it without
+ * a second query.
+ */
+export function assertVerified(profile: Doc<"profiles">): void {
+  if (profile.verified === false) {
+    throw new ConvexError({
+      code: "NOT_VERIFIED",
+      message: "Your account is not verified. Please verify it on mafia.ge.",
+    });
+  }
+}
+
+/**
+ * Authoritative verification gate. Throws if the user is not authenticated,
+ * has not synced a profile, or the account is unverified. Returns the profile.
+ */
+export async function requireVerified(
+  ctx: QueryCtx | MutationCtx,
+): Promise<Doc<"profiles">> {
+  const profile = await getAuthenticatedProfile(ctx);
+  assertVerified(profile);
+  return profile;
+}
+
+/**
  * Authoritative permission gate. Call at the start of any admin/moderation
  * mutation or query. Throws `FORBIDDEN` if the user's role lacks `permission`.
  * Returns the profile so the handler can reuse it.
@@ -68,6 +95,7 @@ export async function requirePermission(
   permission: Permission,
 ): Promise<Doc<"profiles">> {
   const profile = await getAuthenticatedProfile(ctx);
+  assertVerified(profile);
   if (!roleHasPermission(profile.role, permission)) {
     throw new ConvexError({
       code: "FORBIDDEN",
@@ -91,6 +119,7 @@ export async function requireFeature(
   feature: Feature,
 ): Promise<Doc<"profiles">> {
   const profile = await getAuthenticatedProfile(ctx);
+  assertVerified(profile);
   if (
     !hasFeature(
       { role: profile.role, subscription: profile.subscription },

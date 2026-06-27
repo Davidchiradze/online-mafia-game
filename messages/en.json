@@ -191,6 +191,14 @@
     "authIssueBody": "We couldn't verify your identity for this session. To enter the family's headquarters, please sign in again on mafia.ge.",
     "signInOnSite": "Sign In on mafia.ge"
   },
+  "notVerified": {
+    "badge": "Account Not Verified",
+    "title": "Verify Your",
+    "titleHighlight": "Account",
+    "body": "Your account isn't verified yet. Please verify it on mafia.ge to enter the family's headquarters.",
+    "verifyCta": "Verify on mafia.ge",
+    "logout": "Log Out"
+  },
   "landing": {},
   "lobby": {
     "createRoomTitle": "Create Room",

@@ -60,6 +60,7 @@ export const upsertFromPhp = mutation({
     name: v.optional(v.string()),
     avatar: v.optional(v.string()),
     amount: v.optional(v.string()),
+    verified: v.optional(v.boolean()),
     subscription: v.optional(
       v.object({
         packageId: v.number(),
@@ -97,7 +98,7 @@ export const upsertFromPhp = mutation({
       accountId,
       ...fields,
       nickname,
-      verified: true,
+      verified: fields.verified ?? true,
       createdAt: now,
       updatedAt: now,
     });
