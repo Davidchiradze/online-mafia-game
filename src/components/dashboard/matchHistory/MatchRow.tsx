@@ -33,7 +33,7 @@ export default function MatchRow({
   return (
     <div
       className={cn(
-        "group relative overflow-hidden rounded-xl border shadow-lg backdrop-blur-md transition-all duration-300",
+        "group relative overflow-hidden rounded-xl border shadow-lg transition-colors duration-300",
         expanded
           ? "border-white/10 bg-[#13131a]"
           : "border-white/5 bg-[#13131a]/80 hover:border-white/20 hover:bg-[#1a1a24]",
@@ -117,7 +117,7 @@ export default function MatchRow({
         <div className="absolute right-5 top-5 flex justify-end md:relative md:right-auto md:top-auto md:col-span-1">
           <div
             className={cn(
-              "rounded-full border p-1.5 transition-all duration-300",
+              "rounded-full border p-1.5 transition-colors duration-300",
               expanded
                 ? "border-white/20 bg-white/10 text-white"
                 : "border-transparent text-zinc-500 group-hover:bg-white/10 group-hover:text-zinc-300",

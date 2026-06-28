@@ -205,7 +205,7 @@ function RoleCard({
   return (
     <div
       {...rest}
-      className="relative flex w-44 shrink-0 flex-col overflow-hidden rounded-xl border border-white/5 bg-[#13131a]/60 p-4 backdrop-blur-md transition-colors hover:bg-[#1a1a24]"
+      className="relative flex w-44 shrink-0 flex-col overflow-hidden rounded-xl border border-white/5 bg-[#13131a]/60 p-4 transition-colors hover:bg-[#1a1a24]"
     >
       <div className="mb-3 flex items-center gap-2">
         <div

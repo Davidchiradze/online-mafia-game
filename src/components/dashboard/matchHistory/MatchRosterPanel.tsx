@@ -40,7 +40,7 @@ export default function MatchRosterPanel({
           animate={{ height: "auto", opacity: 1 }}
           exit={{ height: 0, opacity: 0 }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
-          className="overflow-hidden bg-[#0c0c12]/80 backdrop-blur-md"
+          className="overflow-hidden bg-[#0c0c12]/80"
         >
           <div className="border-t border-white/5 px-7 py-6">
             <div className="mb-5 flex items-center justify-between">
