@@ -69,7 +69,12 @@ export default function MatchRosterPanel({
               </p>
             ) : (
               <div className="grid grid-cols-1 gap-x-12 gap-y-1 md:grid-cols-2">
-                {detail.players.map((player) => {
+                {[...detail.players]
+                  .sort(
+                    (a, b) =>
+                      (a.seatNumber ?? Infinity) - (b.seatNumber ?? Infinity),
+                  )
+                  .map((player) => {
                   const faction = roleToFaction(player.role);
                   const Icon = factionIcon(faction);
                   const isYou = player.playerId === currentPlayerId;
@@ -86,6 +91,9 @@ export default function MatchRosterPanel({
                       )}
                     >
                       <div className="flex min-w-0 items-center gap-2.5">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-white/10 bg-white/[0.04] font-inter text-xs font-bold tabular-nums text-zinc-400">
+                          {player.seatNumber ?? "—"}
+                        </span>
                         <div className="h-7 w-7 shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-purple-500 to-red-600 shadow">
                           {player.avatar ? (
                             /* eslint-disable-next-line @next/next/no-img-element */
