@@ -44,12 +44,18 @@ export function useParticipantVisibility(
   const {
     gameSessionState,
     hostUserId,
-    isHost: isViewerHost,
+    isHost,
     userId,
     players,
     viewerRole: fetchedViewerRole,
     getRoleForUser,
+    hostVisionEnabled,
   } = useGameRoom();
+
+  // A staff spectator with host-POV reveal on sees video exactly like the host
+  // (night phases visible). This only affects visibility math — never the real
+  // `isHost`, so no host controls/authority leak to the spectator.
+  const isViewerHost = isHost || hostVisionEnabled;
 
   const targetUserId = useMemo(() => {
     return trackRef?.participant?.identity;

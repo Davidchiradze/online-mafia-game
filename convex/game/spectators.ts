@@ -2,6 +2,7 @@ import { ConvexError, v } from "convex/values";
 import { query, mutation, internalMutation } from "../_generated/server";
 import { getAuthenticatedUser, requireFeature } from "../lib/auth";
 import { FEATURES } from "../lib/entitlements";
+import { PERMISSIONS, roleHasPermission } from "../lib/access";
 import { getGameById, getPlayerInGame } from "../lib/games";
 import { SPECTATOR } from "../lib/constants";
 
@@ -33,7 +34,8 @@ export const isSpectator = query({
 export const join = mutation({
   args: { gameId: v.id("games") },
   handler: async (ctx, { gameId }) => {
-    const { _id: userId } = await requireFeature(ctx, FEATURES.SPECTATE_GAME);
+    const profile = await requireFeature(ctx, FEATURES.SPECTATE_GAME);
+    const userId = profile._id;
     const game = await getGameById(ctx.db, gameId);
 
     if (game.gameStatus !== "playing") {
@@ -43,8 +45,11 @@ export const join = mutation({
       });
     }
 
-    const isPrivilegedSpectator =
-      SPECTATOR.PRIVILEGED_PROFILE_IDS.includes(userId);
+    // Staff (moderators/admins) bypass the private-game and capacity limits.
+    const isPrivilegedSpectator = roleHasPermission(
+      profile.role,
+      PERMISSIONS.GAME_SPECTATE_ANY,
+    );
 
     if (game.isPrivate && !isPrivilegedSpectator) {
       throw new ConvexError({
@@ -87,8 +92,7 @@ export const join = mutation({
       });
     }
 
-    const profile = await ctx.db.get(userId);
-    const nickname = profile?.nickname ?? "Spectator";
+    const nickname = profile.nickname ?? "Spectator";
 
     const id = await ctx.db.insert("gameSpectators", {
       gameId,

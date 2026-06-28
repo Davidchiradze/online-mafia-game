@@ -214,9 +214,11 @@ export const gameSpectators = {
 // ============================================================================
 
 export const gameRoles = {
-  getVisible: makeFunctionReference<"query", { gameId: Id<"games"> }, VisibleRoles>(
-    "game/roles:getVisible",
-  ),
+  getVisible: makeFunctionReference<
+    "query",
+    { gameId: Id<"games">; revealAll?: boolean },
+    VisibleRoles
+  >("game/roles:getVisible"),
   assign: makeFunctionReference<
     "mutation",
     { gameId: Id<"games">; playerId: Id<"profiles">; role: string },

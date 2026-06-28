@@ -17,8 +17,10 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { useErrorMessage } from "@/lib/i18n/errorMessage";
 import { useEntitlements } from "@/hooks/auth/useEntitlements";
+import { useAccess } from "@/hooks/auth/useAccess";
 import { SUBSCRIPTIONS_PATH } from "@/components/auth/SubscriptionGuard";
 import { FEATURES } from "@convex/lib/entitlements";
+import { PERMISSIONS } from "@convex/lib/access";
 import { cn } from "@/lib/utils";
 import type { Id } from "@convex/_generated/dataModel";
 
@@ -100,6 +102,10 @@ export default function SpectatorJoinPrompt({ gameId, game, isPrivate }: Props) 
   const tGate = useTranslations("subscriptions.gate");
   const { isLoading: entLoading, has } = useEntitlements();
   const canSpectate = has(FEATURES.SPECTATE_GAME);
+  const { can } = useAccess();
+  // Staff (moderators/admins) bypass the private-game block — the server
+  // authorizes this in `game.spectators.join` via GAME_SPECTATE_ANY.
+  const canBypassPrivate = can(PERMISSIONS.GAME_SPECTATE_ANY);
 
   const handleJoinAsSpectator = async () => {
     if (isJoining) return;
@@ -152,7 +158,7 @@ export default function SpectatorJoinPrompt({ gameId, game, isPrivate }: Props) 
     );
   }
 
-  if (isPrivate) {
+  if (isPrivate && !canBypassPrivate) {
     return (
       <PromptCard
         icon={Lock}

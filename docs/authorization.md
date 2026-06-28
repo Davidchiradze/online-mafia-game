@@ -45,7 +45,9 @@ export const PERMISSIONS = {
   USER_VIEW:          "user.view",          // view users
   USER_BAN:           "user.ban",           // ban / suspend
   ROLE_ASSIGN:        "role.assign",        // promote / demote
-  GAME_VIEW_ALL:      "game.view_all",      // see any game (bypass visibility)
+  GAME_VIEW_ALL:      "game.view_all",      // view all games' data in /admin
+  GAME_SPECTATE_ANY:  "game.spectate_any",  // spectate any live game (bypass private/full)
+  GAME_REVEAL_ROLES:  "game.reveal_roles",  // reveal LIVE in-game roles (host POV)
   GAME_FORCE_END:     "game.force_end",     // force-end / cancel a game
   GAME_REFUND:        "game.refund",        // trigger PHP refund (money)
 } as const;
@@ -57,14 +59,19 @@ export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
 | `admin_panel.access` | — | ✅ | ✅ |
 | `user.view` | — | ✅ | ✅ |
 | `game.view_all` | — | ✅ | ✅ |
+| `game.spectate_any` | — | ✅ | ✅ |
 | `game.force_end` | — | ✅ | ✅ |
+| `game.reveal_roles` | — | — | ✅ |
 | `role.assign` | — | — | ✅ |
 | `user.ban` | — | — | ✅ |
 | `game.refund` | — | — | ✅ |
 
 Rationale: **moderator** = moderation + read-only visibility; **admin** =
-everything, including the money-sensitive (`refund`) and privilege-changing
-(`role.assign`, `user.ban`) operations.
+everything, including the money-sensitive (`refund`), privilege-changing
+(`role.assign`, `user.ban`), and live role-reveal (`game.reveal_roles`)
+operations. Note `game.spectate_any` (join any room) is deliberately split from
+`game.reveal_roles` (see live roles) so moderators can spectate private/full
+games without bypassing in-game visibility.
 
 ## Single source of truth — `convex/lib/access.ts`
 

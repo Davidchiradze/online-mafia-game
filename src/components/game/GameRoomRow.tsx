@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { Doc } from "@convex/_generated/dataModel";
 import { authProfiles } from "@convex/refs/lobby";
 import { FEATURES, hasFeature } from "@convex/lib/entitlements";
+import { PERMISSIONS, roleHasPermission } from "@convex/lib/access";
 import { SUBSCRIPTIONS_PATH } from "@/components/auth/SubscriptionGuard";
 import { LobbyGame } from "@/components/lobby/LobbyContent";
 import { GAME_TYPE_MAX_PLAYER_NUMBER } from "@/lib/constants/game";
@@ -185,6 +186,7 @@ function RoomActionButton({
   isPlayer,
   canPlay,
   canSpectate,
+  canSpectateAny,
   fullWidth = false,
 }: {
   room: LobbyGame;
@@ -193,6 +195,7 @@ function RoomActionButton({
   isPlayer: boolean;
   canPlay: boolean;
   canSpectate: boolean;
+  canSpectateAny: boolean;
   fullWidth?: boolean;
 }) {
   const t = useTranslations("game");
@@ -228,7 +231,9 @@ function RoomActionButton({
       );
     }
 
-    if (room.isPrivate) {
+    // Private games block normal spectators, but staff with GAME_SPECTATE_ANY
+    // (moderators/admins) may watch — fall through to the spectate button.
+    if (room.isPrivate && !canSpectateAny) {
       return (
         <button
           disabled
@@ -269,6 +274,7 @@ function DesktopRoomRow({
   isPlayer,
   canPlay,
   canSpectate,
+  canSpectateAny,
 }: {
   room: LobbyGame;
   onJoin: () => void;
@@ -276,6 +282,7 @@ function DesktopRoomRow({
   isPlayer: boolean;
   canPlay: boolean;
   canSpectate: boolean;
+  canSpectateAny: boolean;
 }) {
   const hostNickname =
     room.players.find((p) => p.playerId === room.hostId)?.nickname ?? "—";
@@ -318,6 +325,7 @@ function DesktopRoomRow({
           isPlayer={isPlayer}
           canPlay={canPlay}
           canSpectate={canSpectate}
+          canSpectateAny={canSpectateAny}
         />
       </td>
     </tr>
@@ -331,6 +339,7 @@ function MobileRoomRow({
   isPlayer,
   canPlay,
   canSpectate,
+  canSpectateAny,
 }: {
   room: LobbyGame;
   onJoin: () => void;
@@ -338,6 +347,7 @@ function MobileRoomRow({
   isPlayer: boolean;
   canPlay: boolean;
   canSpectate: boolean;
+  canSpectateAny: boolean;
 }) {
   const t = useTranslations("game");
   const hostNickname =
@@ -398,6 +408,7 @@ function MobileRoomRow({
         isPlayer={isPlayer}
         canPlay={canPlay}
         canSpectate={canSpectate}
+        canSpectateAny={canSpectateAny}
         fullWidth
       />
     </div>
@@ -421,6 +432,12 @@ export default function GameRoomRow({ room, variant, onNavigate }: Props) {
   };
   const canPlay = hasFeature(entInput, FEATURES.PLAY_GAME);
   const canSpectate = hasFeature(entInput, FEATURES.SPECTATE_GAME);
+  // Staff (moderators/admins) may spectate private/full games. Authoritatively
+  // re-checked server-side in `game.spectators.join`.
+  const canSpectateAny = roleHasPermission(
+    currentProfile?.role,
+    PERMISSIONS.GAME_SPECTATE_ANY,
+  );
 
   const handleJoin = () => {
     if (!canPlay) {
@@ -453,6 +470,7 @@ export default function GameRoomRow({ room, variant, onNavigate }: Props) {
         isPlayer={isPlayer}
         canPlay={canPlay}
         canSpectate={canSpectate}
+        canSpectateAny={canSpectateAny}
       />
 
       {showJoinConfirm && (

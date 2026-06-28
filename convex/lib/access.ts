@@ -58,8 +58,12 @@ export const PERMISSIONS = {
   USER_BAN: "user.ban",
   /** Assign access roles to users. */
   ROLE_ASSIGN: "role.assign",
-  /** View any game (bypass in-game visibility rules). */
+  /** View all games and their data in the admin panel (list, stats, logs). */
   GAME_VIEW_ALL: "game.view_all",
+  /** Spectate any live game — bypass the private-room and capacity limits. */
+  GAME_SPECTATE_ANY: "game.spectate_any",
+  /** Reveal in-game roles of a LIVE game (bypass live visibility, host POV). */
+  GAME_REVEAL_ROLES: "game.reveal_roles",
   /** Force-end / cancel a game. */
   GAME_FORCE_END: "game.force_end",
   /** Issue a balance refund (calls the PHP refund endpoint). */
@@ -82,10 +86,12 @@ export const ROLE_PERMISSIONS: Record<AccessRole, readonly Permission[]> = {
     PERMISSIONS.ADMIN_PANEL_ACCESS,
     PERMISSIONS.USER_VIEW,
     PERMISSIONS.GAME_VIEW_ALL,
+    // May join any game as a spectator, but NOT reveal live roles (admin only).
+    PERMISSIONS.GAME_SPECTATE_ANY,
     PERMISSIONS.GAME_FORCE_END,
     PERMISSIONS.CHAT_MESSAGE_DELETE,
   ],
-  admin: ALL_PERMISSIONS, // full access
+  admin: ALL_PERMISSIONS, // full access (incl. GAME_REVEAL_ROLES)
 };
 
 export function getPermissionsForRole(

@@ -1,5 +1,3 @@
-import type { Id } from "../_generated/dataModel";
-
 export const GAME_PHASES = [
   "game_session_started",
   "picking_roles",
@@ -56,11 +54,6 @@ export const VOTING = {
 
 export const SPECTATOR = {
   MAX_SPECTATORS_PER_GAME: 5,
-  /** Profile IDs allowed to spectate private games and bypass the capacity limit. */
-  PRIVILEGED_PROFILE_IDS: [
-    "k578tt29gk1nhmnp7v3mqcjc15880wrr", // Chiri
-    "k576wp845hwennx6gmk60kyb91881ym6", // GI2GI
-  ] as Id<"profiles">[],
 } as const;
 
 export const SPEAKING_STATE = {

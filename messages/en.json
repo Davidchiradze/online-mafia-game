@@ -672,6 +672,13 @@
       "enableAudioBody": "Your browser requires interaction to start audio playback.",
       "enableAudioHint": "or click anywhere outside to enable",
       "loadingVideo": "Loading…"
+    },
+    "staffTools": {
+      "title": "Staff Tools",
+      "close": "Close",
+      "revealRoles": "Reveal roles (host view)",
+      "revealRolesOn": "Roles and night video visible to you",
+      "revealRolesOff": "See all roles like the host"
     }
   },
   "errors": {

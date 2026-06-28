@@ -1,9 +1,10 @@
 "use client";
 
-import { createContext, useContext, useMemo } from "react";
+import { createContext, useContext, useMemo, useState } from "react";
 import type { PropsWithChildren } from "react";
 import { Room as LiveKitRoom } from "livekit-client";
 import { useQuery } from "convex/react";
+import { PERMISSIONS, roleHasPermission } from "@convex/lib/access";
 import { authProfiles, lobbyGames } from "@convex/refs/lobby";
 import {
   gameSessions,
@@ -120,6 +121,11 @@ type GameRoomContextValue = {
   viewerRole: string | null;
   playerRolesMap: Map<string, string | null>;
   getRoleForUser: (targetUserId: string) => string | null;
+  /** True when the viewer is a staff member spectating (may use staff tools). */
+  canRevealRoles: boolean;
+  /** Whether the staff spectator has toggled the host-POV role reveal on. */
+  hostVisionEnabled: boolean;
+  setHostVisionEnabled: (enabled: boolean) => void;
   nightPhaseSession: ConvexNightPhaseSession | null;
   votingSession: ConvexVotingSession | null;
   voteData: VoteData;
@@ -154,12 +160,26 @@ export function GameRoomProvider({
   const userId = (currentUserId ?? "") as string;
 
   // ---------------------------------------------------------------------------
+  // Staff host-POV reveal (spectating moderators/admins only)
+  // ---------------------------------------------------------------------------
+  const canRevealRoles =
+    isSpectator &&
+    roleHasPermission(currentProfile?.role, PERMISSIONS.GAME_REVEAL_ROLES);
+  const [hostVisionRequested, setHostVisionRequested] = useState(false);
+  // Gate the toggle behind the privilege so it can never be on for a non-staff
+  // viewer even if the state somehow flips.
+  const hostVisionEnabled = canRevealRoles && hostVisionRequested;
+
+  // ---------------------------------------------------------------------------
   // Convex reactive queries
   // ---------------------------------------------------------------------------
   const game = useQuery(lobbyGames.getById, { gameId });
   const playersData = useQuery(gamePlayers.listByGame, { gameId });
   const sessionData = useQuery(gameSessions.get, { gameId });
-  const rolesData = useQuery(gameRoles.getVisible, { gameId });
+  const rolesData = useQuery(gameRoles.getVisible, {
+    gameId,
+    revealAll: hostVisionEnabled,
+  });
   const nightData = useQuery(nightPhase.getCurrent, { gameId });
   const healedData = useQuery(nightPhase.getHealedPlayers, { gameId });
   const votingData = useQuery(voting.getSession, { gameId });
@@ -284,6 +304,9 @@ export function GameRoomProvider({
       viewerRole,
       playerRolesMap,
       getRoleForUser,
+      canRevealRoles,
+      hostVisionEnabled,
+      setHostVisionEnabled: setHostVisionRequested,
       nightPhaseSession: nightData ?? null,
       votingSession: votingData ?? null,
       voteData,
@@ -306,6 +329,8 @@ export function GameRoomProvider({
       viewerRole,
       playerRolesMap,
       getRoleForUser,
+      canRevealRoles,
+      hostVisionEnabled,
       nightData,
       votingData,
       voteData,
