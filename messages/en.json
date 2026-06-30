@@ -233,7 +233,12 @@
     "joinGame": "Join Game",
     "spectateRoomTitle": "Spectate Room",
     "spectateRoomBody": "You are about to watch <strong>{name}</strong> as a spectator. You can observe but cannot participate.",
-    "watchGame": "Watch Game"
+    "watchGame": "Watch Game",
+    "joinRequestStatus": {
+      "accepted": "You're in! Your request to join <b>{room}</b> was accepted.",
+      "enterRoom": "Enter room",
+      "rejected": "Your request to join {room} was declined"
+    }
   },
   "nav": {
     "lobby": "Lobby",

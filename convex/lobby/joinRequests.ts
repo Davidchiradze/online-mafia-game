@@ -129,6 +129,44 @@ export const myStatus = query({
 });
 
 /**
+ * Reactive list of the caller's own join requests that are still worth
+ * notifying on. Used by the lobby-level listener to surface accept/reject
+ * toasts after the player has left the in-game waiting room.
+ *
+ * Returns pending requests plus any whose game is still `not_started`, each
+ * with its game's display name. Requests for deleted games are skipped.
+ */
+export const myActiveRequests = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthenticatedUser(ctx);
+
+    const requests = await ctx.db
+      .query("joinRequests")
+      .withIndex("by_requesterId", (q) => q.eq("requesterId", userId))
+      .collect();
+
+    const results = await Promise.all(
+      requests.map(async (request) => {
+        const game = await ctx.db.get(request.gameId);
+        if (!game) return null;
+        if (request.status !== "pending" && game.gameStatus !== "not_started") {
+          return null;
+        }
+        return {
+          requestId: request._id,
+          gameId: request.gameId,
+          gameName: game.name,
+          status: request.status,
+        };
+      }),
+    );
+
+    return results.filter((r): r is NonNullable<typeof r> => r !== null);
+  },
+});
+
+/**
  * Reactive count of pending join requests for a game.
  * Lightweight query the host subscribes to for the badge indicator.
  */

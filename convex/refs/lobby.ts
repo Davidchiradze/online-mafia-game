@@ -113,6 +113,16 @@ export const joinRequests = {
   myStatus: makeFunctionReference<"query", { gameId: Id<"games"> }, MyJoinStatus>(
     "lobby/joinRequests:myStatus",
   ),
+  myActiveRequests: makeFunctionReference<
+    "query",
+    Record<string, never>,
+    {
+      requestId: Id<"joinRequests">;
+      gameId: Id<"games">;
+      gameName: string;
+      status: JoinRequestStatus;
+    }[]
+  >("lobby/joinRequests:myActiveRequests"),
   checkOrRequest: makeFunctionReference<
     "mutation",
     { gameId: Id<"games"> },

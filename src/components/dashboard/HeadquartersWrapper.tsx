@@ -7,6 +7,7 @@ import AuthorizedHeader from "@/components/dashboard/AuthorizedHeader";
 import NavigationSidebar from "@/components/dashboard/NavigationSidebar";
 import AuthGate from "@/components/dashboard/AuthGate";
 import FloatingChatWidget from "@/components/dashboard/community-chat/FloatingChatWidget";
+import { useMyJoinRequestNotifications } from "@/hooks/lobby/useMyJoinRequestNotifications";
 
 type HeadquartersWrapperProps = {
   children: React.ReactNode;
@@ -18,6 +19,8 @@ export default function HeadquartersWrapper({
   const pathname = usePathname();
   const [isSidebarHovered, setIsSidebarHovered] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useMyJoinRequestNotifications();
 
   useEffect(() => {
     setIsMobileMenuOpen(false);

@@ -15,4 +15,5 @@ export const joinRequests = defineTable({
 })
   .index("by_gameId", ["gameId"])
   .index("by_gameId_requesterId", ["gameId", "requesterId"])
-  .index("by_gameId_status", ["gameId", "status"]);
+  .index("by_gameId_status", ["gameId", "status"])
+  .index("by_requesterId", ["requesterId"]);
