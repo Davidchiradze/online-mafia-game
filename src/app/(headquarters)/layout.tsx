@@ -1,3 +1,4 @@
+import AuthGate from "@/components/dashboard/AuthGate";
 import HeadquartersWrapper from "@/components/dashboard/HeadquartersWrapper";
 
 export default function HeadquartersLayout({
@@ -5,5 +6,9 @@ export default function HeadquartersLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <HeadquartersWrapper>{children}</HeadquartersWrapper>;
+  return (
+    <AuthGate>
+      <HeadquartersWrapper>{children}</HeadquartersWrapper>
+    </AuthGate>
+  );
 }
