@@ -15,6 +15,11 @@ export const playerStats = defineTable({
   wins: v.number(),
   losses: v.number(),
   noContests: v.number(),
+  // Consecutive-win streak: incremented on a win, reset to 0 on a loss, left
+  // unchanged on a no-contest. Optional so rows created before this field
+  // validate; treated as 0 on read.
+  currentStreak: v.optional(v.number()),
+  bestStreak: v.optional(v.number()),
   // One entry per role the player has held. noContests = matches - wins - losses.
   roleStats: v.array(
     v.object({
