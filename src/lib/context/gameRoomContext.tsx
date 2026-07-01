@@ -121,6 +121,9 @@ type GameRoomContextValue = {
   viewerRole: string | null;
   playerRolesMap: Map<string, string | null>;
   getRoleForUser: (targetUserId: string) => string | null;
+  /** Whether the local player has opted to reveal their own + teammates' roles. */
+  rolesRevealed: boolean;
+  setRolesRevealed: (revealed: boolean) => void;
   /** True when the viewer is a staff member spectating (may use staff tools). */
   canRevealRoles: boolean;
   /** Whether the staff spectator has toggled the host-POV role reveal on. */
@@ -169,6 +172,10 @@ export function GameRoomProvider({
   // Gate the toggle behind the privilege so it can never be on for a non-staff
   // viewer even if the state somehow flips.
   const hostVisionEnabled = canRevealRoles && hostVisionRequested;
+
+  // Local, client-side opt-in for the player to peek at their own + teammates'
+  // roles. Hidden by default so roles stay private on shared/streamed screens.
+  const [rolesRevealed, setRolesRevealed] = useState(false);
 
   // ---------------------------------------------------------------------------
   // Convex reactive queries
@@ -304,6 +311,8 @@ export function GameRoomProvider({
       viewerRole,
       playerRolesMap,
       getRoleForUser,
+      rolesRevealed,
+      setRolesRevealed,
       canRevealRoles,
       hostVisionEnabled,
       setHostVisionEnabled: setHostVisionRequested,
@@ -329,6 +338,7 @@ export function GameRoomProvider({
       viewerRole,
       playerRolesMap,
       getRoleForUser,
+      rolesRevealed,
       canRevealRoles,
       hostVisionEnabled,
       nightData,

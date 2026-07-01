@@ -16,6 +16,7 @@ export type Role = (typeof JAPANESE_MAFIA_ROLES)[number] | null;
  *
  * - VISIBLE: Full video shown normally
  * - DIMMED: Video shown with blur overlay (host or awake role sees sleeping players)
+ * - MASKED: Video shown un-blurred with a crossed-eye marker (detective's mafia check)
  * - COVERED: Hidden behind a sleeping cover (💤)
  * - DEAD: Permanent dead overlay (💀)
  * - DISCONNECTED: No video track available (connection lost)
@@ -23,6 +24,7 @@ export type Role = (typeof JAPANESE_MAFIA_ROLES)[number] | null;
 export enum VisibilityState {
   VISIBLE = "visible",
   DIMMED = "dimmed",
+  MASKED = "masked",
   COVERED = "covered",
   DEAD = "dead",
   DISCONNECTED = "disconnected",
@@ -43,7 +45,7 @@ export function canSeeParticipant(
   targetRole: Role,
   gamePhase: GamePhase | null,
   isViewerHost: boolean,
-  isTargetHost: boolean
+  isTargetHost: boolean,
 ): boolean {
   // If no game session has started yet, everyone can see everyone
   if (!gamePhase) {
@@ -294,7 +296,7 @@ export function getVisibilityState(
   targetRole: Role,
   gamePhase: GamePhase | null,
   isViewerHost: boolean,
-  isTargetHost: boolean
+  isTargetHost: boolean,
 ): VisibilityState {
   // Use existing logic to determine base visibility
   const isVisible = canSeeParticipant(
@@ -302,7 +304,7 @@ export function getVisibilityState(
     targetRole,
     gamePhase,
     isViewerHost,
-    isTargetHost
+    isTargetHost,
   );
 
   // If not visible at all, return covered
@@ -328,6 +330,17 @@ export function getVisibilityState(
     // If target's role is in the awake list, they're visible; otherwise dimmed
     if (awakeRoles.length > 0 && awakeRoles.includes(targetRole)) {
       return VisibilityState.VISIBLE;
+    }
+
+    // During the detective's mafia check and the doctor's heal, show sleeping
+    // players un-blurred with a crossed-eye marker instead of the dimmed night
+    // overlay, so the active role can read faces clearly while choosing a target.
+    if (
+      (gamePhase === "detective_checks_for_mafia" &&
+        viewerRole === "DETECTIVE") ||
+      (gamePhase === "doctor_heals_player" && viewerRole === "DOCTOR")
+    ) {
+      return VisibilityState.MASKED;
     }
 
     // Target is sleeping during this phase
@@ -365,7 +378,7 @@ export function getVisibilityStateWithDeath(
   isTargetHost: boolean,
   viewerIsAlive: boolean,
   targetIsAlive: boolean,
-  isGameFinished: boolean = false
+  isGameFinished: boolean = false,
 ): VisibilityState {
   // If game is finished, everyone is visible (reveal phase)
   if (isGameFinished) {
@@ -393,6 +406,6 @@ export function getVisibilityStateWithDeath(
     targetRole,
     gamePhase,
     isViewerHost,
-    isTargetHost
+    isTargetHost,
   );
 }

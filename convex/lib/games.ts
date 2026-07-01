@@ -327,10 +327,18 @@ async function bumpPlayerStats(
       wins: w,
       losses: l,
       noContests: nc,
+      currentStreak: w,
+      bestStreak: w,
       roleStats: [{ role, matches: 1, wins: w, losses: l }],
     });
     return;
   }
+
+  // Win → extend streak, loss → reset, no-contest → leave unchanged.
+  const prevStreak = existing.currentStreak ?? 0;
+  const currentStreak =
+    outcome === "win" ? prevStreak + 1 : outcome === "loss" ? 0 : prevStreak;
+  const bestStreak = Math.max(existing.bestStreak ?? 0, currentStreak);
 
   const roleStats = [...existing.roleStats];
   const idx = roleStats.findIndex((r) => r.role === role);
@@ -351,6 +359,8 @@ async function bumpPlayerStats(
     wins: existing.wins + w,
     losses: existing.losses + l,
     noContests: existing.noContests + nc,
+    currentStreak,
+    bestStreak,
     roleStats,
   });
 }

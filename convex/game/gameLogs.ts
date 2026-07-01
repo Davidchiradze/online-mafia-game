@@ -121,6 +121,8 @@ export const getMyStats = query({
         losses: 0,
         noContests: 0,
         winRate: 0,
+        currentStreak: 0,
+        bestStreak: 0,
         roleStats: [] as Array<{
           role: string;
           matches: number;
@@ -137,6 +139,8 @@ export const getMyStats = query({
       losses: stats.losses,
       noContests: stats.noContests,
       winRate: winRatePct(stats.wins, stats.losses),
+      currentStreak: stats.currentStreak ?? 0,
+      bestStreak: stats.bestStreak ?? 0,
       roleStats: stats.roleStats
         .map((r) => ({ ...r, winRate: winRatePct(r.wins, r.losses) }))
         .sort((a, b) => b.matches - a.matches),

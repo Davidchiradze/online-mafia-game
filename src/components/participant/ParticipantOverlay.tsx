@@ -32,6 +32,19 @@ export default function ParticipantOverlay({
     return <ParticipantCover state="disconnected" />;
   }
 
+  if (visibilityState === VisibilityState.MASKED) {
+    return (
+      <div className="relative w-full h-full">
+        <ParticipantTile
+          className="lk-hide-metadata"
+          trackRef={trackRef}
+          style={{ height: "100%" }}
+        />
+        <ParticipantCover state="masked" />
+      </div>
+    );
+  }
+
   return (
     <div className="relative w-full h-full">
       <ParticipantTile

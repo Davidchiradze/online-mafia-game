@@ -13,10 +13,16 @@ import {
   DeadCover,
   NightCover,
   DimmedCover,
+  MaskedCover,
   DisconnectedCover,
 } from "@/components/participant/playerStates";
 
-export type CoverState = "sleeping" | "dead" | "disconnected" | "dimmed";
+export type CoverState =
+  | "sleeping"
+  | "dead"
+  | "disconnected"
+  | "dimmed"
+  | "masked";
 
 interface ParticipantCoverProps {
   state: CoverState;
@@ -34,6 +40,8 @@ export default function ParticipantCover({
       return <DisconnectedCover className={className} />;
     case "dimmed":
       return <DimmedCover className={className} />;
+    case "masked":
+      return <MaskedCover className={className} />;
     case "sleeping":
       return <NightCover className={className} />;
   }

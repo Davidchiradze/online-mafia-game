@@ -71,7 +71,10 @@ export const request = mutation({
     await getGameById(ctx.db, gameId);
 
     const existing = await getJoinRequestByRequester(ctx.db, gameId, userId);
-    if (existing && (existing.status === "pending" || existing.status === "accepted")) {
+    if (
+      existing &&
+      (existing.status === "pending" || existing.status === "accepted")
+    ) {
       return { requestId: existing._id, status: existing.status };
     }
 
@@ -287,7 +290,11 @@ export const kick = mutation({
       throw new ConvexError("Cannot kick yourself");
     }
 
-    const joinRequest = await getJoinRequestByRequester(ctx.db, gameId, targetUserId);
+    const joinRequest = await getJoinRequestByRequester(
+      ctx.db,
+      gameId,
+      targetUserId,
+    );
     if (joinRequest && joinRequest.status !== "rejected") {
       await ctx.db.patch(joinRequest._id, { status: "rejected" });
     }

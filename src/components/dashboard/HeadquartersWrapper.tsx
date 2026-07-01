@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import AuthorizedHeader from "@/components/dashboard/AuthorizedHeader";
 import NavigationSidebar from "@/components/dashboard/NavigationSidebar";
-import AuthGate from "@/components/dashboard/AuthGate";
 import FloatingChatWidget from "@/components/dashboard/community-chat/FloatingChatWidget";
 import { useMyJoinRequestNotifications } from "@/hooks/lobby/useMyJoinRequestNotifications";
 
@@ -83,9 +82,7 @@ export default function HeadquartersWrapper({
       <div className="relative z-10 flex h-screen min-w-0 flex-1 flex-col overflow-hidden transition-all duration-300 ease-in-out md:ml-[72px]">
         <AuthorizedHeader onOpenMobileMenu={() => setIsMobileMenuOpen(true)} />
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-black/20 shadow-[-10px_-10px_30px_rgba(0,0,0,0.5)] md:rounded-tl-3xl md:border-l md:border-t md:border-white/10">
-          <div className="h-full">
-            <AuthGate>{children}</AuthGate>
-          </div>
+          <div className="h-full">{children}</div>
         </main>
       </div>
 

@@ -228,6 +228,14 @@
     "statSpectating": "მაყურებლები",
     "statActiveRooms": "აქტიური ოთახები",
     "statGamesPlaying": "მიმდინარე თამაშები",
+    "statWinRate": "მოგების მაჩვენებელი",
+    "statMatchesPlayed": "ნათამაშები მატჩები",
+    "statWins": "მოგება",
+    "statLosses": "წაგება",
+    "streakLabel": "მოგების სერია",
+    "streakHeatingUp": "ხურდება",
+    "streakOnFire": "",
+    "streakUnstoppable": "",
     "joinRoomTitle": "ოთახში შესვლა",
     "joinRoomBody": "თქვენ აპირებთ შეუერთდეთ <strong>{name}</strong>-ს.",
     "joinGame": "თამაშში შესვლა",
@@ -375,6 +383,8 @@
       "nominated": "დასახელებული: {list}"
     },
     "ready": "მზადაა",
+    "revealRole": "როლის ჩვენება",
+    "hideRole": "დამალვა",
     "roles": {
       "DON": "დონი",
       "MAFIA": "მაფია",
