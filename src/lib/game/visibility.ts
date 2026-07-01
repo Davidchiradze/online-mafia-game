@@ -34,7 +34,8 @@ export enum VisibilityState {
  * Determines if the viewer can see the target participant's video
  *
  * @param viewerRole - The role of the person viewing
- * @param targetRole - The role of the person being viewed (or null if host)
+ * @param _targetRole - The role of the person being viewed (unused: awake roles
+ *   now see every player; target-specific dimming is handled in getVisibilityState)
  * @param gamePhase - Current phase of the game
  * @param isViewerHost - Whether the viewer is the host
  * @param isTargetHost - Whether the target is the host
@@ -42,7 +43,7 @@ export enum VisibilityState {
  */
 export function canSeeParticipant(
   viewerRole: Role,
-  targetRole: Role,
+  _targetRole: Role,
   gamePhase: GamePhase | null,
   isViewerHost: boolean,
   isTargetHost: boolean,
@@ -89,78 +90,62 @@ export function canSeeParticipant(
     return true;
   }
 
-  // MAFIA MEET: Only Don, Mafia, and Right Hand can see each other
-  // Host can see them, they can see host
+  // MAFIA MEET: Mafia (Don, Mafia, Right Hand) are awake — they see every
+  // player (teammates fully, everyone else dimmed). Non-mafia see no one.
   if (gamePhase === "mafia_meet") {
     const mafiaRoles: Role[] = ["DON", "MAFIA", "MAFIA_RIGHT_HAND"];
 
     if (isViewerHost) return true; // Host sees everyone
-    if (isTargetHost && mafiaRoles.includes(viewerRole)) return true; // Mafia see host
-
-    // Mafia members see each other
-    if (mafiaRoles.includes(viewerRole) && mafiaRoles.includes(targetRole)) {
-      return true;
-    }
+    if (mafiaRoles.includes(viewerRole)) return true; // Awake mafia see everyone
 
     return false;
   }
 
-  // DON CHOOSES RIGHT HAND: Only Don can see everyone, others see no one (except host)
+  // DON CHOOSES RIGHT HAND: Mafia are awake — they see every player
+  // (teammates fully, everyone else dimmed). Non-mafia see no one.
   if (gamePhase === "don_chooses_right_hand") {
     const mafiaRoles: Role[] = ["DON", "MAFIA", "MAFIA_RIGHT_HAND"];
 
     if (isViewerHost) return true; // Host sees everyone
-    if (isTargetHost && mafiaRoles.includes(viewerRole)) return true; // Mafia see host
-
-    // Mafia members see each other
-    if (mafiaRoles.includes(viewerRole) && mafiaRoles.includes(targetRole)) {
-      return true;
-    }
+    if (mafiaRoles.includes(viewerRole)) return true; // Awake mafia see everyone
 
     return false;
   }
 
-  // YAKUZA & SHOGUN MEET: Only Yakuza and Shogun can see each other
+  // YAKUZA & SHOGUN MEET: Yakuza and Shogun are awake — they see every player
+  // (teammates fully, everyone else dimmed). Others see no one.
   if (gamePhase === "yakuda_shogun_meet") {
     const yakuzaRoles: Role[] = ["YAKUZA", "SHOGUN"];
 
     if (isViewerHost) return true; // Host sees everyone
-    if (isTargetHost && yakuzaRoles.includes(viewerRole)) return true; // Yakuza see host
-
-    // Yakuza members see each other
-    if (yakuzaRoles.includes(viewerRole) && yakuzaRoles.includes(targetRole)) {
-      return true;
-    }
+    if (yakuzaRoles.includes(viewerRole)) return true; // Awake yakuza see everyone
 
     return false;
   }
 
-  // DETECTIVE MEET: Only Detective can see (themselves and host)
+  // DETECTIVE MEET: Detective is awake — sees every player (self fully,
+  // everyone else dimmed). Others see no one.
   if (gamePhase === "detective_meet") {
     if (isViewerHost) return true; // Host sees everyone
-    if (isTargetHost && viewerRole === "DETECTIVE") return true; // Detective sees host
-    if (viewerRole === "DETECTIVE" && targetRole === "DETECTIVE") return true; // Detective sees self
+    if (viewerRole === "DETECTIVE") return true; // Awake detective sees everyone
     return false;
   }
 
-  // DOCTOR MEET: Only Doctor can see (themselves and host)
+  // DOCTOR MEET: Doctor is awake — sees every player (self fully, everyone
+  // else dimmed). Others see no one.
   if (gamePhase === "doctor_meet") {
     if (isViewerHost) return true; // Host sees everyone
-    if (isTargetHost && viewerRole === "DOCTOR") return true; // Doctor sees host
-    if (viewerRole === "DOCTOR" && targetRole === "DOCTOR") return true; // Doctor sees self
+    if (viewerRole === "DOCTOR") return true; // Awake doctor sees everyone
     return false;
   }
 
-  // MAFIA CHOOSES TARGET: Only mafia members can see each other
+  // MAFIA CHOOSES TARGET: Mafia are awake — they see every player (teammates
+  // fully, everyone else dimmed) to pick a target. Non-mafia see no one.
   if (gamePhase === "mafia_chooses_target") {
     const mafiaRoles: Role[] = ["DON", "MAFIA", "MAFIA_RIGHT_HAND"];
 
     if (isViewerHost) return true; // Host sees everyone
-    if (isTargetHost && mafiaRoles.includes(viewerRole)) return true; // Mafia see host
-
-    if (mafiaRoles.includes(viewerRole) && mafiaRoles.includes(targetRole)) {
-      return true;
-    }
+    if (mafiaRoles.includes(viewerRole)) return true; // Awake mafia see everyone
 
     return false;
   }
@@ -181,16 +166,13 @@ export function canSeeParticipant(
     return false;
   }
 
-  // YAKUZA CHOOSES TARGET: Only Yakuza and Shogun can see each other
+  // YAKUZA CHOOSES TARGET: Yakuza and Shogun are awake — they see every player
+  // (teammates fully, everyone else dimmed) to pick a target. Others see no one.
   if (gamePhase === "yakuza_and_shogun_chooses_target") {
     const yakuzaRoles: Role[] = ["YAKUZA", "SHOGUN"];
 
     if (isViewerHost) return true; // Host sees everyone
-    if (isTargetHost && yakuzaRoles.includes(viewerRole)) return true; // Yakuza see host
-
-    if (yakuzaRoles.includes(viewerRole) && yakuzaRoles.includes(targetRole)) {
-      return true;
-    }
+    if (yakuzaRoles.includes(viewerRole)) return true; // Awake yakuza see everyone
 
     return false;
   }
@@ -332,16 +314,16 @@ export function getVisibilityState(
       return VisibilityState.VISIBLE;
     }
 
-    // During the detective's mafia check and the doctor's heal, show sleeping
-    // players un-blurred with a crossed-eye marker instead of the dimmed night
-    // overlay, so the active role can read faces clearly while choosing a target.
-    if (
-      (gamePhase === "detective_checks_for_mafia" &&
-        viewerRole === "DETECTIVE") ||
-      (gamePhase === "doctor_heals_player" && viewerRole === "DOCTOR")
-    ) {
-      return VisibilityState.MASKED;
-    }
+    // // During the detective's mafia check and the doctor's heal, show sleeping
+    // // players un-blurred with a crossed-eye marker instead of the dimmed night
+    // // overlay, so the active role can read faces clearly while choosing a target.
+    // if (
+    //   (gamePhase === "detective_checks_for_mafia" &&
+    //     viewerRole === "DETECTIVE") ||
+    //   (gamePhase === "doctor_heals_player" && viewerRole === "DOCTOR")
+    // ) {
+    //   return VisibilityState.MASKED;
+    // }
 
     // Target is sleeping during this phase
     return VisibilityState.DIMMED;

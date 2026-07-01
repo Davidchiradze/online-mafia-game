@@ -17,7 +17,7 @@ export const CONVEX_AUTH_COOKIE_NAME = "cnvx-auth";
 export const BRIDGE_ATTEMPT_COOKIE_NAME = "bridge_attempted";
 
 export const BRIDGE_ATTEMPT_TTL_SECONDS = 20;
-export const CONVEX_JWT_TTL_SECONDS = 10000;
+export const CONVEX_JWT_TTL_SECONDS = 40000;
 
 export const CONVEX_JWT_ISSUER = process.env.CONVEX_JWT_ISSUER;
 export const CONVEX_JWT_AUDIENCE = "convex";
