@@ -97,10 +97,15 @@ export const update = mutation({
  * Roles are assigned separately via assignRandomRoles during picking_roles phase.
  */
 export const startGame = mutation({
-  args: { gameId: v.id("games") },
-  handler: async (ctx, { gameId }) => {
+  args: {
+    gameId: v.id("games"),
+    withoutSelfJustification: v.optional(v.boolean()),
+  },
+  handler: async (ctx, { gameId, withoutSelfJustification }) => {
     const userId = await getAuthenticatedUser(ctx);
     const game = await assertIsHost(ctx.db, gameId, userId);
+
+    const skipSelfJustification = withoutSelfJustification ?? false;
 
     const players = await getPlayersByGameId(ctx.db, gameId);
     if (players.length === 0) throw new ConvexError({ code: "NO_PLAYERS_JOINED", message: "No players joined" });
@@ -136,9 +141,10 @@ export const startGame = mutation({
       .unique();
 
     if (existing) {
-      if (existing.startedAt === undefined) {
-        await ctx.db.patch(existing._id, { startedAt });
-      }
+      await ctx.db.patch(existing._id, {
+        withoutSelfJustification: skipSelfJustification,
+        ...(existing.startedAt === undefined ? { startedAt } : {}),
+      });
       return existing._id;
     }
 
@@ -149,6 +155,7 @@ export const startGame = mutation({
       currentNightNumber: 0,
       nominatedPlayers: [],
       speakingOrder: [],
+      withoutSelfJustification: skipSelfJustification,
       startedAt,
     });
   },

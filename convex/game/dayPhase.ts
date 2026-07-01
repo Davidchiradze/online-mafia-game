@@ -124,7 +124,10 @@ export const finishCurrentSpeaker = mutation({
     const currentSpeaker = session.currentSpeakerIndex ?? null;
     const speakingOrder = session.speakingOrder ?? [];
 
-    if (!SPEAKING_STATE.isActive(currentSpeaker) || speakingOrder.length === 0) {
+    if (
+      !SPEAKING_STATE.isActive(currentSpeaker) ||
+      speakingOrder.length === 0
+    ) {
       throw new ConvexError("No active speaker to finish");
     }
 
@@ -212,7 +215,9 @@ export const startNominatedPlayersSpeaking = mutation({
     const session = await getGameSession(ctx.db, gameId);
 
     if (session.gamePhase !== "day_phase") {
-      throw new ConvexError("Can only start nominated players speaking from day phase");
+      throw new ConvexError(
+        "Can only start nominated players speaking from day phase",
+      );
     }
 
     const nominatedPlayers = session.nominatedPlayers ?? [];
@@ -220,8 +225,9 @@ export const startNominatedPlayersSpeaking = mutation({
       throw new ConvexError("No players nominated");
     }
 
-    // Single nominee → no self-justification needed; skip straight to voting.
-    if (nominatedPlayers.length === 1) {
+    // Skip self-justification when the host disabled it, or when there is a
+    // single nominee (no defense needed) → go straight to voting.
+    if (session.withoutSelfJustification || nominatedPlayers.length === 1) {
       await enterVotingPhase(ctx, gameId, nominatedPlayers);
       return;
     }
@@ -304,7 +310,10 @@ export const finishCurrentNominatedSpeaker = mutation({
     const currentSpeaker = session.currentSpeakerIndex ?? null;
     const speakingOrder = session.speakingOrder ?? [];
 
-    if (!SPEAKING_STATE.isActive(currentSpeaker) || speakingOrder.length === 0) {
+    if (
+      !SPEAKING_STATE.isActive(currentSpeaker) ||
+      speakingOrder.length === 0
+    ) {
       throw new ConvexError("No active speaker to finish");
     }
 

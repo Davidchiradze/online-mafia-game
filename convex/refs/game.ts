@@ -136,9 +136,11 @@ export const gameSessions = {
     { sessionId: Id<"gameSessions">; updates: GameSessionUpdates },
     null
   >("game/sessions:update"),
-  startGame: makeFunctionReference<"mutation", { gameId: Id<"games"> }, Id<"gameSessions">>(
-    "game/sessions:startGame",
-  ),
+  startGame: makeFunctionReference<
+    "mutation",
+    { gameId: Id<"games">; withoutSelfJustification?: boolean },
+    Id<"gameSessions">
+  >("game/sessions:startGame"),
   finishGame: makeFunctionReference<"mutation", { gameId: Id<"games"> }, null>(
     "game/sessions:finishGame",
   ),

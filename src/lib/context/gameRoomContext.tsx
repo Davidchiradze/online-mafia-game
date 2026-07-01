@@ -48,6 +48,7 @@ type ConvexGameSession = {
   nominatedPlayers: number[];
   speakerStartedAt?: string;
   speakingOrder: number[];
+  withoutSelfJustification?: boolean;
   winner?: "mafia" | "yakuza" | "citizens";
 };
 

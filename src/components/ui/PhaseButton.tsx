@@ -63,7 +63,7 @@ const variantStyles: Record<
 /**
  * Unified phase action button with gradient background, glow effect, and inline spinner.
  */
-const DEFAULT_MOUNT_DISABLE_MS = 1000;
+const DEFAULT_MOUNT_DISABLE_MS = 0;
 
 export default function PhaseButton({
   onClick,

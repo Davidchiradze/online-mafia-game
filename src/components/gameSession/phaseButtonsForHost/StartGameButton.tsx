@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import PhaseButton from "@/components/ui/PhaseButton";
 import PhaseTitle from "@/components/ui/PhaseTitle";
+import StartGameModal from "./StartGameModal";
 
 const CONTAINER_CLASS = "flex flex-col items-center gap-3 w-44";
 const LABEL_CLASS = "font-orbitron text-xs font-bold tracking-wider";
@@ -27,6 +28,7 @@ const StartGameButton = () => {
   const startGameMutation = useMutation(gameSessions.startGame);
 
   const [isLoading, setIsLoading] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
 
   const { readyCount, totalPlayers, allReady } = useMemo(() => {
     const lobbyPlayers = players.filter((p) => p.playerId !== hostUserId);
@@ -41,11 +43,15 @@ const StartGameButton = () => {
     };
   }, [players, hostUserId]);
 
-  const handleStartGame = async () => {
+  const handleConfirmStart = async (withoutSelfJustification: boolean) => {
     if (isLoading) return;
     setIsLoading(true);
     try {
-      await startGameMutation({ gameId: gameId as Id<"games"> });
+      await startGameMutation({
+        gameId: gameId as Id<"games">,
+        withoutSelfJustification,
+      });
+      setModalOpen(false);
     } catch (error) {
       console.error("Failed to start game:", error);
     } finally {
@@ -61,10 +67,16 @@ const StartGameButton = () => {
           {t("allPlayersReady", { count: totalPlayers })}
         </span>
         <PhaseButton
-          onClick={handleStartGame}
+          onClick={() => setModalOpen(true)}
           isLoading={isLoading}
           label={t("start")}
           variant="success"
+        />
+        <StartGameModal
+          open={modalOpen}
+          onClose={() => setModalOpen(false)}
+          onConfirm={handleConfirmStart}
+          isLoading={isLoading}
         />
       </div>
     );

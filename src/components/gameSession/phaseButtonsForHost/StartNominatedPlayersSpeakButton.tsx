@@ -84,7 +84,7 @@ const StartNominatedPlayersSpeakButton = ({ gameSessionState }: Props) => {
         <PhaseButton
           onClick={handleSkipToNightPhase}
           isLoading={isLoading}
-          label={t("start")}
+          label={t("startNight")}
         />
       </div>
     );

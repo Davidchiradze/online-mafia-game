@@ -22,6 +22,7 @@ import ContinueNextRoundButton from "../gameSession/phaseButtonsForHost/Continue
 import EndGameControls from "../gameSession/phaseButtonsForHost/EndGameControls";
 import DayPhaseSpeakingControls from "../gameSession/phaseButtonsForHost/DayPhaseSpeakingControls";
 import StartNominatedPlayersSpeakButton from "../gameSession/phaseButtonsForHost/StartNominatedPlayersSpeakButton";
+import StartVotingButton from "../gameSession/phaseButtonsForHost/StartVotingButton";
 import NominatedPlayersSpeakingControls from "../gameSession/phaseButtonsForHost/NominatedPlayersSpeakingControls";
 import NightActionsDisplay from "./NightActionsDisplay";
 import PhaseTitle from "../ui/PhaseTitle";
@@ -131,7 +132,9 @@ const GamePhaseControls = () => {
 
       case GAME_PHASES[16]: // "day_phase"
         if (isSpeakingComplete(gameSessionState.currentSpeakerIndex)) {
-          return (
+          return gameSessionState.withoutSelfJustification ? (
+            <StartVotingButton gameSessionState={gameSessionState} />
+          ) : (
             <StartNominatedPlayersSpeakButton
               gameSessionState={gameSessionState}
             />

@@ -9,11 +9,13 @@ import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { SPEAKING_STATE } from "@/lib/constants/game";
 import PhaseButton from "@/components/ui/PhaseButton";
 
-const BUTTON_RENDER_DELAY_MS = 2000;
+const BUTTON_RENDER_DELAY_MS = 1000;
 
 type Props = {
   gameId: string;
-  gameSessionState: NonNullable<ReturnType<typeof useGameRoom>["gameSessionState"]>;
+  gameSessionState: NonNullable<
+    ReturnType<typeof useGameRoom>["gameSessionState"]
+  >;
 };
 
 /**
@@ -38,7 +40,8 @@ export default function DayPhaseSpeakingControls({
   const isNotStarted = speakingOrder.length === 0 || currentSpeaker === null;
   const isPaused = SPEAKING_STATE.isPaused(currentSpeaker);
   const isCompleted = SPEAKING_STATE.isCompleted(currentSpeaker);
-  const buttonMode = isNotStarted || isCompleted ? "start" : isPaused ? "next" : "finish";
+  const buttonMode =
+    isNotStarted || isCompleted ? "start" : isPaused ? "next" : "finish";
   const disableResetKey = `${buttonMode}-${String(currentSpeaker)}-${speakingOrder.length}`;
 
   const handleStart = useCallback(async () => {
@@ -76,8 +79,8 @@ export default function DayPhaseSpeakingControls({
       <PhaseButton
         onClick={handleStart}
         isLoading={isLoading}
-        disableOnMountMs={BUTTON_RENDER_DELAY_MS}
-        disableResetKey={disableResetKey}
+        // disableOnMountMs={BUTTON_RENDER_DELAY_MS}
+        // disableResetKey={disableResetKey}
         label={t("start")}
         variant="success"
       />
@@ -89,8 +92,8 @@ export default function DayPhaseSpeakingControls({
       <PhaseButton
         onClick={handleNext}
         isLoading={isLoading}
-        disableOnMountMs={BUTTON_RENDER_DELAY_MS}
-        disableResetKey={disableResetKey}
+        // disableOnMountMs={BUTTON_RENDER_DELAY_MS}
+        // disableResetKey={disableResetKey}
         label={t("start")}
         variant="success"
       />

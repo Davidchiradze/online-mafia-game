@@ -517,7 +517,13 @@
       "startSelfJustification": "თავის მართლების დაწყება",
       "startingVoting": "იწყება…",
       "startVotingPhase": "კენჭისყრის ფაზის დაწყება",
-      "pickRoles": "როლების არჩევა"
+      "pickRoles": "როლების არჩევა",
+      "startGameTitle": "თამაშის დაწყება",
+      "selfJustificationQuestion": "როგორ განიხილონ ნომინირებული მოთამაშეები კენჭისყრამდე?",
+      "withSelfJustification": "თავის მართლებით",
+      "withSelfJustificationHint": "თითოეულ ნომინირებულ მოთამაშეს კენჭისყრამდე ეძლევა 30 წამი თავის დასაცავად.",
+      "withoutSelfJustification": "თავის მართლების გარეშე",
+      "withoutSelfJustificationHint": "გამოტოვე დაცვის ფაზა და პირდაპირ დაიწყე კენჭისყრა."
     },
     "session": {
       "connectingAsSpectator": "მაყურებლად დაკავშირება...",

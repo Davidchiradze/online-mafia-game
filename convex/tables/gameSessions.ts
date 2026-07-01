@@ -13,13 +13,10 @@ export const gameSessions = defineTable({
   nominatedPlayers: v.array(v.number()),
   speakerStartedAt: v.optional(v.string()),
   speakingOrder: v.array(v.number()),
+  withoutSelfJustification: v.optional(v.boolean()),
   startedAt: v.optional(v.number()), // ms epoch — set when play begins (startGame)
   winner: v.optional(
-    v.union(
-      v.literal("mafia"),
-      v.literal("yakuza"),
-      v.literal("citizens"),
-    ),
+    v.union(v.literal("mafia"), v.literal("yakuza"), v.literal("citizens")),
   ),
   // Structured endgame snapshot captured when the winner is first decided.
   winMethod: v.optional(winMethodValidator),

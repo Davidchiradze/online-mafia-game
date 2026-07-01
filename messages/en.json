@@ -517,7 +517,13 @@
       "startSelfJustification": "Start self-justification",
       "startingVoting": "Starting…",
       "startVotingPhase": "Start Voting Phase",
-      "pickRoles": "Pick Roles"
+      "pickRoles": "Pick Roles",
+      "startGameTitle": "Start Game",
+      "selfJustificationQuestion": "How should nominated players be handled before voting?",
+      "withSelfJustification": "With self-justification",
+      "withSelfJustificationHint": "Each nominated player gets 30 seconds to defend themselves before voting.",
+      "withoutSelfJustification": "Without self-justification",
+      "withoutSelfJustificationHint": "Skip the defense phase and go straight to voting."
     },
     "session": {
       "connectingAsSpectator": "Connecting as spectator...",
