@@ -383,6 +383,8 @@
       "nominated": "დასახელებული: {list}"
     },
     "ready": "მზადაა",
+    "revealRole": "როლის ჩვენება",
+    "hideRole": "დამალვა",
     "roles": {
       "DON": "დონი",
       "MAFIA": "მაფია",

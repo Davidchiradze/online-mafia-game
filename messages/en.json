@@ -383,6 +383,8 @@
       "nominated": "Nominated: {list}"
     },
     "ready": "Ready",
+    "revealRole": "Reveal role",
+    "hideRole": "Hide",
     "roles": {
       "DON": "Don",
       "MAFIA": "Mafia",
