@@ -7,7 +7,9 @@ export const PHP_API_BASE_URL = IS_LOCAL
 
 const ONLINE_MAFIA_ORIGIN = process.env.NEXT_PUBLIC_ONLINE_MAFIA_ORIGIN;
 
-export const PHP_LOGIN_REDIRECT_URL = `${PHP_API_BASE_URL}/ka/accounts/login/?from=${ONLINE_MAFIA_ORIGIN}`;
+const PHP_LOGIN_PATH = `/ka/accounts/login/?from=${ONLINE_MAFIA_ORIGIN}`;
+export const PHP_LOGIN_REDIRECT_URL = `${PHP_API_BASE_URL}${PHP_LOGIN_PATH}`;
+export const PHP_LOGOUT_REDIRECT_URL = `${PHP_API_BASE_URL}/ka/accounts/logout/?next=${encodeURIComponent(PHP_LOGIN_PATH)}`;
 export const LOGOUT_ENDPOINT = "/api/auth/logout";
 
 export const PHP_SESSION_COOKIE_NAME = "PHPSESSID";
