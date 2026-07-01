@@ -35,10 +35,16 @@ export const transfer = mutation({
 
     if (newHostPlayer && prevHostPlayer) {
       const newHostOriginalSeat = newHostPlayer.seatNumber;
-      await ctx.db.patch(newHostPlayer._id, { seatNumber: hostSeatNumber });
+      await ctx.db.patch(newHostPlayer._id, {
+        seatNumber: hostSeatNumber,
+        isReady: false,
+      });
       await ctx.db.patch(prevHostPlayer._id, { seatNumber: newHostOriginalSeat });
     } else if (newHostPlayer) {
-      await ctx.db.patch(newHostPlayer._id, { seatNumber: hostSeatNumber });
+      await ctx.db.patch(newHostPlayer._id, {
+        seatNumber: hostSeatNumber,
+        isReady: false,
+      });
     }
 
     const newHostRequest = await getJoinRequestByRequester(ctx.db, gameId, newHostId);
