@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
+import AuthGate from "@/components/dashboard/AuthGate";
 import AuthorizedHeader from "@/components/dashboard/AuthorizedHeader";
 import NavigationSidebar from "@/components/dashboard/NavigationSidebar";
 import FloatingChatWidget from "@/components/dashboard/community-chat/FloatingChatWidget";
@@ -12,14 +13,22 @@ type HeadquartersWrapperProps = {
   children: React.ReactNode;
 };
 
+/**
+ * Runs the join-request listener. Mounted INSIDE the `AuthGate` so its query
+ * (`myActiveRequests` → `getAuthenticatedUser`) never fires during the auth
+ * bootstrap window, where it would throw "Not authenticated".
+ */
+function JoinRequestNotifier() {
+  useMyJoinRequestNotifications();
+  return null;
+}
+
 export default function HeadquartersWrapper({
   children,
 }: HeadquartersWrapperProps) {
   const pathname = usePathname();
   const [isSidebarHovered, setIsSidebarHovered] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  useMyJoinRequestNotifications();
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
@@ -82,7 +91,12 @@ export default function HeadquartersWrapper({
       <div className="relative z-10 flex h-screen min-w-0 flex-1 flex-col overflow-hidden transition-all duration-300 ease-in-out md:ml-[72px]">
         <AuthorizedHeader onOpenMobileMenu={() => setIsMobileMenuOpen(true)} />
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-black/20 shadow-[-10px_-10px_30px_rgba(0,0,0,0.5)] md:rounded-tl-3xl md:border-l md:border-t md:border-white/10">
-          <div className="h-full">{children}</div>
+          <div className="h-full">
+            <AuthGate>
+              <JoinRequestNotifier />
+              {children}
+            </AuthGate>
+          </div>
         </main>
       </div>
 

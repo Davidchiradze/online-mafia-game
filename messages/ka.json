@@ -201,11 +201,11 @@
   },
   "landing": {},
   "lobby": {
-    "createRoomTitle": "ოთახის შექმნა",
+    "createRoomTitle": "თამაშის შექმნა",
     "roomSettingsTitle": "ოთახის პარამეტრები",
     "creating": "იქმნება…",
     "saving": "ინახება…",
-    "createRoom": "ოთახის შექმნა",
+    "createRoom": "თამაშის შექმნა",
     "saveChanges": "ცვლილებების შენახვა",
     "roomName": "ოთახის სახელი",
     "roomNamePlaceholder": "შეიყვანეთ ოთახის სახელი…",
