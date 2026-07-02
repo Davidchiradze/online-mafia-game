@@ -49,6 +49,7 @@ export const PERMISSIONS = {
   GAME_SPECTATE_ANY:  "game.spectate_any",  // spectate any live game (bypass private/full)
   GAME_REVEAL_ROLES:  "game.reveal_roles",  // reveal LIVE in-game roles (host POV)
   GAME_FORCE_END:     "game.force_end",     // force-end / cancel a game
+  GAME_BROADCAST:     "game.broadcast",     // message everyone in a live game room
   GAME_REFUND:        "game.refund",        // trigger PHP refund (money)
 } as const;
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
@@ -61,6 +62,7 @@ export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
 | `game.view_all` | — | ✅ | ✅ |
 | `game.spectate_any` | — | ✅ | ✅ |
 | `game.force_end` | — | ✅ | ✅ |
+| `game.broadcast` | — | ✅ | ✅ |
 | `game.reveal_roles` | — | — | ✅ |
 | `role.assign` | — | — | ✅ |
 | `user.ban` | — | — | ✅ |
@@ -71,7 +73,9 @@ everything, including the money-sensitive (`refund`), privilege-changing
 (`role.assign`, `user.ban`), and live role-reveal (`game.reveal_roles`)
 operations. Note `game.spectate_any` (join any room) is deliberately split from
 `game.reveal_roles` (see live roles) so moderators can spectate private/full
-games without bypassing in-game visibility.
+games without bypassing in-game visibility. `game.broadcast` (message a room — for
+responding to reports) is a moderation capability, so moderators get it too; see
+[game-broadcasts.md](./game-broadcasts.md).
 
 ## Single source of truth — `convex/lib/access.ts`
 

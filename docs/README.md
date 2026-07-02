@@ -25,6 +25,7 @@ This documentation describes the architecture, patterns, and conventions used in
 - **[authorization.md](./authorization.md)** - Access roles (admin/moderator), permissions, `/admin` route gating
 - **[subscriptions.md](./subscriptions.md)** - Subscription tiers, feature entitlements, and gating create/join/spectate + the game route
 - **[community-chat.md](./community-chat.md)** - Global community chat channel + online sidebar (subscription-gated, soft-delete moderation, daily prune)
+- **[game-broadcasts.md](./game-broadcasts.md)** - Per-game notification channel (staff broadcasts + reusable system pushes) delivered as one-time toasts to players + spectators
 - **[admin-dashboard.md](./admin-dashboard.md)** - Admin panel routes + the analytics dashboard (KPIs, leaderboards, charts, presence)
 - **[server-time.md](./server-time.md)** - Server-corrected client clock (use `useServerTime()` for any timer math involving a server timestamp)
 - **[decisions.md](./decisions.md)** - Architectural Decision Records (ADRs)

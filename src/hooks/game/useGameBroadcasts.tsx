@@ -11,7 +11,7 @@ type BroadcastKind = "staff" | "system" | "news";
 
 /** How long a room notification stays on screen (longer than a normal toast so
  *  players have time to read a staff message). */
-const BROADCAST_AUTOCLOSE_MS = 1000;
+const BROADCAST_AUTOCLOSE_MS = 8000;
 
 /**
  * Subscribes to the game's room-notification channel and surfaces each new

@@ -162,6 +162,19 @@ const games = useQuery(api.games.listAll);
 
 **When to use**: Lobby page game list.
 
+### 8. Game Broadcasts (room notifications)
+
+**Query**: `api.game.broadcasts.recent`
+**Returns**: Recent room notifications for a game (staff messages / system pushes)
+
+```typescript
+const broadcasts = useQuery(api.game.broadcasts.recent, { gameId });
+// Each: { _id, kind, text, title?, senderNickname?, senderRole?, createdAt }
+```
+
+**When to use**: The `useGameBroadcasts` listener toasts each new broadcast to
+everyone in the room. See [game-broadcasts.md](./game-broadcasts.md).
+
 ## Conditional Queries
 
 Use `"skip"` to conditionally disable a query:
