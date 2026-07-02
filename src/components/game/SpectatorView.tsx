@@ -10,8 +10,10 @@ import "@livekit/components-styles";
 import { useTranslations } from "next-intl";
 import PlayerCircle from "@/components/game/PlayerCircle";
 import GameRoomHeader from "@/components/game/GameRoomHeader";
-import StaffToolsButton from "@/components/game/StaffToolsButton";
+import StaffToolsButton from "@/components/game/staff-tools";
 import { useRef } from "react";
+import { useGameBroadcasts } from "@/hooks/game/useGameBroadcasts";
+import type { Id } from "@convex/_generated/dataModel";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import AudioPlaybackModal from "@/components/liveKit/AudioPlaybackModal";
 
@@ -30,6 +32,9 @@ export default function SpectatorView({
   userId,
 }: SpectatorViewProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
+
+  // Room-wide notifications (staff broadcasts + system pushes) as toasts.
+  useGameBroadcasts(gameId as Id<"games">);
 
   return (
     <RoomContext.Provider value={room}>

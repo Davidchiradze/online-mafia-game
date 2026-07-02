@@ -17,6 +17,7 @@ import {
   adminAuditLog,
   communityMessages,
   communityReadState,
+  gameBroadcasts,
 } from "./tables";
 
 const schema = defineSchema({
@@ -37,6 +38,7 @@ const schema = defineSchema({
   adminAuditLog,
   communityMessages,
   communityReadState,
+  gameBroadcasts,
 });
 
 export default schema;

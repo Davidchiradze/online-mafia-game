@@ -150,6 +150,33 @@ export const gameSessions = {
 };
 
 // ============================================================================
+// GAME BROADCASTS (room notifications)
+// ============================================================================
+
+type GameBroadcast = {
+  _id: Id<"gameBroadcasts">;
+  kind: "staff" | "system" | "news";
+  text: string;
+  title?: string;
+  senderNickname?: string;
+  senderRole?: string;
+  createdAt: number;
+};
+
+export const gameBroadcasts = {
+  recent: makeFunctionReference<"query", { gameId: Id<"games"> }, GameBroadcast[]>(
+    "game/broadcasts:recent",
+  ),
+  // Staff-only room message. `push` (system notifications) is internal-only and
+  // is invoked via `internal.game.broadcasts.push`, not through a ref.
+  send: makeFunctionReference<
+    "mutation",
+    { gameId: Id<"games">; text: string },
+    null
+  >("game/broadcasts:send"),
+};
+
+// ============================================================================
 // GAME PLAYERS
 // ============================================================================
 

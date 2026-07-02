@@ -12,7 +12,9 @@ import PlayerCircle from "@/components/game/PlayerCircle";
 import GameRoomHeader from "@/components/game/GameRoomHeader";
 import { useRef } from "react";
 import { useSpeakingAutoMute, useDeadPlayerMute } from "@/hooks/livekit";
+import { useGameBroadcasts } from "@/hooks/game/useGameBroadcasts";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
+import type { Id } from "@convex/_generated/dataModel";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import AudioPlaybackModal from "@/components/liveKit/AudioPlaybackModal";
 import CardPickingBoard from "@/components/gameSession/cardPicking/CardPickingBoard";
@@ -33,6 +35,9 @@ export default function LiveKitTestComponent({
 }) {
   const { gameSessionState, players } = useGameRoom();
   const containerRef = useRef<HTMLDivElement | null>(null);
+
+  // Room-wide notifications (staff broadcasts + system pushes) as toasts.
+  useGameBroadcasts(gameId as Id<"games">);
 
   useSpeakingAutoMute(room, gameSessionState, players, userId, isHost);
 

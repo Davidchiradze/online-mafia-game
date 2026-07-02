@@ -102,6 +102,19 @@ export const COMMUNITY_CHAT = {
   ONLINE_CAP: 1000,
 } as const;
 
+export const GAME_BROADCAST = {
+  /** Max characters per broadcast (validated server-side after trimming). */
+  MAX_MESSAGE_LENGTH: 500,
+  /**
+   * `recent` only returns broadcasts newer than this. Keeps the reactive query
+   * bounded and stops a just-joined client from being toasted with stale
+   * announcements from earlier in the game.
+   */
+  RECENT_WINDOW_MS: 120_000,
+  /** Safety cap on how many recent broadcasts `recent` returns. */
+  LIST_LIMIT: 10,
+} as const;
+
 export const FOULS = {
   MAX_FOULS: 3,
   ELIMINATION_THRESHOLD: 4,

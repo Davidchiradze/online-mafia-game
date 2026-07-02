@@ -703,7 +703,18 @@
       "close": "Close",
       "revealRoles": "Reveal roles (host view)",
       "revealRolesOn": "Roles and night video visible to you",
-      "revealRolesOff": "See all roles like the host"
+      "revealRolesOff": "See all roles like the host",
+      "broadcast": "Send message to room",
+      "broadcastDesc": "Message all players and spectators",
+      "broadcastTitle": "Message to room",
+      "broadcastPlaceholder": "Type a message for everyone in the room…",
+      "send": "Send",
+      "sending": "Sending…",
+      "cancel": "Cancel",
+      "broadcastSent": "Message sent to the room."
+    },
+    "broadcast": {
+      "staffLabel": "Staff"
     }
   },
   "errors": {
@@ -729,6 +740,9 @@
     "CHAT_EMPTY": "Message cannot be empty.",
     "CHAT_TOO_LONG": "Your message is too long.",
     "CHAT_RATE_LIMITED": "You're sending messages too quickly. Please slow down.",
-    "CHAT_MESSAGE_NOT_FOUND": "Message not found."
+    "CHAT_MESSAGE_NOT_FOUND": "Message not found.",
+    "FORBIDDEN": "You do not have permission to do that.",
+    "BROADCAST_EMPTY": "Message cannot be empty.",
+    "BROADCAST_TOO_LONG": "Your message is too long."
   }
 }

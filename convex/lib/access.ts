@@ -66,6 +66,8 @@ export const PERMISSIONS = {
   GAME_REVEAL_ROLES: "game.reveal_roles",
   /** Force-end / cancel a game. */
   GAME_FORCE_END: "game.force_end",
+  /** Broadcast a message to everyone in a live game room (players + spectators). */
+  GAME_BROADCAST: "game.broadcast",
   /** Issue a balance refund (calls the PHP refund endpoint). */
   GAME_REFUND: "game.refund",
   /** Delete any message in the community chat (soft-delete). */
@@ -89,6 +91,7 @@ export const ROLE_PERMISSIONS: Record<AccessRole, readonly Permission[]> = {
     // May join any game as a spectator, but NOT reveal live roles (admin only).
     PERMISSIONS.GAME_SPECTATE_ANY,
     PERMISSIONS.GAME_FORCE_END,
+    PERMISSIONS.GAME_BROADCAST,
     PERMISSIONS.CHAT_MESSAGE_DELETE,
   ],
   admin: ALL_PERMISSIONS, // full access (incl. GAME_REVEAL_ROLES)
