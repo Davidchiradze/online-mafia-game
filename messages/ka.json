@@ -185,11 +185,11 @@
     "avatar": "ავატარი"
   },
   "auth": {
-    "accessDenied": "წვდომა აკრძალულია",
-    "authIssueTitle": "ავთენტიფიკაციის",
-    "authIssueTitleHighlight": "შეცდომა",
-    "authIssueBody": "ვერ მოხერხდა თქვენი ვინაობის დადასტურება ამ სესიისთვის.შესასვლელად გთხოვთ თავიდან შეხვიდეთ mafia.ge-ზე.",
-    "signInOnSite": "შესვლა mafia.ge-ზე"
+    "accessDenied": "ავტორიზაცია სავალდებულოა",
+    "authIssueTitle": "გაიარეთ  ავტორიზაცია",
+    "authIssueTitleHighlight": "Mafia.ge -ზე",
+    "authIssueBody": " ",
+    "signInOnSite": "შესვლა"
   },
   "notVerified": {
     "badge": "ანგარიში არ არის ვერიფიცირებული",
@@ -246,7 +246,11 @@
       "accepted": "თქვენი მოთხოვნა <b>{room}</b>-ში შესვლის შესახებ დადასტურდა.",
       "enterRoom": "ოთახში შესვლა",
       "rejected": "თქვენი მოთხოვნა {room}-ში შესვლის შესახებ უარყოფილია"
-    }
+    },
+    "promoDate": "01.07.2026",
+    "promoTitle": "თბილისის თასი 2026 — 5000₾ საპრიზო",
+    "promoDescription": "თბილისის თასი 2026 საპრიზო ფონდი 5000₾ იწყება! ფინალი იუთუბ არხზე GI2GI დაიდება.",
+    "promoCta": "სრულად ნახვა"
   },
   "nav": {
     "lobby": "ლობი",

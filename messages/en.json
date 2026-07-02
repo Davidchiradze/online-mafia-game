@@ -246,7 +246,11 @@
       "accepted": "You're in! Your request to join <b>{room}</b> was accepted.",
       "enterRoom": "Enter room",
       "rejected": "Your request to join {room} was declined"
-    }
+    },
+    "promoDate": "01.07.2026",
+    "promoTitle": "Tbilisi Cup 2026 — 5000₾ Prize Pool",
+    "promoDescription": "The Tbilisi Cup 2026 with a 5000₾ prize pool is starting! The final will be streamed on the GI2GI YouTube channel.",
+    "promoCta": "Read more"
   },
   "nav": {
     "lobby": "Lobby",

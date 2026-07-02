@@ -8,9 +8,10 @@ import { gameLogs as historyRefs } from "@convex/refs/history";
 import { Doc } from "@convex/_generated/dataModel";
 import GameTable from "@/components/game/GameTable";
 import CreateGameModal from "@/components/modals/CreateGameModal";
-import { Search, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import LobbyStats from "./LobbyStats";
 import StreakFlame from "./StreakFlame";
+import PromoBanner from "./PromoBanner";
 import { LobbySubscriptionModal } from "./LobbySubscriptionModal";
 import {
   SubscriptionGuard,
@@ -73,6 +74,17 @@ export default function LobbyContent({ games }: Props) {
         </div>
 
         <LobbyStats stats={myStats} />
+
+        <div className="mb-8">
+          <PromoBanner
+            href="https://www.mafia.ge/ka/news/7"
+            imageUrl="https://www.mafia.ge/uploads/news/news_1782920753_a55c1edd.png"
+            eyebrow={t("promoDate")}
+            title={t("promoTitle")}
+            description={t("promoDescription")}
+            ctaLabel={t("promoCta")}
+          />
+        </div>
 
         <div className="mb-6 flex flex-col gap-3 sm:flex-row">
           {/* <div className="relative flex-1">
