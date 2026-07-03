@@ -19,11 +19,11 @@ export const GAME_TYPE_LABEL: Record<(typeof GAME_TYPES)[number], string> = {
 };
 
 export const GAME_STATUS_LABEL: Record<(typeof GAME_STATUSES)[number], string> =
-{
-  not_started: "Not started",
-  playing: "Playing",
-  finished: "Finished",
-};
+  {
+    not_started: "Not started",
+    playing: "Playing",
+    finished: "Finished",
+  };
 
 export const GAME_TYPE_MAX_PLAYER_NUMBER: Record<
   (typeof GAME_TYPES)[number],
@@ -198,8 +198,39 @@ export const VOTING = {
 
 // Game Cleanup Constants
 export const GAME_CLEANUP = {
-  /** Delay before deleting a finished game and its relations (1 minute) */
-  DELAY_MS: 60_000,
+  /**
+   * Delay before deleting a finished game and its relations.
+   * MUST match `GAME_CLEANUP.DELAY_MS` in `convex/lib/constants.ts` — this
+   * client copy drives the "room closes in Ns" countdown in the winner banner.
+   */
+  DELAY_MS: 90_000,
+} as const;
+
+/**
+ * Per-phase decision countdown durations (milliseconds).
+ *
+ * Visual-only pressure indicator: when the timer hits 0 nothing auto-advances —
+ * the host still clicks the phase's End button. Shown only to the acting role(s)
+ * for that phase (see `getAwakeRoles` in `src/lib/game/visibility.ts`) plus the
+ * host; never to spectators.
+ *
+ * Speaking/voting phases are intentionally omitted — they already have their
+ * own per-speaker timers (`useSpeakingProgress`, voting timer).
+ */
+export const PHASE_TIMERS: Partial<
+  Record<(typeof GAME_PHASES)[number], number>
+> = {
+  mafia_meet: 40 * 1000,
+  don_chooses_right_hand: 20 * 1000,
+  yakuda_shogun_meet: 40 * 1000,
+  detective_meet: 15 * 1000,
+  doctor_meet: 15 * 1000,
+  mafia_chooses_target: 20 * 1000,
+  don_checks_for_detective: 15 * 1000,
+  right_hand_checks_for_yakuza: 15 * 1000,
+  yakuza_and_shogun_chooses_target: 20 * 1000,
+  detective_checks_for_mafia: 15 * 1000,
+  doctor_heals_player: 15 * 1000,
 } as const;
 
 // Card-picking phase constants
@@ -215,5 +246,3 @@ export const SPECTATOR = {
   /** Maximum number of spectators allowed per game */
   MAX_SPECTATORS_PER_GAME: 7,
 } as const;
-
-

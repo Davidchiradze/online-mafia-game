@@ -203,9 +203,11 @@ export function canSeeParticipant(
 }
 
 /**
- * Determines which roles are "awake" (active) during a specific game phase
+ * Determines which roles are "awake" (active) during a specific game phase.
+ * Also used as the acting-role gate for the per-phase decision countdown
+ * (only these roles + the host see the timer).
  */
-function getAwakeRoles(gamePhase: GamePhase): Role[] {
+export function getAwakeRoles(gamePhase: GamePhase): Role[] {
   switch (gamePhase) {
     case "mafia_meet":
     case "mafia_chooses_target":

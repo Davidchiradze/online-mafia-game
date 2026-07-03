@@ -4,6 +4,7 @@ import React from "react";
 import { useTranslations } from "next-intl";
 import { GAME_PHASES, SPEAKING_STATE } from "@/lib/constants/game";
 import PickerIndicator from "@/components/gameSession/cardPicking/PickerIndicator";
+import PhaseCountdown from "@/components/game/PhaseCountdown";
 
 type Translator = ReturnType<typeof useTranslations<"game">>;
 
@@ -128,6 +129,8 @@ export default function PhaseTitle(props: PhaseTitleProps) {
       <h3 className="font-orbitron text-white uppercase tracking-wider text-sm font-bold">
         {title}
       </h3>
+
+      <PhaseCountdown />
 
       {isPickingRolesPhase && <PickerIndicator />}
 

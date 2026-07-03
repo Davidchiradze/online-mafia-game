@@ -689,7 +689,8 @@
       "noContest": "No Contest",
       "mafiaWinner": "Mafia",
       "yakuzaWinner": "Yakuza and Shogun",
-      "citizensWinner": "Citizens"
+      "citizensWinner": "Citizens",
+      "roomClosing": "Room closes in {seconds}s"
     },
     "livekit": {
       "enableAudioTitle": "Enable Audio",
@@ -715,6 +716,9 @@
     },
     "broadcast": {
       "staffLabel": "Staff"
+    },
+    "phaseTimer": {
+      "seconds": "{seconds}s"
     }
   },
   "errors": {

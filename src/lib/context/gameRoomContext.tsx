@@ -49,6 +49,8 @@ type ConvexGameSession = {
   speakerStartedAt?: string;
   speakingOrder: number[];
   withoutSelfJustification?: boolean;
+  phaseStartedAt?: number;
+  finishedAt?: number;
   winner?: "mafia" | "yakuza" | "citizens";
 };
 

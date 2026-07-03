@@ -123,6 +123,24 @@
   box-shadow: 0 0 8px rgba(244, 63, 94, 0.15);
 }
 
+.badge-timer {
+  @apply bg-gradient-to-r from-sky-500/20 to-blue-600/20
+         border border-sky-500/40 text-sky-300;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.15);
+}
+
+.badge-timer-urgent {
+  @apply bg-gradient-to-r from-red-500/25 to-red-600/25
+         border border-red-500/50 text-red-300;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.25);
+  animation: timer-pulse 1s ease-in-out infinite;
+}
+
+@keyframes timer-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
 .badge-voted {
   background: linear-gradient(135deg, rgba(52,211,153,0.15) 0%, rgba(16,185,129,0.2) 100%);
   border: 1px solid rgba(52,211,153,0.35);

@@ -15,6 +15,12 @@ export const gameSessions = defineTable({
   speakingOrder: v.array(v.number()),
   withoutSelfJustification: v.optional(v.boolean()),
   startedAt: v.optional(v.number()), // ms epoch — set when play begins (startGame)
+  // ms epoch — stamped on every phase change; drives the per-phase decision
+  // countdown shown to the acting role(s) + host (visual only, see docs).
+  phaseStartedAt: v.optional(v.number()),
+  // ms epoch — set when the game is finished (finishGame / admin force-end);
+  // drives the "room closes in Ns" countdown in the winner banner.
+  finishedAt: v.optional(v.number()),
   winner: v.optional(
     v.union(v.literal("mafia"), v.literal("yakuza"), v.literal("citizens")),
   ),

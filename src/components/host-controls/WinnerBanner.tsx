@@ -2,6 +2,9 @@
 
 import { useTranslations } from "next-intl";
 import FinishGameButton from "./FinishGameButton";
+import { GAME_CLEANUP } from "@/lib/constants/game";
+import { useCountdown } from "@/hooks/game/useCountdown";
+import { useGameRoom } from "@/lib/context/gameRoomContext";
 
 type Winner = "mafia" | "yakuza" | "citizens";
 
@@ -32,12 +35,21 @@ export default function WinnerBanner({
   canFinish = false,
 }: WinnerBannerProps) {
   const t = useTranslations("game.winnerBanner");
+  const { gameSessionState } = useGameRoom();
 
   const WINNER_LABELS: Record<Winner, string> = {
     mafia: t("mafiaWinner"),
     yakuza: t("yakuzaWinner"),
     citizens: t("citizensWinner"),
   };
+
+  // Room-closing countdown — starts once the game is actually finished
+  // (`finishedAt` set). Mirrors the server's scheduled cleanup delay.
+  const finishedAt = gameSessionState?.finishedAt ?? null;
+  const { secondsLeft, isExpired } = useCountdown(
+    finishedAt,
+    GAME_CLEANUP.DELAY_MS,
+  );
 
   return (
     <div className="w-full min-h-full flex flex-col items-center justify-center gap-3 py-2 text-center sm:gap-4">
@@ -57,6 +69,12 @@ export default function WinnerBanner({
       </div>
 
       {canFinish && winner && <FinishGameButton gameId={gameId} />}
+
+      {finishedAt != null && (
+        <p className="font-orbitron text-[11px] uppercase tracking-[0.2em] text-slate-400">
+          {t("roomClosing", { seconds: isExpired ? 0 : secondsLeft })}
+        </p>
+      )}
     </div>
   );
 }

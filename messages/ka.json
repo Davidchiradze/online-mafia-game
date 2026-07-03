@@ -689,7 +689,8 @@
       "noContest": "ანულირებულია",
       "mafiaWinner": "მაფია",
       "yakuzaWinner": "იაკუძა და შოგუნი",
-      "citizensWinner": "მოქალაქეები"
+      "citizensWinner": "მოქალაქეები",
+      "roomClosing": "ოთახი დაიხურება {seconds} წამში"
     },
     "livekit": {
       "enableAudioTitle": "აუდიოს ჩართვა",
@@ -715,6 +716,9 @@
     },
     "broadcast": {
       "staffLabel": "ადმინისტრაცია"
+    },
+    "phaseTimer": {
+      "seconds": "{seconds} წამი"
     }
   },
   "errors": {

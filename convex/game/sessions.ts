@@ -73,7 +73,11 @@ export const update = mutation({
   handler: async (ctx, { sessionId, updates }) => {
     const userId = await getAuthenticatedUser(ctx);
     const session = await ctx.db.get(sessionId);
-    if (!session) throw new ConvexError({ code: "SESSION_NOT_FOUND", message: "Game session not found" });
+    if (!session)
+      throw new ConvexError({
+        code: "SESSION_NOT_FOUND",
+        message: "Game session not found",
+      });
 
     await assertIsHost(ctx.db, session.gameId, userId);
 
@@ -86,6 +90,16 @@ export const update = mutation({
           patch[key] = value;
         }
       }
+    }
+
+    // Stamp the phase-start time whenever the phase actually changes so clients
+    // can render the per-phase decision countdown. All non-speaking meet/decision
+    // phases route through this mutation, so this single stamp covers them.
+    if (
+      updates.gamePhase !== undefined &&
+      updates.gamePhase !== session.gamePhase
+    ) {
+      patch.phaseStartedAt = Date.now();
     }
 
     await ctx.db.patch(sessionId, patch);
@@ -108,7 +122,11 @@ export const startGame = mutation({
     const skipSelfJustification = withoutSelfJustification ?? false;
 
     const players = await getPlayersByGameId(ctx.db, gameId);
-    if (players.length === 0) throw new ConvexError({ code: "NO_PLAYERS_JOINED", message: "No players joined" });
+    if (players.length === 0)
+      throw new ConvexError({
+        code: "NO_PLAYERS_JOINED",
+        message: "No players joined",
+      });
 
     const maxSeats = game.maxPlayers;
 
@@ -213,7 +231,10 @@ export const finishGame = mutation({
     const game = await assertIsHost(ctx.db, gameId, userId);
 
     if (game.gameStatus !== "playing") {
-      throw new ConvexError({ code: "GAME_NOT_PLAYING", message: "Game is not currently playing" });
+      throw new ConvexError({
+        code: "GAME_NOT_PLAYING",
+        message: "Game is not currently playing",
+      });
     }
 
     const session = await ctx.db
@@ -221,15 +242,26 @@ export const finishGame = mutation({
       .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
       .unique();
 
-    if (!session) throw new ConvexError({ code: "SESSION_NOT_FOUND", message: "Game session not found" });
-    if (session.isFinished) throw new ConvexError({ code: "GAME_ALREADY_FINISHED", message: "Game is already finished" });
+    if (!session)
+      throw new ConvexError({
+        code: "SESSION_NOT_FOUND",
+        message: "Game session not found",
+      });
+    if (session.isFinished)
+      throw new ConvexError({
+        code: "GAME_ALREADY_FINISHED",
+        message: "Game is already finished",
+      });
 
     // Persist the permanent game-log snapshot BEFORE flipping status / scheduling
     // cleanup — the cleanup cascade-deletes the live game and all its relations.
     await archiveGameLog(ctx, gameId);
 
     await ctx.db.patch(gameId, { gameStatus: "finished" });
-    await ctx.db.patch(session._id, { isFinished: true });
+    await ctx.db.patch(session._id, {
+      isFinished: true,
+      finishedAt: Date.now(),
+    });
 
     await ctx.scheduler.runAfter(GAME_CLEANUP.DELAY_MS, removeGameInternal, {
       gameId,

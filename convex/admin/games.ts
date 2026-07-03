@@ -74,7 +74,10 @@ export const forceEndGame = mutation({
       await archiveGameLog(ctx, gameId);
       await ctx.db.patch(gameId, { gameStatus: "finished" });
       if (session && !session.isFinished) {
-        await ctx.db.patch(session._id, { isFinished: true });
+        await ctx.db.patch(session._id, {
+          isFinished: true,
+          finishedAt: Date.now(),
+        });
       }
       await ctx.scheduler.runAfter(GAME_CLEANUP.DELAY_MS, removeGameInternal, {
         gameId,

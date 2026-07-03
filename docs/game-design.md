@@ -171,6 +171,8 @@ The primary function is `getVisibilityStateWithDeath()` which accounts for game 
 - `currentSpeakerIndex` - Current speaker position
 - `nominatedPlayers` - Array of seat numbers nominated for voting
 - `currentNightNumber` - Current night round
+- `phaseStartedAt` - ms epoch, stamped on every phase change; drives the per-phase decision countdown (see **Phase Timers** below)
+- `finishedAt` - ms epoch, set when the game finishes; drives the "room closes in Ns" countdown in the winner banner
 
 ### Night Phase Sessions Table (`nightPhaseSessions`)
 
@@ -199,6 +201,36 @@ The primary function is `getVisibilityStateWithDeath()` which accounts for game 
 - `isAutoVote` - Whether vote was auto-cast
 - `isBothLeave` - Whether this is a "both leave" vote
 
+## Phase Timers
+
+Each non-speaking meet/decision phase shows a **visual-only** countdown so the
+acting role knows how long they have to decide (e.g. mafia choosing a target,
+detective checking a player). It does **not** auto-advance — the host still
+clicks the phase's End button when the timer runs out.
+
+- **Durations** live in `PHASE_TIMERS` in `src/lib/constants/game.ts` (fixed
+  per phase). Speaking/voting phases are intentionally excluded — they already
+  have their own per-speaker timers.
+- **Timestamp**: `gameSessions.update` stamps `phaseStartedAt = Date.now()`
+  whenever `gamePhase` changes. All meet/decision transitions route through this
+  mutation, so the stamp is centralized (not duplicated across phase buttons).
+- **Who sees it**: the acting role(s) for the phase — resolved via
+  `getAwakeRoles()` in `src/lib/game/visibility.ts` — plus the host. **Never
+  spectators.**
+- **Rendering**: `<PhaseCountdown />` (in `src/components/game/`) sits in the
+  `PhaseTitle` area and self-gates on role/host. The countdown is computed with
+  `useCountdown()` (`src/hooks/game/useCountdown.ts`), which is server-clock
+  corrected via `useServerTime()` — see `/docs/server-time.md`. Turns red and
+  pulses in the final 5 seconds.
+
+### Room-closing countdown
+
+After a game finishes, the winner banner shows a "Room closes in Ns" countdown
+until the server's scheduled cleanup deletes the room. It counts down
+`GAME_CLEANUP.DELAY_MS` from `gameSessions.finishedAt`. The client copy of
+`GAME_CLEANUP.DELAY_MS` (in `src/lib/constants/game.ts`) **must** match the
+server copy (in `convex/lib/constants.ts`).
+
 ## Role Filtering (Security)
 
 **Critical**: Role information must be filtered server-side in Convex queries based on team relationships.
@@ -217,6 +249,7 @@ All game constants are defined in `src/lib/constants/game.ts`:
 - `JAPANESE_MAFIA_ROLES` - Array of all roles
 - `GAME_STATUSES` - Array of game statuses
 - `GAME_TYPES` - Array of game types
+- `PHASE_TIMERS` - Per-phase decision countdown durations (see **Phase Timers**)
 
 **Always use these constants** instead of hardcoding strings.
 
