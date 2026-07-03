@@ -40,13 +40,13 @@ export default function WinnerBanner({
   };
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center gap-4 text-center">
+    <div className="w-full min-h-full flex flex-col items-center justify-center gap-3 py-2 text-center sm:gap-4">
       <div className="space-y-1">
         <p className="font-orbitron text-[10px] uppercase tracking-[0.3em] text-slate-400">
           {t("gameOver")}
         </p>
         <h2
-          className={`font-orbitron text-2xl font-bold uppercase tracking-wider ${
+          className={`font-orbitron text-lg font-bold uppercase tracking-wider break-words sm:text-2xl ${
             winner ? WINNER_ACCENT[winner] : "text-slate-300"
           }`}
         >
