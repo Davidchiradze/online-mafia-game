@@ -32,7 +32,7 @@ export default function ToolButton({
       onClick={onClick}
       aria-pressed={ariaPressed}
       className={cn(
-        "flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-all",
+        "flex w-full items-center gap-3 rounded-xl border p-3 text-left transition",
         active
           ? "border-red-500/30 bg-red-500/10"
           : "border-white/10 bg-white/[0.02] hover:border-white/20",

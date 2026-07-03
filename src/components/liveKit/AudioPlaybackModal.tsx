@@ -59,7 +59,7 @@ export default function AudioPlaybackModal({ room }: { room: Room }) {
             mt-6 w-full px-6 py-3 rounded-xl font-medium text-white
             bg-white/10 hover:bg-white/20 active:bg-white/25
             border border-white/15 hover:border-white/25
-            transition-all duration-200 cursor-pointer
+            transition duration-200 cursor-pointer
           "
         >
           {t("enableAudioButton")}

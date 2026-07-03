@@ -94,7 +94,7 @@ const StartGameButton = () => {
         <div className="w-full flex flex-col items-center gap-2">
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-all duration-300"
+              className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-[width] duration-300"
               style={{ width: `${progress}%` }}
             />
           </div>

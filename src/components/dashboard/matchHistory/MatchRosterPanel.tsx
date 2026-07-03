@@ -1,6 +1,5 @@
 "use client";
 
-import { motion, AnimatePresence } from "motion/react";
 import { Users, Trophy } from "lucide-react";
 import { useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
@@ -33,16 +32,14 @@ export default function MatchRosterPanel({
   );
 
   return (
-    <AnimatePresence>
-      {expanded && (
-        <motion.div
-          initial={{ height: 0, opacity: 0 }}
-          animate={{ height: "auto", opacity: 1 }}
-          exit={{ height: 0, opacity: 0 }}
-          transition={{ duration: 0.3, ease: "easeInOut" }}
-          className="overflow-hidden bg-[#0c0c12]/80"
-        >
-          <div className="border-t border-white/5 px-7 py-6">
+    <div
+      className={cn(
+        "grid bg-[#0c0c12]/80 transition-[grid-template-rows,opacity] duration-300 ease-in-out",
+        expanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
+      )}
+    >
+      <div className="overflow-hidden">
+        <div className="border-t border-white/5 px-7 py-6">
             <div className="mb-5 flex items-center justify-between">
               <h4 className="flex items-center gap-2 font-inter text-xs font-bold uppercase tracking-widest text-zinc-400">
                 <Users className="h-4 w-4 text-blue-400" /> {t("operationRoster")}
@@ -151,8 +148,7 @@ export default function MatchRosterPanel({
               </div>
             )}
           </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+        </div>
+      </div>
   );
 }

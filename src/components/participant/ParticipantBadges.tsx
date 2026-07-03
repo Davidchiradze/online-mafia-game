@@ -83,7 +83,7 @@ export default function ParticipantBadges({
                 e.stopPropagation();
                 onToggleMic?.();
               }}
-              className={`px-1.5 py-1 tsm:px-2 tsm:py-1.5 tlg:px-2.5 rounded-lg backdrop-blur-md flex items-center gap-1.5 transition-all cursor-pointer ring-1 ring-white/20 hover:ring-white/40 hover:brightness-125 active:scale-95 ${micContainerClass}`}
+              className={`px-1.5 py-1 tsm:px-2 tsm:py-1.5 tlg:px-2.5 rounded-lg backdrop-blur-md flex items-center gap-1.5 transition cursor-pointer ring-1 ring-white/20 hover:ring-white/40 hover:brightness-125 active:scale-95 ${micContainerClass}`}
             >
               {isMuted ? (
                 <MicOffIcon
@@ -97,7 +97,7 @@ export default function ParticipantBadges({
             </button>
           ) : (
             <div
-              className={`px-1 py-0.5 tsm:px-1.5 tsm:py-1 rounded-md backdrop-blur-md flex items-center gap-1.5 transition-all ${micContainerClass}`}
+              className={`px-1 py-0.5 tsm:px-1.5 tsm:py-1 rounded-md backdrop-blur-md flex items-center gap-1.5 transition ${micContainerClass}`}
             >
               {isMuted ? (
                 <MicOffIcon
@@ -115,7 +115,7 @@ export default function ParticipantBadges({
 
       {/* Player name — top center, hidden during game, revealed on hover (desktop) or tap/focus (mobile) */}
       <div
-        className={`absolute top-0 left-0 right-0 z-20 flex justify-center pointer-events-none transition-all duration-300 ${
+        className={`absolute top-0 left-0 right-0 z-20 flex justify-center pointer-events-none transition duration-300 ${
           isGameActive
             ? "opacity-0 -translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 group-focus-within:opacity-100 group-focus-within:translate-y-0"
             : "opacity-100"

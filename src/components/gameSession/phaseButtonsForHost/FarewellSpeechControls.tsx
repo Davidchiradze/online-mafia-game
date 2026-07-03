@@ -132,7 +132,7 @@ export default function FarewellSpeechControls({ gameSessionState }: Props) {
           return (
             <div
               key={seat}
-              className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border transition-all ${
+              className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border transition ${
                 isCurrent
                   ? speakerIsActive
                     ? "bg-emerald-500/20 text-emerald-300 border-emerald-500 ring-2 ring-emerald-500/30 animate-pulse"

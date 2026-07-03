@@ -25,7 +25,7 @@ export default function AdminShell({ children }: { children: ReactNode }) {
         <div className="absolute bottom-0 left-0 h-[24rem] w-[24rem] rounded-full bg-emerald-600/10 blur-[130px]" />
       </div>
 
-      <header className="sticky top-0 z-20 border-b border-white/[0.06] bg-slate-950/70 backdrop-blur-xl">
+      <header className="sticky top-0 z-20 border-b border-white/[0.06] bg-slate-950/70">
         <div className="mx-auto flex max-w-7xl items-center gap-6 px-4 py-3.5 sm:px-6">
           <span className="font-orbitron bg-gradient-to-r from-indigo-300 via-violet-300 to-rose-300 bg-clip-text text-lg font-semibold text-transparent">
             {t("title")}

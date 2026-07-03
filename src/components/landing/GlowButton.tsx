@@ -22,7 +22,7 @@ export function GlowButton({
   className = "",
   fullWidth = false,
 }: GlowButtonProps) {
-  const base = `group relative px-8 py-3.5 rounded-xl bg-gradient-to-r from-red-600 via-red-500 to-red-600 text-white font-semibold shadow-[0_0_30px_rgba(220,38,38,0.4)] hover:shadow-[0_0_45px_rgba(220,38,38,0.65)] transition-all cursor-pointer flex items-center justify-center gap-2 font-sans text-base ${fullWidth ? "w-full" : "w-full sm:w-auto"} ${className}`;
+  const base = `group relative px-8 py-3.5 rounded-xl bg-gradient-to-r from-red-600 via-red-500 to-red-600 text-white font-semibold shadow-[0_0_30px_rgba(220,38,38,0.4)] hover:shadow-[0_0_45px_rgba(220,38,38,0.65)] transition cursor-pointer flex items-center justify-center gap-2 font-sans text-base ${fullWidth ? "w-full" : "w-full sm:w-auto"} ${className}`;
 
   if (href) {
     return (

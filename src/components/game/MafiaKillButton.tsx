@@ -50,7 +50,7 @@ export default function MafiaKillButton({
         rounded-t-lg
         text-[0.6rem] lg:text-[0.7rem]
         font-semibold uppercase tracking-widest
-        transition-all duration-200
+        transition duration-200
         border border-b-0
         ${
           isSelected

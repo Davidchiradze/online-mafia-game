@@ -53,7 +53,7 @@ export function SubscriptionUpsell({ className }: { className?: string }) {
       href={SUBSCRIPTIONS_PATH}
       className={
         className ??
-        "inline-flex items-center justify-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/[0.08] px-5 py-2.5 font-sans text-sm font-semibold text-amber-300 transition-all hover:border-amber-500/50 hover:bg-amber-500/[0.14]"
+        "inline-flex items-center justify-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/[0.08] px-5 py-2.5 font-sans text-sm font-semibold text-amber-300 transition hover:border-amber-500/50 hover:bg-amber-500/[0.14]"
       }
     >
       <Lock className="h-4 w-4" />

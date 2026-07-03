@@ -155,14 +155,14 @@ export default function CreateGameModal(props: Props) {
         <>
           <button
             onClick={onClose}
-            className="px-5 py-2.5 rounded-xl border border-white/10 text-gray-400 hover:text-white hover:border-white/20 font-sans text-sm font-medium transition-all cursor-pointer"
+            className="px-5 py-2.5 rounded-xl border border-white/10 text-gray-400 hover:text-white hover:border-white/20 font-sans text-sm font-medium transition cursor-pointer"
           >
             {tc("cancel")}
           </button>
           <button
             onClick={handleSubmit}
             disabled={!canSubmit || loading || (isEdit && !hasChanges)}
-            className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-sans text-sm font-semibold shadow-[0_0_20px_rgba(220,38,38,0.3)] hover:shadow-[0_0_30px_rgba(220,38,38,0.5)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all flex items-center gap-2"
+            className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-sans text-sm font-semibold shadow-[0_0_20px_rgba(220,38,38,0.3)] hover:shadow-[0_0_30px_rgba(220,38,38,0.5)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition flex items-center gap-2"
           >
             {loading && <Loader2 className="w-4 h-4 animate-spin" />}
             {submitLabel}
@@ -188,7 +188,7 @@ export default function CreateGameModal(props: Props) {
             onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
             placeholder={t("roomNamePlaceholder")}
             autoFocus
-            className="w-full px-4 py-3 rounded-xl bg-white/[0.05] border border-white/[0.08] text-white placeholder-gray-600 font-sans text-sm focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 transition-all"
+            className="w-full px-4 py-3 rounded-xl bg-white/[0.05] border border-white/[0.08] text-white placeholder-gray-600 font-sans text-sm focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 transition"
           />
         </div>
 
@@ -202,7 +202,7 @@ export default function CreateGameModal(props: Props) {
               onChange={(e) =>
                 setType(e.target.value as (typeof GAME_TYPES)[number])
               }
-              className="w-full px-4 py-3 rounded-xl bg-white/[0.05] border border-white/[0.08] text-white font-sans text-sm focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 transition-all appearance-none cursor-pointer"
+              className="w-full px-4 py-3 rounded-xl bg-white/[0.05] border border-white/[0.08] text-white font-sans text-sm focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 transition appearance-none cursor-pointer"
             >
               {GAME_TYPES.filter(
                 (gt) => gt !== "traditional" && gt !== "city_mafia",
@@ -223,7 +223,7 @@ export default function CreateGameModal(props: Props) {
             <button
               type="button"
               onClick={() => setIsPrivate(false)}
-              className={`flex flex-col items-center gap-2 px-4 py-4 rounded-xl border transition-all cursor-pointer ${
+              className={`flex flex-col items-center gap-2 px-4 py-4 rounded-xl border transition cursor-pointer ${
                 !isPrivate
                   ? "border-red-500/50 bg-red-500/[0.08] shadow-[0_0_16px_rgba(220,38,38,0.15)]"
                   : "border-white/[0.08] bg-white/[0.03] hover:border-white/15 hover:bg-white/[0.05]"
@@ -249,7 +249,7 @@ export default function CreateGameModal(props: Props) {
             <button
               type="button"
               onClick={() => setIsPrivate(true)}
-              className={`flex flex-col items-center gap-2 px-4 py-4 rounded-xl border transition-all cursor-pointer ${
+              className={`flex flex-col items-center gap-2 px-4 py-4 rounded-xl border transition cursor-pointer ${
                 isPrivate
                   ? "border-red-500/50 bg-red-500/[0.08] shadow-[0_0_16px_rgba(220,38,38,0.15)]"
                   : "border-white/[0.08] bg-white/[0.03] hover:border-white/15 hover:bg-white/[0.05]"

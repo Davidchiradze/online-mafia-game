@@ -68,7 +68,7 @@ export default function AuthErrorScreen() {
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="relative overflow-hidden rounded-3xl border border-white/5 bg-black/60 p-8 shadow-2xl backdrop-blur-2xl sm:p-12"
+          className="relative overflow-hidden rounded-3xl border border-white/5 bg-black/60 p-8 shadow-2xl sm:p-12"
         >
           <div className="pointer-events-none absolute left-1/2 top-0 h-[2px] w-1/2 -translate-x-1/2 bg-gradient-to-r from-transparent via-red-500 to-transparent opacity-70" />
           <div className="pointer-events-none absolute left-1/2 top-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-red-600/20 blur-[100px]" />
@@ -87,7 +87,7 @@ export default function AuthErrorScreen() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.15 }}
-              className="mb-4 inline-flex items-center gap-2 rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1 backdrop-blur-sm"
+              className="mb-4 inline-flex items-center gap-2 rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1"
             >
               <span className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
               <span className="font-sans text-[0.7rem] font-semibold uppercase tracking-widest text-red-300">
@@ -127,7 +127,7 @@ export default function AuthErrorScreen() {
             >
               <a
                 href={PHP_LOGIN_REDIRECT_URL}
-                className="group relative flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-600 via-red-500 to-red-600 px-7 py-3.5 font-sans text-base font-semibold text-white shadow-[0_0_30px_rgba(220,38,38,0.4)] transition-all hover:shadow-[0_0_45px_rgba(220,38,38,0.65)] sm:w-auto"
+                className="group relative flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-600 via-red-500 to-red-600 px-7 py-3.5 font-sans text-base font-semibold text-white shadow-[0_0_30px_rgba(220,38,38,0.4)] transition hover:shadow-[0_0_45px_rgba(220,38,38,0.65)] sm:w-auto"
               >
                 {t("signInOnSite")}
                 <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />

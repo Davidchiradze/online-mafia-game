@@ -48,7 +48,7 @@ export default function NominationButton({
       title={isNominated ? t("clickToRemoveNomination") : t("clickToNominate")}
       className={`
         w-5 h-5 tsm:w-6 tsm:h-6 tmd:w-8 tmd:h-8 rounded-full flex items-center justify-center
-        transition-all duration-200 shadow-lg
+        transition duration-200 shadow-lg
         ${
           isLoading
             ? "opacity-50 cursor-not-allowed"

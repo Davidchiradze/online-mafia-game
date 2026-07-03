@@ -252,7 +252,7 @@ export default function ParticipantComponent({
   return (
     <div
       tabIndex={0}
-      className={`relative w-full h-full flex flex-col items-stretch justify-stretch text-sm text-gray-200 group transition-all duration-300 rounded-xl overflow-hidden outline-none ${speakerBorderClass}`}
+      className={`relative w-full h-full flex flex-col items-stretch justify-stretch text-sm text-gray-200 group transition duration-300 rounded-xl overflow-hidden outline-none ${speakerBorderClass}`}
       onMouseLeave={() => setMenuOpen(false)}
       onClick={handleTileClick}
     >

@@ -122,7 +122,7 @@ export default function GameRoomHeader() {
             >
               <button
                 type="button"
-                className="flex items-center gap-1.5 p-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-all group"
+                className="flex items-center gap-1.5 p-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition group"
                 aria-label={t("header.viewSpectators")}
               >
                 <EyeIcon width={18} height={18} />
@@ -136,7 +136,7 @@ export default function GameRoomHeader() {
               <button
                 type="button"
                 onClick={() => setIsJoinDrawerOpen(true)}
-                className="relative p-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-all group"
+                className="relative p-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition group"
                 aria-label={t("header.manageJoinRequests")}
                 title={t("header.joinRequests")}
               >
@@ -153,7 +153,7 @@ export default function GameRoomHeader() {
               <button
                 type="button"
                 onClick={() => setIsSettingsOpen(true)}
-                className="p-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-all group"
+                className="p-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition group"
                 aria-label={t("header.roomSettings")}
                 title={t("header.roomSettings")}
               >
@@ -164,7 +164,7 @@ export default function GameRoomHeader() {
             <button
               type="button"
               onClick={toggleFullscreen}
-              className="p-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-all group"
+              className="p-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition group"
               title={isFullscreen ? t("header.exitFullscreen") : t("header.enterFullscreen")}
               aria-label={isFullscreen ? t("header.exitFullscreen") : t("header.enterFullscreen")}
             >
@@ -186,7 +186,7 @@ export default function GameRoomHeader() {
             <button
               type="button"
               onClick={handleDisconnect}
-              className="p-2 rounded-lg bg-white/5 hover:bg-red-500/20 border border-white/10 hover:border-red-500/30 transition-all group"
+              className="p-2 rounded-lg bg-white/5 hover:bg-red-500/20 border border-white/10 hover:border-red-500/30 transition group"
               title={isSpectator ? t("header.stopSpectating") : t("header.leaveRoom")}
               aria-label={isSpectator ? t("header.stopSpectating") : t("header.leaveRoom")}
             >

@@ -52,7 +52,7 @@ function StatCard({
   accent: string;
 }) {
   return (
-    <div className="relative min-w-[140px] overflow-hidden rounded-xl border border-white/5 bg-[#13131a]/80 p-5 shadow-xl backdrop-blur-xl">
+    <div className="relative min-w-[140px] overflow-hidden rounded-xl border border-white/5 bg-[#13131a]/80 p-5 shadow-xl">
       <div className={`absolute left-0 top-0 h-[2px] w-full ${accent}`} />
       <div className="mb-2 flex items-center gap-2 font-inter text-xs font-bold uppercase tracking-widest text-zinc-400">
         {icon} {label}

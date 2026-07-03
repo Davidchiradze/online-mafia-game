@@ -71,7 +71,7 @@ export function CandidateDots({
       {candidates.map((seat, idx) => (
         <div
           key={seat}
-          className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all ${
+          className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition ${
             variant === "regular" && idx === currentIdx && isVoting ? "animate-pulse" : ""
           }`}
           style={getDotStyle(idx)}

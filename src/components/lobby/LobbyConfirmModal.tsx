@@ -61,14 +61,14 @@ export function LobbyConfirmModal({
           <button
             onClick={onCancel}
             disabled={loading}
-            className="flex-1 py-3 rounded-xl border border-white/10 text-gray-400 hover:text-white hover:border-white/20 font-sans text-sm font-medium transition-all disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
+            className="flex-1 py-3 rounded-xl border border-white/10 text-gray-400 hover:text-white hover:border-white/20 font-sans text-sm font-medium transition disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
           >
             {tc("cancel")}
           </button>
           <button
             onClick={onConfirm}
             disabled={loading}
-            className={`flex-1 py-3 rounded-xl text-white font-sans text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2 ${cfg.confirmClass}`}
+            className={`flex-1 py-3 rounded-xl text-white font-sans text-sm font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2 ${cfg.confirmClass}`}
           >
             {loading ? (
               <>

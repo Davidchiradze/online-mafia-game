@@ -98,7 +98,9 @@ export default function NominatedPlayersSpeakingControls({
 
   if (currentSpeaker === null || speakingOrder.length === 0) {
     return (
-      <div className="text-sm text-white/50">{t("noNominatedPlayersSpeaking")}</div>
+      <div className="text-sm text-white/50">
+        {t("noNominatedPlayersSpeaking")}
+      </div>
     );
   }
 
@@ -129,7 +131,7 @@ export default function NominatedPlayersSpeakingControls({
           return (
             <div
               key={seat}
-              className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border transition-all ${
+              className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border transition ${
                 isActive
                   ? "bg-emerald-500/20 text-emerald-300 border-emerald-500 ring-2 ring-emerald-500/30"
                   : isNext

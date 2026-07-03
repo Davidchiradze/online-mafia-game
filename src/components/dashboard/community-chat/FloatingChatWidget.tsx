@@ -81,7 +81,7 @@ function WidgetInner() {
             exit={{ opacity: 0, y: 16, scale: 0.96 }}
             transition={{ type: "spring", bounce: 0, duration: 0.25 }}
             className={cn(
-              "flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0a0a12]/95 shadow-[0_20px_60px_rgba(0,0,0,0.6)] backdrop-blur-xl font-inter",
+              "flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0a0a12]/95 shadow-[0_20px_60px_rgba(0,0,0,0.6)] font-inter",
               "h-[min(75vh,520px)] w-[calc(100vw-3rem)] sm:w-[380px]",
               expanded && "sm:h-[min(80vh,640px)] sm:w-[min(90vw,820px)]",
             )}
@@ -171,7 +171,7 @@ function WidgetInner() {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-label={open ? t("minimizeChat") : t("openChat")}
-        className="relative flex h-14 w-14 items-center justify-center rounded-full bg-red-600 text-white shadow-[0_0_25px_rgba(220,38,38,0.5)] transition-all hover:bg-red-500"
+        className="relative flex h-14 w-14 items-center justify-center rounded-full bg-red-600 text-white shadow-[0_0_25px_rgba(220,38,38,0.5)] transition hover:bg-red-500"
       >
         {open ? (
           <ChevronDown className="h-6 w-6" />

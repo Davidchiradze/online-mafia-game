@@ -51,7 +51,7 @@ export default function FoulSpeakButton({
       }
       className={`
         relative w-5 h-5 tsm:w-6 tsm:h-6 tmd:w-8 tmd:h-8 rounded-full flex items-center justify-center
-        transition-all duration-200 shadow-lg
+        transition duration-200 shadow-lg
         ${
           isFoulSpeaking
             ? "bg-amber-500 border border-amber-400 text-white animate-pulse"

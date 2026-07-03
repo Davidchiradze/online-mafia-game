@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { ChevronDown, Clock, Trophy, Users } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import {
@@ -36,7 +35,7 @@ export default function ArchiveRow({ row }: { row: AdminGameLogRow }) {
   return (
     <div
       className={cn(
-        "group relative overflow-hidden rounded-xl border shadow-lg backdrop-blur-md transition-all duration-300",
+        "group relative overflow-hidden rounded-xl border shadow-lg transition-colors duration-300",
         expanded
           ? "border-white/10 bg-[#13131a]"
           : "border-white/5 bg-[#13131a]/80 hover:border-white/20 hover:bg-[#1a1a24]",
@@ -108,7 +107,7 @@ export default function ArchiveRow({ row }: { row: AdminGameLogRow }) {
         <div className="absolute right-5 top-5 flex justify-end md:relative md:right-auto md:top-auto md:col-span-1">
           <div
             className={cn(
-              "rounded-full border p-1.5 transition-all duration-300",
+              "rounded-full border p-1.5 transition-colors duration-300",
               expanded
                 ? "border-white/20 bg-white/10 text-white"
                 : "border-transparent text-zinc-500 group-hover:bg-white/10 group-hover:text-zinc-300",
@@ -125,16 +124,14 @@ export default function ArchiveRow({ row }: { row: AdminGameLogRow }) {
       </div>
 
       {/* Roster panel */}
-      <AnimatePresence>
-        {expanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="overflow-hidden bg-[#0c0c12]/80 backdrop-blur-md"
-          >
-            <div className="border-t border-white/5 px-7 py-6">
+      <div
+        className={cn(
+          "grid bg-[#0c0c12]/80 transition-[grid-template-rows,opacity] duration-300 ease-in-out",
+          expanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
+        )}
+      >
+        <div className="overflow-hidden">
+          <div className="border-t border-white/5 px-7 py-6">
               <h4 className="mb-5 flex items-center gap-2 font-inter text-xs font-bold uppercase tracking-widest text-zinc-400">
                 <Users className="h-4 w-4 text-blue-400" /> {t("archive.roster")}
               </h4>
@@ -192,9 +189,8 @@ export default function ArchiveRow({ row }: { row: AdminGameLogRow }) {
                 })}
               </div>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+        </div>
     </div>
   );
 }

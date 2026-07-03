@@ -89,7 +89,7 @@ export default function SeatIndicator({
 
       {/* Seat number badge */}
       <div
-        className={`w-4 h-4 tsm:w-5 tsm:h-5 tlg:w-6 tlg:h-6 aspect-square rounded-full flex items-center justify-center transition-all border ${
+        className={`w-4 h-4 tsm:w-5 tsm:h-5 tlg:w-6 tlg:h-6 aspect-square rounded-full flex items-center justify-center transition border ${
           showSpeakingRing ? "border-transparent bg-black/70" : badgeClass
         }`}
       >

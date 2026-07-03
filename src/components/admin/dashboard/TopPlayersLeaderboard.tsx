@@ -44,7 +44,7 @@ export default function TopPlayersLeaderboard() {
               key={tab.key}
               onClick={() => setSortBy(tab.key)}
               className={cn(
-                "rounded-lg px-2.5 py-1 text-xs font-medium transition-all",
+                "rounded-lg px-2.5 py-1 text-xs font-medium transition",
                 sortBy === tab.key
                   ? "bg-white/10 text-white shadow-sm"
                   : "text-slate-400 hover:text-white",

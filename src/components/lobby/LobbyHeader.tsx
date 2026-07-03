@@ -28,7 +28,7 @@ export default function LobbyHeader() {
         <div className="relative">
           <button
             onClick={() => setMenuOpen((v) => !v)}
-            className="flex items-center gap-3 px-4 py-2 rounded-xl backdrop-blur-md bg-white/5 border border-white/10 hover:border-white/20 transition-all"
+            className="flex items-center gap-3 px-4 py-2 rounded-xl backdrop-blur-md bg-white/5 border border-white/10 hover:border-white/20 transition"
           >
             {/* Avatar */}
             <div className="relative shrink-0">
@@ -63,7 +63,7 @@ export default function LobbyHeader() {
                 className="fixed inset-0 z-10"
                 onClick={() => setMenuOpen(false)}
               />
-              <div className="absolute right-0 top-full mt-2 z-20 w-44 rounded-xl border border-white/10 bg-[#12121f] backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.6)] overflow-hidden">
+              <div className="absolute right-0 top-full mt-2 z-20 w-44 rounded-xl border border-white/10 bg-[#12121f] shadow-[0_8px_32px_rgba(0,0,0,0.6)] overflow-hidden">
                 <button
                   onClick={handleSignOut}
                   className="w-full flex items-center gap-2.5 px-4 py-3 text-gray-400 hover:text-white hover:bg-white/5 transition-colors font-sans text-sm"

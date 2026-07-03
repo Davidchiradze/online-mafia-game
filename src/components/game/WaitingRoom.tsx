@@ -132,7 +132,7 @@ function RoomHeader({
           onClick={onLeave}
           disabled={isLeaving}
           title={t("leaveRoomTitle")}
-          className="p-2 rounded-lg bg-white/5 hover:bg-red-500/20 border border-white/10 hover:border-red-500/30 text-gray-400 hover:text-red-400 transition-all cursor-pointer disabled:opacity-40 shrink-0 group"
+          className="p-2 rounded-lg bg-white/5 hover:bg-red-500/20 border border-white/10 hover:border-red-500/30 text-gray-400 hover:text-red-400 transition cursor-pointer disabled:opacity-40 shrink-0 group"
         >
           <X className="w-5 h-5" />
         </button>
@@ -160,7 +160,7 @@ function WaitingRoomFooter({
       <button
         onClick={handleLeave}
         disabled={isLeaving}
-        className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white border border-white/10 hover:border-white/20 font-sans text-sm font-semibold transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white border border-white/10 hover:border-white/20 font-sans text-sm font-semibold transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <LogOut className="w-4 h-4" />
         {t("leaveRoom")}
@@ -296,7 +296,7 @@ function RejectedState({
       <button
         onClick={onLeave}
         disabled={isLeaving}
-        className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-sans text-sm font-semibold shadow-[0_0_20px_rgba(220,38,38,0.3)] hover:shadow-[0_0_30px_rgba(220,38,38,0.5)] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-sans text-sm font-semibold shadow-[0_0_20px_rgba(220,38,38,0.3)] hover:shadow-[0_0_30px_rgba(220,38,38,0.5)] transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <LogOut className="w-4 h-4" />
         {t("backToLobby")}

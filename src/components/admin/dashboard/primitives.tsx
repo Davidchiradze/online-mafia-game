@@ -26,7 +26,7 @@ export function DashboardCard({
         "group relative overflow-hidden rounded-2xl border border-white/10",
         "bg-gradient-to-br from-white/[0.07] to-white/[0.02]",
         "p-5 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.7)] backdrop-blur-xl",
-        "transition-all duration-300 hover:border-white/20",
+        "transition duration-300 hover:border-white/20",
         className,
       )}
     >

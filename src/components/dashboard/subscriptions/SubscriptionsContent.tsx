@@ -186,7 +186,7 @@ export default function SubscriptionsContent() {
                     onClick={pkg.disabled ? undefined : handlePurchase}
                     disabled={pkg.disabled}
                     className={cn(
-                      "w-full rounded-xl py-4 text-sm font-semibold transition-all duration-200",
+                      "w-full rounded-xl py-4 text-sm font-semibold transition duration-200",
                       pkg.disabled
                         ? "cursor-not-allowed bg-[#202024] text-zinc-500"
                         : "bg-[#2a2a32] text-white shadow-sm hover:bg-[#32323c] hover:shadow-md",

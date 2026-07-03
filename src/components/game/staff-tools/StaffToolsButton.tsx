@@ -62,7 +62,7 @@ export default function StaffToolsButton() {
         onClick={() => setOpen((p) => !p)}
         aria-label={t("title")}
         className={cn(
-          "flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border shadow-xl transition-all",
+          "flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border shadow-xl transition",
           hostVisionEnabled
             ? "border-red-500/40 bg-red-600 text-white shadow-[0_0_20px_rgba(220,38,38,0.4)]"
             : "border-white/10 bg-[#13131a] text-zinc-300 hover:border-white/20 hover:text-white",

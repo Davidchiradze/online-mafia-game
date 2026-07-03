@@ -223,7 +223,7 @@ function RoomActionButton({
       return (
         <button
           onClick={onJoin}
-          className={`px-4 py-2${fullWidth ? ".5" : ""} rounded-lg bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white shadow-[0_0_20px_rgba(220,38,38,0.3)] hover:shadow-[0_0_30px_rgba(220,38,38,0.5)] transition-all flex items-center gap-2 ${base} font-sans text-[0.85rem] font-semibold cursor-pointer`}
+          className={`px-4 py-2${fullWidth ? ".5" : ""} rounded-lg bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white shadow-[0_0_20px_rgba(220,38,38,0.3)] hover:shadow-[0_0_30px_rgba(220,38,38,0.5)] transition flex items-center gap-2 ${base} font-sans text-[0.85rem] font-semibold cursor-pointer`}
         >
           {lockIcon ?? <LogIn className="w-4 h-4" />}
           {fullWidth ? t("row.rejoinGame") : t("row.rejoin")}
@@ -248,7 +248,7 @@ function RoomActionButton({
     return (
       <button
         onClick={onSpectate}
-        className={`px-4 py-2${fullWidth ? ".5" : ""} rounded-lg bg-white/10 hover:bg-white/20 text-white border border-white/20 hover:border-white/30 transition-all flex items-center gap-2 ${base} font-sans text-[0.85rem] font-medium cursor-pointer`}
+        className={`px-4 py-2${fullWidth ? ".5" : ""} rounded-lg bg-white/10 hover:bg-white/20 text-white border border-white/20 hover:border-white/30 transition flex items-center gap-2 ${base} font-sans text-[0.85rem] font-medium cursor-pointer`}
       >
         {spectateLockIcon ?? <Eye className="w-4 h-4" />}
         {t("row.spectate")}
@@ -259,7 +259,7 @@ function RoomActionButton({
   return (
     <button
       onClick={onJoin}
-      className={`${fullWidth ? "w-full" : ""} inline-flex items-center justify-center gap-2 px-4 py-2${fullWidth ? ".5" : ""} rounded-lg bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white shadow-[0_0_20px_rgba(220,38,38,0.3)] hover:shadow-[0_0_30px_rgba(220,38,38,0.5)] transition-all font-sans text-[0.85rem] font-semibold cursor-pointer ${base}`}
+      className={`${fullWidth ? "w-full" : ""} inline-flex items-center justify-center gap-2 px-4 py-2${fullWidth ? ".5" : ""} rounded-lg bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white shadow-[0_0_20px_rgba(220,38,38,0.3)] hover:shadow-[0_0_30px_rgba(220,38,38,0.5)] transition font-sans text-[0.85rem] font-semibold cursor-pointer ${base}`}
     >
       {lockIcon}
       {fullWidth ? t("row.joinGame") : t("row.join")}
@@ -289,7 +289,7 @@ function DesktopRoomRow({
   const t = useTranslations("game");
 
   return (
-    <tr className="transition-all duration-200">
+    <tr className="transition duration-200">
       <td className="px-6 py-4">
         <div className="flex items-center gap-2">
           <span className="font-sans font-semibold text-white text-[0.95rem] leading-tight">
@@ -355,7 +355,7 @@ function MobileRoomRow({
 
   return (
     <div
-      className="rounded-xl border border-white/10 p-4 transition-all duration-200"
+      className="rounded-xl border border-white/10 p-4 transition duration-200"
       style={{
         background:
           "linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)",

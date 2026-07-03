@@ -14,7 +14,7 @@ export default function ComingSoonPage({
       <div className="relative w-full max-w-xl text-center">
         <div className="pointer-events-none absolute left-1/2 top-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-red-600/20 blur-[100px]" />
 
-        <div className="relative overflow-hidden rounded-3xl border border-white/5 bg-black/60 p-10 shadow-2xl backdrop-blur-2xl sm:p-14">
+        <div className="relative overflow-hidden rounded-3xl border border-white/5 bg-black/60 p-10 shadow-2xl sm:p-14">
           <div className="absolute left-1/2 top-0 h-[2px] w-1/3 -translate-x-1/2 bg-gradient-to-r from-transparent via-red-500 to-transparent opacity-70" />
 
           <div className="relative z-10 flex flex-col items-center">

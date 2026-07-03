@@ -28,7 +28,7 @@ export default function AuthorizedHeader({
 
       <div className="flex items-center gap-3">
         <LanguageSwitcher />
-        <div className="flex cursor-default items-center gap-3 rounded-lg border border-white/10 bg-white/5 px-4 py-2 backdrop-blur-md transition-all hover:border-white/20">
+        <div className="flex cursor-default items-center gap-3 rounded-lg border border-white/10 bg-white/5 px-4 py-2 backdrop-blur-md transition hover:border-white/20">
         <div className="relative">
           {/* <div className="h-9 w-9 overflow-hidden rounded-full bg-gradient-to-br from-purple-500 to-red-600 shadow-lg"> */}
           <UserAvatar

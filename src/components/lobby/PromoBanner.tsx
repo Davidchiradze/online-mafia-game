@@ -32,7 +32,7 @@ export default function PromoBanner({
       href={href}
       target={external ? "_blank" : undefined}
       rel={external ? "noopener noreferrer" : undefined}
-      className={`group relative block overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03] backdrop-blur-sm transition-all hover:border-red-500/40 hover:shadow-[0_0_40px_rgba(220,38,38,0.18)] ${className}`}
+      className={`group relative block overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03] backdrop-blur-sm transition hover:border-red-500/40 hover:shadow-[0_0_40px_rgba(220,38,38,0.18)] ${className}`}
     >
       {/* Ambient red glow that intensifies on hover */}
       <div
@@ -62,7 +62,7 @@ export default function PromoBanner({
               {description}
             </p>
           )}
-          <span className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-red-700 px-5 py-2.5 font-sans text-sm font-semibold text-white shadow-[0_0_20px_rgba(220,38,38,0.3)] transition-all group-hover:from-red-500 group-hover:to-red-600 group-hover:shadow-[0_0_30px_rgba(220,38,38,0.5)]">
+          <span className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-red-700 px-5 py-2.5 font-sans text-sm font-semibold text-white shadow-[0_0_20px_rgba(220,38,38,0.3)] transition group-hover:from-red-500 group-hover:to-red-600 group-hover:shadow-[0_0_30px_rgba(220,38,38,0.5)]">
             {ctaLabel}
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
           </span>

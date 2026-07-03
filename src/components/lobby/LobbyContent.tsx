@@ -94,14 +94,14 @@ export default function LobbyContent({ games }: Props) {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t("searchRoomsPlaceholder")}
-              className="w-full rounded-xl border border-white/[0.08] bg-white/[0.05] py-2.5 pl-11 pr-4 font-sans text-sm text-white placeholder-gray-600 transition-all focus:border-red-500/40 focus:outline-none focus:ring-1 focus:ring-red-500/20"
+              className="w-full rounded-xl border border-white/[0.08] bg-white/[0.05] py-2.5 pl-11 pr-4 font-sans text-sm text-white placeholder-gray-600 transition focus:border-red-500/40 focus:outline-none focus:ring-1 focus:ring-red-500/20"
             />
           </div> */}
 
           {/* <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="cursor-pointer appearance-none rounded-xl border border-white/[0.08] bg-white/[0.05] px-4 py-2.5 font-sans text-sm text-white transition-all focus:border-red-500/40 focus:outline-none"
+            className="cursor-pointer appearance-none rounded-xl border border-white/[0.08] bg-white/[0.05] px-4 py-2.5 font-sans text-sm text-white transition focus:border-red-500/40 focus:outline-none"
           >
             <option value="all" className="bg-[#0a0a12]">
               {t("statusAll")}
@@ -120,12 +120,12 @@ export default function LobbyContent({ games }: Props) {
           <SubscriptionGuard
             feature={FEATURES.PLAY_GAME}
             fallback={
-              <SubscriptionUpsell className="flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/[0.08] px-5 py-2.5 font-sans text-sm font-semibold text-amber-300 transition-all hover:border-amber-500/50 hover:bg-amber-500/[0.14]" />
+              <SubscriptionUpsell className="flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/[0.08] px-5 py-2.5 font-sans text-sm font-semibold text-amber-300 transition hover:border-amber-500/50 hover:bg-amber-500/[0.14]" />
             }
           >
             <button
               onClick={() => setIsCreateOpen(true)}
-              className="flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-red-700 px-5 py-2.5 font-sans text-sm font-semibold text-white shadow-[0_0_20px_rgba(220,38,38,0.3)] transition-all hover:from-red-500 hover:to-red-600 hover:shadow-[0_0_30px_rgba(220,38,38,0.5)]"
+              className="flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-red-700 px-5 py-2.5 font-sans text-sm font-semibold text-white shadow-[0_0_20px_rgba(220,38,38,0.3)] transition hover:from-red-500 hover:to-red-600 hover:shadow-[0_0_30px_rgba(220,38,38,0.5)]"
             >
               <Plus className="h-4 w-4" />
               {t("createRoom")}

@@ -80,7 +80,7 @@ export default function FoulButton({
         title={getButtonTitle()}
         className={`
           relative w-5 h-5 tsm:w-6 tsm:h-6 tmd:w-8 tmd:h-8 rounded-full flex items-center justify-center
-          transition-all duration-200 shadow-lg bg-black/50 border border-white/20 text-white/80 hover:bg-red-600/80 hover:border-red-400 hover:text-white
+          transition duration-200 shadow-lg bg-black/50 border border-white/20 text-white/80 hover:bg-red-600/80 hover:border-red-400 hover:text-white
           ${
             isLoading || isAlreadyEliminated
               ? "opacity-50 cursor-not-allowed"

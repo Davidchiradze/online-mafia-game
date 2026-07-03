@@ -25,7 +25,7 @@ export function Composer({ onSend }: Props) {
 
   return (
     <div className="shrink-0 px-4 sm:px-6 py-4 border-t border-white/5 backdrop-blur-md bg-black/20">
-      <div className="flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 focus-within:border-red-500/40 focus-within:shadow-[0_0_20px_rgba(220,38,38,0.15)] transition-all px-3 py-2">
+      <div className="flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 focus-within:border-red-500/40 focus-within:shadow-[0_0_20px_rgba(220,38,38,0.15)] transition px-3 py-2">
         <input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
@@ -43,7 +43,7 @@ export function Composer({ onSend }: Props) {
           onClick={() => void submit()}
           disabled={!draft.trim()}
           className={cn(
-            "flex items-center justify-center w-9 h-9 rounded-lg transition-all shrink-0",
+            "flex items-center justify-center w-9 h-9 rounded-lg transition shrink-0",
             draft.trim()
               ? "bg-red-600 hover:bg-red-500 text-white shadow-[0_0_15px_rgba(220,38,38,0.5)]"
               : "bg-white/5 text-zinc-600 cursor-not-allowed",

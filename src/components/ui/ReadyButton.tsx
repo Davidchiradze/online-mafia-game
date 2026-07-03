@@ -78,7 +78,7 @@ export default function ReadyButton({
         text-xs md:text-sm text-white
         rounded-xl border-2
         whitespace-nowrap
-        transition-all duration-200
+        transition duration-200
         active:scale-95
         disabled:cursor-not-allowed disabled:opacity-60
       `}

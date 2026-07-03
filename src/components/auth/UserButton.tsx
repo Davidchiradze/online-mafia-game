@@ -24,7 +24,7 @@ export default function UserButton() {
       </span>
       <a
         href="/api/auth/logout"
-        className="rounded-lg border border-white/[0.1] bg-white/[0.04] px-3 py-1.5 text-xs font-medium text-gray-400 hover:text-white hover:bg-white/[0.08] font-sans transition-all"
+        className="rounded-lg border border-white/[0.1] bg-white/[0.04] px-3 py-1.5 text-xs font-medium text-gray-400 hover:text-white hover:bg-white/[0.08] font-sans transition"
       >
         {t("signOut")}
       </a>

@@ -13,7 +13,7 @@ const PAGE_SIZE = 10;
 type GameTypeFilter = "all" | (typeof GAME_TYPES)[number];
 
 const SELECT_CLASS =
-  "min-w-[180px] cursor-pointer appearance-none rounded-xl border border-white/5 bg-[#13131a]/60 px-5 py-3.5 font-inter font-medium text-white backdrop-blur-md transition-all focus:border-[#00ff66]/50 focus:bg-[#13131a]/90 focus:outline-none";
+  "min-w-[180px] cursor-pointer appearance-none rounded-xl border border-white/5 bg-[#13131a]/60 px-5 py-3.5 font-inter font-medium text-white backdrop-blur-md transition focus:border-[#00ff66]/50 focus:bg-[#13131a]/90 focus:outline-none";
 
 export default function ArchiveList() {
   const t = useTranslations("admin");
@@ -55,7 +55,7 @@ export default function ArchiveList() {
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder={t("archive.search")}
-            className="w-full rounded-xl border border-white/5 bg-[#13131a]/60 py-3.5 pl-11 pr-4 font-inter font-medium text-white backdrop-blur-md transition-all placeholder:text-zinc-500 focus:border-[#00ff66]/50 focus:bg-[#13131a]/90 focus:outline-none"
+            className="w-full rounded-xl border border-white/5 bg-[#13131a]/60 py-3.5 pl-11 pr-4 font-inter font-medium text-white backdrop-blur-md transition placeholder:text-zinc-500 focus:border-[#00ff66]/50 focus:bg-[#13131a]/90 focus:outline-none"
           />
         </div>
 

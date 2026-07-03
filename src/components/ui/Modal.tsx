@@ -85,7 +85,7 @@ export default function Modal({
         {showClose ? (
           <button
             onClick={onClose}
-            className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all cursor-pointer ${isDark ? "text-gray-500 hover:text-white hover:bg-white/10" : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"}`}
+            className={`w-8 h-8 flex items-center justify-center rounded-lg transition cursor-pointer ${isDark ? "text-gray-500 hover:text-white hover:bg-white/10" : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"}`}
             aria-label={t("close")}
           >
             ✕

@@ -88,7 +88,7 @@ function PromptCard({
 }
 
 const BACK_BUTTON_CLASS =
-  "flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border border-white/10 py-3 font-sans text-sm font-medium text-zinc-400 transition-all hover:border-white/20 hover:text-white disabled:cursor-not-allowed disabled:opacity-40";
+  "flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border border-white/10 py-3 font-sans text-sm font-medium text-zinc-400 transition hover:border-white/20 hover:text-white disabled:cursor-not-allowed disabled:opacity-40";
 
 export default function SpectatorJoinPrompt({ gameId, game, isPrivate }: Props) {
   const t = useTranslations("game.spectatorJoin");
@@ -149,7 +149,7 @@ export default function SpectatorJoinPrompt({ gameId, game, isPrivate }: Props) 
           </button>
           <button
             onClick={() => router.push(SUBSCRIPTIONS_PATH)}
-            className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 py-3 font-sans text-sm font-semibold text-white shadow-[0_0_20px_rgba(245,158,11,0.3)] transition-all hover:from-amber-500 hover:to-amber-600 hover:shadow-[0_0_30px_rgba(245,158,11,0.5)]"
+            className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 py-3 font-sans text-sm font-semibold text-white shadow-[0_0_20px_rgba(245,158,11,0.3)] transition hover:from-amber-500 hover:to-amber-600 hover:shadow-[0_0_30px_rgba(245,158,11,0.5)]"
           >
             {tGate("viewPlans")}
           </button>
@@ -255,7 +255,7 @@ export default function SpectatorJoinPrompt({ gameId, game, isPrivate }: Props) 
         <button
           onClick={handleJoinAsSpectator}
           disabled={isJoining}
-          className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-red-700 py-3 font-sans text-sm font-semibold text-white shadow-[0_0_20px_rgba(220,38,38,0.3)] transition-all hover:from-red-500 hover:to-red-600 hover:shadow-[0_0_30px_rgba(220,38,38,0.5)] disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-red-700 py-3 font-sans text-sm font-semibold text-white shadow-[0_0_20px_rgba(220,38,38,0.3)] transition hover:from-red-500 hover:to-red-600 hover:shadow-[0_0_30px_rgba(220,38,38,0.5)] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isJoining ? (
             <>

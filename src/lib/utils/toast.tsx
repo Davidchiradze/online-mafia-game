@@ -50,7 +50,7 @@ function show(
   return toastify(<ToastBody type={type} message={message} />, {
     ...BASE_OPTIONS,
     ...options,
-    className: `!bg-[rgba(14,14,22,0.92)] !backdrop-blur-xl !border !border-white/[0.08] !border-l-[3px] ${ACCENT_MAP[type]} !rounded-xl !shadow-[0_8px_32px_rgba(0,0,0,0.5)] !p-3 !min-h-0 [&>div]:!p-0 [&>div]:!m-0`,
+    className: `!bg-[rgba(14,14,22,0.92)] !border !border-white/[0.08] !border-l-[3px] ${ACCENT_MAP[type]} !rounded-xl !shadow-[0_8px_32px_rgba(0,0,0,0.5)] !p-3 !min-h-0 [&>div]:!p-0 [&>div]:!m-0`,
     closeButton: false,
   });
 }

@@ -37,13 +37,13 @@ export function LandingNavbar() {
           <LanguageSwitcher />
           <Link
             href="/auth/signin"
-            className="px-5 py-2 rounded-lg border border-white/20 text-white/80 hover:text-white hover:border-white/40 backdrop-blur-sm transition-all font-sans text-[0.85rem] font-medium"
+            className="px-5 py-2 rounded-lg border border-white/20 text-white/80 hover:text-white hover:border-white/40 backdrop-blur-sm transition font-sans text-[0.85rem] font-medium"
           >
             Sign In
           </Link>
           <Link
             href="/auth/signup"
-            className="px-5 py-2 rounded-lg bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-500 hover:to-red-600 shadow-[0_0_20px_rgba(220,38,38,0.3)] transition-all font-sans text-[0.85rem] font-semibold"
+            className="px-5 py-2 rounded-lg bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-500 hover:to-red-600 shadow-[0_0_20px_rgba(220,38,38,0.3)] transition font-sans text-[0.85rem] font-semibold"
           >
             Play Now
           </Link>
