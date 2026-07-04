@@ -77,12 +77,14 @@ export default function LobbyContent({ games }: Props) {
 
         <div className="mb-8">
           <PromoBanner
-            href="https://www.mafia.ge/ka/news/7"
-            imageUrl="https://www.mafia.ge/uploads/news/news_1782920753_a55c1edd.png"
-            eyebrow={t("promoDate")}
+            href="https://www.mafia.ge/ka/tournament/details/15"
+            bannerImageUrl="https://www.mafia.ge/templates/newassets/img/tournament-banner.png"
+            bannerImageMobileUrl="https://www.mafia.ge/templates/newassets/img/tournament-bannermob.png"
+            cupImageUrl="https://www.mafia.ge/templates/newassets/img/cupImage.png"
+            eyebrow={t("promoEyebrow")}
             title={t("promoTitle")}
-            description={t("promoDescription")}
-            ctaLabel={t("promoCta")}
+            highlight={t("promoHighlight")}
+            status={t("promoStatus")}
           />
         </div>
 

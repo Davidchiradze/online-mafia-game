@@ -248,9 +248,12 @@
       "rejected": "Your request to join {room} was declined"
     },
     "promoDate": "01.07.2026",
-    "promoTitle": "Tbilisi Cup 2026 — 5000₾ Prize Pool",
+    "promoEyebrow": "Tournament",
+    "promoTitle": "Tbilisi Cup 2026 - 5000₾",
+    "promoHighlight": "Summer Season",
+    "promoStatus": "Active",
     "promoDescription": "The Tbilisi Cup 2026 with a 5000₾ prize pool is starting! The final will be streamed on the GI2GI YouTube channel.",
-    "promoCta": "Read more"
+    "promoCta": "View details"
   },
   "nav": {
     "lobby": "Lobby",
