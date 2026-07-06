@@ -17,6 +17,7 @@ import { useGameRoom } from "@/lib/context/gameRoomContext";
 import type { Id } from "@convex/_generated/dataModel";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import AudioPlaybackModal from "@/components/liveKit/AudioPlaybackModal";
+import MicPermissionModal from "@/components/liveKit/MicPermissionModal";
 import CardPickingBoard from "@/components/gameSession/cardPicking/CardPickingBoard";
 
 export default function LiveKitTestComponent({
@@ -64,6 +65,7 @@ export default function LiveKitTestComponent({
         </div>
         <RoomAudioRenderer />
         <AudioPlaybackModal room={room} />
+        <MicPermissionModal />
         <CardPickingBoard />
       </div>
     </RoomContext.Provider>

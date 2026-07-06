@@ -700,6 +700,14 @@
       "enableAudioButton": "Enable Audio",
       "enableAudioBody": "Your browser requires interaction to start audio playback.",
       "enableAudioHint": "or click anywhere outside to enable",
+      "enableMicTitle": "Enable your microphone",
+      "enableMicBody": "The game needs microphone access so you can speak when it's your turn. Allow it now to avoid being cut off later.",
+      "enableMicButton": "Allow microphone",
+      "enableMicRequesting": "Waiting for permission…",
+      "micBlockedTitle": "Microphone is blocked",
+      "micBlockedBody": "Your browser is blocking the microphone for this site. You won't be able to speak until you unblock it:",
+      "micBlockedStep1": "Click the lock icon in your browser's address bar.",
+      "micBlockedStep2": "Set Microphone to “Allow”.",
       "loadingVideo": "Loading…"
     },
     "staffTools": {
