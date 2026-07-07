@@ -74,6 +74,13 @@ export function useGameRoomConnection({
           resolution: { width: 320, height: 240 },
           frameRate: 30,
         },
+        // Force H.264 so encode/decode use the device's hardware codec.
+        // The VP8 default is software-decoded on many phones/Safari, which
+        // pegs the CPU (heat) and starves audio. VP8 stays as an auto backup
+        // via the client's default `backupCodec` for clients without H.264.
+        publishDefaults: {
+          videoCodec: "h264",
+        },
       }),
   );
 
