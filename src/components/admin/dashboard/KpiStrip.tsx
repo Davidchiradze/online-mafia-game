@@ -9,6 +9,7 @@ import {
   Trophy,
   Ban,
   UserPlus,
+  UserCheck,
   Crown,
   type LucideIcon,
 } from "lucide-react";
@@ -53,7 +54,7 @@ function Stat({
         <div className="font-orbitron text-xl font-semibold leading-none text-white">
           {value}
         </div>
-        <div className="mt-1 truncate text-[11px] uppercase tracking-wide text-slate-400">
+        <div className="mt-1 text-[11px] uppercase leading-tight tracking-wide text-slate-400">
           {label}
         </div>
         {sub && (
@@ -80,7 +81,7 @@ export default function KpiStrip() {
 
   return (
     <DashboardCard className="p-0">
-      <div className="grid grid-cols-2 divide-x divide-y divide-white/5 sm:grid-cols-3 lg:grid-cols-7 lg:divide-y-0">
+      <div className="grid grid-cols-2 divide-x divide-y divide-white/5 sm:grid-cols-3 lg:grid-cols-8 lg:divide-y-0">
         <Stat
           live
           accent="emerald"
@@ -109,6 +110,12 @@ export default function KpiStrip() {
           accent="sky"
           value={v(kpi?.finishedGames)}
           label={t("dashboard.kpi.finishedGames")}
+        />
+        <Stat
+          icon={UserCheck}
+          accent="indigo"
+          value={v(kpi?.playersPlayed)}
+          label={t("dashboard.kpi.playersPlayed")}
         />
         <Stat
           icon={UserPlus}

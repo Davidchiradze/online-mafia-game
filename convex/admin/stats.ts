@@ -51,6 +51,7 @@ export const overviewKpis = query({
 
     return {
       totalUsers: profiles.length,
+      playersPlayed: stats.length,
       newThisWeek,
       banned,
       subscribers,
