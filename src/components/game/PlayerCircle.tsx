@@ -56,9 +56,9 @@ export default function PlayerCircle({
           <div
             key={`seat-${String(seatNumber)}`}
             className={
-              "relative rounded-xl backdrop-blur-sm " +
+              "relative rounded-xl " +
               (isOccupied
-                ? "bg-black/40 border border-white/10"
+                ? "bg-black/60 border border-white/10"
                 : "bg-white/[0.03] border border-dashed border-white/20")
             }
             style={{ gridColumn: pos.gridColumn, gridRow: pos.gridRow }}
@@ -79,7 +79,7 @@ export default function PlayerCircle({
         return (
           <motion.div
             key={`player-${playerId}`}
-            className="relative rounded-xl backdrop-blur-sm bg-black/40 border border-white/10"
+            className="relative rounded-xl bg-black/60 border border-white/10"
             style={{
               gridColumn: position.gridColumn,
               gridRow: position.gridRow,

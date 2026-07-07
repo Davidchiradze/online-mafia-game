@@ -15,7 +15,7 @@ export function LandingNavbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-black/30 border-b border-white/5">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-black/50 border-b border-white/5">
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
         <LandingLogo size="md" />
 
@@ -37,7 +37,7 @@ export function LandingNavbar() {
           <LanguageSwitcher />
           <Link
             href="/auth/signin"
-            className="px-5 py-2 rounded-lg border border-white/20 text-white/80 hover:text-white hover:border-white/40 backdrop-blur-sm transition font-sans text-[0.85rem] font-medium"
+            className="px-5 py-2 rounded-lg border border-white/20 text-white/80 hover:text-white hover:border-white/40 transition font-sans text-[0.85rem] font-medium"
           >
             Sign In
           </Link>
@@ -65,7 +65,7 @@ export function LandingNavbar() {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="md:hidden bg-black/90 backdrop-blur-xl border-t border-white/5 px-6 py-6 space-y-4">
+        <div className="md:hidden bg-black/90 border-t border-white/5 px-6 py-6 space-y-4">
           {navLinks.map((item) => (
             <a
               key={item.label}

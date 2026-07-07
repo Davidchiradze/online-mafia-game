@@ -38,7 +38,7 @@ export default function FinishGameButton({ gameId }: FinishGameButtonProps) {
         aria-label={t("ariaLabel")}
         title={t("ariaLabel")}
         onClick={() => setIsModalOpen(true)}
-        className="rounded-full border border-red-500/60 bg-red-600/80 backdrop-blur px-4 py-2 text-xs font-medium text-white hover:bg-red-700/90 transition"
+        className="rounded-full border border-red-500/60 bg-red-600/80 px-4 py-2 text-xs font-medium text-white hover:bg-red-700/90 transition"
       >
         {t("buttonLabel")}
       </button>

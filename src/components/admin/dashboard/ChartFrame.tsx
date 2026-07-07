@@ -48,10 +48,9 @@ export default function ChartFrame({
 /** Shared dark tooltip style for all charts. */
 export const TOOLTIP_STYLE = {
   contentStyle: {
-    background: "rgba(15, 23, 42, 0.92)", // slate-900 glass
+    background: "rgba(15, 23, 42, 0.92)", // slate-900 (near-opaque)
     border: "1px solid rgba(255,255,255,0.12)",
     borderRadius: 12,
-    backdropFilter: "blur(8px)",
     fontSize: 12,
     boxShadow: "0 8px 30px -12px rgba(0,0,0,0.8)",
   },

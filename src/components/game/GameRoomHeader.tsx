@@ -98,7 +98,7 @@ export default function GameRoomHeader() {
   };
   return (
     <>
-      <header className="relative z-20 px-4 sm:px-6 py-3 border-b border-white/10 bg-black/40 backdrop-blur-sm">
+      <header className="relative z-20 px-4 sm:px-6 py-3 border-b border-white/10 bg-black/60">
         <div className="flex items-center justify-between">
           <LandingLogo size="sm" />
 

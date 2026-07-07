@@ -54,7 +54,7 @@ export default function MatchHistoryList({
   if (results.length === 0) {
     const filtersActive = outcome !== "all" || gameType !== "all";
     return (
-      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/10 bg-[#13131a]/40 px-6 py-16 text-center backdrop-blur-md">
+      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/10 bg-[#13131a]/60 px-6 py-16 text-center">
         <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-zinc-500">
           {filtersActive ? (
             <SearchX className="h-7 w-7" />

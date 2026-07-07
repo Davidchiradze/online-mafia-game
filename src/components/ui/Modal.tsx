@@ -69,7 +69,7 @@ export default function Modal({
             }
           : undefined
       }
-      overlayClassName={`fixed inset-0 z-50 flex items-center justify-center px-4 ${isDark ? "bg-black/75 backdrop-blur-sm" : "bg-black/50"}`}
+      overlayClassName={`fixed inset-0 z-50 flex items-center justify-center px-4 ${isDark ? "bg-black/75" : "bg-black/50"}`}
       bodyOpenClassName="overflow-hidden"
     >
       <div className="flex items-start justify-between">

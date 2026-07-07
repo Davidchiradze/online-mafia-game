@@ -13,7 +13,7 @@ const PAGE_SIZE = 10;
 type GameTypeFilter = "all" | (typeof GAME_TYPES)[number];
 
 const SELECT_CLASS =
-  "min-w-[180px] cursor-pointer appearance-none rounded-xl border border-white/5 bg-[#13131a]/60 px-5 py-3.5 font-inter font-medium text-white backdrop-blur-md transition focus:border-[#00ff66]/50 focus:bg-[#13131a]/90 focus:outline-none";
+  "min-w-[180px] cursor-pointer appearance-none rounded-xl border border-white/5 bg-[#13131a]/70 px-5 py-3.5 font-inter font-medium text-white transition focus:border-[#00ff66]/50 focus:bg-[#13131a]/90 focus:outline-none";
 
 export default function ArchiveList() {
   const t = useTranslations("admin");
@@ -55,7 +55,7 @@ export default function ArchiveList() {
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder={t("archive.search")}
-            className="w-full rounded-xl border border-white/5 bg-[#13131a]/60 py-3.5 pl-11 pr-4 font-inter font-medium text-white backdrop-blur-md transition placeholder:text-zinc-500 focus:border-[#00ff66]/50 focus:bg-[#13131a]/90 focus:outline-none"
+            className="w-full rounded-xl border border-white/5 bg-[#13131a]/70 py-3.5 pl-11 pr-4 font-inter font-medium text-white transition placeholder:text-zinc-500 focus:border-[#00ff66]/50 focus:bg-[#13131a]/90 focus:outline-none"
           />
         </div>
 
@@ -85,7 +85,7 @@ export default function ArchiveList() {
           ))}
         </div>
       ) : results.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/10 bg-[#13131a]/40 px-6 py-16 text-center backdrop-blur-md">
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/10 bg-[#13131a]/60 px-6 py-16 text-center">
           <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-zinc-500">
             {filtersActive ? (
               <SearchX className="h-7 w-7" />

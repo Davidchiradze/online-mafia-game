@@ -14,7 +14,7 @@ export default function MaskedCover({ className = "" }: MaskedCoverProps) {
     <div
       className={`absolute inset-0 z-[5] flex items-center justify-center pointer-events-none ${className}`}
     >
-      <span className="flex items-center justify-center p-2 md:p-3 rounded-full border border-white/20 bg-black/40 backdrop-blur-md text-white/80 shadow-[0_0_16px_rgba(0,0,0,0.4)]">
+      <span className="flex items-center justify-center p-2 md:p-3 rounded-full border border-white/20 bg-black/60 text-white/80 shadow-[0_0_16px_rgba(0,0,0,0.4)]">
         <EyeOff className="h-5 w-5 md:h-7 md:w-7" strokeWidth={2} />
       </span>
     </div>

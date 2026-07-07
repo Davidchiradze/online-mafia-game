@@ -58,8 +58,8 @@ export default function YakuzaKillButton({
         border border-b-0
         ${
           isSelected
-            ? "bg-purple-500/15 backdrop-blur-md border-purple-400/30 text-purple-100 shadow-[0_0_16px_rgba(168,85,247,0.2)]"
-            : "bg-black/60 backdrop-blur-md border-purple-400/15 text-purple-200/70 hover:text-purple-100 hover:border-purple-400/30 hover:bg-black/70 cursor-pointer active:scale-95"
+            ? "bg-purple-500/30 border-purple-400/30 text-purple-100 shadow-[0_0_16px_rgba(168,85,247,0.2)]"
+            : "bg-black/75 border-purple-400/15 text-purple-200/70 hover:text-purple-100 hover:border-purple-400/30 hover:bg-black/70 cursor-pointer active:scale-95"
         }
         ${isLoading ? "opacity-50 cursor-wait" : ""}
       `}

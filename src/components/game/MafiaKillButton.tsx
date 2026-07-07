@@ -54,8 +54,8 @@ export default function MafiaKillButton({
         border border-b-0
         ${
           isSelected
-            ? "bg-white/10 backdrop-blur-md border-white/20 text-white shadow-[0_0_16px_rgba(255,255,255,0.15)]"
-            : "bg-black/60 backdrop-blur-md border-white/10 text-white/80 hover:text-white hover:border-white/20 hover:bg-black/70 cursor-pointer active:scale-95"
+            ? "bg-white/20 border-white/20 text-white shadow-[0_0_16px_rgba(255,255,255,0.15)]"
+            : "bg-black/75 border-white/10 text-white/80 hover:text-white hover:border-white/20 hover:bg-black/70 cursor-pointer active:scale-95"
         }
         ${isLoading ? "opacity-50 cursor-wait" : ""}
       `}

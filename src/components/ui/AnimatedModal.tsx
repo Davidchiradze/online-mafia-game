@@ -115,7 +115,7 @@ export default function AnimatedModal({
       {/* Backdrop */}
       <div
         className={`
-          absolute inset-0 bg-black/70 backdrop-blur-sm
+          absolute inset-0 bg-black/70
           transition-opacity duration-300 ease-out pointer-events-none
           ${isAnimating ? "opacity-100" : "opacity-0"}
         `}

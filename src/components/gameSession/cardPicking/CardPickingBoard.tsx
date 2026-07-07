@@ -87,7 +87,7 @@ export default function CardPickingBoard() {
     <AnimatePresence>
       <motion.div
         key="card-picking-board"
-        className="fixed inset-0 z-30 flex flex-col items-center justify-center bg-black/85 px-4 py-8 backdrop-blur-md"
+        className="fixed inset-0 z-30 flex flex-col items-center justify-center bg-black/85 px-4 py-8"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}

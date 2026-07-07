@@ -89,7 +89,7 @@ export default function LobbyStats({
           }) => (
             <div
               key={key}
-              className={`flex items-center gap-4 rounded-xl border p-4 ${border} backdrop-blur-sm`}
+              className={`flex items-center gap-4 rounded-xl border p-4 ${border}`}
               style={{
                 background: `linear-gradient(135deg, ${bg} 0%, transparent 100%)`,
                 boxShadow: `0 4px 20px ${glow}`,

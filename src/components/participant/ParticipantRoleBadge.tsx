@@ -70,7 +70,7 @@ export default function ParticipantRoleBadge({
           e.stopPropagation();
           setRolesRevealed(true);
         }}
-        className={`${BADGE_BASE} cursor-pointer bg-black/60 text-white/90 ring-1 ring-white/20 backdrop-blur-md transition opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto hover:brightness-125 active:scale-95`}
+        className={`${BADGE_BASE} cursor-pointer bg-black/75 text-white/90 ring-1 ring-white/20 transition opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto hover:brightness-125 active:scale-95`}
       >
         {tg("revealRole")}
       </button>
