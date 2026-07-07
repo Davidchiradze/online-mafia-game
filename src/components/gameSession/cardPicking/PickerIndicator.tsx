@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useCardPicking } from "@/hooks/game";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { GAME_PHASES } from "@/lib/constants/game";
@@ -17,6 +18,7 @@ import type { Id } from "@convex/_generated/dataModel";
  * nothing outside the picking phase or before any session exists.
  */
 export default function PickerIndicator() {
+  const t = useTranslations("game");
   const { gameId, gameSessionState } = useGameRoom();
   const { state } = useCardPicking(gameId as Id<"games">);
 
@@ -26,7 +28,7 @@ export default function PickerIndicator() {
   if (state.isComplete) {
     return (
       <p className="text-center text-xs font-medium uppercase tracking-[0.25em] text-emerald-400/90">
-        All cards picked
+        {t("allCardsPicked")}
       </p>
     );
   }
@@ -35,8 +37,8 @@ export default function PickerIndicator() {
 
   return (
     <p className="text-center text-xs font-medium uppercase tracking-[0.25em] text-amber-300/90">
-      <span className="text-white/60">Picking now:</span>{" "}
-      <span className="text-amber-200">Seat #{state.currentSeat}</span>
+      <span className="text-white/60">{t("pickingNow")}</span>{" "}
+      <span className="text-amber-200">{t("seatLabel", { seat: state.currentSeat })}</span>
     </p>
   );
 }

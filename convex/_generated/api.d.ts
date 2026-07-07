@@ -8,7 +8,16 @@
  * @module
  */
 
+import type * as admin_gameLogs from "../admin/gameLogs.js";
+import type * as admin_games from "../admin/games.js";
+import type * as admin_stats from "../admin/stats.js";
+import type * as admin_users from "../admin/users.js";
 import type * as auth_profiles from "../auth/profiles.js";
+import type * as community_maintenance from "../community/maintenance.js";
+import type * as community_messages from "../community/messages.js";
+import type * as community_readState from "../community/readState.js";
+import type * as crons from "../crons.js";
+import type * as game_broadcasts from "../game/broadcasts.js";
 import type * as game_cardPicking from "../game/cardPicking.js";
 import type * as game_dayPhase from "../game/dayPhase.js";
 import type * as game_farewellSpeech from "../game/farewellSpeech.js";
@@ -20,8 +29,11 @@ import type * as game_sessions from "../game/sessions.js";
 import type * as game_spectators from "../game/spectators.js";
 import type * as game_voting from "../game/voting.js";
 import type * as game_webhookHandler from "../game/webhookHandler.js";
+import type * as lib_access from "../lib/access.js";
+import type * as lib_admin from "../lib/admin.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_constants from "../lib/constants.js";
+import type * as lib_entitlements from "../lib/entitlements.js";
 import type * as lib_games from "../lib/games.js";
 import type * as lib_phaseTransitions from "../lib/phaseTransitions.js";
 import type * as lib_profiles from "../lib/profiles.js";
@@ -31,10 +43,17 @@ import type * as lib_winConditions from "../lib/winConditions.js";
 import type * as lobby_games from "../lobby/games.js";
 import type * as lobby_hostTransfer from "../lobby/hostTransfer.js";
 import type * as lobby_joinRequests from "../lobby/joinRequests.js";
+import type * as migrations from "../migrations.js";
+import type * as presence from "../presence.js";
+import type * as refs_admin from "../refs/admin.js";
 import type * as refs_game from "../refs/game.js";
 import type * as refs_history from "../refs/history.js";
 import type * as refs_lobby from "../refs/lobby.js";
+import type * as tables_adminAuditLog from "../tables/adminAuditLog.js";
 import type * as tables_cardPickingSessions from "../tables/cardPickingSessions.js";
+import type * as tables_communityMessages from "../tables/communityMessages.js";
+import type * as tables_communityReadState from "../tables/communityReadState.js";
+import type * as tables_gameBroadcasts from "../tables/gameBroadcasts.js";
 import type * as tables_gameLogPlayers from "../tables/gameLogPlayers.js";
 import type * as tables_gameLogs from "../tables/gameLogs.js";
 import type * as tables_gamePlayerRoles from "../tables/gamePlayerRoles.js";
@@ -57,7 +76,16 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "admin/gameLogs": typeof admin_gameLogs;
+  "admin/games": typeof admin_games;
+  "admin/stats": typeof admin_stats;
+  "admin/users": typeof admin_users;
   "auth/profiles": typeof auth_profiles;
+  "community/maintenance": typeof community_maintenance;
+  "community/messages": typeof community_messages;
+  "community/readState": typeof community_readState;
+  crons: typeof crons;
+  "game/broadcasts": typeof game_broadcasts;
   "game/cardPicking": typeof game_cardPicking;
   "game/dayPhase": typeof game_dayPhase;
   "game/farewellSpeech": typeof game_farewellSpeech;
@@ -69,8 +97,11 @@ declare const fullApi: ApiFromModules<{
   "game/spectators": typeof game_spectators;
   "game/voting": typeof game_voting;
   "game/webhookHandler": typeof game_webhookHandler;
+  "lib/access": typeof lib_access;
+  "lib/admin": typeof lib_admin;
   "lib/auth": typeof lib_auth;
   "lib/constants": typeof lib_constants;
+  "lib/entitlements": typeof lib_entitlements;
   "lib/games": typeof lib_games;
   "lib/phaseTransitions": typeof lib_phaseTransitions;
   "lib/profiles": typeof lib_profiles;
@@ -80,10 +111,17 @@ declare const fullApi: ApiFromModules<{
   "lobby/games": typeof lobby_games;
   "lobby/hostTransfer": typeof lobby_hostTransfer;
   "lobby/joinRequests": typeof lobby_joinRequests;
+  migrations: typeof migrations;
+  presence: typeof presence;
+  "refs/admin": typeof refs_admin;
   "refs/game": typeof refs_game;
   "refs/history": typeof refs_history;
   "refs/lobby": typeof refs_lobby;
+  "tables/adminAuditLog": typeof tables_adminAuditLog;
   "tables/cardPickingSessions": typeof tables_cardPickingSessions;
+  "tables/communityMessages": typeof tables_communityMessages;
+  "tables/communityReadState": typeof tables_communityReadState;
+  "tables/gameBroadcasts": typeof tables_gameBroadcasts;
   "tables/gameLogPlayers": typeof tables_gameLogPlayers;
   "tables/gameLogs": typeof tables_gameLogs;
   "tables/gamePlayerRoles": typeof tables_gamePlayerRoles;
@@ -126,4 +164,67 @@ export declare const internal: FilterApi<
   FunctionReference<any, "internal">
 >;
 
-export declare const components: {};
+export declare const components: {
+  presence: {
+    public: {
+      disconnect: FunctionReference<
+        "mutation",
+        "internal",
+        { scheduled?: boolean; sessionToken: string },
+        null
+      >;
+      heartbeat: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          interval?: number;
+          roomId: string;
+          sessionId: string;
+          userId: string;
+        },
+        { roomToken: string; sessionToken: string }
+      >;
+      list: FunctionReference<
+        "query",
+        "internal",
+        { limit?: number; roomToken: string },
+        Array<{
+          data?: any;
+          lastDisconnected: number;
+          online: boolean;
+          userId: string;
+        }>
+      >;
+      listRoom: FunctionReference<
+        "query",
+        "internal",
+        { limit?: number; onlineOnly?: boolean; roomId: string },
+        Array<{ lastDisconnected: number; online: boolean; userId: string }>
+      >;
+      listUser: FunctionReference<
+        "query",
+        "internal",
+        { limit?: number; onlineOnly?: boolean; userId: string },
+        Array<{ lastDisconnected: number; online: boolean; roomId: string }>
+      >;
+      removeRoom: FunctionReference<
+        "mutation",
+        "internal",
+        { roomId: string },
+        null
+      >;
+      removeRoomUser: FunctionReference<
+        "mutation",
+        "internal",
+        { roomId: string; userId: string },
+        null
+      >;
+      updateRoomUser: FunctionReference<
+        "mutation",
+        "internal",
+        { data?: any; roomId: string; userId: string },
+        null
+      >;
+    };
+  };
+};

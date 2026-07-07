@@ -1,5 +1,13 @@
+import { ConvexError } from "convex/values";
 import { QueryCtx, MutationCtx } from "../_generated/server";
-import { Id } from "../_generated/dataModel";
+import { Doc, Id } from "../_generated/dataModel";
+import {
+  type AccessRole,
+  type Permission,
+  normalizeRole,
+  roleHasPermission,
+} from "./access";
+import { type Feature, hasFeature } from "./entitlements";
 
 /**
  * Returns the external PHP `accounts.id` from the validated JWT.
@@ -13,7 +21,7 @@ export async function getAuthenticatedAccountId(
 ): Promise<string> {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) {
-    throw new Error("Not authenticated");
+    throw new ConvexError({ code: "NOT_AUTHENTICATED", message: "Not authenticated" });
   }
   return identity.subject;
 }
@@ -29,13 +37,114 @@ export async function getAuthenticatedAccountId(
 export async function getAuthenticatedUser(
   ctx: QueryCtx | MutationCtx,
 ): Promise<Id<"profiles">> {
+  return (await getAuthenticatedProfile(ctx))._id;
+}
+
+/**
+ * Returns the full authenticated profile document.
+ * Throws if not authenticated or the profile has not been synced yet.
+ */
+export async function getAuthenticatedProfile(
+  ctx: QueryCtx | MutationCtx,
+): Promise<Doc<"profiles">> {
   const accountId = await getAuthenticatedAccountId(ctx);
   const profile = await ctx.db
     .query("profiles")
     .withIndex("by_accountId", (q) => q.eq("accountId", accountId))
     .unique();
   if (!profile) {
-    throw new Error("Profile not found. Please complete profile sync.");
+    throw new ConvexError({ code: "PROFILE_SYNC_REQUIRED", message: "Profile not found. Please complete profile sync." });
   }
-  return profile._id;
+  return profile;
+}
+
+/**
+ * Throws `NOT_VERIFIED` if the PHP account behind `profile` is not verified
+ * (`status_id === 0`, synced into `profiles.verified`). Pure assertion on an
+ * already-loaded profile so the authoritative gates below can reuse it without
+ * a second query.
+ */
+export function assertVerified(profile: Doc<"profiles">): void {
+  if (profile.verified === false) {
+    throw new ConvexError({
+      code: "NOT_VERIFIED",
+      message: "Your account is not verified. Please verify it on mafia.ge.",
+    });
+  }
+}
+
+/**
+ * Authoritative verification gate. Throws if the user is not authenticated,
+ * has not synced a profile, or the account is unverified. Returns the profile.
+ */
+export async function requireVerified(
+  ctx: QueryCtx | MutationCtx,
+): Promise<Doc<"profiles">> {
+  const profile = await getAuthenticatedProfile(ctx);
+  assertVerified(profile);
+  return profile;
+}
+
+/**
+ * Authoritative permission gate. Call at the start of any admin/moderation
+ * mutation or query. Throws `FORBIDDEN` if the user's role lacks `permission`.
+ * Returns the profile so the handler can reuse it.
+ */
+export async function requirePermission(
+  ctx: QueryCtx | MutationCtx,
+  permission: Permission,
+): Promise<Doc<"profiles">> {
+  const profile = await getAuthenticatedProfile(ctx);
+  assertVerified(profile);
+  if (!roleHasPermission(profile.role, permission)) {
+    throw new ConvexError({
+      code: "FORBIDDEN",
+      message: "You do not have permission to perform this action.",
+    });
+  }
+  return profile;
+}
+
+/**
+ * Authoritative subscription gate. Call at the start of any mutation/query that
+ * a paid feature unlocks. Throws `SUBSCRIPTION_REQUIRED` if the user's tier (or
+ * staff override) does not grant `feature`. Returns the profile for reuse.
+ *
+ * Distinct from `requirePermission` (access roles): this is the subscription
+ * axis. Moderators/admins are granted the highest tier's features — see
+ * convex/lib/entitlements.ts.
+ */
+export async function requireFeature(
+  ctx: QueryCtx | MutationCtx,
+  feature: Feature,
+): Promise<Doc<"profiles">> {
+  const profile = await getAuthenticatedProfile(ctx);
+  assertVerified(profile);
+  if (
+    !hasFeature(
+      { role: profile.role, subscription: profile.subscription },
+      feature,
+    )
+  ) {
+    throw new ConvexError({
+      code: "SUBSCRIPTION_REQUIRED",
+      message: "An active subscription is required to perform this action.",
+    });
+  }
+  return profile;
+}
+
+/** Authoritative role gate (prefer `requirePermission` for capability checks). */
+export async function requireRole(
+  ctx: QueryCtx | MutationCtx,
+  role: AccessRole,
+): Promise<Doc<"profiles">> {
+  const profile = await getAuthenticatedProfile(ctx);
+  if (normalizeRole(profile.role) !== role) {
+    throw new ConvexError({
+      code: "FORBIDDEN",
+      message: "You do not have the required role for this action.",
+    });
+  }
+  return profile;
 }

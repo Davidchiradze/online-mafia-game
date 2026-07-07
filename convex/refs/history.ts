@@ -79,6 +79,8 @@ export type PlayerStats = {
   losses: number;
   noContests: number;
   winRate: number;
+  currentStreak: number;
+  bestStreak: number;
   roleStats: RoleStat[];
 };
 

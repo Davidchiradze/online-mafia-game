@@ -10,6 +10,7 @@ export const gamePlayers = defineTable({
   fouls: v.number(),
   foulSpeakStartedAt: v.optional(v.number()),
   state: v.optional(v.string()),
+  isReady: v.optional(v.boolean()),
 })
   .index("by_gameId", ["gameId"])
   .index("by_gameId_playerId", ["gameId", "playerId"]);

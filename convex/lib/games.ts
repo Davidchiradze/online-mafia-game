@@ -1,3 +1,4 @@
+import { ConvexError } from "convex/values";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -10,7 +11,7 @@ import { roleToFaction } from "./roles";
 export async function getGameById(db: DatabaseReader, gameId: Id<"games">) {
   const game = await db.get(gameId);
   if (!game) {
-    throw new Error("Game not found");
+    throw new ConvexError({ code: "GAME_NOT_FOUND", message: "Game not found" });
   }
   return game;
 }
@@ -22,7 +23,7 @@ export async function assertIsHost(
 ) {
   const game = await getGameById(db, gameId);
   if (game.hostId !== userId) {
-    throw new Error("Only the host can perform this action");
+    throw new ConvexError({ code: "HOST_ONLY", message: "Only the host can perform this action" });
   }
   return game;
 }
@@ -101,6 +102,7 @@ const GAME_RELATED_TABLES = [
   "nightPhaseSessions",
   "votingSessions",
   "cardPickingSessions",
+  "gameBroadcasts",
 ] as const;
 
 export async function deleteGameAndRelations(
@@ -326,10 +328,18 @@ async function bumpPlayerStats(
       wins: w,
       losses: l,
       noContests: nc,
+      currentStreak: w,
+      bestStreak: w,
       roleStats: [{ role, matches: 1, wins: w, losses: l }],
     });
     return;
   }
+
+  // Win → extend streak, loss → reset, no-contest → leave unchanged.
+  const prevStreak = existing.currentStreak ?? 0;
+  const currentStreak =
+    outcome === "win" ? prevStreak + 1 : outcome === "loss" ? 0 : prevStreak;
+  const bestStreak = Math.max(existing.bestStreak ?? 0, currentStreak);
 
   const roleStats = [...existing.roleStats];
   const idx = roleStats.findIndex((r) => r.role === role);
@@ -350,6 +360,8 @@ async function bumpPlayerStats(
     wins: existing.wins + w,
     losses: existing.losses + l,
     noContests: existing.noContests + nc,
+    currentStreak,
+    bestStreak,
     roleStats,
   });
 }

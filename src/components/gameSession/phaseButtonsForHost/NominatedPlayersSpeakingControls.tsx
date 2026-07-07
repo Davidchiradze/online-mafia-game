@@ -4,6 +4,7 @@ import React, { useState, useCallback } from "react";
 import { useMutation } from "convex/react";
 import { dayPhase } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
+import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { SPEAKING_STATE } from "@/lib/constants/game";
 import PhaseButton from "@/components/ui/PhaseButton";
@@ -27,6 +28,7 @@ type Props = {
 export default function NominatedPlayersSpeakingControls({
   gameSessionState,
 }: Props) {
+  const t = useTranslations("game.host");
   const { gameId } = useGameRoom();
   const [isLoading, setIsLoading] = useState(false);
   const advanceNominatedSpeaker = useMutation(dayPhase.advanceNominatedSpeaker);
@@ -96,7 +98,9 @@ export default function NominatedPlayersSpeakingControls({
 
   if (currentSpeaker === null || speakingOrder.length === 0) {
     return (
-      <div className="text-sm text-white/50">No nominated players speaking</div>
+      <div className="text-sm text-white/50">
+        {t("noNominatedPlayersSpeaking")}
+      </div>
     );
   }
 
@@ -106,12 +110,12 @@ export default function NominatedPlayersSpeakingControls({
       {foulEliminationOccurred && (
         <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 text-center w-full">
           <p className="text-amber-300 text-sm font-medium">
-            Player eliminated by fouls
+            {t("playerEliminatedByFouls")}
           </p>
           <p className="text-amber-400/70 text-xs mt-1">
             {isPaused
-              ? "Continue to night phase"
-              : "Current speaker can finish, then continue to night phase"}
+              ? t("continueToNightPhase")
+              : t("speakerCanFinishThenNight")}
           </p>
         </div>
       )}
@@ -127,7 +131,7 @@ export default function NominatedPlayersSpeakingControls({
           return (
             <div
               key={seat}
-              className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border transition-all ${
+              className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border transition ${
                 isActive
                   ? "bg-emerald-500/20 text-emerald-300 border-emerald-500 ring-2 ring-emerald-500/30"
                   : isNext
@@ -138,12 +142,12 @@ export default function NominatedPlayersSpeakingControls({
               }`}
               title={
                 isActive
-                  ? "Currently speaking"
+                  ? t("currentlySpeaking")
                   : isNext
-                    ? "Next speaker"
+                    ? t("nextSpeaker")
                     : hasSpoken
-                      ? "Finished"
-                      : "Waiting"
+                      ? t("finished")
+                      : t("waiting")
               }
             >
               {seat}
@@ -160,7 +164,7 @@ export default function NominatedPlayersSpeakingControls({
             isLoading={isLoading}
             disableOnMountMs={BUTTON_RENDER_DELAY_MS}
             disableResetKey={disableResetKey}
-            label="Finish"
+            label={t("finish")}
             variant="danger"
           />
         ) : (
@@ -169,7 +173,7 @@ export default function NominatedPlayersSpeakingControls({
             isLoading={isLoading}
             disableOnMountMs={BUTTON_RENDER_DELAY_MS}
             disableResetKey={disableResetKey}
-            label="Finish"
+            label={t("finish")}
             variant="danger"
           />
         )
@@ -179,7 +183,7 @@ export default function NominatedPlayersSpeakingControls({
           isLoading={isLoading}
           disableOnMountMs={BUTTON_RENDER_DELAY_MS}
           disableResetKey={disableResetKey}
-          label={isLastSpeaker ? "Finish" : "Start"}
+          label={isLastSpeaker ? t("finish") : t("start")}
           variant={isLastSpeaker ? "danger" : "success"}
         />
       ) : (
@@ -188,7 +192,7 @@ export default function NominatedPlayersSpeakingControls({
           isLoading={isLoading}
           disableOnMountMs={BUTTON_RENDER_DELAY_MS}
           disableResetKey={disableResetKey}
-          label="Finish"
+          label={t("finish")}
           variant="danger"
         />
       )}

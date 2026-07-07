@@ -68,14 +68,20 @@ export function computeSpeakingOrder(
   return { speakingOrder, openerIndex };
 }
 
+/**
+ * Returns the next speaker after the current one, skipping any seat not in
+ * `aliveSeats` (e.g. eliminated by fouls mid-round). Returns null when no alive
+ * speaker remains — i.e. the round is complete. Omit `aliveSeats` to advance by
+ * position only.
+ */
 export function getNextSpeaker(
   currentSpeakerIndex: number,
   speakingOrder: number[],
+  aliveSeats?: ReadonlySet<number | undefined>,
 ): number | null {
   const pos = speakingOrder.indexOf(currentSpeakerIndex);
-  if (pos === -1) {
-    return speakingOrder.length > 0 ? speakingOrder[0] : null;
+  for (let i = pos + 1; i < speakingOrder.length; i++) {
+    if (!aliveSeats || aliveSeats.has(speakingOrder[i])) return speakingOrder[i];
   }
-  const next = pos + 1;
-  return next >= speakingOrder.length ? null : speakingOrder[next];
+  return null;
 }

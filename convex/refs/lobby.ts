@@ -15,6 +15,7 @@ type GamePlayer = {
   fouls: number;
   foulSpeakStartedAt?: number;
   state?: string;
+  avatar?: string;
 };
 
 type GameSpectator = {
@@ -23,6 +24,7 @@ type GameSpectator = {
   gameId: Id<"games">;
   userId: Id<"profiles">;
   nickname: string;
+  avatar?: string;
 };
 
 type GameWithRelations = {
@@ -44,11 +46,17 @@ type Profile = {
   _creationTime: number;
   accountId: string;
   email?: string;
-  username?: string;
   name?: string;
   nickname: string;
   avatar?: string;
   role?: string;
+  amount?: string;
+  subscription?: {
+    packageId: number;
+    from?: string;
+    to?: string;
+    active: boolean;
+  };
   verified: boolean;
   createdAt: number;
   updatedAt: number;
@@ -58,11 +66,18 @@ type UpsertFromPhpArgs = {
   secret: string;
   accountId: string;
   email?: string;
-  username?: string;
+  nickname?: string;
   name?: string;
   avatar?: string;
   role?: string;
   amount?: string;
+  verified?: boolean;
+  subscription?: {
+    packageId: number;
+    from?: string;
+    to?: string;
+    active: boolean;
+  };
 };
 
 export const authProfiles = {
@@ -85,6 +100,7 @@ type JoinRequestDoc = {
   gameId: Id<"games">;
   requesterId: Id<"profiles">;
   requesterNickname: string;
+  requesterAvatar?: string;
   status: JoinRequestStatus;
 };
 
@@ -97,6 +113,16 @@ export const joinRequests = {
   myStatus: makeFunctionReference<"query", { gameId: Id<"games"> }, MyJoinStatus>(
     "lobby/joinRequests:myStatus",
   ),
+  myActiveRequests: makeFunctionReference<
+    "query",
+    Record<string, never>,
+    {
+      requestId: Id<"joinRequests">;
+      gameId: Id<"games">;
+      gameName: string;
+      status: JoinRequestStatus;
+    }[]
+  >("lobby/joinRequests:myActiveRequests"),
   checkOrRequest: makeFunctionReference<
     "mutation",
     { gameId: Id<"games"> },

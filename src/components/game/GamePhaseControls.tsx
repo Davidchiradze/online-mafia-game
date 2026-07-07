@@ -22,6 +22,7 @@ import ContinueNextRoundButton from "../gameSession/phaseButtonsForHost/Continue
 import EndGameControls from "../gameSession/phaseButtonsForHost/EndGameControls";
 import DayPhaseSpeakingControls from "../gameSession/phaseButtonsForHost/DayPhaseSpeakingControls";
 import StartNominatedPlayersSpeakButton from "../gameSession/phaseButtonsForHost/StartNominatedPlayersSpeakButton";
+import StartVotingButton from "../gameSession/phaseButtonsForHost/StartVotingButton";
 import NominatedPlayersSpeakingControls from "../gameSession/phaseButtonsForHost/NominatedPlayersSpeakingControls";
 import NightActionsDisplay from "./NightActionsDisplay";
 import PhaseTitle from "../ui/PhaseTitle";
@@ -57,6 +58,12 @@ const GamePhaseControls = () => {
         canFinish={!gameSessionState.isFinished}
       />
     );
+  }
+
+  // The game was finished with no decided winner (e.g. an admin force-ended it):
+  // show the "No Contest" end state instead of stale live-phase controls.
+  if (gameSessionState.isFinished) {
+    return <WinnerBanner gameId={gameId} winner={null} />;
   }
 
   const currentPhase = gameSessionState.gamePhase;
@@ -125,7 +132,9 @@ const GamePhaseControls = () => {
 
       case GAME_PHASES[16]: // "day_phase"
         if (isSpeakingComplete(gameSessionState.currentSpeakerIndex)) {
-          return (
+          return gameSessionState.withoutSelfJustification ? (
+            <StartVotingButton gameSessionState={gameSessionState} />
+          ) : (
             <StartNominatedPlayersSpeakButton
               gameSessionState={gameSessionState}
             />

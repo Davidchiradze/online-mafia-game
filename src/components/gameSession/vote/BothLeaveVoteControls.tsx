@@ -2,6 +2,7 @@
 
 import { useCallback } from "react";
 import { useMutation } from "convex/react";
+import { useTranslations } from "next-intl";
 import { voting } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
@@ -31,6 +32,7 @@ export function BothLeaveVoteControls({
   resultMessage,
   setResultMessage,
 }: Props) {
+  const t = useTranslations("game");
   const { gameId, votingSession, voteData } = useGameRoom();
   const { timeLeft, isLocalVoting, startLocalVoting, stopLocalVoting } =
     useVotingTimer();
@@ -90,11 +92,16 @@ export function BothLeaveVoteControls({
           gameId: gameId as Id<"games">,
           candidates: result.candidates,
         });
-        setResultMessage(`All ${result.candidates.length} players farewell...`);
+        setResultMessage(
+          t("bothLeaveFarewellResult", { count: result.candidates.length }),
+        );
       } else {
         await skipToNightAfterTieMutation({ gameId: gameId as Id<"games"> });
         setResultMessage(
-          `Vote failed (${result.voteCount}/${result.totalVoters}). Night...`,
+          t("bothLeaveFailResult", {
+            voteCount: result.voteCount,
+            totalVoters: result.totalVoters,
+          }),
         );
       }
     } catch (e) {
@@ -120,8 +127,8 @@ export function BothLeaveVoteControls({
 
   // Status text for when not voting
   const getStatusText = () => {
-    if (voteEnded) return `${bothLeaveVotes.length} voted yes`;
-    return "Ready to vote";
+    if (voteEnded) return t("bothLeaveVotedYes", { count: bothLeaveVotes.length });
+    return t("readyToVote");
   };
 
   return (
@@ -142,7 +149,7 @@ export function BothLeaveVoteControls({
             fontWeight: 700,
           }}
         >
-          Both Leave Vote
+          {t("bothLeaveVoteLabel")}
         </span>
       </div>
 
@@ -160,14 +167,14 @@ export function BothLeaveVoteControls({
         className="text-xs text-center text-white/50"
         style={{ fontFamily: "var(--font-inter), sans-serif" }}
       >
-        Should all {candidates.length} leave?
+        {t("bothLeaveQuestion", { count: candidates.length })}
       </div>
 
       {/* Timer / Status */}
       {isVoting ? (
         <VotingTimer
           timeLeft={timeLeft}
-          subtitle={`${bothLeaveVotes.length} votes`}
+          subtitle={t("bothLeaveVotedYes", { count: bothLeaveVotes.length })}
         />
       ) : (
         <div

@@ -1,10 +1,12 @@
 "use client";
 
 import React, { useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { useVotingButton } from "@/hooks/game/useVotingButton";
 
 export default function VotingDisplay() {
+  const t = useTranslations("game.voting");
   const { votingSession, gameSessionState, players, userId, gameId, voteData } =
     useGameRoom();
 
@@ -39,7 +41,7 @@ export default function VotingDisplay() {
       <div className="w-full flex flex-col items-center gap-3">
         <div className="both-leave-header w-full px-4 py-2 rounded-lg border text-center">
           <span className="font-orbitron text-amber-300 text-xs uppercase tracking-wider font-bold">
-            Both Leave Vote
+            {t("bothLeaveVote")}
           </span>
         </div>
 
@@ -54,20 +56,20 @@ export default function VotingDisplay() {
         </div>
 
         <div className="font-inter text-xs text-white/50 text-center">
-          Should all {candidates.length} leave?
+          {t("shouldAllLeave", { count: candidates.length })}
         </div>
 
         {hasVoted ? (
-          <VotedBadge />
+          <VotedBadge t={t} />
         ) : isVotingActive ? (
           <VoteButton
-            label={isSubmitting ? "..." : `👍 Yes (${timeLeft}s)`}
+            label={isSubmitting ? "..." : t("voteYes", { seconds: timeLeft })}
             enabled={isEnabled && !isSubmitting}
             onClick={submitVote}
             variant="danger"
           />
         ) : (
-          <WaitingBadge />
+          <WaitingBadge t={t} />
         )}
       </div>
     );
@@ -77,7 +79,7 @@ export default function VotingDisplay() {
     return (
       <div className="results-waiting w-full px-4 py-3 rounded-lg border text-center">
         <span className="font-orbitron text-xs text-white/50 uppercase tracking-wider">
-          Waiting for results...
+          {t("waitingForResults")}
         </span>
       </div>
     );
@@ -87,12 +89,12 @@ export default function VotingDisplay() {
     return (
       <div className="w-full flex flex-col items-center gap-3">
         <div className="font-orbitron text-xs uppercase tracking-wider text-amber-400/80">
-          Last Candidate
+          {t("lastCandidate")}
         </div>
 
         <CandidateBadge seat={currentCandidate} color="amber" />
 
-        {hasVoted ? <VotedBadge /> : <AutoVotedBadge />}
+        {hasVoted ? <VotedBadge t={t} /> : <AutoVotedBadge t={t} />}
       </div>
     );
   }
@@ -100,22 +102,22 @@ export default function VotingDisplay() {
   return (
     <div className="w-full flex flex-col items-center gap-3">
       <div className="font-orbitron text-xs uppercase tracking-wider text-white/50">
-        Vote against
+        {t("voteAgainst")}
       </div>
 
       <CandidateBadge seat={currentCandidate} color="red" />
 
       {hasVoted ? (
-        <VotedBadge />
+        <VotedBadge t={t} />
       ) : isVotingActive ? (
         <VoteButton
-          label={isSubmitting ? "..." : `👍 Vote (${timeLeft}s)`}
+          label={isSubmitting ? "..." : t("voteNow", { seconds: timeLeft })}
           enabled={isEnabled && !isSubmitting}
           onClick={submitVote}
           variant="success"
         />
       ) : (
-        <WaitingBadge />
+        <WaitingBadge t={t} />
       )}
     </div>
   );
@@ -130,7 +132,7 @@ function CandidateBadge({
 }) {
   const badgeClass = color === "red" ? "candidate-badge-red" : "candidate-badge-amber";
   const textClass = color === "red" ? "text-red-300" : "text-amber-300";
-  
+
   return (
     <div className={`${badgeClass} px-5 py-2 rounded-lg border`}>
       <span className={`font-orbitron text-xl font-bold ${textClass}`}>
@@ -163,26 +165,28 @@ function VoteButton({
   );
 }
 
-function VotedBadge() {
+type TFunction = ReturnType<typeof useTranslations<"game.voting">>;
+
+function VotedBadge({ t }: { t: TFunction }) {
   return (
     <div className="badge-voted font-orbitron text-xs">
-      ✓ Voted
+      ✓ {t("voted")}
     </div>
   );
 }
 
-function AutoVotedBadge() {
+function AutoVotedBadge({ t }: { t: TFunction }) {
   return (
     <div className="badge-auto-voted font-orbitron text-xs">
-      Auto-voted
+      {t("autoVoted")}
     </div>
   );
 }
 
-function WaitingBadge() {
+function WaitingBadge({ t }: { t: TFunction }) {
   return (
     <div className="badge-waiting font-orbitron text-xs">
-      Wait for host...
+      {t("waitForHost")}
     </div>
   );
 }

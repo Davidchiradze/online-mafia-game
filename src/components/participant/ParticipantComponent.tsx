@@ -1,7 +1,9 @@
 "use client";
 
 import { TrackReferenceOrPlaceholder } from "@livekit/components-react";
+import { Check } from "lucide-react";
 import { useCallback, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { FOULS } from "@/lib/constants/game";
 
 // Context
@@ -32,7 +34,6 @@ import { useFoulNotification } from "@/hooks/game/useFoulNotification";
 // Components
 import ReadyButton from "@/components/ui/ReadyButton";
 import ParticipantMenuButton from "./ParticipantMenuButton";
-import SpeakingProgressBar from "./SpeakingProgressBar";
 import ParticipantOverlay from "./ParticipantOverlay";
 import ParticipantBadges from "./ParticipantBadges";
 import NominationFoulSection from "./NominationFoulSection";
@@ -56,6 +57,8 @@ export default function ParticipantComponent({
   player: NonNullable<ReturnType<typeof useGameRoom>["players"]>[number];
 }) {
   const { gameSessionState, room } = useGameRoom();
+  const tg = useTranslations("game");
+  const tc = useTranslations("common");
 
   // Basic participant state
   const {
@@ -67,13 +70,13 @@ export default function ParticipantComponent({
     isTargetHost,
   } = useParticipantState(trackRef, player, currentProfileId, hostProfileId);
 
-  // Ready state
+  // Ready state (backed by the gamePlayers.isReady column in Convex)
   const {
     isReady,
     markReady,
     markUnready,
     isLoading: isLoadingReady,
-  } = useParticipantReady(gameId, participantId, trackRef);
+  } = useParticipantReady(gameId, player.isReady ?? false);
 
   // Visibility state
   const { visibilityState, isTargetDead } = useParticipantVisibility(
@@ -116,7 +119,7 @@ export default function ParticipantComponent({
   }, [gameSessionState?.gamePhase]);
 
   // Speaking state
-  const { isSpeaking, isParticipantFoulSpeaking, boxShadowClass } =
+  const { isSpeaking, isParticipantFoulSpeaking, speakerBorderClass } =
     useParticipantSpeaking(
       gameSessionState,
       player.seatNumber ?? null,
@@ -249,7 +252,7 @@ export default function ParticipantComponent({
   return (
     <div
       tabIndex={0}
-      className={`relative w-full h-full flex flex-col items-stretch justify-stretch text-sm text-gray-200 group transition-shadow duration-300 rounded-xl overflow-hidden outline-none ${boxShadowClass}`}
+      className={`relative w-full h-full flex flex-col items-stretch justify-stretch text-sm text-gray-200 group transition duration-300 rounded-xl overflow-hidden outline-none ${speakerBorderClass}`}
       onMouseLeave={() => setMenuOpen(false)}
       onClick={handleTileClick}
     >
@@ -275,6 +278,7 @@ export default function ParticipantComponent({
         showNominationEffect={showNominationEffect}
         playerId={(player.playerId as string) || ""}
         onToggleMic={handleToggleMic}
+        speakingProgress={isSpeaking && !isTargetDead ? speakingProgress : 0}
       />
 
       {/* Lobby menu - kick/make host */}
@@ -285,21 +289,25 @@ export default function ParticipantComponent({
           onCloseMenu={() => setMenuOpen(false)}
           items={[
             {
-              label: "Kick player",
+              label: tg("kickPlayer"),
               onClick: onKick,
-              className: "text-red-600 dark:text-red-400",
+              destructive: true,
             },
-            { label: "Make host", onClick: onMakeHost },
-            { label: "Mute player", onClick: handleMutePlayer },
+            { label: tg("makeHost"), onClick: onMakeHost },
+            { label: tg("mutePlayer"), onClick: handleMutePlayer },
           ]}
-          ariaLabel="Participant settings"
+          ariaLabel={tg("participantSettings")}
         />
       )}
 
-      {/* Ready indicator */}
+      {/* Ready indicator — centered glassy badge. For the local player the
+          interactive Ready/Cancel button renders on top of it at the same
+          spot (revealed on hover), so it doubles as the resting state. */}
       {!gameSessionState && isReady && (
-        <div className="absolute right-1 top-[34px] md:right-2 md:top-2 z-20 w-5 h-5 md:w-6 md:h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px] md:text-xs font-bold shadow">
-          ✓
+        <div className="absolute bottom-2 right-2 md:bottom-3 md:right-3 z-20 pointer-events-none">
+          <span className="flex items-center justify-center p-1 md:p-2 rounded-full border border-emerald-400/40 bg-emerald-500/30 text-emerald-200 shadow-[0_0_16px_rgba(16,185,129,0.25)]">
+            <Check className="h-3.5 w-3.5 md:h-6 md:w-6" strokeWidth={3} />
+          </span>
         </div>
       )}
 
@@ -344,6 +352,8 @@ export default function ParticipantComponent({
             onReady={onReady}
             onUnready={onUnready}
             disabled={isLoadingReady}
+            labelReady={tg("ready")}
+            labelUnready={tc("cancel")}
             className={`${
               isMobileReadyVisible ? "flex" : "hidden"
             } md:group-hover:flex flex items-center justify-center`}
@@ -351,10 +361,6 @@ export default function ParticipantComponent({
         </div>
       )}
 
-      {/* Speaking progress bar */}
-      {isSpeaking && !isTargetDead && (
-        <SpeakingProgressBar progress={speakingProgress} />
-      )}
     </div>
   );
 }

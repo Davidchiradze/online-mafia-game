@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
+import { useTranslations } from "next-intl";
 import { joinRequests } from "@convex/refs/lobby";
 import Drawer from "@/components/ui/Drawer";
+import UserAvatar from "@/components/ui/UserAvatar";
 import { Check, X, UserPlus, Users } from "lucide-react";
 import type { Id } from "@convex/_generated/dataModel";
 
@@ -15,22 +17,16 @@ type Props = {
 
 type RequestStatus = "pending" | "accepted" | "rejected";
 
-const STATUS_CONFIG: Record<
-  RequestStatus,
-  { label: string; dot: string; row: string }
-> = {
+const STATUS_STYLE: Record<RequestStatus, { dot: string; row: string }> = {
   pending: {
-    label: "Pending",
     dot: "bg-amber-400 shadow-[0_0_6px_rgba(245,158,11,0.5)]",
     row: "border-amber-500/20 bg-amber-500/[0.04]",
   },
   accepted: {
-    label: "Accepted",
     dot: "bg-emerald-400 shadow-[0_0_6px_rgba(16,185,129,0.5)]",
     row: "border-emerald-500/20 bg-emerald-500/[0.04]",
   },
   rejected: {
-    label: "Rejected",
     dot: "bg-red-400/60",
     row: "border-red-500/10 bg-red-500/[0.03]",
   },
@@ -38,6 +34,13 @@ const STATUS_CONFIG: Record<
 
 export default function JoinRequestsDrawer({ gameId, open, onClose }: Props) {
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const t = useTranslations("game.joinRequests");
+
+  const STATUS_CONFIG: Record<RequestStatus, { label: string; dot: string; row: string }> = {
+    pending: { label: t("statusPending"), ...STATUS_STYLE.pending },
+    accepted: { label: t("statusAccepted"), ...STATUS_STYLE.accepted },
+    rejected: { label: t("statusRejected"), ...STATUS_STYLE.rejected },
+  };
 
   const requests = useQuery(
     joinRequests.listByGame,
@@ -82,7 +85,7 @@ export default function JoinRequestsDrawer({ gameId, open, onClose }: Props) {
     <Drawer
       open={open}
       onClose={onClose}
-      title="Join Requests"
+      title={t("drawerTitle")}
       size="md"
       variant="dark"
     >
@@ -90,7 +93,9 @@ export default function JoinRequestsDrawer({ gameId, open, onClose }: Props) {
         <div className="mb-4 flex items-center gap-2 px-3 py-2 rounded-lg border border-amber-500/20 bg-amber-500/[0.06]">
           <UserPlus className="w-4 h-4 text-amber-400 shrink-0" />
           <span className="text-amber-300/90 text-xs font-medium font-inter">
-            {pendingCount} pending {pendingCount === 1 ? "request" : "requests"}
+            {pendingCount === 1
+              ? t("pendingOne", { count: pendingCount })
+              : t("pendingMany", { count: pendingCount })}
           </span>
         </div>
       )}
@@ -101,7 +106,7 @@ export default function JoinRequestsDrawer({ gameId, open, onClose }: Props) {
             <Users className="w-6 h-6 text-gray-600" />
           </div>
           <p className="text-gray-500 font-inter text-sm">
-            No join requests yet
+            {t("noRequestsYet")}
           </p>
         </div>
       ) : (
@@ -122,6 +127,11 @@ export default function JoinRequestsDrawer({ gameId, open, onClose }: Props) {
                   <span
                     className={`w-2 h-2 rounded-full shrink-0 ${config.dot}`}
                   />
+                  <UserAvatar
+                    src={r.requesterAvatar}
+                    name={r.requesterNickname}
+                    size={28}
+                  />
                   <span className="text-white/90 text-sm font-medium font-inter truncate">
                     {r.requesterNickname}
                   </span>
@@ -135,7 +145,7 @@ export default function JoinRequestsDrawer({ gameId, open, onClose }: Props) {
                         disabled={isLoading}
                         onClick={() => handleAccept(r._id)}
                         className="flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/25 transition-colors disabled:opacity-50 cursor-pointer"
-                        aria-label={`Accept ${r.requesterNickname}`}
+                        aria-label={t("acceptAriaLabel", { name: r.requesterNickname })}
                       >
                         <Check className="w-3.5 h-3.5" />
                       </button>
@@ -144,7 +154,7 @@ export default function JoinRequestsDrawer({ gameId, open, onClose }: Props) {
                         disabled={isLoading}
                         onClick={() => handleReject(r._id)}
                         className="flex items-center justify-center w-7 h-7 rounded-lg bg-red-500/15 border border-red-500/30 text-red-400 hover:bg-red-500/25 transition-colors disabled:opacity-50 cursor-pointer"
-                        aria-label={`Reject ${r.requesterNickname}`}
+                        aria-label={t("rejectAriaLabel", { name: r.requesterNickname })}
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>
@@ -158,11 +168,11 @@ export default function JoinRequestsDrawer({ gameId, open, onClose }: Props) {
                         disabled={isLoading}
                         onClick={() => handleReject(r._id)}
                         className="flex items-center gap-1 px-2 py-1 rounded-md text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50 cursor-pointer"
-                        aria-label={`Reject ${r.requesterNickname}`}
-                        title="Reject access"
+                        aria-label={t("rejectAgainAriaLabel", { name: r.requesterNickname })}
+                        title={t("rejectAccessTitle")}
                       >
                         <X className="w-3 h-3" />
-                        <span className="text-xs font-inter">Reject</span>
+                        <span className="text-xs font-inter">{t("rejectLabel")}</span>
                       </button>
                     </>
                   )}
@@ -174,11 +184,11 @@ export default function JoinRequestsDrawer({ gameId, open, onClose }: Props) {
                         disabled={isLoading}
                         onClick={() => handleAccept(r._id)}
                         className="flex items-center gap-1 px-2 py-1 rounded-md text-white/30 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors disabled:opacity-50 cursor-pointer"
-                        aria-label={`Re-accept ${r.requesterNickname}`}
-                        title="Allow again"
+                        aria-label={t("reacceptAriaLabel", { name: r.requesterNickname })}
+                        title={t("allowAgainTitle")}
                       >
                         <Check className="w-3 h-3" />
-                        <span className="text-xs font-inter">Allow</span>
+                        <span className="text-xs font-inter">{t("allowLabel")}</span>
                       </button>
                     </>
                   )}

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { LandingLogo } from "./LandingLogo";
+import LanguageSwitcher from "@/components/i18n/LanguageSwitcher";
 
 const navLinks = [
   { label: "Features", href: "#features" },
@@ -14,7 +15,7 @@ export function LandingNavbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-black/30 border-b border-white/5">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-black/50 border-b border-white/5">
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
         <LandingLogo size="md" />
 
@@ -33,15 +34,16 @@ export function LandingNavbar() {
 
         {/* Desktop CTA */}
         <div className="hidden md:flex items-center gap-3">
+          <LanguageSwitcher />
           <Link
             href="/auth/signin"
-            className="px-5 py-2 rounded-lg border border-white/20 text-white/80 hover:text-white hover:border-white/40 backdrop-blur-sm transition-all font-sans text-[0.85rem] font-medium"
+            className="px-5 py-2 rounded-lg border border-white/20 text-white/80 hover:text-white hover:border-white/40 transition font-sans text-[0.85rem] font-medium"
           >
             Sign In
           </Link>
           <Link
             href="/auth/signup"
-            className="px-5 py-2 rounded-lg bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-500 hover:to-red-600 shadow-[0_0_20px_rgba(220,38,38,0.3)] transition-all font-sans text-[0.85rem] font-semibold"
+            className="px-5 py-2 rounded-lg bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-500 hover:to-red-600 shadow-[0_0_20px_rgba(220,38,38,0.3)] transition font-sans text-[0.85rem] font-semibold"
           >
             Play Now
           </Link>
@@ -63,7 +65,7 @@ export function LandingNavbar() {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="md:hidden bg-black/90 backdrop-blur-xl border-t border-white/5 px-6 py-6 space-y-4">
+        <div className="md:hidden bg-black/90 border-t border-white/5 px-6 py-6 space-y-4">
           {navLinks.map((item) => (
             <a
               key={item.label}

@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { mutation } from "../_generated/server";
 import { getAuthenticatedUser } from "../lib/auth";
 import {
@@ -7,7 +7,7 @@ import {
   getPlayersByGameId,
   recordWinnerIfDecided,
 } from "../lib/games";
-import { enterNightPhase } from "../lib/phaseTransitions";
+import { enterNightPhase, enterVotingPhase } from "../lib/phaseTransitions";
 import { SPEAKING_STATE, FOULS } from "../lib/constants";
 import { computeSpeakingOrder, getNextSpeaker } from "../lib/speakingOrder";
 import type { Id } from "../_generated/dataModel";
@@ -22,7 +22,7 @@ async function getGameSession(db: DatabaseReader, gameId: Id<"games">) {
     .query("gameSessions")
     .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
     .unique();
-  if (!session) throw new Error("Game session not found");
+  if (!session) throw new ConvexError("Game session not found");
   return session;
 }
 
@@ -56,7 +56,7 @@ export const startDaySpeaking = mutation({
     );
 
     if (speakingOrder.length === 0) {
-      throw new Error("No alive players to speak");
+      throw new ConvexError("No alive players to speak");
     }
 
     await ctx.db.patch(session._id, {
@@ -82,14 +82,19 @@ export const advanceSpeaker = mutation({
     const currentSpeaker = session.currentSpeakerIndex ?? null;
 
     if (currentSpeaker === null || speakingOrder.length === 0) {
-      throw new Error("No active speaking session");
+      throw new ConvexError("No active speaking session");
     }
+
+    const players = await getPlayersByGameId(ctx.db, gameId);
+    const aliveSeats = new Set(
+      players.filter((p) => p.isAlive).map((p) => p.seatNumber),
+    );
 
     const lastSpeaker = SPEAKING_STATE.isPaused(currentSpeaker)
       ? SPEAKING_STATE.getLastSpeakerFromPaused(currentSpeaker)
       : currentSpeaker;
 
-    const nextSpeaker = getNextSpeaker(lastSpeaker, speakingOrder);
+    const nextSpeaker = getNextSpeaker(lastSpeaker, speakingOrder, aliveSeats);
 
     if (nextSpeaker === null) {
       await ctx.db.patch(session._id, {
@@ -119,8 +124,11 @@ export const finishCurrentSpeaker = mutation({
     const currentSpeaker = session.currentSpeakerIndex ?? null;
     const speakingOrder = session.speakingOrder ?? [];
 
-    if (!SPEAKING_STATE.isActive(currentSpeaker) || speakingOrder.length === 0) {
-      throw new Error("No active speaker to finish");
+    if (
+      !SPEAKING_STATE.isActive(currentSpeaker) ||
+      speakingOrder.length === 0
+    ) {
+      throw new ConvexError("No active speaker to finish");
     }
 
     await ctx.db.patch(session._id, {
@@ -163,11 +171,11 @@ export const nominatePlayer = mutation({
     const session = await getGameSession(ctx.db, gameId);
 
     if (session.gamePhase !== "day_phase") {
-      throw new Error("Nominations only allowed during day phase");
+      throw new ConvexError("Nominations only allowed during day phase");
     }
 
     if (session.foulEliminationOccurred) {
-      throw new Error(
+      throw new ConvexError(
         "Nominations blocked - player eliminated by fouls this round",
       );
     }
@@ -207,12 +215,21 @@ export const startNominatedPlayersSpeaking = mutation({
     const session = await getGameSession(ctx.db, gameId);
 
     if (session.gamePhase !== "day_phase") {
-      throw new Error("Can only start nominated players speaking from day phase");
+      throw new ConvexError(
+        "Can only start nominated players speaking from day phase",
+      );
     }
 
     const nominatedPlayers = session.nominatedPlayers ?? [];
     if (nominatedPlayers.length === 0) {
-      throw new Error("No players nominated");
+      throw new ConvexError("No players nominated");
+    }
+
+    // Skip self-justification when the host disabled it, or when there is a
+    // single nominee (no defense needed) → go straight to voting.
+    if (session.withoutSelfJustification || nominatedPlayers.length === 1) {
+      await enterVotingPhase(ctx, gameId, nominatedPlayers);
+      return;
     }
 
     await ctx.db.patch(session._id, {
@@ -237,7 +254,7 @@ export const advanceNominatedSpeaker = mutation({
     const session = await getGameSession(ctx.db, gameId);
 
     if (session.gamePhase !== "nominated_players_speak") {
-      throw new Error("Not in nominated players speaking phase");
+      throw new ConvexError("Not in nominated players speaking phase");
     }
 
     if (session.foulEliminationOccurred) {
@@ -249,43 +266,23 @@ export const advanceNominatedSpeaker = mutation({
     const currentSpeaker = session.currentSpeakerIndex ?? null;
 
     if (currentSpeaker === null || speakingOrder.length === 0) {
-      throw new Error("No active speaking session");
+      throw new ConvexError("No active speaking session");
     }
+
+    const players = await getPlayersByGameId(ctx.db, gameId);
+    const aliveSeats = new Set(
+      players.filter((p) => p.isAlive).map((p) => p.seatNumber),
+    );
 
     const lastSpeaker = SPEAKING_STATE.isPaused(currentSpeaker)
       ? SPEAKING_STATE.getLastSpeakerFromPaused(currentSpeaker)
       : currentSpeaker;
 
-    const nextSpeaker = getNextSpeaker(lastSpeaker, speakingOrder);
+    const nextSpeaker = getNextSpeaker(lastSpeaker, speakingOrder, aliveSeats);
 
     if (nextSpeaker === null) {
       const nominatedPlayers = session.nominatedPlayers ?? [];
-
-      const existingVoting = await ctx.db
-        .query("votingSessions")
-        .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
-        .unique();
-
-      if (!existingVoting) {
-        await ctx.db.insert("votingSessions", {
-          gameId,
-          candidates: nominatedPlayers,
-          roundNumber: 1,
-          currentCandidateIndex: 0,
-          votingActive: false,
-          isTieBreak: false,
-          tieBreakRound: 0,
-          bothLeaveVoteActive: false,
-          playersWhoVoted: [],
-        });
-      }
-
-      await ctx.db.patch(session._id, {
-        gamePhase: "voting",
-        currentSpeakerIndex: undefined,
-        speakerStartedAt: undefined,
-        speakingOrder: [],
-      });
+      await enterVotingPhase(ctx, gameId, nominatedPlayers);
       return;
     }
 
@@ -307,14 +304,17 @@ export const finishCurrentNominatedSpeaker = mutation({
     const session = await getGameSession(ctx.db, gameId);
 
     if (session.gamePhase !== "nominated_players_speak") {
-      throw new Error("Not in nominated players speaking phase");
+      throw new ConvexError("Not in nominated players speaking phase");
     }
 
     const currentSpeaker = session.currentSpeakerIndex ?? null;
     const speakingOrder = session.speakingOrder ?? [];
 
-    if (!SPEAKING_STATE.isActive(currentSpeaker) || speakingOrder.length === 0) {
-      throw new Error("No active speaker to finish");
+    if (
+      !SPEAKING_STATE.isActive(currentSpeaker) ||
+      speakingOrder.length === 0
+    ) {
+      throw new ConvexError("No active speaker to finish");
     }
 
     await ctx.db.patch(session._id, {
@@ -339,17 +339,17 @@ export const giveFoul = mutation({
 
     const allowedPhases = FOULS.ALLOWED_PHASES as readonly string[];
     if (!allowedPhases.includes(session.gamePhase)) {
-      throw new Error("Fouls not allowed during this phase");
+      throw new ConvexError("Fouls not allowed during this phase");
     }
 
     const players = await getPlayersByGameId(ctx.db, gameId);
     const player = players.find((p) => p.seatNumber === seatNumber);
-    if (!player) throw new Error("Player not found");
-    if (!player.isAlive) throw new Error("Cannot foul a dead player");
+    if (!player) throw new ConvexError("Player not found");
+    if (!player.isAlive) throw new ConvexError("Cannot foul a dead player");
 
     const currentFouls = player.fouls ?? 0;
     if (currentFouls >= FOULS.ELIMINATION_THRESHOLD) {
-      throw new Error("Player already eliminated by fouls");
+      throw new ConvexError("Player already eliminated by fouls");
     }
 
     const newFoulCount = currentFouls + 1;

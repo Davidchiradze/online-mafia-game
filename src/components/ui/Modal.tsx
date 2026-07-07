@@ -2,6 +2,7 @@
 
 import { ReactNode, useEffect } from "react";
 import ReactModal from "react-modal";
+import { useTranslations } from "next-intl";
 
 type Props = {
   open: boolean;
@@ -41,6 +42,8 @@ export default function Modal({
   showClose = true,
   variant = "default",
 }: Props) {
+  const t = useTranslations("common");
+
   useEffect(() => {
     ReactModal.setAppElement("body");
   }, []);
@@ -66,7 +69,7 @@ export default function Modal({
             }
           : undefined
       }
-      overlayClassName={`fixed inset-0 z-50 flex items-center justify-center px-4 ${isDark ? "bg-black/75 backdrop-blur-sm" : "bg-black/50"}`}
+      overlayClassName={`fixed inset-0 z-50 flex items-center justify-center px-4 ${isDark ? "bg-black/75" : "bg-black/50"}`}
       bodyOpenClassName="overflow-hidden"
     >
       <div className="flex items-start justify-between">
@@ -82,8 +85,8 @@ export default function Modal({
         {showClose ? (
           <button
             onClick={onClose}
-            className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all cursor-pointer ${isDark ? "text-gray-500 hover:text-white hover:bg-white/10" : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"}`}
-            aria-label="Close modal"
+            className={`w-8 h-8 flex items-center justify-center rounded-lg transition cursor-pointer ${isDark ? "text-gray-500 hover:text-white hover:bg-white/10" : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"}`}
+            aria-label={t("close")}
           >
             ✕
           </button>

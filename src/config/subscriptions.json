@@ -1,0 +1,65 @@
+{
+  "banner": {
+    "labelKey": "banner.label",
+    "inactiveTitleKey": "banner.inactiveTitle",
+    "inactiveSubtitleKey": "banner.inactiveSubtitle"
+  },
+  "purchasePath": "/ka/subscription",
+  "playPath": "/lobby",
+  "packages": [
+    {
+      "id": "basic",
+      "labelKey": "packages.basic.label",
+      "labelColor": "text-zinc-200",
+      "badgeKey": "packages.basic.badge",
+      "badgeColor": "bg-red-600",
+      "titleKey": "packages.basic.title",
+      "oldPrice": "19₾",
+      "price": "0",
+      "periodKey": "packages.basic.period",
+      "featureKeys": [
+        "features.fullAccess",
+        "features.balanceOnly",
+        "features.noAutoPayments"
+      ],
+      "buttonKey": "packages.basic.button",
+      "disabled": false
+    },
+    {
+      "id": "standard",
+      "labelKey": "packages.standard.label",
+      "labelColor": "text-yellow-500",
+      "badgeKey": "packages.standard.badge",
+      "badgeColor": "bg-red-600",
+      "titleKey": "packages.standard.title",
+      "oldPrice": "39₾",
+      "price": "29",
+      "periodKey": "packages.standard.period",
+      "featureKeys": [
+        "features.fullAccess",
+        "features.balanceOnly",
+        "features.noAutoPayments"
+      ],
+      "buttonKey": "packages.standard.button",
+      "disabled": true
+    },
+    {
+      "id": "premium",
+      "labelKey": "packages.premium.label",
+      "labelColor": "text-purple-400",
+      "badgeKey": "packages.premium.badge",
+      "badgeColor": "bg-red-600",
+      "titleKey": "packages.premium.title",
+      "oldPrice": "69₾",
+      "price": "48",
+      "periodKey": "packages.premium.period",
+      "featureKeys": [
+        "features.fullAccess",
+        "features.balanceOnly",
+        "features.noAutoPayments"
+      ],
+      "buttonKey": "packages.premium.button",
+      "disabled": true
+    }
+  ]
+}

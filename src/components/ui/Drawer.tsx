@@ -1,6 +1,7 @@
 "use client";
 import { ReactNode } from "react";
 import { X } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 type Props = {
   open: boolean;
@@ -29,6 +30,8 @@ export default function Drawer({
   size = "md",
   variant = "default",
 }: Props) {
+  const t = useTranslations("common");
+
   if (!open) return null;
 
   const isDark = variant === "dark";
@@ -36,7 +39,7 @@ export default function Drawer({
   return (
     <div className="fixed inset-0 z-50">
       <div
-        className={`absolute inset-0 ${isDark ? "bg-black/75 backdrop-blur-sm" : "bg-black/50"}`}
+        className={`absolute inset-0 ${isDark ? "bg-black/75" : "bg-black/50"}`}
         onClick={onClose}
       />
       <div
@@ -67,12 +70,12 @@ export default function Drawer({
           <button
             type="button"
             onClick={onClose}
-            className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all cursor-pointer ${
+            className={`w-8 h-8 flex items-center justify-center rounded-lg transition cursor-pointer ${
               isDark
                 ? "text-gray-500 hover:text-white hover:bg-white/10"
                 : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
             }`}
-            aria-label="Close drawer"
+            aria-label={t("close")}
           >
             <X className="w-4 h-4" />
           </button>

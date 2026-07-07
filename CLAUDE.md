@@ -11,6 +11,11 @@
 - **`/docs/game-end-conditions.md`** — Auto win-detection rules
 - **`/docs/frontend.md`** — React / UI conventions
 - **`/docs/backend.md`** — Server patterns
+- **`/docs/authorization.md`** — Access roles (admin/moderator), permissions, `/admin` gating
+- **`/docs/subscriptions.md`** — Subscription tiers, feature entitlements, gating create/join/spectate + game route
+- **`/docs/community-chat.md`** — Global community chat channel + online sidebar (subscription-gated, soft-delete moderation, daily prune)
+- **`/docs/game-broadcasts.md`** — Per-game notification channel (staff broadcasts + reusable system pushes) as one-time toasts to players + spectators
+- **`/docs/admin-dashboard.md`** — Admin panel routes + analytics dashboard (KPIs, leaderboards, charts, presence)
 - **`/docs/server-time.md`** — Server-corrected client clock for timers
 - **`/docs/decisions.md`** — Architectural decisions (ADR)
 - **`/docs/livekit-server.md`** — Self-hosted LiveKit VPS setup

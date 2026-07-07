@@ -1,20 +1,19 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import FinishGameButton from "./FinishGameButton";
+import { GAME_CLEANUP } from "@/lib/constants/game";
+import { useCountdown } from "@/hooks/game/useCountdown";
+import { useGameRoom } from "@/lib/context/gameRoomContext";
 
 type Winner = "mafia" | "yakuza" | "citizens";
 
 type WinnerBannerProps = {
   gameId: string;
-  winner: Winner;
+  /** Decided winning faction, or `null` when the game ended with no contest. */
+  winner: Winner | null;
   /** When true, show the host's "Finish Game" button (pending-win state). */
   canFinish?: boolean;
-};
-
-const WINNER_LABELS: Record<Winner, string> = {
-  mafia: "Mafia",
-  yakuza: "Yakuza and Shogun",
-  citizens: "Citizens",
 };
 
 const WINNER_ACCENT: Record<Winner, string> = {
@@ -24,30 +23,58 @@ const WINNER_ACCENT: Record<Winner, string> = {
 };
 
 /**
- * Banner shown when the auto win-detection has decided a winner. The host sees
- * it while the win is pending (`canFinish`) with a "Finish Game" button to
- * confirm the end; everyone sees the title-only version once the game is
- * finished.
+ * Banner shown when a game ends. The host sees it while a win is pending
+ * (`canFinish`) with a "Finish Game" button to confirm the end; everyone sees
+ * the title-only version once the game is finished. When `winner` is `null`
+ * (e.g. an admin force-ended the game), it shows a "No Contest" end state
+ * instead of a faction win.
  */
 export default function WinnerBanner({
   gameId,
   winner,
   canFinish = false,
 }: WinnerBannerProps) {
+  const t = useTranslations("game.winnerBanner");
+  const { gameSessionState } = useGameRoom();
+
+  const WINNER_LABELS: Record<Winner, string> = {
+    mafia: t("mafiaWinner"),
+    yakuza: t("yakuzaWinner"),
+    citizens: t("citizensWinner"),
+  };
+
+  // Room-closing countdown — starts once the game is actually finished
+  // (`finishedAt` set). Mirrors the server's scheduled cleanup delay.
+  const finishedAt = gameSessionState?.finishedAt ?? null;
+  const { secondsLeft, isExpired } = useCountdown(
+    finishedAt,
+    GAME_CLEANUP.DELAY_MS,
+  );
+
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center gap-4 text-center">
+    <div className="w-full min-h-full flex flex-col items-center justify-center gap-3 py-2 text-center sm:gap-4">
       <div className="space-y-1">
         <p className="font-orbitron text-[10px] uppercase tracking-[0.3em] text-slate-400">
-          Game Over
+          {t("gameOver")}
         </p>
         <h2
-          className={`font-orbitron text-2xl font-bold uppercase tracking-wider ${WINNER_ACCENT[winner]}`}
+          className={`font-orbitron text-lg font-bold uppercase tracking-wider break-words sm:text-2xl ${
+            winner ? WINNER_ACCENT[winner] : "text-slate-300"
+          }`}
         >
-          {WINNER_LABELS[winner]} Win
+          {winner
+            ? `${t("winSuffix")} - ${WINNER_LABELS[winner]}`
+            : t("noContest")}
         </h2>
       </div>
 
-      {canFinish && <FinishGameButton gameId={gameId} />}
+      {canFinish && winner && <FinishGameButton gameId={gameId} />}
+
+      {finishedAt != null && (
+        <p className="font-orbitron text-[11px] uppercase tracking-[0.2em] text-slate-400">
+          {t("roomClosing", { seconds: isExpired ? 0 : secondsLeft })}
+        </p>
+      )}
     </div>
   );
 }

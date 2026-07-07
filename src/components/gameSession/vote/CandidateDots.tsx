@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 type Props = {
   candidates: number[];
   currentIdx: number;
@@ -18,6 +20,7 @@ export function CandidateDots({
   votes,
   variant = "regular",
 }: Props) {
+  const t = useTranslations("game");
   const getDotStyle = (idx: number): React.CSSProperties => {
     if (variant === "both_leave") {
       return {
@@ -68,11 +71,11 @@ export function CandidateDots({
       {candidates.map((seat, idx) => (
         <div
           key={seat}
-          className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all ${
+          className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition ${
             variant === "regular" && idx === currentIdx && isVoting ? "animate-pulse" : ""
           }`}
           style={getDotStyle(idx)}
-          title={`#${seat}: ${(votes[String(seat)] ?? []).length} votes`}
+          title={t("candidateDotTooltip", { seat, votes: (votes[String(seat)] ?? []).length })}
         >
           <span
             className={`text-xs font-bold ${getTextColor(idx)}`}

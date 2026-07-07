@@ -104,7 +104,7 @@ export default function AnimatedModal({
     <div
       className={`
         fixed inset-0 z-[100] flex items-center justify-center p-4 cursor-pointer
-        transition-all duration-300 ease-out
+        transition duration-300 ease-out
         ${isAnimating ? "opacity-100" : "opacity-0"}
         ${backdropClassName}
       `}
@@ -115,7 +115,7 @@ export default function AnimatedModal({
       {/* Backdrop */}
       <div
         className={`
-          absolute inset-0 bg-black/70 backdrop-blur-sm
+          absolute inset-0 bg-black/70
           transition-opacity duration-300 ease-out pointer-events-none
           ${isAnimating ? "opacity-100" : "opacity-0"}
         `}
@@ -125,7 +125,7 @@ export default function AnimatedModal({
       <div
         className={`
           relative z-10
-          transition-all duration-300 ease-out
+          transition duration-300 ease-out
           ${
             isAnimating
               ? "opacity-100 scale-100 translate-y-0"

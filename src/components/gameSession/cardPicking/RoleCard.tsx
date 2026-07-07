@@ -1,6 +1,7 @@
 "use client";
 
 import Image, { type StaticImageData } from "next/image";
+import { useTranslations } from "next-intl";
 import FlipCard from "@/components/ui/FlipCard";
 import { CARD_BACK_IMAGE, getRoleImage } from "./cardImages";
 
@@ -31,6 +32,7 @@ export default function RoleCard({
   claimed,
   onPick,
 }: RoleCardProps) {
+  const t = useTranslations("game");
   const isInteractive = !claimed && onPick !== undefined;
 
   const className = [
@@ -41,6 +43,11 @@ export default function RoleCard({
     claimed ? "opacity-30 saturate-50" : "",
   ].join(" ");
 
+  const ariaLabel =
+    isFlipped && role
+      ? t("cardRevealed", { role })
+      : t("hiddenCard");
+
   const content = (
     <FlipCard
       isFlipped={isFlipped}
@@ -48,11 +55,11 @@ export default function RoleCard({
       flipDuration={700}
       width="100%"
       height="100%"
-      front={<CardFace image={CARD_BACK_IMAGE} alt="Card back" />}
+      front={<CardFace image={CARD_BACK_IMAGE} alt={t("cardBack")} />}
       back={
         <CardFace
           image={getRoleImage(role)}
-          alt={role ? `${role} card` : "Hidden role"}
+          alt={role ? t("cardRevealed", { role }) : t("hiddenCard")}
         />
       }
     />
@@ -66,7 +73,7 @@ export default function RoleCard({
     return (
       <div
         className={className}
-        aria-label={isFlipped && role ? `Card revealed: ${role}` : "Hidden card"}
+        aria-label={ariaLabel}
         data-card-id={cardId}
       >
         {content}
@@ -78,7 +85,7 @@ export default function RoleCard({
     <button
       type="button"
       onClick={() => onPick?.(cardId)}
-      aria-label={isFlipped && role ? `Card revealed: ${role}` : "Hidden card"}
+      aria-label={ariaLabel}
       data-card-id={cardId}
       className={className}
     >

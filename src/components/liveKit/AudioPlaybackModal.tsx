@@ -2,11 +2,12 @@
 
 import { useAudioPlayback } from "@livekit/components-react";
 import { Room } from "livekit-client";
-
+import { useTranslations } from "next-intl";
 import AnimatedModal from "@/components/ui/AnimatedModal";
 
 export default function AudioPlaybackModal({ room }: { room: Room }) {
   const { canPlayAudio, startAudio } = useAudioPlayback(room);
+  const t = useTranslations("game.livekit");
 
   return (
     <AnimatedModal
@@ -45,11 +46,11 @@ export default function AudioPlaybackModal({ room }: { room: Room }) {
         </div>
 
         <h2 className="text-lg font-semibold text-white tracking-wide">
-          Enable Audio
+          {t("enableAudioTitle")}
         </h2>
 
         <p className="mt-2 text-sm text-white/50 leading-relaxed max-w-[260px] mx-auto">
-          Your browser requires interaction to start audio playback.
+          {t("enableAudioBody")}
         </p>
 
         <button
@@ -58,14 +59,14 @@ export default function AudioPlaybackModal({ room }: { room: Room }) {
             mt-6 w-full px-6 py-3 rounded-xl font-medium text-white
             bg-white/10 hover:bg-white/20 active:bg-white/25
             border border-white/15 hover:border-white/25
-            transition-all duration-200 cursor-pointer
+            transition duration-200 cursor-pointer
           "
         >
-          Enable Audio
+          {t("enableAudioButton")}
         </button>
 
         <p className="mt-4 text-xs text-white/30">
-          or click anywhere outside to enable
+          {t("enableAudioHint")}
         </p>
       </div>
     </AnimatedModal>

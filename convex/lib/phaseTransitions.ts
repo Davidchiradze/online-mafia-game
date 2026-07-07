@@ -1,3 +1,4 @@
+import { ConvexError } from "convex/values";
 import type { DatabaseWriter, MutationCtx } from "../_generated/server";
 import type { Id } from "../_generated/dataModel";
 import { recordWinnerIfDecided } from "./games";
@@ -20,7 +21,7 @@ async function getGameSessionOrThrow(db: DatabaseWriter, gameId: Id<"games">) {
     .query("gameSessions")
     .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
     .unique();
-  if (!session) throw new Error("Game session not found");
+  if (!session) throw new ConvexError("Game session not found");
   return session;
 }
 
@@ -102,6 +103,48 @@ export async function enterNightPhase(ctx: MutationCtx, gameId: Id<"games">) {
   await createNightSessionIfNeeded(db, gameId, newNightNumber);
 
   return null;
+}
+
+/**
+ * Enter `voting` (single source of truth).
+ *
+ * Creates the voting session (with the given nominees as candidates) if one does
+ * not already exist, and resets speaking state. Used both when self-justification
+ * speaking finishes and when it is skipped (single nominee).
+ */
+export async function enterVotingPhase(
+  ctx: MutationCtx,
+  gameId: Id<"games">,
+  candidates: number[],
+) {
+  const db = ctx.db;
+  const session = await getGameSessionOrThrow(db, gameId);
+
+  const existingVoting = await db
+    .query("votingSessions")
+    .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
+    .unique();
+
+  if (!existingVoting) {
+    await db.insert("votingSessions", {
+      gameId,
+      candidates,
+      roundNumber: 1,
+      currentCandidateIndex: 0,
+      votingActive: false,
+      isTieBreak: false,
+      tieBreakRound: 0,
+      bothLeaveVoteActive: false,
+      playersWhoVoted: [],
+    });
+  }
+
+  await db.patch(session._id, {
+    gamePhase: "voting",
+    currentSpeakerIndex: undefined,
+    speakerStartedAt: undefined,
+    speakingOrder: [],
+  });
 }
 
 /**

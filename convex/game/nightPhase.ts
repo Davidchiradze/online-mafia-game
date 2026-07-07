@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { query, mutation } from "../_generated/server";
 import { getAuthenticatedUser } from "../lib/auth";
 import { assertIsHost } from "../lib/games";
@@ -15,7 +15,7 @@ async function getGameSession(db: DatabaseReader, gameId: Id<"games">) {
     .query("gameSessions")
     .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
     .unique();
-  if (!session) throw new Error("Game session not found");
+  if (!session) throw new ConvexError("Game session not found");
   return session;
 }
 
@@ -132,8 +132,8 @@ async function verifyTargetAlive(
     .collect();
 
   const target = players.find((p) => p.seatNumber === targetSeatNumber);
-  if (!target) throw new Error("Target player not found");
-  if (!target.isAlive) throw new Error("Cannot target a dead player");
+  if (!target) throw new ConvexError("Target player not found");
+  if (!target.isAlive) throw new ConvexError("Cannot target a dead player");
   return target;
 }
 
@@ -228,16 +228,16 @@ export const selectMafiaTarget = mutation({
 
     const authority = await getMafiaKillAuthority(ctx.db, gameId);
     if (!authority || authority.playerId !== userId) {
-      throw new Error("You don't have authority to select a target");
+      throw new ConvexError("You don't have authority to select a target");
     }
 
     const session = await getGameSession(ctx.db, gameId);
     if (session.gamePhase !== "mafia_chooses_target") {
-      throw new Error("Not in mafia target selection phase");
+      throw new ConvexError("Not in mafia target selection phase");
     }
 
     const nightNumber = session.currentNightNumber;
-    if (!nightNumber) throw new Error("No active night");
+    if (!nightNumber) throw new ConvexError("No active night");
 
     await verifyTargetAlive(ctx.db, gameId, targetSeatNumber);
 
@@ -251,7 +251,7 @@ export const selectMafiaTarget = mutation({
     }
 
     if (nightSession.mafiaTarget !== undefined) {
-      throw new Error("Target already selected - cannot change decision");
+      throw new ConvexError("Target already selected - cannot change decision");
     }
 
     await ctx.db.patch(nightSession._id, { mafiaTarget: targetSeatNumber });
@@ -268,16 +268,16 @@ export const selectYakuzaTarget = mutation({
 
     const authority = await getYakuzaKillAuthority(ctx.db, gameId);
     if (!authority || authority.playerId !== userId) {
-      throw new Error("You don't have authority to select a target");
+      throw new ConvexError("You don't have authority to select a target");
     }
 
     const session = await getGameSession(ctx.db, gameId);
     if (session.gamePhase !== "yakuza_and_shogun_chooses_target") {
-      throw new Error("Not in Yakuza target selection phase");
+      throw new ConvexError("Not in Yakuza target selection phase");
     }
 
     const nightNumber = session.currentNightNumber;
-    if (!nightNumber) throw new Error("No active night");
+    if (!nightNumber) throw new ConvexError("No active night");
 
     await verifyTargetAlive(ctx.db, gameId, targetSeatNumber);
 
@@ -291,7 +291,7 @@ export const selectYakuzaTarget = mutation({
     }
 
     if (nightSession.yakuzaTarget !== undefined) {
-      throw new Error("Target already selected - cannot change decision");
+      throw new ConvexError("Target already selected - cannot change decision");
     }
 
     await ctx.db.patch(nightSession._id, { yakuzaTarget: targetSeatNumber });
@@ -308,22 +308,22 @@ export const healPlayer = mutation({
 
     const authority = await getDoctorHealAuthority(ctx.db, gameId);
     if (!authority || authority.playerId !== userId) {
-      throw new Error("You don't have authority to heal");
+      throw new ConvexError("You don't have authority to heal");
     }
 
     const session = await getGameSession(ctx.db, gameId);
     if (session.gamePhase !== "doctor_heals_player") {
-      throw new Error("Not in doctor heal phase");
+      throw new ConvexError("Not in doctor heal phase");
     }
 
     const nightNumber = session.currentNightNumber;
-    if (!nightNumber) throw new Error("No active night");
+    if (!nightNumber) throw new ConvexError("No active night");
 
     await verifyTargetAlive(ctx.db, gameId, targetSeatNumber);
 
     const healedPlayers = await getAllHealedSeats(ctx.db, gameId);
     if (healedPlayers.includes(targetSeatNumber)) {
-      throw new Error("This player has already been healed once this game");
+      throw new ConvexError("This player has already been healed once this game");
     }
 
     let nightSession = await getNightSession(ctx.db, gameId, nightNumber);
@@ -336,7 +336,7 @@ export const healPlayer = mutation({
     }
 
     if (nightSession.healedPlayer !== undefined) {
-      throw new Error("Heal already selected - cannot change decision");
+      throw new ConvexError("Heal already selected - cannot change decision");
     }
 
     await ctx.db.patch(nightSession._id, { healedPlayer: targetSeatNumber });

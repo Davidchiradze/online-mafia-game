@@ -16,6 +16,7 @@ type GamePlayer = {
   fouls: number;
   foulSpeakStartedAt?: number;
   state?: string;
+  isReady?: boolean;
 };
 
 type GameSessionDoc = {
@@ -135,15 +136,44 @@ export const gameSessions = {
     { sessionId: Id<"gameSessions">; updates: GameSessionUpdates },
     null
   >("game/sessions:update"),
-  startGame: makeFunctionReference<"mutation", { gameId: Id<"games"> }, Id<"gameSessions">>(
-    "game/sessions:startGame",
-  ),
+  startGame: makeFunctionReference<
+    "mutation",
+    { gameId: Id<"games">; withoutSelfJustification?: boolean },
+    Id<"gameSessions">
+  >("game/sessions:startGame"),
   finishGame: makeFunctionReference<"mutation", { gameId: Id<"games"> }, null>(
     "game/sessions:finishGame",
   ),
   assignRandomRoles: makeFunctionReference<"mutation", { gameId: Id<"games"> }, null>(
     "game/sessions:assignRandomRoles",
   ),
+};
+
+// ============================================================================
+// GAME BROADCASTS (room notifications)
+// ============================================================================
+
+type GameBroadcast = {
+  _id: Id<"gameBroadcasts">;
+  kind: "staff" | "system" | "news";
+  text: string;
+  title?: string;
+  senderNickname?: string;
+  senderRole?: string;
+  createdAt: number;
+};
+
+export const gameBroadcasts = {
+  recent: makeFunctionReference<"query", { gameId: Id<"games"> }, GameBroadcast[]>(
+    "game/broadcasts:recent",
+  ),
+  // Staff-only room message. `push` (system notifications) is internal-only and
+  // is invoked via `internal.game.broadcasts.push`, not through a ref.
+  send: makeFunctionReference<
+    "mutation",
+    { gameId: Id<"games">; text: string },
+    null
+  >("game/broadcasts:send"),
 };
 
 // ============================================================================
@@ -167,6 +197,11 @@ export const gamePlayers = {
   leave: makeFunctionReference<"mutation", { gameId: Id<"games"> }, null>(
     "game/players:leave",
   ),
+  setReady: makeFunctionReference<
+    "mutation",
+    { gameId: Id<"games">; ready: boolean },
+    null
+  >("game/players:setReady"),
   kill: makeFunctionReference<
     "mutation",
     { gameId: Id<"games">; targetPlayerId: Id<"profiles"> },
@@ -208,9 +243,11 @@ export const gameSpectators = {
 // ============================================================================
 
 export const gameRoles = {
-  getVisible: makeFunctionReference<"query", { gameId: Id<"games"> }, VisibleRoles>(
-    "game/roles:getVisible",
-  ),
+  getVisible: makeFunctionReference<
+    "query",
+    { gameId: Id<"games">; revealAll?: boolean },
+    VisibleRoles
+  >("game/roles:getVisible"),
   assign: makeFunctionReference<
     "mutation",
     { gameId: Id<"games">; playerId: Id<"profiles">; role: string },

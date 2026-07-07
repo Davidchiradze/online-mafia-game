@@ -39,10 +39,7 @@ export async function POST(req: NextRequest) {
     user = await fetchUserBySession(sessionId);
   } catch (err) {
     console.error("[auth/sync-profile] PHP fetch failed", err);
-    return NextResponse.json(
-      { ok: false, error: "upstream" },
-      { status: 502 },
-    );
+    return NextResponse.json({ ok: false, error: "upstream" }, { status: 502 });
   }
 
   if (!user) {
@@ -57,19 +54,25 @@ export async function POST(req: NextRequest) {
       secret: serverEnv.convexSyncSecret,
       accountId: user.id,
       email: user.email ?? undefined,
-      username: user.username ?? undefined,
+      nickname: user.username ?? undefined,
       name: user.name ?? undefined,
       avatar: normalizeAvatarUrl(user.avatar) ?? undefined,
-      role: user.role ?? undefined,
       amount: user.amount != null ? String(user.amount) : undefined,
+      // PHP status_id 0 = unverified account; null -> treated as verified.
+      verified: user.status !== 0,
+      subscription: user.subscription
+        ? {
+            packageId: user.subscription.packageId,
+            from: user.subscription.from ?? undefined,
+            to: user.subscription.to ?? undefined,
+            active: user.subscription.active,
+          }
+        : undefined,
     });
 
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("[auth/sync-profile] Convex upsert failed", err);
-    return NextResponse.json(
-      { ok: false, error: "upsert" },
-      { status: 500 },
-    );
+    return NextResponse.json({ ok: false, error: "upsert" }, { status: 500 });
   }
 }

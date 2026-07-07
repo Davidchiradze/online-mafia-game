@@ -1,39 +1,25 @@
 "use client";
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { createContext, useContext, useMemo, useState } from "react";
 import type { PropsWithChildren } from "react";
 import { Room as LiveKitRoom } from "livekit-client";
-import { useQuery, useMutation } from "convex/react";
-import { authProfiles, lobbyGames, joinRequests } from "@convex/refs/lobby";
+import { useQuery } from "convex/react";
+import { PERMISSIONS, roleHasPermission } from "@convex/lib/access";
+import { authProfiles, lobbyGames } from "@convex/refs/lobby";
 import {
   gameSessions,
   gamePlayers,
   gameRoles,
   nightPhase,
   voting,
-  gameSpectators,
 } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
-import {
-  useLivekitRoom,
-  useLivekitConnect,
-  useLivekitCleanup,
-} from "@/hooks/livekit";
-import { JOIN_REQUEST_STATUSES } from "@/lib/constants/game";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import { useGameRoomConnection, type JoinStatus } from "./useGameRoomConnection";
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
-
-type JoinStatus = "pending" | "accepted" | "rejected" | "none";
 
 type ConvexGamePlayer = {
   _id: Id<"gamePlayers">;
@@ -46,6 +32,7 @@ type ConvexGamePlayer = {
   fouls: number;
   foulSpeakStartedAt?: number;
   state?: string;
+  isReady?: boolean;
 };
 
 type ConvexGameSession = {
@@ -61,6 +48,9 @@ type ConvexGameSession = {
   nominatedPlayers: number[];
   speakerStartedAt?: string;
   speakingOrder: number[];
+  withoutSelfJustification?: boolean;
+  phaseStartedAt?: number;
+  finishedAt?: number;
   winner?: "mafia" | "yakuza" | "citizens";
 };
 
@@ -112,6 +102,7 @@ type GameSpectator = {
   gameId: string;
   userId: string;
   nickname: string;
+  avatar?: string;
 };
 
 type GameRoomContextValue = {
@@ -127,18 +118,22 @@ type GameRoomContextValue = {
   livekitToken: string | null;
   joinStatus: JoinStatus;
   gameSessionState: ConvexGameSession | null;
-  setGameSessionState: (state: ConvexGameSession | null) => void;
-  startGame: () => Promise<{ ok: boolean; message?: string }>;
-  disconnect: () => void;
   isJoiningGame: boolean;
   joinError: string | null;
   players: ConvexGamePlayer[];
   viewerRole: string | null;
   playerRolesMap: Map<string, string | null>;
   getRoleForUser: (targetUserId: string) => string | null;
+  /** Whether the local player has opted to reveal their own + teammates' roles. */
+  rolesRevealed: boolean;
+  setRolesRevealed: (revealed: boolean) => void;
+  /** True when the viewer is a staff member spectating (may use staff tools). */
+  canRevealRoles: boolean;
+  /** Whether the staff spectator has toggled the host-POV role reveal on. */
+  hostVisionEnabled: boolean;
+  setHostVisionEnabled: (enabled: boolean) => void;
   nightPhaseSession: ConvexNightPhaseSession | null;
   votingSession: ConvexVotingSession | null;
-  setVotingSession: (session: ConvexVotingSession | null) => void;
   voteData: VoteData;
   healedPlayers: number[];
 };
@@ -171,13 +166,30 @@ export function GameRoomProvider({
   const userId = (currentUserId ?? "") as string;
 
   // ---------------------------------------------------------------------------
+  // Staff host-POV reveal (spectating moderators/admins only)
+  // ---------------------------------------------------------------------------
+  const canRevealRoles =
+    isSpectator &&
+    roleHasPermission(currentProfile?.role, PERMISSIONS.GAME_REVEAL_ROLES);
+  const [hostVisionRequested, setHostVisionRequested] = useState(false);
+  // Gate the toggle behind the privilege so it can never be on for a non-staff
+  // viewer even if the state somehow flips.
+  const hostVisionEnabled = canRevealRoles && hostVisionRequested;
+
+  // Local, client-side opt-in for the player to peek at their own + teammates'
+  // roles. Hidden by default so roles stay private on shared/streamed screens.
+  const [rolesRevealed, setRolesRevealed] = useState(false);
+
+  // ---------------------------------------------------------------------------
   // Convex reactive queries
   // ---------------------------------------------------------------------------
   const game = useQuery(lobbyGames.getById, { gameId });
-  const myStatus = useQuery(joinRequests.myStatus, { gameId });
   const playersData = useQuery(gamePlayers.listByGame, { gameId });
   const sessionData = useQuery(gameSessions.get, { gameId });
-  const rolesData = useQuery(gameRoles.getVisible, { gameId });
+  const rolesData = useQuery(gameRoles.getVisible, {
+    gameId,
+    revealAll: hostVisionEnabled,
+  });
   const nightData = useQuery(nightPhase.getCurrent, { gameId });
   const healedData = useQuery(nightPhase.getHealedPlayers, { gameId });
   const votingData = useQuery(voting.getSession, { gameId });
@@ -189,19 +201,9 @@ export function GameRoomProvider({
   );
 
   // ---------------------------------------------------------------------------
-  // Convex mutations
-  // ---------------------------------------------------------------------------
-  const checkOrRequestMutation = useMutation(joinRequests.checkOrRequest);
-  const joinPlayerMutation = useMutation(gamePlayers.join);
-  const leavePlayerMutation = useMutation(gamePlayers.leave);
-  const leaveSpectatorMutation = useMutation(gameSpectators.leave);
-  const startGameMutation = useMutation(gameSessions.startGame);
-
-  // ---------------------------------------------------------------------------
   // Derived state
   // ---------------------------------------------------------------------------
   const hostUserId = game?.hostId ?? null;
-  const joinStatus: JoinStatus = myStatus?.status ?? "none";
   const isHost =
     !isSpectator && !!currentUserId && !!game && game.hostId === currentUserId;
 
@@ -214,144 +216,18 @@ export function GameRoomProvider({
   }, [isSpectator, playersData, currentUserId]);
 
   // ---------------------------------------------------------------------------
-  // Local state
+  // Join lifecycle + LiveKit connection
   // ---------------------------------------------------------------------------
-  const [isJoiningGame, setIsJoiningGame] = useState(false);
-  const [joinError, setJoinError] = useState<string | null>(null);
-  const [livekitToken, setLivekitToken] = useState<string | null>(null);
-  const [localVotingSession, setLocalVotingSession] =
-    useState<ConvexVotingSession | null>(null);
-  const [localSessionState, setLocalSessionState] =
-    useState<ConvexGameSession | null>(null);
-
-  const [room] = useState(
-    () =>
-      new LiveKitRoom({
-        adaptiveStream: true,
-        dynacast: true,
-        videoCaptureDefaults: {
-          resolution: { width: 320, height: 240 },
-          frameRate: 30,
-        },
-      }),
-  );
-
-  // ---------------------------------------------------------------------------
-  // Join flow
-  // ---------------------------------------------------------------------------
-  const [hasRequested, setHasRequested] = useState(false);
-
-  // Step 1: Create join request if none exists
-  useEffect(() => {
-    if (!currentUserId || isSpectator) return;
-    if (joinStatus === "none" && !hasRequested) {
-      setHasRequested(true);
-      checkOrRequestMutation({ gameId }).catch(() => {});
-    }
-  }, [
-    currentUserId,
-    isSpectator,
-    joinStatus,
-    hasRequested,
-    checkOrRequestMutation,
-    gameId,
-  ]);
-
-  // Step 2: Ensure player seat when accepted
-  useEffect(() => {
-    if (isSpectator || hasPlayerRecord || isJoiningGame || joinError) return;
-    if (joinStatus !== "accepted") return;
-
-    const ensureSeat = async () => {
-      setIsJoiningGame(true);
-      setJoinError(null);
-      try {
-        await joinPlayerMutation({ gameId });
-      } catch {
-        setJoinError("Unable to join game (Room is full)");
-      } finally {
-        setIsJoiningGame(false);
-      }
-    };
-
-    void ensureSeat();
-  }, [
-    isSpectator,
-    hasPlayerRecord,
-    isJoiningGame,
-    joinError,
-    joinStatus,
-    joinPlayerMutation,
-    gameId,
-  ]);
-
-  // ---------------------------------------------------------------------------
-  // Disconnect
-  // ---------------------------------------------------------------------------
-  const disconnect = useCallback(async () => {
-    try {
-      if (isSpectator) {
-        await leaveSpectatorMutation({ gameId });
-      } else if (hasPlayerRecord) {
-        await leavePlayerMutation({ gameId });
-      }
-      room.disconnect();
-    } catch {
-      // noop
-    }
-  }, [
-    gameId,
-    hasPlayerRecord,
-    isSpectator,
-    room,
-    leavePlayerMutation,
-    leaveSpectatorMutation,
-  ]);
-
-  // Handle rejected → disconnect
-  useEffect(() => {
-    if (joinStatus === "rejected") {
-      room.disconnect();
-    }
-  }, [joinStatus, room]);
-
-  // Disconnect LiveKit and clean up Convex records on unmount / tab close
-  useLivekitCleanup(room, disconnect);
-
-  // ---------------------------------------------------------------------------
-  // LiveKit hooks
-  // ---------------------------------------------------------------------------
-  useLivekitRoom(
-    room,
-    {
-      redirectOnDisconnect: joinStatus !== "rejected",
-      redirectPath: "/lobby",
-    },
-    isSpectator || hasPlayerRecord,
-  );
-
-  const livekitJoinStatus =
-    joinStatus === "accepted"
-      ? JOIN_REQUEST_STATUSES.ACCEPTED
-      : joinStatus === "pending"
-        ? JOIN_REQUEST_STATUSES.PENDING
-        : joinStatus === "rejected"
-          ? JOIN_REQUEST_STATUSES.REJECTED
-          : undefined;
-
-  useLivekitConnect({
-    gameId: gameId as string,
-    userId,
-    isHost,
-    joinStatus: livekitJoinStatus,
-    isJoiningGame,
-    hasPlayerRecord,
-    joinError,
-    room,
-    setLivekitToken,
-    isSpectator,
-    participantName: currentProfile?.nickname,
-  });
+  const { room, livekitToken, joinStatus, isJoiningGame, joinError } =
+    useGameRoomConnection({
+      gameId,
+      isSpectator,
+      currentUserId,
+      userId,
+      isHost,
+      hasPlayerRecord,
+      participantName: currentProfile?.nickname,
+    });
 
   // ---------------------------------------------------------------------------
   // Computed: roles
@@ -404,27 +280,6 @@ export function GameRoomProvider({
     return { votes, playersWhoVoted, bothLeaveVoters };
   }, [votesData]);
 
-  // Prefer Convex reactive data over local overrides
-  const effectiveSession = sessionData ?? localSessionState;
-  const effectiveVoting = votingData ?? localVotingSession;
-
-  // ---------------------------------------------------------------------------
-  // Start game
-  // ---------------------------------------------------------------------------
-  const startGame = useCallback(async () => {
-    if (isSpectator)
-      return { ok: false, message: "Spectators cannot start games" };
-    try {
-      await startGameMutation({ gameId });
-      return { ok: true };
-    } catch (err) {
-      return {
-        ok: false,
-        message: err instanceof Error ? err.message : "Failed to start game",
-      };
-    }
-  }, [isSpectator, startGameMutation, gameId]);
-
   // ---------------------------------------------------------------------------
   // Context value
   // ---------------------------------------------------------------------------
@@ -452,19 +307,20 @@ export function GameRoomProvider({
       maxPlayers: game?.maxPlayers ?? null,
       livekitToken,
       joinStatus,
-      gameSessionState: effectiveSession ?? null,
-      setGameSessionState: setLocalSessionState,
-      startGame,
-      disconnect,
+      gameSessionState: sessionData ?? null,
       isJoiningGame,
       joinError,
       players: playersData ?? [],
       viewerRole,
       playerRolesMap,
       getRoleForUser,
+      rolesRevealed,
+      setRolesRevealed,
+      canRevealRoles,
+      hostVisionEnabled,
+      setHostVisionEnabled: setHostVisionRequested,
       nightPhaseSession: nightData ?? null,
-      votingSession: effectiveVoting ?? null,
-      setVotingSession: setLocalVotingSession,
+      votingSession: votingData ?? null,
       voteData,
       healedPlayers: healedData ?? [],
     }),
@@ -478,17 +334,18 @@ export function GameRoomProvider({
       room,
       livekitToken,
       joinStatus,
-      effectiveSession,
-      startGame,
-      disconnect,
+      sessionData,
       isJoiningGame,
       joinError,
       playersData,
       viewerRole,
       playerRolesMap,
       getRoleForUser,
+      rolesRevealed,
+      canRevealRoles,
+      hostVisionEnabled,
       nightData,
-      effectiveVoting,
+      votingData,
       voteData,
       healedData,
     ],

@@ -1,7 +1,8 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { query, mutation } from "../_generated/server";
-import { getAuthenticatedUser } from "../lib/auth";
-import { getGameById, assertIsHost } from "../lib/games";
+import { getAuthenticatedUser, getAuthenticatedProfile } from "../lib/auth";
+import { PERMISSIONS, roleHasPermission } from "../lib/access";
+import { getGameById, assertIsHost, getPlayerInGame } from "../lib/games";
 import {
   GAME_PHASES,
   MAFIA_TEAM_ROLES,
@@ -16,14 +17,17 @@ import {
  * - Game finished → everyone sees all roles
  * - Own role → always visible
  * - Host → sees all roles
+ * - Staff spectator (GAME_REVEAL_ROLES) with `revealAll` → sees all roles, but
+ *   only if NOT a seated player in this game (no self-cheating)
  * - Mafia team (DON, MAFIA, MAFIA_RIGHT_HAND) → see each other
  * - Yakuza team (YAKUZA, SHOGUN) → see each other
  * - Everyone else → null
  */
 export const getVisible = query({
-  args: { gameId: v.id("games") },
-  handler: async (ctx, { gameId }) => {
-    const userId = await getAuthenticatedUser(ctx);
+  args: { gameId: v.id("games"), revealAll: v.optional(v.boolean()) },
+  handler: async (ctx, { gameId, revealAll }) => {
+    const profile = await getAuthenticatedProfile(ctx);
+    const userId = profile._id;
     const game = await getGameById(ctx.db, gameId);
 
     const session = await ctx.db
@@ -42,6 +46,15 @@ export const getVisible = query({
     const requestingRole =
       allRoles.find((r) => r.playerId === userId)?.role ?? null;
 
+    // A staff spectator may reveal all roles (host POV), but never if they are a
+    // seated player in this game. Defense in depth — the UI also hides the tool
+    // for players, but the server is the authoritative gate.
+    const callerIsPlayer = (await getPlayerInGame(ctx.db, gameId, userId)) !== null;
+    const canRevealAll =
+      revealAll === true &&
+      !callerIsPlayer &&
+      roleHasPermission(profile.role, PERMISSIONS.GAME_REVEAL_ROLES);
+
     const roles = allRoles.map((roleDoc) => {
       let canSeeRole = false;
 
@@ -50,6 +63,8 @@ export const getVisible = query({
       } else if (roleDoc.playerId === userId) {
         canSeeRole = true;
       } else if (isHost) {
+        canSeeRole = true;
+      } else if (canRevealAll) {
         canSeeRole = true;
       } else if (
         (MAFIA_TEAM_ROLES as readonly string[]).includes(requestingRole ?? "") &&
@@ -135,16 +150,16 @@ export const promoteToRightHand = mutation({
       )
       .unique();
     if (!callerRole || callerRole.role !== "DON") {
-      throw new Error("Only the Don can promote the Right Hand");
+      throw new ConvexError("Only the Don can promote the Right Hand");
     }
 
     const session = await ctx.db
       .query("gameSessions")
       .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
       .unique();
-    if (!session) throw new Error("Game session not found");
+    if (!session) throw new ConvexError("Game session not found");
     if (session.gamePhase !== GAME_PHASES[3]) {
-      throw new Error("Not in don_chooses_right_hand phase");
+      throw new ConvexError("Not in don_chooses_right_hand phase");
     }
 
     const targetRole = await ctx.db
@@ -154,10 +169,10 @@ export const promoteToRightHand = mutation({
       )
       .unique();
     if (!targetRole) {
-      throw new Error("Target player has no role assigned");
+      throw new ConvexError("Target player has no role assigned");
     }
     if (targetRole.role !== "MAFIA") {
-      throw new Error("Only MAFIA players can be promoted to Right Hand");
+      throw new ConvexError("Only MAFIA players can be promoted to Right Hand");
     }
 
     const allRolesInGame = await ctx.db
@@ -168,7 +183,7 @@ export const promoteToRightHand = mutation({
       (r) => r.role === "MAFIA_RIGHT_HAND",
     );
     if (alreadyHasRightHand) {
-      throw new Error("Right Hand has already been chosen");
+      throw new ConvexError("Right Hand has already been chosen");
     }
 
     await ctx.db.patch(targetRole._id, { role: "MAFIA_RIGHT_HAND" });

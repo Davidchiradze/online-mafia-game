@@ -3,13 +3,25 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
+import AuthGate from "@/components/dashboard/AuthGate";
 import AuthorizedHeader from "@/components/dashboard/AuthorizedHeader";
 import NavigationSidebar from "@/components/dashboard/NavigationSidebar";
-import AuthGate from "@/components/dashboard/AuthGate";
+import FloatingChatWidget from "@/components/dashboard/community-chat/FloatingChatWidget";
+import { useMyJoinRequestNotifications } from "@/hooks/lobby/useMyJoinRequestNotifications";
 
 type HeadquartersWrapperProps = {
   children: React.ReactNode;
 };
+
+/**
+ * Runs the join-request listener. Mounted INSIDE the `AuthGate` so its query
+ * (`myActiveRequests` → `getAuthenticatedUser`) never fires during the auth
+ * bootstrap window, where it would throw "Not authenticated".
+ */
+function JoinRequestNotifier() {
+  useMyJoinRequestNotifications();
+  return null;
+}
 
 export default function HeadquartersWrapper({
   children,
@@ -45,7 +57,7 @@ export default function HeadquartersWrapper({
       <aside
         onMouseEnter={() => setIsSidebarHovered(true)}
         onMouseLeave={() => setIsSidebarHovered(false)}
-        className={`fixed left-0 top-0 z-30 hidden h-screen shrink-0 flex-col overflow-hidden border-r border-white/5 bg-black/80 backdrop-blur-xl transition-all duration-300 ease-in-out md:flex ${isSidebarHovered ? "w-[240px]" : "w-[72px]"}`}
+        className={`fixed left-0 top-0 z-30 hidden h-screen shrink-0 flex-col overflow-hidden border-r border-white/5 bg-black/80 transition-all duration-300 ease-in-out md:flex ${isSidebarHovered ? "w-[280px]" : "w-[72px]"}`}
       >
         <NavigationSidebar
           expanded={isSidebarHovered}
@@ -61,14 +73,14 @@ export default function HeadquartersWrapper({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsMobileMenuOpen(false)}
-              className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
+              className="fixed inset-0 z-40 bg-black/60 md:hidden"
             />
             <motion.aside
               initial={{ x: "-100%" }}
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", bounce: 0, duration: 0.3 }}
-              className="fixed inset-y-0 left-0 z-50 flex w-[240px] flex-col overflow-hidden border-r border-white/10 bg-black/90 backdrop-blur-xl md:hidden"
+              className="fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col overflow-hidden border-r border-white/10 bg-black/90 md:hidden"
             >
               <NavigationSidebar expanded onSignOut={handleSignOut} />
             </motion.aside>
@@ -80,10 +92,15 @@ export default function HeadquartersWrapper({
         <AuthorizedHeader onOpenMobileMenu={() => setIsMobileMenuOpen(true)} />
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-black/20 shadow-[-10px_-10px_30px_rgba(0,0,0,0.5)] md:rounded-tl-3xl md:border-l md:border-t md:border-white/10">
           <div className="h-full">
-            <AuthGate>{children}</AuthGate>
+            <AuthGate>
+              <JoinRequestNotifier />
+              {children}
+            </AuthGate>
           </div>
         </main>
       </div>
+
+      <FloatingChatWidget />
     </div>
   );
 }

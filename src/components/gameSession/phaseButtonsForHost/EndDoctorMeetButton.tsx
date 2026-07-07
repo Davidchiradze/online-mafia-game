@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useMutation } from "convex/react";
 import { gameSessions, dayPhase } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
+import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { GAME_PHASES } from "@/lib/constants/game";
 import PhaseButton from "@/components/ui/PhaseButton";
@@ -18,6 +19,7 @@ type EndDoctorMeetButtonProps = {
 const EndDoctorMeetButton = ({
   gameSessionState,
 }: EndDoctorMeetButtonProps) => {
+  const t = useTranslations("game.host");
   const { gameId } = useGameRoom();
   const [isLoading, setIsLoading] = useState(false);
   const updateSession = useMutation(gameSessions.update);
@@ -40,7 +42,7 @@ const EndDoctorMeetButton = ({
     }
   };
 
-  return <PhaseButton onClick={handleEndDoctorMeet} isLoading={isLoading} label="End Meeting" variant="danger" />;
+  return <PhaseButton onClick={handleEndDoctorMeet} isLoading={isLoading} label={t("endMeeting")} variant="danger" />;
 };
 
 export default EndDoctorMeetButton;

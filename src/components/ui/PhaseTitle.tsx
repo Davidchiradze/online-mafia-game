@@ -1,10 +1,12 @@
+"use client";
+
 import React from "react";
-import {
-  GAME_PHASES,
-  GAME_PHASE_LABELS,
-  SPEAKING_STATE,
-} from "@/lib/constants/game";
+import { useTranslations } from "next-intl";
+import { GAME_PHASES, SPEAKING_STATE } from "@/lib/constants/game";
 import PickerIndicator from "@/components/gameSession/cardPicking/PickerIndicator";
+import PhaseCountdown from "@/components/game/PhaseCountdown";
+
+type Translator = ReturnType<typeof useTranslations<"game">>;
 
 type GameSessionState = {
   gamePhase: string;
@@ -19,11 +21,11 @@ type PhaseTitleProps =
   | { title: string; gameSessionState?: never; isHost?: never };
 
 function getPhaseTitle(
+  t: Translator,
   phase: string,
   nightNumber: number | null | undefined,
 ): string {
-  const label =
-    GAME_PHASE_LABELS[phase as (typeof GAME_PHASES)[number]] ?? phase;
+  const label = t.has(`phases.${phase}`) ? t(`phases.${phase}`) : phase;
   const night = nightNumber ?? 0;
 
   const nightPhases: string[] = [
@@ -37,7 +39,7 @@ function getPhaseTitle(
   ];
 
   if (nightPhases.includes(phase) && night > 0) {
-    return `N${night} — ${label}`;
+    return t("phaseTitle.nightLabel", { night, label });
   }
 
   const dayPhases: string[] = [
@@ -48,13 +50,14 @@ function getPhaseTitle(
   ];
 
   if (dayPhases.includes(phase) && night > 0) {
-    return `D${night} — ${label}`;
+    return t("phaseTitle.dayLabel", { night, label });
   }
 
   return label;
 }
 
 function getSpeakerInfo(
+  t: Translator,
   speakingOrder: number[],
   currentSpeaker: number | null | undefined,
 ): { text: string; isActive: boolean } | null {
@@ -68,7 +71,7 @@ function getSpeakerInfo(
 
   if (isActive) {
     return {
-      text: `#${currentSpeaker} speaking`,
+      text: t("phaseTitle.speaking", { seat: currentSpeaker }),
       isActive: true,
     };
   }
@@ -80,7 +83,7 @@ function getSpeakerInfo(
     if (lastIndex < speakingOrder.length - 1) {
       const nextSpeaker = speakingOrder[lastIndex + 1];
       return {
-        text: `Next speaker: #${nextSpeaker}`,
+        text: t("phaseTitle.nextSpeaker", { seat: nextSpeaker }),
         isActive: false,
       };
     }
@@ -90,6 +93,8 @@ function getSpeakerInfo(
 }
 
 export default function PhaseTitle(props: PhaseTitleProps) {
+  const t = useTranslations("game");
+
   if ("title" in props && props.title) {
     return (
       <div className="text-center">
@@ -112,8 +117,8 @@ export default function PhaseTitle(props: PhaseTitleProps) {
     nominatedPlayers = [],
   } = gameSessionState;
 
-  const title = getPhaseTitle(gamePhase, currentNightNumber);
-  const speakerInfo = getSpeakerInfo(speakingOrder, currentSpeakerIndex);
+  const title = getPhaseTitle(t, gamePhase, currentNightNumber);
+  const speakerInfo = getSpeakerInfo(t, speakingOrder, currentSpeakerIndex);
   const isPickingRolesPhase = gamePhase === GAME_PHASES[1];
 
   // Only show nominated players to host
@@ -124,6 +129,8 @@ export default function PhaseTitle(props: PhaseTitleProps) {
       <h3 className="font-orbitron text-white uppercase tracking-wider text-sm font-bold">
         {title}
       </h3>
+
+      <PhaseCountdown />
 
       {isPickingRolesPhase && <PickerIndicator />}
 
@@ -139,7 +146,9 @@ export default function PhaseTitle(props: PhaseTitleProps) {
                 />
               </svg>
               <span>
-                Nominated: {nominatedPlayers.map((n) => `#${n}`).join(", ")}
+                {t("phaseTitle.nominated", {
+                  list: nominatedPlayers.map((n) => `#${n}`).join(", "),
+                })}
               </span>
             </div>
           )}

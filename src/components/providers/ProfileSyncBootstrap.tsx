@@ -16,7 +16,6 @@ import { useConvexAuth } from "convex/react";
 export default function ProfileSyncBootstrap() {
   const { isAuthenticated } = useConvexAuth();
   const syncedRef = useRef(false);
-
   useEffect(() => {
     if (!isAuthenticated || syncedRef.current) return;
     syncedRef.current = true;
@@ -26,6 +25,7 @@ export default function ProfileSyncBootstrap() {
       credentials: "include",
     })
       .then((res) => {
+        console.log("synced");
         //   if (res.status === 401) {
         //     return;
         //   }

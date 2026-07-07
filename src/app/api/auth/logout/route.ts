@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import {
   IS_PROD,
-  PHP_LOGIN_REDIRECT_URL,
+  PHP_LOGOUT_REDIRECT_URL,
   PHP_SESSION_COOKIE_NAME,
 } from "@/lib/auth/constants";
 import { clearAuthCookie } from "@/lib/auth/cookies";
@@ -12,23 +12,29 @@ export const dynamic = "force-dynamic";
 /**
  * GET /api/auth/logout
  *
- * Clears all auth-related cookies this origin can see (`cnvx-auth`
- * always; `PHPSESSID` best-effort) and redirects the browser to the
- * PHP login page.
+ * Unbinds the local `cnvx-auth` cookie and hands the browser to PHP's
+ * own logout URL so the PHP session is destroyed server-side.
+ *
+ * Why redirect to PHP logout rather than PHP login: on prod, PHPSESSID
+ * is scoped to mafia.ge and cannot be cleared from online.mafia.ge, so
+ * clearing it here is a no-op. If we redirected straight to the login
+ * page the still-valid PHP session would be re-bridged into a fresh JWT
+ * (via the middleware -> /api/auth/bridge) and the user would land back
+ * logged in — "never gets logged out". A top-level navigation to the
+ * PHP logout URL carries PHPSESSID to mafia.ge, letting PHP tear the
+ * session down before bouncing back to login.
  *
  * Used for both explicit user-initiated sign-out and as the recovery
- * target when Convex rejects a JWT for any reason. Invalidating the
- * PHP session itself is the PHP app's job — we just unbind the local
- * cookies so the next page load forces a fresh bridge.
+ * target when Convex rejects a JWT for any reason.
  */
 export async function GET() {
-  const res = NextResponse.redirect(PHP_LOGIN_REDIRECT_URL);
+  const res = NextResponse.redirect(PHP_LOGOUT_REDIRECT_URL);
   clearAuthCookie(res);
 
-  // Best-effort PHP session clear. Effective only when the cookie is
-  // visible to this origin (same host / parent domain). On a cross-
-  // origin setup (PHP on mafia.ge, Next.js on online.mafia.ge with
-  // PHPSESSID scoped to mafia.ge), the browser ignores this delete.
+  // Best-effort local PHPSESSID clear. Effective only when the cookie is
+  // visible to this origin (same host, e.g. localhost across ports). On a
+  // cross-origin prod setup the browser ignores this delete — the PHP
+  // logout redirect above is what actually ends the session there.
   res.cookies.set({
     name: PHP_SESSION_COOKIE_NAME,
     value: "",

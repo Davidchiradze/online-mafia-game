@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Crosshair, LogOut } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import {
   NAVIGATION_SIDEBAR_ITEMS,
@@ -24,6 +25,7 @@ function NavItem({
   expanded: boolean;
 }) {
   const Icon = item.icon;
+  const t = useTranslations("nav");
 
   return (
     <Link
@@ -51,10 +53,10 @@ function NavItem({
       <span
         className={cn(
           "ml-0 max-w-0 flex-1 overflow-hidden whitespace-nowrap font-medium opacity-0 transition-all duration-300 ease-in-out",
-          expanded && "ml-3 max-w-[150px] opacity-100",
+          expanded && "ml-3 max-w-[200px] opacity-100",
         )}
       >
-        {item.label}
+        {t(item.labelKey)}
       </span>
     </Link>
   );
@@ -65,6 +67,7 @@ export default function NavigationSidebar({
   onSignOut,
 }: NavigationSidebarProps) {
   const pathname = usePathname();
+  const t = useTranslations("nav");
 
   return (
     <>
@@ -109,7 +112,7 @@ export default function NavigationSidebar({
               expanded && "ml-3 max-w-[100px] opacity-100",
             )}
           >
-            Logout
+            {t("logout")}
           </span>
         </button>
       </div>

@@ -26,7 +26,7 @@ export function GlowCard({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: animationDelay }}
-      className={`group relative rounded-2xl border border-white/[0.06] backdrop-blur-sm p-8 hover:border-white/[0.12] transition-all duration-500 ${className}`}
+      className={`group relative rounded-2xl border border-white/[0.06] p-8 hover:border-white/[0.12] transition duration-500 ${className}`}
       style={{
         background: `radial-gradient(ellipse at 50% 0%, ${glowColor}, transparent 70%), rgba(255,255,255,0.02)`,
       }}

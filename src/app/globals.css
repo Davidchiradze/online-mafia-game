@@ -3,13 +3,22 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Height-aware "roomy" variants for participant-tile overlays.
+   Tiles live in a fixed 4×4 grid filling the board, so a wide-but-short
+   viewport (e.g. a phone in landscape) produces small tiles even though the
+   width is large. Gating the "grow" steps on BOTH width and height keeps
+   badges/buttons compact until the tile actually has room. */
+@custom-variant tsm (@media (min-width: 640px) and (min-height: 560px));
+@custom-variant tmd (@media (min-width: 768px) and (min-height: 640px));
+@custom-variant tlg (@media (min-width: 1024px) and (min-height: 760px));
+
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter);
+  --font-sans: var(--font-inter), var(--font-noto-georgian);
   --font-mono: var(--font-geist-mono);
-  --font-orbitron: var(--font-orbitron);
+  --font-orbitron: var(--font-orbitron), var(--font-noto-georgian);
   --font-inter: var(--font-inter);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -143,7 +152,13 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+    font-family: var(--font-inter), var(--font-noto-georgian), ui-sans-serif, system-ui, sans-serif;
+  }
+
+  /* Georgian locale: use BPG Nino Mtavruli as the primary face everywhere. */
+  html[lang="ka"] body,
+  html[lang="ka"] {
+    font-family: var(--font-noto-georgian), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   }
 }
 
@@ -208,6 +223,26 @@
 
 .nomination-badge {
   animation: nomination-badge-pulse 0.5s ease-in-out infinite;
+}
+
+/* Active speaker — steady emerald border + glow */
+.speaker-active {
+  border-width: 2px;
+  border-style: solid;
+  border-color: rgba(52, 211, 153, 0.9);
+  box-shadow:
+    0 0 22px 1px rgba(52, 211, 153, 0.7),
+    inset 0 0 12px -4px rgba(52, 211, 153, 0.55);
+}
+
+/* Foul speaking — steady red border + glow */
+.speaker-foul {
+  border-width: 2px;
+  border-style: solid;
+  border-color: rgba(239, 68, 68, 0.9);
+  box-shadow:
+    0 0 24px 1px rgba(239, 68, 68, 0.75),
+    inset 0 0 12px -4px rgba(239, 68, 68, 0.6);
 }
 
 

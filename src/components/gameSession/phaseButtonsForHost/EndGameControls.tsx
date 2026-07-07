@@ -2,12 +2,14 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import PhaseButton from "@/components/ui/PhaseButton";
 
 /**
  * Controls displayed when the game has ended
  */
 const EndGameControls = () => {
+  const t = useTranslations("game.host");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
@@ -26,7 +28,7 @@ const EndGameControls = () => {
     <PhaseButton
       onClick={handleReturnToLobby}
       isLoading={isLoading}
-      label="Return to Lobby"
+      label={t("returnToLobby")}
       variant="secondary"
     />
   );

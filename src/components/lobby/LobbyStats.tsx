@@ -1,17 +1,17 @@
-import { Users, Gamepad2, Activity, Eye } from "lucide-react";
+"use client";
+
+import { useTranslations } from "next-intl";
+import { Crosshair, Gamepad2, Trophy, Skull } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import type { PlayerStats } from "@convex/refs/history";
 
-export type LobbyStatsData = {
-  totalPlayers: number;
-  totalSpectators: number;
-  activeRooms: number;
-  playing: number;
-};
+type StatKey = "winRate" | "totalMatches" | "wins" | "losses";
 
-const STAT_CARDS: Array<{
-  key: keyof LobbyStatsData;
+const STAT_CARD_CONFIGS: Array<{
+  key: StatKey;
   icon: LucideIcon;
-  label: string;
+  labelKey: string;
+  format: (v: number) => string;
   gradient: string;
   border: string;
   glow: string;
@@ -19,9 +19,21 @@ const STAT_CARDS: Array<{
   bg: string;
 }> = [
   {
-    key: "totalPlayers",
-    icon: Users,
-    label: "Players in Rooms",
+    key: "winRate",
+    icon: Crosshair,
+    labelKey: "statWinRate",
+    format: (v) => `${v}%`,
+    gradient: "from-emerald-500/20 to-emerald-600/20",
+    border: "border-emerald-400/20",
+    glow: "rgba(16,185,129,0.15)",
+    iconColor: "text-emerald-400",
+    bg: "rgba(16,185,129,0.06)",
+  },
+  {
+    key: "totalMatches",
+    icon: Gamepad2,
+    labelKey: "statMatchesPlayed",
+    format: (v) => String(v),
     gradient: "from-blue-500/20 to-blue-600/20",
     border: "border-blue-400/20",
     glow: "rgba(59,130,246,0.15)",
@@ -29,29 +41,21 @@ const STAT_CARDS: Array<{
     bg: "rgba(59,130,246,0.06)",
   },
   {
-    key: "totalSpectators",
-    icon: Eye,
-    label: "Spectating",
-    gradient: "from-cyan-500/20 to-cyan-600/20",
-    border: "border-cyan-400/20",
-    glow: "rgba(6,182,212,0.15)",
-    iconColor: "text-cyan-400",
-    bg: "rgba(6,182,212,0.06)",
+    key: "wins",
+    icon: Trophy,
+    labelKey: "statWins",
+    format: (v) => String(v),
+    gradient: "from-amber-500/20 to-amber-600/20",
+    border: "border-amber-400/20",
+    glow: "rgba(245,158,11,0.15)",
+    iconColor: "text-amber-400",
+    bg: "rgba(245,158,11,0.06)",
   },
   {
-    key: "activeRooms",
-    icon: Gamepad2,
-    label: "Active Rooms",
-    gradient: "from-purple-500/20 to-purple-600/20",
-    border: "border-purple-400/20",
-    glow: "rgba(168,85,247,0.15)",
-    iconColor: "text-purple-400",
-    bg: "rgba(168,85,247,0.06)",
-  },
-  {
-    key: "playing",
-    icon: Activity,
-    label: "Games Playing",
+    key: "losses",
+    icon: Skull,
+    labelKey: "statLosses",
+    format: (v) => String(v),
     gradient: "from-red-500/20 to-red-600/20",
     border: "border-red-400/20",
     glow: "rgba(220,38,38,0.15)",
@@ -60,32 +64,55 @@ const STAT_CARDS: Array<{
   },
 ];
 
-export default function LobbyStats({ stats }: { stats: LobbyStatsData }) {
+export default function LobbyStats({
+  stats,
+}: {
+  stats: PlayerStats | undefined;
+}) {
+  const t = useTranslations("lobby");
+  const loading = stats === undefined;
+
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-      {STAT_CARDS.map(({ key, icon: Icon, label, gradient, border, glow, iconColor, bg }) => (
-        <div
-          key={key}
-          className={`flex items-center gap-4 p-4 rounded-xl border ${border} backdrop-blur-sm`}
-          style={{
-            background: `linear-gradient(135deg, ${bg} 0%, transparent 100%)`,
-            boxShadow: `0 4px 20px ${glow}`,
-          }}
-        >
-          <div
-            className={`w-12 h-12 rounded-xl bg-gradient-to-br ${gradient} border ${border} flex items-center justify-center shrink-0`}
-            style={{ boxShadow: `0 0 16px ${glow}` }}
-          >
-            <Icon className={`w-5 h-5 ${iconColor}`} />
-          </div>
-          <div>
-            <div className="text-white font-orbitron font-bold text-2xl leading-tight">
-              {stats[key]}
+    <div className="mb-8">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {STAT_CARD_CONFIGS.map(
+          ({
+            key,
+            icon: Icon,
+            labelKey,
+            format,
+            gradient,
+            border,
+            glow,
+            iconColor,
+            bg,
+          }) => (
+            <div
+              key={key}
+              className={`flex items-center gap-4 rounded-xl border p-4 ${border}`}
+              style={{
+                background: `linear-gradient(135deg, ${bg} 0%, transparent 100%)`,
+                boxShadow: `0 4px 20px ${glow}`,
+              }}
+            >
+              <div
+                className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${gradient} border ${border}`}
+                style={{ boxShadow: `0 0 16px ${glow}` }}
+              >
+                <Icon className={`h-5 w-5 ${iconColor}`} />
+              </div>
+              <div>
+                <div className="font-orbitron text-2xl font-bold leading-tight text-white">
+                  {loading ? "—" : format(stats[key])}
+                </div>
+                <div className="font-sans text-xs text-gray-500">
+                  {t(labelKey)}
+                </div>
+              </div>
             </div>
-            <div className="text-gray-500 font-sans text-xs">{label}</div>
-          </div>
-        </div>
-      ))}
+          ),
+        )}
+      </div>
     </div>
   );
 }

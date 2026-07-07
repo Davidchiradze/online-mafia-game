@@ -7,9 +7,13 @@ import {
 } from "@livekit/components-react";
 import { Room, Track } from "livekit-client";
 import "@livekit/components-styles";
+import { useTranslations } from "next-intl";
 import PlayerCircle from "@/components/game/PlayerCircle";
 import GameRoomHeader from "@/components/game/GameRoomHeader";
+import StaffToolsButton from "@/components/game/staff-tools";
 import { useRef } from "react";
+import { useGameBroadcasts } from "@/hooks/game/useGameBroadcasts";
+import type { Id } from "@convex/_generated/dataModel";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import AudioPlaybackModal from "@/components/liveKit/AudioPlaybackModal";
 
@@ -29,6 +33,9 @@ export default function SpectatorView({
 }: SpectatorViewProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
 
+  // Room-wide notifications (staff broadcasts + system pushes) as toasts.
+  useGameBroadcasts(gameId as Id<"games">);
+
   return (
     <RoomContext.Provider value={room}>
       <div
@@ -47,6 +54,7 @@ export default function SpectatorView({
         </div>
         <RoomAudioRenderer />
         <AudioPlaybackModal room={room} />
+        <StaffToolsButton />
       </div>
     </RoomContext.Provider>
   );
@@ -61,6 +69,7 @@ function SpectatorVideoConference({
   hostUserId: string | null;
   userId: string;
 }) {
+  const t = useTranslations("game.session");
   const tracks = useTracks(
     [{ source: Track.Source.Camera, withPlaceholder: true }],
     { onlySubscribed: false },
@@ -70,7 +79,7 @@ function SpectatorVideoConference({
 
   return (
     <div className="w-full h-full flex items-center justify-center">
-      {!hasAnyTracks && <LoadingSpinner message="Waiting for players..." />}
+      {!hasAnyTracks && <LoadingSpinner message={t("waitingForPlayers")} />}
       {hasAnyTracks && (
         <div className="game-grid-container w-full h-full">
           <PlayerCircle

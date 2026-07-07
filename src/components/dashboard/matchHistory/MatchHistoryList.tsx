@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import { usePaginatedQuery } from "convex/react";
 import { Swords, SearchX } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { gameLogs as historyRefs } from "@convex/refs/history";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 import MatchRow from "./MatchRow";
@@ -22,6 +23,7 @@ export default function MatchHistoryList({
   gameType,
   currentPlayerId,
 }: Props) {
+  const t = useTranslations("matchHistory");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const { results, status, loadMore } = usePaginatedQuery(
@@ -52,7 +54,7 @@ export default function MatchHistoryList({
   if (results.length === 0) {
     const filtersActive = outcome !== "all" || gameType !== "all";
     return (
-      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/10 bg-[#13131a]/40 px-6 py-16 text-center backdrop-blur-md">
+      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/10 bg-[#13131a]/60 px-6 py-16 text-center">
         <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-zinc-500">
           {filtersActive ? (
             <SearchX className="h-7 w-7" />
@@ -61,12 +63,10 @@ export default function MatchHistoryList({
           )}
         </div>
         <h3 className="mb-2 font-orbitron text-lg font-bold uppercase tracking-widest text-zinc-200">
-          {filtersActive ? "No matches found" : "No matches yet"}
+          {filtersActive ? t("noMatchesFoundTitle") : t("noMatchesYetTitle")}
         </h3>
         <p className="max-w-sm font-inter text-sm text-zinc-500">
-          {filtersActive
-            ? "No games match the selected filters. Try adjusting them to see more of your history."
-            : "Once you finish a game, it'll show up here with your role, result, and full roster."}
+          {filtersActive ? t("noMatchesFoundBody") : t("noMatchesYetBody")}
         </p>
       </div>
     );
@@ -76,9 +76,9 @@ export default function MatchHistoryList({
     <>
       {/* Desktop list header */}
       <div className="mb-2 hidden grid-cols-12 gap-4 px-6 py-3 font-inter text-xs font-bold uppercase tracking-widest text-zinc-500 md:grid">
-        <div className="col-span-3">Date &amp; Time</div>
-        <div className="col-span-5">Operation &amp; Assignment</div>
-        <div className="col-span-3">Outcome</div>
+        <div className="col-span-3">{t("colDateTime")}</div>
+        <div className="col-span-5">{t("colOperation")}</div>
+        <div className="col-span-3">{t("colOutcome")}</div>
         <div className="col-span-1" />
       </div>
 

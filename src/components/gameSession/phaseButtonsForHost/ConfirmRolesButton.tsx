@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useMutation } from "convex/react";
 import { gameSessions } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
+import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { useCardPicking } from "@/hooks/game";
 import { GAME_PHASES } from "@/lib/constants/game";
@@ -20,6 +21,7 @@ type ConfirmRolesButtonProps = {
  * (`state.isComplete === true`).
  */
 const ConfirmRolesButton = ({ gameSessionState }: ConfirmRolesButtonProps) => {
+  const t = useTranslations("game.host");
   const [isLoading, setIsLoading] = useState(false);
   const updateSession = useMutation(gameSessions.update);
   const { state } = useCardPicking(gameSessionState.gameId as Id<"games">);
@@ -46,7 +48,7 @@ const ConfirmRolesButton = ({ gameSessionState }: ConfirmRolesButtonProps) => {
       onClick={handleConfirmRoles}
       isLoading={isLoading}
       disabled={!isComplete}
-      label={isComplete ? "Confirm Roles" : "Waiting for picks..."}
+      label={isComplete ? t("confirmRoles") : t("waitingForPicks")}
       variant="success"
     />
   );

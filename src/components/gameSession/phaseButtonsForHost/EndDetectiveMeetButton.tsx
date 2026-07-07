@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useMutation } from "convex/react";
 import { gameSessions } from "@convex/refs/game";
+import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { GAME_PHASES } from "@/lib/constants/game";
 import PhaseButton from "@/components/ui/PhaseButton";
@@ -17,6 +18,7 @@ type EndDetectiveMeetButtonProps = {
 const EndDetectiveMeetButton = ({
   gameSessionState,
 }: EndDetectiveMeetButtonProps) => {
+  const t = useTranslations("game.host");
   const [isLoading, setIsLoading] = useState(false);
   const updateSession = useMutation(gameSessions.update);
 
@@ -36,7 +38,7 @@ const EndDetectiveMeetButton = ({
   };
 
   return (
-    <PhaseButton onClick={handleEndDetectiveMeet} isLoading={isLoading} label="End Meeting" variant="danger" />
+    <PhaseButton onClick={handleEndDetectiveMeet} isLoading={isLoading} label={t("endMeeting")} variant="danger" />
   );
 };
 

@@ -52,4 +52,9 @@ export const gameLogs = defineTable({
   ),
 })
   .index("by_gameId", ["gameId"])
-  .index("by_hostId", ["hostId"]);
+  .index("by_hostId", ["hostId"])
+  // Full-text search over game name for the admin archive (filterable by mode).
+  .searchIndex("search_gameName", {
+    searchField: "gameName",
+    filterFields: ["gameType"],
+  });

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { LoadingSpinner } from "./LoadingSpinner";
 import { BothLeaveVoteControls } from "./BothLeaveVoteControls";
@@ -19,11 +20,12 @@ import { RegularVotingControls } from "./RegularVotingControls";
  */
 export default function VotingPhaseControls() {
   const { votingSession } = useGameRoom();
+  const t = useTranslations("common");
   const [isLoading, setIsLoading] = useState(false);
   const [resultMessage, setResultMessage] = useState<string | null>(null);
 
   if (!votingSession) {
-    return <LoadingSpinner text="Loading..." />;
+    return <LoadingSpinner text={t("loading")} />;
   }
 
   const isBothLeaveMode = votingSession.bothLeaveVoteActive;

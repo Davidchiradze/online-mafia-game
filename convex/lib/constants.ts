@@ -1,5 +1,3 @@
-import type { Id } from "../_generated/dataModel";
-
 export const GAME_PHASES = [
   "game_session_started",
   "picking_roles",
@@ -56,11 +54,6 @@ export const VOTING = {
 
 export const SPECTATOR = {
   MAX_SPECTATORS_PER_GAME: 5,
-  /** Profile IDs allowed to spectate private games and bypass the capacity limit. */
-  PRIVILEGED_PROFILE_IDS: [
-    "k578tt29gk1nhmnp7v3mqcjc15880wrr", // Chiri
-    "k576wp845hwennx6gmk60kyb91881ym6", // GI2GI
-  ] as Id<"profiles">[],
 } as const;
 
 export const SPEAKING_STATE = {
@@ -83,6 +76,43 @@ export const CARD_PICK = {
   TIMEOUT_MS: 15 * 1000,
   /** Per-pick timeout in seconds */
   TIMEOUT_SECONDS: 15,
+} as const;
+
+export const PRESENCE = {
+  /**
+   * Single site-wide presence room. "Online" means a user is on the site
+   * anywhere, not in a specific game/chat room. Heartbeat is 60s; the
+   * component marks a session offline after 2.5x the interval of silence
+   * (~150s) or on a graceful tab-close disconnect.
+   */
+  GLOBAL_ROOM: "global",
+  HEARTBEAT_INTERVAL_MS: 60_000,
+} as const;
+
+export const COMMUNITY_CHAT = {
+  /** Max characters per message (validated server-side after trimming). */
+  MAX_MESSAGE_LENGTH: 500,
+  /** Minimum gap between a single author's messages — anti-spam throttle. */
+  SEND_COOLDOWN_MS: 1_000,
+  /** How many recent messages `list` returns (and the prune retention floor). */
+  LIST_LIMIT: 100,
+  /** Daily prune keeps at most this many most-recent messages. */
+  RETENTION_LIMIT: 200,
+  /** Generous cap when listing online users for the sidebar. */
+  ONLINE_CAP: 1000,
+} as const;
+
+export const GAME_BROADCAST = {
+  /** Max characters per broadcast (validated server-side after trimming). */
+  MAX_MESSAGE_LENGTH: 500,
+  /**
+   * `recent` only returns broadcasts newer than this. Keeps the reactive query
+   * bounded and stops a just-joined client from being toasted with stale
+   * announcements from earlier in the game.
+   */
+  RECENT_WINDOW_MS: 120_000,
+  /** Safety cap on how many recent broadcasts `recent` returns. */
+  LIST_LIMIT: 10,
 } as const;
 
 export const FOULS = {

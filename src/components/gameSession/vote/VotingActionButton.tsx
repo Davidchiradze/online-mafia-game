@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import PhaseButton from "@/components/ui/PhaseButton";
 
 export type ActionState =
@@ -33,18 +34,20 @@ export function VotingActionButton({
   onSeeResult,
   variant = "regular",
 }: Props) {
+  const t = useTranslations("game");
+
   switch (state) {
     case "loading":
       return (
         <div className="flex items-center gap-2 text-xs text-white/60">
           <span className="w-4 h-4 border-2 border-emerald-400/30 border-t-emerald-400 rounded-full animate-spin" />
-          Processing...
+          {t("processingAction")}
         </div>
       );
 
     case "voting":
       return (
-        <span className="text-xs text-white/50">Voting in progress...</span>
+        <span className="text-xs text-white/50">{t("votingInProgress")}</span>
       );
 
     case "tally":
@@ -52,7 +55,7 @@ export function VotingActionButton({
         <PhaseButton
           onClick={onTally ?? (() => {})}
           isLoading={false}
-          label="Tally Results"
+          label={t("tallyResults")}
         />
       );
 
@@ -61,7 +64,7 @@ export function VotingActionButton({
         <PhaseButton
           onClick={onNextCandidate ?? (() => {})}
           isLoading={false}
-          label="Next"
+          label={t("nextCandidate")}
           variant="secondary"
         />
       );
@@ -71,7 +74,7 @@ export function VotingActionButton({
         <PhaseButton
           onClick={onVoteNow ?? (() => {})}
           isLoading={false}
-          label="Vote Now"
+          label={t("voteNow")}
           variant={variant === "both_leave" ? "danger" : "primary"}
         />
       );
@@ -81,7 +84,7 @@ export function VotingActionButton({
         <PhaseButton
           onClick={onSeeResult ?? (() => {})}
           isLoading={false}
-          label="See Result"
+          label={t("seeResult")}
         />
       );
 

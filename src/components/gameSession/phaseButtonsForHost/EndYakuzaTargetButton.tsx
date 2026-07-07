@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useMutation } from "convex/react";
 import { gameSessions } from "@convex/refs/game";
+import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { GAME_PHASES } from "@/lib/constants/game";
 import PhaseButton from "@/components/ui/PhaseButton";
@@ -18,6 +19,7 @@ type EndYakuzaTargetButtonProps = {
 const EndYakuzaTargetButton = ({
   gameSessionState,
 }: EndYakuzaTargetButtonProps) => {
+  const t = useTranslations("game.host");
   const [isLoading, setIsLoading] = useState(false);
   const updateSession = useMutation(gameSessions.update);
   const { canEndYakuzaPhase } = useNightPhaseReadiness();
@@ -42,7 +44,7 @@ const EndYakuzaTargetButton = ({
       onClick={handleEndYakuzaTarget}
       isLoading={isLoading}
       disabled={!canEndYakuzaPhase}
-      label={canEndYakuzaPhase ? "End Yakuza Phase" : "Waiting for Yakuza..."}
+      label={canEndYakuzaPhase ? t("endYakuzaPhase") : t("waitingForYakuza")}
       variant="danger"
     />
   );

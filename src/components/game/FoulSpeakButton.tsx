@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { FoulAlertIcon } from "@/assets/icons";
 
 type FoulSpeakButtonProps = {
@@ -23,6 +24,7 @@ export default function FoulSpeakButton({
   canFoulSpeak,
   currentFouls,
 }: FoulSpeakButtonProps) {
+  const t = useTranslations("game.actions");
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
@@ -39,17 +41,17 @@ export default function FoulSpeakButton({
       disabled={!canFoulSpeak}
       aria-label={
         isFoulSpeaking
-          ? `Speaking: ${foulSpeakTimeLeft}s left`
-          : "Speak with foul"
+          ? t("foulSpeaking", { seconds: foulSpeakTimeLeft })
+          : t("speakWithFoul")
       }
       title={
         isFoulSpeaking
-          ? `${foulSpeakTimeLeft}s remaining`
-          : "Click to speak for 5 seconds"
+          ? t("secondsRemaining", { seconds: foulSpeakTimeLeft })
+          : t("clickToSpeakFiveSeconds")
       }
       className={`
-        relative w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center
-        transition-all duration-200 shadow-lg
+        relative w-5 h-5 tsm:w-6 tsm:h-6 tmd:w-8 tmd:h-8 rounded-full flex items-center justify-center
+        transition duration-200 shadow-lg
         ${
           isFoulSpeaking
             ? "bg-amber-500 border border-amber-400 text-white animate-pulse"
@@ -60,12 +62,12 @@ export default function FoulSpeakButton({
       `}
     >
       {isFoulSpeaking ? (
-        <span className="text-xs font-bold tabular-nums">{foulSpeakTimeLeft}</span>
+        <span className="text-[10px] tsm:text-xs font-bold tabular-nums">{foulSpeakTimeLeft}</span>
       ) : (
-        <FoulAlertIcon width="16" height="16" />
+        <FoulAlertIcon className="w-3 h-3 tsm:w-3.5 tsm:h-3.5 tmd:w-4 tmd:h-4" />
       )}
       {currentFouls > 0 && !isFoulSpeaking && (
-        <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-600 text-white text-[9px] font-bold flex items-center justify-center shadow-sm">
+        <span className="absolute -top-1 -right-1 w-3 h-3 tsm:w-4 tsm:h-4 rounded-full bg-red-600 text-white text-[7px] tsm:text-[9px] font-bold flex items-center justify-center shadow-sm">
           {currentFouls}
         </span>
       )}

@@ -1,6 +1,7 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { query, mutation, internalMutation } from "../_generated/server";
-import { getAuthenticatedUser } from "../lib/auth";
+import { getAuthenticatedUser, requireFeature } from "../lib/auth";
+import { FEATURES } from "../lib/entitlements";
 import {
   getGameById,
   getPlayersByGameId,
@@ -11,6 +12,38 @@ import {
   deleteGameAndRelations,
 } from "../lib/games";
 import { gameType } from "../tables/games";
+import type { QueryCtx } from "../_generated/server";
+import type { Doc } from "../_generated/dataModel";
+
+/**
+ * Enriches a game's players and spectators with each user's current `avatar`
+ * (read live from their profile). Nicknames are snapshotted on the roster
+ * rows, but avatars are joined here so they stay in sync with profile changes.
+ */
+async function withRosterAvatars(
+  ctx: QueryCtx,
+  game: Doc<"games">,
+  players: Doc<"gamePlayers">[],
+  spectators: Doc<"gameSpectators">[],
+) {
+  const playersWithAvatar = await Promise.all(
+    players.map(async (player) => {
+      const profile = await ctx.db.get(player.playerId);
+      return { ...player, avatar: profile?.avatar };
+    }),
+  );
+  const spectatorsWithAvatar = await Promise.all(
+    spectators.map(async (spectator) => {
+      const profile = await ctx.db.get(spectator.userId);
+      return { ...spectator, avatar: profile?.avatar };
+    }),
+  );
+  return {
+    ...game,
+    players: playersWithAvatar,
+    spectators: spectatorsWithAvatar,
+  };
+}
 
 const GAME_TYPE_MAX_PLAYERS: Record<string, number> = {
   traditional: 10,
@@ -32,7 +65,7 @@ export const list = query({
       games.map(async (game) => {
         const players = await getPlayersByGameId(ctx.db, game._id);
         const spectators = await getSpectatorsByGameId(ctx.db, game._id);
-        return { ...game, players, spectators };
+        return await withRosterAvatars(ctx, game, players, spectators);
       }),
     );
   },
@@ -45,7 +78,7 @@ export const getById = query({
     if (!game) return null;
     const players = await getPlayersByGameId(ctx.db, game._id);
     const spectators = await getSpectatorsByGameId(ctx.db, game._id);
-    return { ...game, players, spectators };
+    return await withRosterAvatars(ctx, game, players, spectators);
   },
 });
 
@@ -56,23 +89,23 @@ export const create = mutation({
     isPrivate: v.boolean(),
   },
   handler: async (ctx, { name, gameType, isPrivate }) => {
-    const userId = await getAuthenticatedUser(ctx);
+    const { _id: userId } = await requireFeature(ctx, FEATURES.PLAY_GAME);
 
     const trimmedName = name.trim();
     if (trimmedName.length === 0) {
-      throw new Error("Game name is required");
+      throw new ConvexError({ code: "GAME_NAME_REQUIRED", message: "Game name is required" });
     }
 
     const maxPlayers = GAME_TYPE_MAX_PLAYERS[gameType];
     if (!maxPlayers) {
-      throw new Error("Invalid game type");
+      throw new ConvexError({ code: "INVALID_GAME_TYPE", message: "Invalid game type" });
     }
 
     let code = generateGameCode();
     let attempts = 0;
     while (await isCodeTaken(ctx.db, code)) {
       if (++attempts >= MAX_CODE_ATTEMPTS) {
-        throw new Error("Unable to generate a unique game code. Try again.");
+        throw new ConvexError({ code: "GAME_CODE_GEN_FAILED", message: "Unable to generate a unique game code. Try again." });
       }
       code = generateGameCode();
     }
@@ -115,7 +148,7 @@ export const update = mutation({
 
     if (name !== undefined) {
       const trimmed = name.trim();
-      if (trimmed.length === 0) throw new Error("Room name cannot be empty");
+      if (trimmed.length === 0) throw new ConvexError({ code: "ROOM_NAME_EMPTY", message: "Room name cannot be empty" });
       patch.name = trimmed;
     }
 

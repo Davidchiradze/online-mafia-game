@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { paginationOptsValidator } from "convex/server";
 import { query } from "../_generated/server";
 import { getAuthenticatedUser } from "../lib/auth";
@@ -83,7 +83,7 @@ export const getGameLog = query({
     const isHost = log.hostId === userId;
     const isParticipant = log.players.some((p) => p.playerId === userId);
     if (!isHost && !isParticipant) {
-      throw new Error("Not authorized to view this game log");
+      throw new ConvexError("Not authorized to view this game log");
     }
 
     // Avatars aren't part of the frozen snapshot — join the player's current
@@ -121,6 +121,8 @@ export const getMyStats = query({
         losses: 0,
         noContests: 0,
         winRate: 0,
+        currentStreak: 0,
+        bestStreak: 0,
         roleStats: [] as Array<{
           role: string;
           matches: number;
@@ -137,6 +139,8 @@ export const getMyStats = query({
       losses: stats.losses,
       noContests: stats.noContests,
       winRate: winRatePct(stats.wins, stats.losses),
+      currentStreak: stats.currentStreak ?? 0,
+      bestStreak: stats.bestStreak ?? 0,
       roleStats: stats.roleStats
         .map((r) => ({ ...r, winRate: winRatePct(r.wins, r.losses) }))
         .sort((a, b) => b.matches - a.matches),

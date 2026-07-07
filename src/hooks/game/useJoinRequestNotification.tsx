@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useCallback, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useQuery, useMutation } from "convex/react";
 import { joinRequests } from "@convex/refs/lobby";
 import { toast } from "@/lib/utils/toast";
 import { toast as toastifyDismiss } from "react-toastify";
 import { Check, X } from "lucide-react";
 import type { Id } from "@convex/_generated/dataModel";
+import UserAvatar from "@/components/ui/UserAvatar";
+import { playSound } from "@/lib/audio/audioUnlock";
 
 // ---------------------------------------------------------------------------
 // Toast body rendered inside each join-request notification
@@ -14,16 +17,19 @@ import type { Id } from "@convex/_generated/dataModel";
 
 function JoinRequestToastBody({
   nickname,
+  avatar,
   requestId,
   onAccept,
   onReject,
 }: {
   nickname: string;
+  avatar?: string;
   requestId: Id<"joinRequests">;
   onAccept: (id: Id<"joinRequests">) => Promise<void>;
   onReject: (id: Id<"joinRequests">) => Promise<void>;
 }) {
   const [loading, setLoading] = useState<"accept" | "reject" | null>(null);
+  const t = useTranslations("game.joinRequests");
 
   const handle = (e: React.MouseEvent, action: "accept" | "reject") => {
     e.stopPropagation();
@@ -35,17 +41,24 @@ function JoinRequestToastBody({
 
   return (
     <div className="flex items-center justify-between gap-3 cursor-pointer">
-      <span className="text-white/90 truncate">
-        <span className="font-semibold text-white">{nickname}</span> wants to
-        join
-      </span>
+      <div className="flex items-center gap-2 min-w-0">
+        <UserAvatar src={avatar} name={nickname} size={28} />
+        <span className="text-white/90 truncate">
+          {t.rich("wantsToJoin", {
+            nickname,
+            b: (chunks) => (
+              <span className="font-semibold text-white">{chunks}</span>
+            ),
+          })}
+        </span>
+      </div>
       <div className="flex items-center gap-1.5 shrink-0">
         <button
           type="button"
           disabled={loading !== null}
           onClick={(e) => handle(e, "accept")}
           className="flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/30 transition-colors disabled:opacity-50 cursor-pointer"
-          aria-label={`Accept ${nickname}`}
+          aria-label={t("acceptAriaLabel", { name: nickname })}
         >
           {loading === "accept" ? (
             <span className="spinner spinner-sm border-emerald-400/30 border-t-emerald-400" />
@@ -58,7 +71,7 @@ function JoinRequestToastBody({
           disabled={loading !== null}
           onClick={(e) => handle(e, "reject")}
           className="flex items-center justify-center w-7 h-7 rounded-lg bg-red-500/20 border border-red-500/40 text-red-400 hover:bg-red-500/30 transition-colors disabled:opacity-50 cursor-pointer"
-          aria-label={`Reject ${nickname}`}
+          aria-label={t("rejectAriaLabel", { name: nickname })}
         >
           {loading === "reject" ? (
             <span className="spinner spinner-sm border-red-400/30 border-t-red-400" />
@@ -122,12 +135,15 @@ export function useJoinRequestNotification(gameId: string, isHost: boolean) {
       return;
     }
 
+    let hasNewRequest = false;
     for (const req of pendingRequests) {
       const id = req._id as string;
       if (!knownIdsRef.current.has(id)) {
+        hasNewRequest = true;
         const toastId = toast.info(
           <JoinRequestToastBody
             nickname={req.requesterNickname}
+            avatar={req.requesterAvatar}
             requestId={req._id}
             onAccept={handleAccept}
             onReject={handleReject}
@@ -138,6 +154,10 @@ export function useJoinRequestNotification(gameId: string, isHost: boolean) {
           toastIdsRef.current.set(id, toastId);
         }
       }
+    }
+
+    if (hasNewRequest) {
+      playSound("/audio/new-request-notification.mp3");
     }
 
     for (const id of toastIdsRef.current.keys()) {

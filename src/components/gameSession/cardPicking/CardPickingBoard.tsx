@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { useCardPicking } from "@/hooks/game";
 import { CARD_PICK, GAME_PHASES } from "@/lib/constants/game";
@@ -34,6 +35,7 @@ import RoleCard from "./RoleCard";
  *     false on the server side.
  */
 export default function CardPickingBoard() {
+  const t = useTranslations("game");
   const { gameId, gameSessionState } = useGameRoom();
   const { state, pickCard } = useCardPicking(gameId as Id<"games">);
 
@@ -85,7 +87,7 @@ export default function CardPickingBoard() {
     <AnimatePresence>
       <motion.div
         key="card-picking-board"
-        className="fixed inset-0 z-30 flex flex-col items-center justify-center bg-black/85 px-4 py-8 backdrop-blur-md"
+        className="fixed inset-0 z-30 flex flex-col items-center justify-center bg-black/85 px-4 py-8"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -95,6 +97,7 @@ export default function CardPickingBoard() {
         <Header
           remaining={state.pickOrder.length - state.currentPickIndex}
           isRevealing={pickedCardId !== null}
+          t={t}
         />
 
         {showCountdown && state.currentTurnStartedAt && (
@@ -150,7 +153,7 @@ export default function CardPickingBoard() {
             animate={{ opacity: isRoleReady ? 1 : 0 }}
             transition={{ delay: 0.4, duration: 0.3 }}
           >
-            Click anywhere to continue
+            {t("clickToContinue")}
           </motion.p>
         )}
       </motion.div>
@@ -171,21 +174,23 @@ function Placeholder() {
 function Header({
   remaining,
   isRevealing,
+  t,
 }: {
   remaining: number;
   isRevealing: boolean;
+  t: ReturnType<typeof useTranslations<"game">>;
 }) {
   return (
     <div className="text-center">
       <p className="text-xs uppercase tracking-[0.3em] text-white/40">
-        Picking roles
+        {t("pickingRolesHeading")}
       </p>
       <h2 className="mt-2 text-2xl font-bold text-white sm:text-3xl">
-        {isRevealing ? "Your role" : "Pick your card"}
+        {isRevealing ? t("yourRole") : t("pickYourCard")}
       </h2>
       {!isRevealing && (
         <p className="mt-1 text-sm text-white/50">
-          {remaining} {remaining === 1 ? "card" : "cards"} left in the deck
+          {t("cardsLeftInDeck", { count: remaining })}
         </p>
       )}
     </div>
@@ -204,6 +209,7 @@ function Header({
  * (per `docs/server-time.md`).
  */
 function Countdown({ turnStartedAt }: { turnStartedAt: string }) {
+  const t = useTranslations("game");
   const getServerTime = useServerTime();
   const [secondsLeft, setSecondsLeft] = useState<number>(
     CARD_PICK.TIMEOUT_SECONDS,
@@ -242,7 +248,7 @@ function Countdown({ turnStartedAt }: { turnStartedAt: string }) {
     >
       <span className="h-2 w-2 rounded-full bg-current opacity-80" />
       <span>
-        {secondsLeft}s {secondsLeft === 1 ? "second" : "seconds"} left
+        {secondsLeft}s {t("secondsLeft", { count: secondsLeft })}
       </span>
     </div>
   );

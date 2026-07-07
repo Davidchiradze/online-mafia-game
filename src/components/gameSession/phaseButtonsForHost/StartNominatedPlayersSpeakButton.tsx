@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useMutation } from "convex/react";
 import { dayPhase, nightPhase } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
+import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import PhaseButton from "@/components/ui/PhaseButton";
 
@@ -20,6 +21,7 @@ type Props = {
  * If foul elimination occurred: shows message and skip to night phase.
  */
 const StartNominatedPlayersSpeakButton = ({ gameSessionState }: Props) => {
+  const t = useTranslations("game.host");
   const { gameId } = useGameRoom();
   const [isLoading, setIsLoading] = useState(false);
   const startNominatedSpeaking = useMutation(
@@ -58,16 +60,16 @@ const StartNominatedPlayersSpeakButton = ({ gameSessionState }: Props) => {
       <div className="flex flex-col items-center gap-2">
         <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 text-center">
           <p className="text-amber-300 text-sm font-medium">
-            Player eliminated by fouls
+            {t("playerEliminatedByFoulsTitle")}
           </p>
           <p className="text-amber-400/70 text-xs mt-1">
-            No voting will occur this round
+            {t("noVotingThisRound")}
           </p>
         </div>
         <PhaseButton
           onClick={handleSkipToNightPhase}
           isLoading={isLoading}
-          label="Start"
+          label={t("start")}
         />
       </div>
     );
@@ -77,22 +79,25 @@ const StartNominatedPlayersSpeakButton = ({ gameSessionState }: Props) => {
     return (
       <div className="flex flex-col items-center gap-2">
         <div className="text-sm text-white/50 text-center">
-          No players nominated
+          {t("noPlayersNominated")}
         </div>
         <PhaseButton
           onClick={handleSkipToNightPhase}
           isLoading={isLoading}
-          label="Start"
+          label={t("startNight")}
         />
       </div>
     );
   }
 
+  // A single nominee skips self-justification and goes straight to voting.
+  const isSingleNominee = nominatedCount === 1;
+
   return (
     <PhaseButton
       onClick={handleStartSelfJustification}
       isLoading={isLoading}
-      label="Start self-justification"
+      label={isSingleNominee ? t("startVoting") : t("startSelfJustification")}
       variant="warning"
     />
   );

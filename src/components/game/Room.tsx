@@ -5,8 +5,10 @@ import SpectatorView from "./SpectatorView";
 import WaitingRoom from "./WaitingRoom";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import LoadingSpinner from "../ui/LoadingSpinner";
+import { useTranslations } from "next-intl";
 
 export default function Room() {
+  const t = useTranslations("game");
   const {
     gameId,
     userId,
@@ -24,7 +26,7 @@ export default function Room() {
     if (!livekitToken) {
       return (
         <div className="flex h-full items-center justify-center text-gray-600 dark:text-gray-300">
-          <LoadingSpinner message="Connecting as spectator..." />
+          <LoadingSpinner message={t("session.connectingAsSpectator")} />
         </div>
       );
     }
@@ -43,7 +45,7 @@ export default function Room() {
   if (isJoiningGame) {
     return (
       <div className="flex h-full items-center justify-center text-gray-600 dark:text-gray-300">
-        <LoadingSpinner message="Joining game..." />
+        <LoadingSpinner message={t("session.joiningGame")} />
       </div>
     );
   }
