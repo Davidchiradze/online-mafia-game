@@ -54,7 +54,7 @@ export default function WaitingRoom({ status, gameId }: Props) {
     <div className="w-full max-w-2xl mx-auto px-4 py-8">
       {/* Main card */}
       <div
-        className="rounded-2xl border border-white/10 overflow-hidden backdrop-blur-xl"
+        className="rounded-2xl border border-white/10 overflow-hidden"
         style={{
           background:
             "linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)",

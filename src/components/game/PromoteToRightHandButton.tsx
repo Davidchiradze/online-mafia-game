@@ -57,7 +57,7 @@ export default function PromoteToRightHandButton({
         font-semibold uppercase tracking-widest
         transition duration-200
         border border-b-0
-        bg-black/60 backdrop-blur-md border-amber-400/20 text-amber-200/80
+        bg-black/75 border-amber-400/20 text-amber-200/80
         hover:text-amber-100 hover:border-amber-400/40 hover:bg-black/70
         cursor-pointer active:scale-95
         ${isLoading ? "opacity-50 cursor-wait" : ""}

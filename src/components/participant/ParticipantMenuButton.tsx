@@ -44,7 +44,7 @@ export default function ParticipantMenuButton({
             type="button"
             aria-label={resolvedAriaLabel}
             onClick={(e) => e.stopPropagation()}
-            className="rounded-lg border border-white/10 bg-black/50 backdrop-blur p-1 md:p-1.5 text-white/80 opacity-0 group-hover:opacity-100 hover:text-white hover:bg-black/70 transition data-[state=open]:opacity-100 data-[state=open]:text-white"
+            className="rounded-lg border border-white/10 bg-black/70 p-1 md:p-1.5 text-white/80 opacity-0 group-hover:opacity-100 hover:text-white hover:bg-black/70 transition data-[state=open]:opacity-100 data-[state=open]:text-white"
           >
             <MoreVerticalIcon width={16} height={16} />
           </button>

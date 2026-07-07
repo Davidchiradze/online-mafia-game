@@ -39,7 +39,7 @@ export default function Drawer({
   return (
     <div className="fixed inset-0 z-50">
       <div
-        className={`absolute inset-0 ${isDark ? "bg-black/75 backdrop-blur-sm" : "bg-black/50"}`}
+        className={`absolute inset-0 ${isDark ? "bg-black/75" : "bg-black/50"}`}
         onClick={onClose}
       />
       <div

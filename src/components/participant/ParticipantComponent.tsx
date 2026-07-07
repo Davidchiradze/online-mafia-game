@@ -305,7 +305,7 @@ export default function ParticipantComponent({
           spot (revealed on hover), so it doubles as the resting state. */}
       {!gameSessionState && isReady && (
         <div className="absolute bottom-2 right-2 md:bottom-3 md:right-3 z-20 pointer-events-none">
-          <span className="flex items-center justify-center p-1 md:p-2 rounded-full border border-emerald-400/40 bg-emerald-500/15 backdrop-blur-md text-emerald-200 shadow-[0_0_16px_rgba(16,185,129,0.25)]">
+          <span className="flex items-center justify-center p-1 md:p-2 rounded-full border border-emerald-400/40 bg-emerald-500/30 text-emerald-200 shadow-[0_0_16px_rgba(16,185,129,0.25)]">
             <Check className="h-3.5 w-3.5 md:h-6 md:w-6" strokeWidth={3} />
           </span>
         </div>

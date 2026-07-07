@@ -57,10 +57,10 @@ export default function DoctorHealButton({
         border border-b-0
         ${
           hasHealed
-            ? "bg-emerald-500/15 backdrop-blur-md border-emerald-400/30 text-emerald-100 shadow-[0_0_16px_rgba(16,185,129,0.2)]"
+            ? "bg-emerald-500/30 border-emerald-400/30 text-emerald-100 shadow-[0_0_16px_rgba(16,185,129,0.2)]"
             : isAlreadyHealed
-              ? "bg-black/40 backdrop-blur-md border-white/5 text-white/25 cursor-not-allowed"
-              : "bg-black/60 backdrop-blur-md border-emerald-400/15 text-emerald-200/70 hover:text-emerald-100 hover:border-emerald-400/30 hover:bg-black/70 cursor-pointer active:scale-95"
+              ? "bg-black/60 border-white/5 text-white/25 cursor-not-allowed"
+              : "bg-black/75 border-emerald-400/15 text-emerald-200/70 hover:text-emerald-100 hover:border-emerald-400/30 hover:bg-black/70 cursor-pointer active:scale-95"
         }
         ${isLoading ? "opacity-50 cursor-wait" : ""}
       `}

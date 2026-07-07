@@ -53,10 +53,10 @@ export default function ParticipantBadges({
   const isGameActive = !!gameSessionState && !gameSessionState.isFinished;
 
   const micContainerClass = isMuted
-    ? "bg-red-950/40 border border-red-500/30"
+    ? "bg-red-950/60 border border-red-500/30"
     : isActiveSpeaker
-      ? "bg-red-950/50 border border-red-500/40"
-      : "bg-black/40 border border-white/10";
+      ? "bg-red-950/65 border border-red-500/40"
+      : "bg-black/60 border border-white/10";
 
   const micIconClass = isMuted
     ? "text-red-400"
@@ -83,7 +83,7 @@ export default function ParticipantBadges({
                 e.stopPropagation();
                 onToggleMic?.();
               }}
-              className={`px-1.5 py-1 tsm:px-2 tsm:py-1.5 tlg:px-2.5 rounded-lg backdrop-blur-md flex items-center gap-1.5 transition cursor-pointer ring-1 ring-white/20 hover:ring-white/40 hover:brightness-125 active:scale-95 ${micContainerClass}`}
+              className={`px-1.5 py-1 tsm:px-2 tsm:py-1.5 tlg:px-2.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer ring-1 ring-white/20 hover:ring-white/40 hover:brightness-125 active:scale-95 ${micContainerClass}`}
             >
               {isMuted ? (
                 <MicOffIcon
@@ -97,7 +97,7 @@ export default function ParticipantBadges({
             </button>
           ) : (
             <div
-              className={`px-1 py-0.5 tsm:px-1.5 tsm:py-1 rounded-md backdrop-blur-md flex items-center gap-1.5 transition ${micContainerClass}`}
+              className={`px-1 py-0.5 tsm:px-1.5 tsm:py-1 rounded-md flex items-center gap-1.5 transition ${micContainerClass}`}
             >
               {isMuted ? (
                 <MicOffIcon
@@ -121,7 +121,7 @@ export default function ParticipantBadges({
             : "opacity-100"
         }`}
       >
-        <div className="px-2 py-0.5 tsm:px-3 tsm:py-1 rounded-b-lg backdrop-blur-md bg-black/60 border border-white/10 border-t-0 shadow-lg max-w-[80%]">
+        <div className="px-2 py-0.5 tsm:px-3 tsm:py-1 rounded-b-lg bg-black/75 border border-white/10 border-t-0 shadow-lg max-w-[80%]">
           <span
             className={`font-inter text-[0.55rem] tsm:text-[0.65rem] tlg:text-[0.75rem] truncate block text-center ${
               isSpeaking

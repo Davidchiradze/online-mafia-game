@@ -28,7 +28,7 @@ export default function GameTable({ rooms }: Props) {
 
   return (
     <div
-      className="rounded-2xl border border-white/10 overflow-hidden backdrop-blur-md"
+      className="rounded-2xl border border-white/10 overflow-hidden"
       style={{
         background:
           "linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)",
