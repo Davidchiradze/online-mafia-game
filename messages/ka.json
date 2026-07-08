@@ -414,6 +414,7 @@
       "introduction_phase": "გაცნობის წრე",
       "night_phase": "ღამის ფაზა",
       "mafia_chooses_target": "მაფია ირჩევს სამიზნეს",
+      "mafia_meets_first_night": "მაფია ხვდება და გეგმავს",
       "don_checks_for_detective": "დონი ამოწმებს დეტექტივს",
       "right_hand_checks_for_yakuza": "მარჯვენა ხელი ამოწმებს იაკუძას",
       "yakuza_and_shogun_chooses_target": "იაკუძა და შოგუნი ირჩევს სამიზნეს",

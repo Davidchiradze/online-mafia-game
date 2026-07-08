@@ -414,6 +414,7 @@
       "introduction_phase": "Introduction",
       "night_phase": "Night Phase",
       "mafia_chooses_target": "Mafia Chooses Target",
+      "mafia_meets_first_night": "Mafia Meets & Plans",
       "don_checks_for_detective": "Don Checks for Detective",
       "right_hand_checks_for_yakuza": "Right Hand Checks for Yakuza",
       "yakuza_and_shogun_chooses_target": "Yakuza & Shogun Choose Target",

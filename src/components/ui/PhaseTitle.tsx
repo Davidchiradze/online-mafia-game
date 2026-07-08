@@ -8,6 +8,23 @@ import PhaseCountdown from "@/components/game/PhaseCountdown";
 
 type Translator = ReturnType<typeof useTranslations<"game">>;
 
+/**
+ * Phases whose label depends on the night number. Each entry swaps in an
+ * alternate `phases.*` key when its predicate matches — e.g. on the first night
+ * the Mafia don't kill, they only meet and plan.
+ */
+const NIGHT_DEPENDENT_PHASE_LABELS: ReadonlyArray<{
+  phase: string;
+  appliesOn: (night: number) => boolean;
+  labelKey: string;
+}> = [
+  {
+    phase: GAME_PHASES[9], // mafia_chooses_target
+    appliesOn: (night) => night === 1,
+    labelKey: "mafia_meets_first_night",
+  },
+];
+
 type GameSessionState = {
   gamePhase: string;
   currentNightNumber?: number | null;
@@ -25,8 +42,13 @@ function getPhaseTitle(
   phase: string,
   nightNumber: number | null | undefined,
 ): string {
-  const label = t.has(`phases.${phase}`) ? t(`phases.${phase}`) : phase;
   const night = nightNumber ?? 0;
+
+  const override = NIGHT_DEPENDENT_PHASE_LABELS.find(
+    (o) => o.phase === phase && o.appliesOn(night),
+  );
+  const key = `phases.${override?.labelKey ?? phase}`;
+  const label = t.has(key) ? t(key) : phase;
 
   const nightPhases: string[] = [
     GAME_PHASES[8],
