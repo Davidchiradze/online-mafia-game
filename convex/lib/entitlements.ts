@@ -26,7 +26,11 @@ import { normalizeRole } from "./access";
  * Tiers — these are the PHP `subscription.packageId` values.
  * -------------------------------------------------------------------------- */
 
-export const SUBSCRIPTION_TIERS = [1, 2, 3] as const;
+// PHP `subscription.packageId` values: 4 = daily, 1 = basic, 2 = standard,
+// 3 = premium. Order matters — `HIGHEST_TIER` is the LAST element and is what
+// staff are granted, so premium (3) is kept last. Daily (4) is the lowest tier
+// and is listed first despite its numeric value.
+export const SUBSCRIPTION_TIERS = [4, 1, 2, 3] as const;
 export type SubscriptionTier = (typeof SUBSCRIPTION_TIERS)[number];
 
 /** Highest tier — staff are treated as holding this (see `getFeatures`). */
@@ -65,11 +69,12 @@ const ALL_FEATURES = Object.values(FEATURES) as Feature[];
 /* ----------------------------------------------------------------------------
  * Tier → features
  *
- * Today all three tiers unlock the same set. Future divergence is a one-line
+ * Today all four tiers unlock the same set. Future divergence is a one-line
  * change here — no call site changes.
  * -------------------------------------------------------------------------- */
 
 export const TIER_FEATURES: Record<SubscriptionTier, readonly Feature[]> = {
+  4: ALL_FEATURES,
   1: ALL_FEATURES,
   2: ALL_FEATURES,
   3: ALL_FEATURES,
@@ -101,9 +106,12 @@ function isStaffRole(role: string | null | undefined): boolean {
 }
 
 /** The effective tier for a profile (staff ⇒ highest), or `null` if none. */
-export function getActiveTier(input: EntitlementInput): SubscriptionTier | null {
+export function getActiveTier(
+  input: EntitlementInput,
+): SubscriptionTier | null {
   if (isStaffRole(input.role)) return HIGHEST_TIER;
-  if (input.subscription?.active) return normalizeTier(input.subscription.packageId);
+  if (input.subscription?.active)
+    return normalizeTier(input.subscription.packageId);
   return null;
 }
 

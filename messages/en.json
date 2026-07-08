@@ -290,6 +290,7 @@
     },
     "yourPackage": "Your Package",
     "owned": "Purchased",
+    "hasActiveSubscription": "You have an active subscription",
     "footerNote": "Once your active subscription expires, you can purchase a new package. Online play —",
     "footerLink": "online.mafia.ge",
     "features": {
@@ -298,6 +299,11 @@
       "noAutoPayments": "No automatic payments"
     },
     "packages": {
+      "daily": {
+        "title": "1 Day",
+        "period": "/ 1 day",
+        "button": "Purchase"
+      },
       "basic": {
         "label": "Basic",
         "badge": "-100%",
@@ -310,14 +316,14 @@
         "badge": "Soon",
         "title": "Standard — 2 Weeks",
         "period": "/ 14 days",
-        "button": "Will be available soon"
+        "button": "Purchase"
       },
       "premium": {
         "label": "Premium",
         "badge": "Soon",
         "title": "Premium — 1 Month",
         "period": "/ 30 days",
-        "button": "Will be available soon"
+        "button": "Purchase"
       }
     }
   },

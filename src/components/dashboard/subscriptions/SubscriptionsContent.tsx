@@ -47,6 +47,10 @@ export default function SubscriptionsContent() {
     ? packages.find((pkg) => pkg.id === activeSubscription.packageId)
     : undefined;
 
+  // With an active subscription you can't buy another package — the other
+  // cards show "you have an active subscription" instead of a purchase button.
+  const hasActiveSubscription = activeSubscription !== null;
+
   const handlePurchase = () => {
     window.location.href = `${PHP_API_BASE_URL}${purchasePath}`;
   };
@@ -119,23 +123,29 @@ export default function SubscriptionsContent() {
                     {t("yourPackage")}
                   </div>
                 ) : (
-                  <div className="mb-1 flex items-center justify-between">
-                    <span
-                      className={cn(
-                        "text-sm font-bold tracking-wide",
-                        pkg.labelColor,
-                      )}
-                    >
-                      {t(pkg.labelKey)}
-                    </span>
-                    <div
-                      className={cn(
-                        "rounded-full px-2.5 py-0.5 text-[11px] font-bold tracking-wider text-white",
-                        pkg.badgeColor,
-                      )}
-                    >
-                      {t(pkg.badgeKey)}
-                    </div>
+                  // Reserve a fixed-height row so titles/prices stay aligned
+                  // across cards even when a card has no label or badge (daily).
+                  <div className="mb-1 flex min-h-[1.5rem] items-center justify-between">
+                    {pkg.labelKey && (
+                      <span
+                        className={cn(
+                          "text-sm font-bold tracking-wide",
+                          pkg.labelColor,
+                        )}
+                      >
+                        {t(pkg.labelKey)}
+                      </span>
+                    )}
+                    {/* {pkg.badgeKey && (
+                      <div
+                        className={cn(
+                          "ml-auto rounded-full px-2.5 py-0.5 text-[11px] font-bold tracking-wider text-white",
+                          pkg.badgeColor,
+                        )}
+                      >
+                        {t(pkg.badgeKey)}
+                      </div>
+                    )} */}
                   </div>
                 )}
 
@@ -146,9 +156,11 @@ export default function SubscriptionsContent() {
 
                 {/* Price */}
                 <div className="mb-8 flex h-12 items-end gap-2">
-                  <span className="mb-1 text-sm font-medium text-zinc-500 line-through sm:text-base">
-                    {pkg.oldPrice}
-                  </span>
+                  {pkg.oldPrice && (
+                    <span className="mb-1 text-sm font-medium text-zinc-500 line-through sm:text-base">
+                      {pkg.oldPrice}
+                    </span>
+                  )}
                   <div className="flex items-baseline leading-none">
                     <span className="text-4xl font-bold text-white sm:text-5xl">
                       {pkg.price}
@@ -180,17 +192,15 @@ export default function SubscriptionsContent() {
                     <Check className="h-4 w-4" />
                     {t("owned")}
                   </div>
+                ) : hasActiveSubscription ? (
+                  <div className="flex w-full items-center justify-center rounded-xl border border-dashed border-white/10 py-4 text-sm font-semibold text-zinc-500">
+                    {t("hasActiveSubscription")}
+                  </div>
                 ) : (
                   <button
                     type="button"
-                    onClick={pkg.disabled ? undefined : handlePurchase}
-                    disabled={pkg.disabled}
-                    className={cn(
-                      "w-full rounded-xl py-4 text-sm font-semibold transition duration-200",
-                      pkg.disabled
-                        ? "cursor-not-allowed bg-[#202024] text-zinc-500"
-                        : "bg-[#2a2a32] text-white shadow-sm hover:bg-[#32323c] hover:shadow-md",
-                    )}
+                    onClick={handlePurchase}
+                    className="w-full rounded-xl bg-[#2a2a32] py-4 text-sm font-semibold text-white shadow-sm transition duration-200 hover:bg-[#32323c] hover:shadow-md"
                   >
                     {t(pkg.buttonKey)}
                   </button>

@@ -6,17 +6,16 @@ import subscriptionsConfig from "@/config/subscriptions.json";
  */
 export type SubscriptionPackage = {
   id: string;
-  labelKey: string;
+  labelKey?: string;
   labelColor: string;
-  badgeKey: string;
-  badgeColor: string;
+  badgeKey?: string;
+  badgeColor?: string;
   titleKey: string;
-  oldPrice: string;
+  oldPrice?: string;
   price: string;
   periodKey: string;
   featureKeys: string[];
   buttonKey: string;
-  disabled: boolean;
 };
 
 /**
@@ -48,6 +47,7 @@ export const SUBSCRIPTIONS_CONFIG = subscriptionsConfig as SubscriptionsConfig;
  * `SubscriptionPackage.id`. Single place these two id schemes are bridged.
  */
 const PACKAGE_ID_BY_TIER: Record<number, string> = {
+  4: "daily",
   1: "basic",
   2: "standard",
   3: "premium",

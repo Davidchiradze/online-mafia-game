@@ -8,6 +8,19 @@
   "playPath": "/lobby",
   "packages": [
     {
+      "id": "daily",
+      "labelColor": "text-zinc-200",
+      "titleKey": "packages.daily.title",
+      "price": "4.99",
+      "periodKey": "packages.daily.period",
+      "featureKeys": [
+        "features.fullAccess",
+        "features.balanceOnly",
+        "features.noAutoPayments"
+      ],
+      "buttonKey": "packages.daily.button"
+    },
+    {
       "id": "basic",
       "labelKey": "packages.basic.label",
       "labelColor": "text-zinc-200",
@@ -22,8 +35,7 @@
         "features.balanceOnly",
         "features.noAutoPayments"
       ],
-      "buttonKey": "packages.basic.button",
-      "disabled": false
+      "buttonKey": "packages.basic.button"
     },
     {
       "id": "standard",
@@ -40,8 +52,7 @@
         "features.balanceOnly",
         "features.noAutoPayments"
       ],
-      "buttonKey": "packages.standard.button",
-      "disabled": true
+      "buttonKey": "packages.standard.button"
     },
     {
       "id": "premium",
@@ -58,8 +69,7 @@
         "features.balanceOnly",
         "features.noAutoPayments"
       ],
-      "buttonKey": "packages.premium.button",
-      "disabled": true
+      "buttonKey": "packages.premium.button"
     }
   ]
 }
