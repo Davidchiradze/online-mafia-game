@@ -125,6 +125,37 @@ export function isSubscriptionActive(input: EntitlementInput): boolean {
   return isStaffRole(input.role) || input.subscription?.active === true;
 }
 
+/**
+ * REPORTING-ONLY validity: is the subscription still active by its own end
+ * date, rather than by the synced `active` snapshot?
+ *
+ * PHP recomputes `active` (= packageId>0 && to>now) only when the user visits
+ * the site, so a lapsed user's `active` flag stays `true` until their next sync
+ * — which for someone who never returns is never. For ACCESS gating that
+ * stale-but-generous behavior is intentional (see docs/subscriptions.md), but
+ * for admin ANALYTICS it inflates the subscriber count. This resolver treats the
+ * `to` date as the source of truth.
+ *
+ * Semantics: when a parseable `to` date exists it alone decides (future ⇒
+ * active); only when `to` is missing/unparseable do we fall back to the flag.
+ *
+ * Do NOT use this for access control — use `hasFeature` / `isSubscriptionActive`.
+ */
+export function isSubscriptionActiveByDate(
+  subscription: { to?: string; active: boolean } | null | undefined,
+  now: number,
+): boolean {
+  if (!subscription) return false;
+  const to = subscription.to?.trim();
+  if (to) {
+    // PHP MySQL datetime, e.g. "2026-07-20 12:00:00" — same parse as the
+    // display helper in the admin users table.
+    const parsed = new Date(to.replace(" ", "T")).getTime();
+    if (!Number.isNaN(parsed)) return parsed > now;
+  }
+  return subscription.active === true;
+}
+
 /** Validator for a feature key (for mutation args, if ever needed). */
 export const featureValidator = v.union(
   v.literal(FEATURES.PLAY_GAME),

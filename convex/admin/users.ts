@@ -1,10 +1,7 @@
 import { ConvexError, v } from "convex/values";
 import { paginationOptsValidator } from "convex/server";
 import { mutation, query } from "../_generated/server";
-import {
-  getAuthenticatedProfile,
-  requirePermission,
-} from "../lib/auth";
+import { getAuthenticatedProfile, requirePermission } from "../lib/auth";
 import { writeAudit } from "../lib/admin";
 import {
   PERMISSIONS,
@@ -71,13 +68,17 @@ export const listUsers = query({
   handler: async (ctx, { paginationOpts, search, filter }) => {
     await requirePermission(ctx, PERMISSIONS.USER_VIEW);
 
+    // "now" as a UTC MySQL datetime string, for the date-based subscribers
+    // filter's lexical comparison against `subscription.to`.
+    const nowStr = new Date(Date.now())
+      .toISOString()
+      .slice(0, 19)
+      .replace("T", " ");
     const term = search?.trim();
     const base = term
       ? ctx.db
           .query("profiles")
-          .withSearchIndex("search_nickname", (q) =>
-            q.search("nickname", term),
-          )
+          .withSearchIndex("search_nickname", (q) => q.search("nickname", term))
       : ctx.db.query("profiles").order("desc");
 
     // Narrow to the selected group. `.filter()` composes with both the search
@@ -87,8 +88,12 @@ export const listUsers = query({
           if (filter === "admins") return q.eq(q.field("role"), "admin");
           if (filter === "moderators")
             return q.eq(q.field("role"), "moderator");
+          // Date is the source of truth: PHP's synced `active` flag goes stale
+          // for users who never return, so filter by the `to` end date. MySQL
+          // datetimes are fixed-width, so a lexical `>` equals a chronological
+          // one — and it composes with the paginated scan. See stats.ts.
           if (filter === "subscribers")
-            return q.eq(q.field("subscription.active"), true);
+            return q.gt(q.field("subscription.to"), nowStr);
           return q.neq(q.field("bannedAt"), undefined); // banned
         })
       : base;
@@ -121,7 +126,10 @@ export const assignRole = mutation({
 
     const target = await ctx.db.get(targetProfileId);
     if (!target) {
-      throw new ConvexError({ code: "USER_NOT_FOUND", message: "User not found" });
+      throw new ConvexError({
+        code: "USER_NOT_FOUND",
+        message: "User not found",
+      });
     }
     if (target._id === actor._id) {
       throw new ConvexError({
@@ -151,7 +159,10 @@ export const setBanned = mutation({
 
     const target = await ctx.db.get(targetProfileId);
     if (!target) {
-      throw new ConvexError({ code: "USER_NOT_FOUND", message: "User not found" });
+      throw new ConvexError({
+        code: "USER_NOT_FOUND",
+        message: "User not found",
+      });
     }
     if (target._id === actor._id) {
       throw new ConvexError({

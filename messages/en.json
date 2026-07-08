@@ -112,6 +112,8 @@
       "subActive": "Active",
       "subExpired": "Expired",
       "subNone": "None",
+      "subUntil": "Until {date}",
+      "subEndedOn": "Ended {date}",
       "filter": "Filter",
       "filterAll": "All users",
       "filterAdmins": "Admins only",

@@ -89,6 +89,15 @@ A subscription is treated as active iff `subscription.active === true`. We do
 is authoritative. Trade-off: a subscription that expires *between* page loads
 stays active in Convex until the next sync. `from`/`to` are display-only.
 
+**Exception — reporting/analytics.** The stale-`active` trade-off is fine for
+*access* (a user must load a page to play, which re-syncs), but it inflates
+*counts*: a user who never returns keeps `active === true` forever after their
+`to` date passes. So admin **analytics** count subscribers by the `to` date
+instead, via `isSubscriptionActiveByDate(subscription, now)` — when a parseable
+`to` exists it alone decides (future ⇒ active), else it falls back to the flag.
+This resolver is **reporting-only**; access gating still uses `hasFeature` /
+`isSubscriptionActive`.
+
 ### Staff override
 
 ```ts

@@ -12,8 +12,10 @@ import {
   PERMISSIONS,
   type AccessRole,
 } from "@convex/lib/access";
+import { isSubscriptionActiveByDate } from "@convex/lib/entitlements";
 import { useAccess } from "@/hooks/auth/useAccess";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
+import { useServerTime } from "@/lib/time/serverTime";
 import { toast } from "@/lib/utils/toast";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
@@ -178,31 +180,7 @@ export default function UsersTable() {
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    {u.subscription && u.subscription.packageId > 0 ? (
-                      <div>
-                        <span
-                          className={`rounded-full px-2 py-0.5 text-xs ${
-                            u.subscription.active
-                              ? "bg-emerald-500/15 text-emerald-400"
-                              : "bg-amber-500/15 text-amber-400"
-                          }`}
-                        >
-                          {u.subscription.active
-                            ? t("users.subActive")
-                            : t("users.subExpired")}
-                        </span>
-                        <div className="mt-1 text-xs text-gray-500">
-                          #{u.subscription.packageId}
-                          {u.subscription.to
-                            ? ` · ${formatSubDate(u.subscription.to)}`
-                            : ""}
-                        </div>
-                      </div>
-                    ) : (
-                      <span className="text-xs text-gray-500">
-                        {t("users.subNone")}
-                      </span>
-                    )}
+                    <SubscriptionCell subscription={u.subscription} />
                   </td>
                   <td className="px-4 py-3">
                     {u.bannedAt ? (
@@ -238,6 +216,60 @@ export default function UsersTable() {
           <div ref={sentinelRef} className="h-px w-full" />
         </div>
       )}
+    </div>
+  );
+}
+
+type UserSubscription = {
+  packageId: number;
+  from?: string;
+  to?: string;
+  active: boolean;
+} | null;
+
+/**
+ * Subscription status + end date for a user row. The Active/Expired badge is
+ * driven by the `to` end DATE, not PHP's synced `active` flag — that flag goes
+ * stale for users who never return (see convex/lib/entitlements.ts). The end
+ * date is always shown so staff can see exactly when access lapses / lapsed.
+ */
+function SubscriptionCell({
+  subscription,
+}: {
+  subscription: UserSubscription;
+}) {
+  const t = useTranslations("admin");
+  const getServerTime = useServerTime();
+
+  if (!subscription || subscription.packageId <= 0) {
+    return <span className="text-xs text-gray-500">{t("users.subNone")}</span>;
+  }
+
+  const active = isSubscriptionActiveByDate(subscription, getServerTime());
+
+  return (
+    <div>
+      <span
+        className={`rounded-full px-2 py-0.5 text-xs ${
+          active
+            ? "bg-emerald-500/15 text-emerald-400"
+            : "bg-amber-500/15 text-amber-400"
+        }`}
+      >
+        {active ? t("users.subActive") : t("users.subExpired")}
+      </span>
+      <div className="mt-1 text-xs text-gray-500">
+        #{subscription.packageId}
+        {subscription.to
+          ? ` · ${
+              active
+                ? t("users.subUntil", { date: formatSubDate(subscription.to) })
+                : t("users.subEndedOn", {
+                    date: formatSubDate(subscription.to),
+                  })
+            }`
+          : ""}
+      </div>
     </div>
   );
 }

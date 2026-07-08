@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { query } from "../_generated/server";
 import { requirePermission } from "../lib/auth";
 import { PERMISSIONS } from "../lib/access";
+import { isSubscriptionActiveByDate } from "../lib/entitlements";
 import { winMethodLabel } from "../lib/winConditions";
 
 /* ============================================================================
@@ -40,8 +41,12 @@ export const overviewKpis = query({
       (p) => p.createdAt > now - WEEK_MS,
     ).length;
     const banned = profiles.filter((p) => p.bannedAt != null).length;
-    const subscribers = profiles.filter(
-      (p) => p.subscription?.active === true,
+    // Count by the subscription END DATE, not the synced `active` flag: PHP only
+    // refreshes `active` on a page visit, so a user who never returns keeps a
+    // stale `active === true` long after their `to` date passed. The date is the
+    // source of truth for reporting. See isSubscriptionActiveByDate.
+    const subscribers = profiles.filter((p) =>
+      isSubscriptionActiveByDate(p.subscription, now),
     ).length;
 
     const activeGames = games.filter((g) => g.gameStatus === "playing").length;
