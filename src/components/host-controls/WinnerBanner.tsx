@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import FinishGameButton from "./FinishGameButton";
-import { GAME_CLEANUP } from "@/lib/constants/game";
+import { GAME_CLEANUP } from "@convex/lib/constants";
 import { useCountdown } from "@/hooks/game/useCountdown";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 

@@ -196,16 +196,6 @@ export const VOTING = {
   BOTH_LEAVE_THRESHOLD: 0.5,
 } as const;
 
-// Game Cleanup Constants
-export const GAME_CLEANUP = {
-  /**
-   * Delay before deleting a finished game and its relations.
-   * MUST match `GAME_CLEANUP.DELAY_MS` in `convex/lib/constants.ts` — this
-   * client copy drives the "room closes in Ns" countdown in the winner banner.
-   */
-  DELAY_MS: 90_000,
-} as const;
-
 /**
  * Per-phase decision countdown durations (milliseconds).
  *
