@@ -87,6 +87,10 @@ export const GAME_PHASES = [
   "voting",
   "repeat",
   "end_game",
+  // Neutral "everyone asleep" buffer inserted between meetings where the awake
+  // role changes across teams (and on Doctor→wake exits). Appended last so the
+  // numeric GAME_PHASES[0..20] indices used across the app stay stable.
+  "phase_transition",
 ] as const;
 
 /** Human-readable labels for each game phase */
@@ -112,6 +116,7 @@ export const GAME_PHASE_LABELS: Record<(typeof GAME_PHASES)[number], string> = {
   voting: "Voting",
   repeat: "Next Round",
   end_game: "Game Over",
+  phase_transition: "Everyone Asleep",
 };
 
 // Day Phase Speaking Constants

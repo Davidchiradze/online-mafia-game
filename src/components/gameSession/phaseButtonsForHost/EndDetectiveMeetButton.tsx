@@ -29,7 +29,8 @@ const EndDetectiveMeetButton = ({
       await updateSession({
         sessionId: gameSessionState._id,
         updates: {
-          gamePhase: GAME_PHASES[6], // "doctor_meet"
+          gamePhase: GAME_PHASES[21], // "phase_transition" (neutral sleep buffer)
+          nextPhase: GAME_PHASES[6], // "doctor_meet"
         },
       });
     } finally {

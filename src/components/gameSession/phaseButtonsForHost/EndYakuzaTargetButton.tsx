@@ -31,7 +31,8 @@ const EndYakuzaTargetButton = ({
       await updateSession({
         sessionId: gameSessionState._id,
         updates: {
-          gamePhase: GAME_PHASES[13], // "detective_checks_for_mafia"
+          gamePhase: GAME_PHASES[21], // "phase_transition" (neutral sleep buffer)
+          nextPhase: GAME_PHASES[13], // "detective_checks_for_mafia"
         },
       });
     } finally {

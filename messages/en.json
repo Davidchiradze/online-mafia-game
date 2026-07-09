@@ -396,7 +396,8 @@
       "dayLabel": "D{night} — {label}",
       "speaking": "#{seat} speaking",
       "nextSpeaker": "Next speaker: #{seat}",
-      "nominated": "Nominated: {list}"
+      "nominated": "Nominated: {list}",
+      "nextPhase": "Next: {label}"
     },
     "ready": "Ready",
     "revealRole": "Reveal role",
@@ -433,7 +434,8 @@
       "nominated_players_speak": "Self-Justification",
       "voting": "Voting",
       "repeat": "Next Round",
-      "end_game": "Game Over"
+      "end_game": "Game Over",
+      "phase_transition": "Everyone is asleep"
     },
     "killConfirmTitle": "Kill Player",
     "killConfirmBody": "Are you sure you want to kill Player {seatNumber}? This action cannot be undone.",

@@ -2,37 +2,42 @@
 
 import React, { useState } from "react";
 import { useMutation } from "convex/react";
-import { farewellSpeech } from "@convex/refs/game";
-import type { Id } from "@convex/_generated/dataModel";
+import { gameSessions } from "@convex/refs/game";
 import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
+import { GAME_PHASES } from "@/lib/constants/game";
 import PhaseButton from "@/components/ui/PhaseButton";
 import { useNightPhaseReadiness } from "@/hooks/game/useNightPhaseReadiness";
 
 /**
- * Button to end doctor's heal action and transition to farewell speech phase.
+ * Button to end the doctor's heal action.
  *
- * Flow:
- * - Calls startFarewellSpeech which:
- *   - Determines who was killed (mafia_target, yakuza_target) minus healed player
- *   - If no one dies, skips directly to day_phase
- *   - Otherwise, transitions to farewell_speech with randomized speaker order
+ * Rather than resolving the night immediately, it parks the game in the neutral
+ * `phase_transition` sleep buffer so the Doctor isn't glimpsed as everyone wakes.
+ * `nextPhase: "farewell_speech"` is a resolve-marker: StartNextPhaseButton runs
+ * the unchanged `startFarewellSpeech`, which determines kills and lands on
+ * `farewell_speech` (a player died) or `day_phase` (no one died).
  */
 const EndDoctorHealButton = () => {
   const t = useTranslations("game.host");
-  const { gameId } = useGameRoom();
+  const { gameSessionState } = useGameRoom();
   const [isLoading, setIsLoading] = useState(false);
+  const updateSession = useMutation(gameSessions.update);
   const { canEndDoctorPhase } = useNightPhaseReadiness();
 
-  const startFarewellSpeechMutation = useMutation(farewellSpeech.startFarewellSpeech);
-
   const handleEndDoctorHeal = async () => {
-    if (isLoading) return;
+    if (isLoading || !gameSessionState) return;
     setIsLoading(true);
     try {
-      await startFarewellSpeechMutation({ gameId: gameId as Id<"games"> });
+      await updateSession({
+        sessionId: gameSessionState._id,
+        updates: {
+          gamePhase: GAME_PHASES[21], // "phase_transition" (neutral sleep buffer)
+          nextPhase: "farewell_speech", // resolve-marker: Start runs startFarewellSpeech
+        },
+      });
     } catch (e) {
-      console.error("Failed to start farewell speech:", e);
+      console.error("Failed to end doctor heal:", e);
     } finally {
       setIsLoading(false);
     }

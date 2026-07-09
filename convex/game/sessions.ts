@@ -60,6 +60,7 @@ export const update = mutation({
     sessionId: v.id("gameSessions"),
     updates: v.object({
       gamePhase: v.optional(v.string()),
+      nextPhase: v.optional(v.union(v.string(), v.null())),
       isFinished: v.optional(v.boolean()),
       currentNightNumber: v.optional(v.number()),
       currentSpeakerIndex: v.optional(v.union(v.number(), v.null())),

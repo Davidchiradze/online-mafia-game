@@ -396,7 +396,8 @@
       "dayLabel": "დღე{night} — {label}",
       "speaking": "#{seat} საუბრობს",
       "nextSpeaker": "შემდეგი მოსაუბრე: #{seat}",
-      "nominated": "დასახელებული: {list}"
+      "nominated": "დასახელებული: {list}",
+      "nextPhase": "შემდეგი: {label}"
     },
     "ready": "მზადაა",
     "revealRole": "როლის ჩვენება",
@@ -433,7 +434,8 @@
       "nominated_players_speak": "თავის მართლება",
       "voting": "კენჭისყრა",
       "repeat": "შემდეგი რაუნდი",
-      "end_game": "თამაში დასრულდა"
+      "end_game": "თამაში დასრულდა",
+      "phase_transition": "ყველას სძინავს"
     },
     "killConfirmTitle": "მოთამაშის მოკვლა",
     "killConfirmBody": "დარწმუნებული ხართ, რომ გსურთ მოკლათ მოთამაშე {seatNumber}? ეს მოქმედება შეუქცევადია.",

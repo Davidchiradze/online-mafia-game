@@ -29,7 +29,8 @@ const EndDetectiveCheckButton = ({
       await updateSession({
         sessionId: gameSessionState._id,
         updates: {
-          gamePhase: GAME_PHASES[14], // "doctor_heals_player"
+          gamePhase: GAME_PHASES[21], // "phase_transition" (neutral sleep buffer)
+          nextPhase: GAME_PHASES[14], // "doctor_heals_player"
         },
       });
     } finally {

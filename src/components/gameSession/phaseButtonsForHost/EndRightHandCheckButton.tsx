@@ -29,7 +29,8 @@ const EndRightHandCheckButton = ({
       await updateSession({
         sessionId: gameSessionState._id,
         updates: {
-          gamePhase: GAME_PHASES[12], // "yakuza_and_shogun_chooses_target"
+          gamePhase: GAME_PHASES[21], // "phase_transition" (neutral sleep buffer)
+          nextPhase: GAME_PHASES[12], // "yakuza_and_shogun_chooses_target"
         },
       });
     } finally {

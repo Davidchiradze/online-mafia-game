@@ -24,6 +24,7 @@ type GameSessionDoc = {
   _creationTime: number;
   gameId: Id<"games">;
   gamePhase: string;
+  nextPhase?: string;
   isFinished: boolean;
   currentNightNumber: number;
   currentSpeakerIndex?: number;
@@ -114,6 +115,7 @@ type GameWithRelations = {
 
 type GameSessionUpdates = {
   gamePhase?: string;
+  nextPhase?: string | null;
   isFinished?: boolean;
   currentNightNumber?: number;
   currentSpeakerIndex?: number | null;

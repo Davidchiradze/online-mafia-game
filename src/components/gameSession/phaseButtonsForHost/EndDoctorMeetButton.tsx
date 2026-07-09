@@ -32,10 +32,13 @@ const EndDoctorMeetButton = ({
       await updateSession({
         sessionId: gameSessionState._id,
         updates: {
-          gamePhase: GAME_PHASES[7], // "introduction_phase"
+          gamePhase: GAME_PHASES[21], // "phase_transition" (neutral sleep buffer)
+          nextPhase: GAME_PHASES[7], // "introduction_phase"
         },
       });
 
+      // Clearing speaking state is phase-agnostic; running it now keeps it clean
+      // through the neutral gap into the introduction phase.
       await resetSpeakingState({ gameId: gameId as Id<"games"> });
     } finally {
       setIsLoading(false);
