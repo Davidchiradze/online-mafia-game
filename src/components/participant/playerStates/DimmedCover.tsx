@@ -1,3 +1,4 @@
+import { EyeOff } from "lucide-react";
 import { STARS } from "./constants";
 
 interface DimmedCoverProps {
@@ -36,6 +37,13 @@ export default function DimmedCover({ className = "" }: DimmedCoverProps) {
           }}
         />
       ))}
+
+      {/* Centered crossed-eye marker */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className="flex items-center justify-center p-1.5 rounded-full border border-white/20 bg-black/60 text-white/80 shadow-[0_0_16px_rgba(0,0,0,0.4)]">
+          <EyeOff className="h-3.5 w-3.5 md:h-4 md:w-4" strokeWidth={2} />
+        </span>
+      </div>
     </div>
   );
 }

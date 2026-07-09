@@ -70,12 +70,14 @@ export function canSeeParticipant(
     return false;
   }
 
-  // PHASE TRANSITION: Neutral sleep buffer between meetings — everyone (players,
-  // spectators, and host) is covered so the just-active role settles before the
-  // next one wakes. Must return false here or the default `return true` below
-  // would reveal everyone and re-introduce the cross-faction leak.
+  // PHASE TRANSITION: Neutral sleep buffer between meetings. Players and
+  // spectators are covered so the just-active role settles before the next one
+  // wakes. The host, however, sees every player dimmed (blurred) so they can
+  // keep monitoring the table during the buffer. Non-host must return false
+  // here or the default `return true` below would reveal everyone and
+  // re-introduce the cross-faction leak.
   if (gamePhase === "phase_transition") {
-    return false;
+    return isViewerHost;
   }
 
   // INTRODUCTION PHASE: Everyone can see everyone (day time)
