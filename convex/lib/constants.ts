@@ -83,7 +83,9 @@ export const PRESENCE = {
    * Single site-wide presence room. "Online" means a user is on the site
    * anywhere, not in a specific game/chat room. Heartbeat is 60s; the
    * component marks a session offline after 2.5x the interval of silence
-   * (~150s) or on a graceful tab-close disconnect.
+   * (~150s) or on a graceful tab-close disconnect. The site-wide heartbeat is
+   * write-only (see `PresenceBootstrap`) — it deliberately does NOT subscribe
+   * to `presence.list`, which is read only where a list is actually rendered.
    */
   GLOBAL_ROOM: "global",
   HEARTBEAT_INTERVAL_MS: 60_000,
