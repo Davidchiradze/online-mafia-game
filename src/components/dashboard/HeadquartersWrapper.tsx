@@ -57,7 +57,7 @@ export default function HeadquartersWrapper({
       <aside
         onMouseEnter={() => setIsSidebarHovered(true)}
         onMouseLeave={() => setIsSidebarHovered(false)}
-        className={`fixed left-0 top-0 z-30 hidden h-screen shrink-0 flex-col overflow-hidden border-r border-white/5 bg-black/80 transition-all duration-300 ease-in-out md:flex ${isSidebarHovered ? "w-[280px]" : "w-[72px]"}`}
+        className={`fixed left-0 top-0 z-30 hidden h-screen shrink-0 flex-col overflow-hidden border-r border-white/5 transition-all duration-300 ease-in-out md:flex ${isSidebarHovered ? "w-[280px] bg-black/95" : "w-[72px] bg-black/80"}`}
       >
         <NavigationSidebar
           expanded={isSidebarHovered}
