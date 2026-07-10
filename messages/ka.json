@@ -405,7 +405,8 @@
     "statMatches": "პარტიები",
     "statBestStreak": "საუკეთესო სერია",
     "onStreak": "{count} მოგება ზედიზედ",
-    "topRole": "საუკეთესო როლი"
+    "topRole": "საუკეთესო როლი",
+    "you": "შენ"
   },
   "game": {
     "gameTypes": {

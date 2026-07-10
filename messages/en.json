@@ -405,7 +405,8 @@
     "statMatches": "Matches",
     "statBestStreak": "Best Streak",
     "onStreak": "{count} win streak",
-    "topRole": "Top Role"
+    "topRole": "Top Role",
+    "you": "You"
   },
   "game": {
     "gameTypes": {
