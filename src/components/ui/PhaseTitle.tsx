@@ -27,6 +27,7 @@ const NIGHT_DEPENDENT_PHASE_LABELS: ReadonlyArray<{
 
 type GameSessionState = {
   gamePhase: string;
+  nextPhase?: string;
   currentNightNumber?: number | null;
   speakingOrder?: number[];
   currentSpeakerIndex?: number | null;
@@ -41,7 +42,19 @@ function getPhaseTitle(
   t: Translator,
   phase: string,
   nightNumber: number | null | undefined,
+  isHost: boolean,
+  nextPhase: string | undefined,
 ): string {
+  // Neutral sleep buffer: the host sees where the game is headed; players only
+  // see the generic "asleep" label (never the next phase — that would leak).
+  if (phase === GAME_PHASES[21] && isHost && nextPhase) {
+    // The Doctor→wake exit stores "farewell_speech" as a resolve-marker; the
+    // real destination (farewell vs day) isn't known yet, so show "Day".
+    const nextKey = nextPhase === "farewell_speech" ? "day_phase" : nextPhase;
+    const label = t.has(`phases.${nextKey}`) ? t(`phases.${nextKey}`) : nextKey;
+    return t("phaseTitle.nextPhase", { label });
+  }
+
   const night = nightNumber ?? 0;
 
   const override = NIGHT_DEPENDENT_PHASE_LABELS.find(
@@ -133,13 +146,20 @@ export default function PhaseTitle(props: PhaseTitleProps) {
 
   const {
     gamePhase,
+    nextPhase,
     currentNightNumber,
     speakingOrder = [],
     currentSpeakerIndex,
     nominatedPlayers = [],
   } = gameSessionState;
 
-  const title = getPhaseTitle(t, gamePhase, currentNightNumber);
+  const title = getPhaseTitle(
+    t,
+    gamePhase,
+    currentNightNumber,
+    isHost,
+    nextPhase,
+  );
   const speakerInfo = getSpeakerInfo(t, speakingOrder, currentSpeakerIndex);
   const isPickingRolesPhase = gamePhase === GAME_PHASES[1];
 

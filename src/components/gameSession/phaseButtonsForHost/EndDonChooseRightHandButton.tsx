@@ -46,7 +46,8 @@ const EndDonChooseRightHandButton = ({
       await updateSession({
         sessionId: gameSessionState._id,
         updates: {
-          gamePhase: GAME_PHASES[4], // "yakuda_shogun_meet"
+          gamePhase: GAME_PHASES[21], // "phase_transition" (neutral sleep buffer)
+          nextPhase: GAME_PHASES[4], // "yakuda_shogun_meet"
         },
       });
     } finally {

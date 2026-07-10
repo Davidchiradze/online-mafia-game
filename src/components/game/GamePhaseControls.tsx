@@ -24,6 +24,7 @@ import DayPhaseSpeakingControls from "../gameSession/phaseButtonsForHost/DayPhas
 import StartNominatedPlayersSpeakButton from "../gameSession/phaseButtonsForHost/StartNominatedPlayersSpeakButton";
 import StartVotingButton from "../gameSession/phaseButtonsForHost/StartVotingButton";
 import NominatedPlayersSpeakingControls from "../gameSession/phaseButtonsForHost/NominatedPlayersSpeakingControls";
+import StartNextPhaseButton from "../gameSession/phaseButtonsForHost/StartNextPhaseButton";
 import NightActionsDisplay from "./NightActionsDisplay";
 import PhaseTitle from "../ui/PhaseTitle";
 import WinnerBanner from "../host-controls/WinnerBanner";
@@ -162,6 +163,9 @@ const GamePhaseControls = () => {
 
       case GAME_PHASES[20]: // "end_game"
         return <EndGameControls />;
+
+      case GAME_PHASES[21]: // "phase_transition" (neutral sleep buffer)
+        return <StartNextPhaseButton gameSessionState={gameSessionState} />;
 
       default:
         return (

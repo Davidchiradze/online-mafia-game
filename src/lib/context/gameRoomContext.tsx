@@ -40,6 +40,7 @@ type ConvexGameSession = {
   _creationTime: number;
   gameId: Id<"games">;
   gamePhase: string;
+  nextPhase?: string;
   isFinished: boolean;
   currentNightNumber: number;
   currentSpeakerIndex?: number;

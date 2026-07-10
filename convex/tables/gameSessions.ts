@@ -5,6 +5,7 @@ import { winMethodValidator } from "./gameLogs";
 export const gameSessions = defineTable({
   gameId: v.id("games"),
   gamePhase: v.string(),
+  nextPhase: v.optional(v.string()),
   isFinished: v.boolean(),
   currentNightNumber: v.number(),
   currentSpeakerIndex: v.optional(v.number()),

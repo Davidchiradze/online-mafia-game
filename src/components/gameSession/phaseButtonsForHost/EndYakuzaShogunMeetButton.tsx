@@ -29,7 +29,8 @@ const EndYakuzaShogunMeetButton = ({
       await updateSession({
         sessionId: gameSessionState._id,
         updates: {
-          gamePhase: GAME_PHASES[5], // "detective_meet"
+          gamePhase: GAME_PHASES[21], // "phase_transition" (neutral sleep buffer)
+          nextPhase: GAME_PHASES[5], // "detective_meet"
         },
       });
     } finally {
