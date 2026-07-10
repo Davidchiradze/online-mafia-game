@@ -384,7 +384,28 @@
     "rosterUnavailable": "სია მიუწვდომელია.",
     "you": "(შენ)",
     "alive": "ცოცხალი",
-    "dead": "მკვდარი"
+    "dead": "მკვდარი",
+    "eloRating": "ELO რეიტინგი",
+    "levelTooltip": "{elo} ELO — ლეველი {level}",
+    "toNextLevel": "{points} ელო {level} ლეველამდე",
+    "tableAvgTooltip": "მაგიდის საშუალო: {avg}",
+    "tableAvg": "მაგიდის საშ. {avg}"
+  },
+  "leaderboard": {
+    "pageTitle": "ლიდერბორდი",
+    "pageSubtitle": "საუკეთესო მოთამაშეები ELO რეიტინგით. მოიგე ძლიერ მაგიდებთან, რომ უფრო სწრაფად აიწიო.",
+    "loading": "ლიდერბორდი იტვირთება…",
+    "empty": "რეიტინგული მოთამაშეები ჯერ არ არიან. დაასრულე თამაში პირველი ადგილის დასაკავებლად.",
+    "record": "{wins}მ / {losses}წ",
+    "level": "ლეველი {level}",
+    "peak": "პიკი {elo}",
+    "levelTooltip": "{elo} ELO — ლეველი {level}",
+    "toNextLevel": "{points} ქულა {level} ლეველამდე",
+    "statWinRate": "მოგების %",
+    "statMatches": "პარტიები",
+    "statBestStreak": "საუკეთესო სერია",
+    "onStreak": "{count} მოგება ზედიზედ",
+    "topRole": "საუკეთესო როლი"
   },
   "game": {
     "gameTypes": {

@@ -7,6 +7,7 @@ import {
 import { Id } from "../_generated/dataModel";
 import { describeWin, type WinContext, type Winner } from "./winConditions";
 import { roleToFaction } from "./roles";
+import { applyPlayerRating, loadRatingSnapshot } from "./playerRatings";
 
 export async function getGameById(db: DatabaseReader, gameId: Id<"games">) {
   const game = await db.get(gameId);
@@ -211,6 +212,10 @@ export async function recordWinnerIfDecided(
  * since the host holds no role. Games finished without a decided winner are
  * still logged with `winner: null` and no `winMethod`.
  *
+ * Also applies ELO rating updates for rated game types — upserts
+ * `playerRatings` and stamps the per-game snapshot on each `gameLogPlayers`
+ * row (see /docs/ranking-system.md).
+ *
  * Call this from `finishGame` BEFORE flipping status / scheduling cleanup.
  */
 export async function archiveGameLog(ctx: MutationCtx, gameId: Id<"games">) {
@@ -258,6 +263,14 @@ export async function archiveGameLog(ctx: MutationCtx, gameId: Id<"games">) {
   const winner: Winner | null = session?.winner ?? null;
   const winMethod = session?.winMethod;
 
+  // ELO pass 1 — snapshot every player's pre-game rating (null for unrated
+  // game types). See /docs/ranking-system.md §3.
+  const ratingSnapshot = await loadRatingSnapshot(
+    ctx.db,
+    game.gameType,
+    roster.map((p) => p.playerId),
+  );
+
   const gameLogId = await ctx.db.insert("gameLogs", {
     gameId,
     gameCode: game.code,
@@ -277,6 +290,16 @@ export async function archiveGameLog(ctx: MutationCtx, gameId: Id<"games">) {
     const outcome: "win" | "loss" | "no_contest" =
       winner === null ? "no_contest" : faction === winner ? "win" : "loss";
 
+    // ELO pass 2 — upsert this player's rating and get the fields to stamp on
+    // their log row (empty for unrated game types).
+    const ratingFields = await applyPlayerRating(
+      ctx,
+      ratingSnapshot,
+      p.playerId,
+      faction,
+      outcome,
+    );
+
     await ctx.db.insert("gameLogPlayers", {
       gameLogId,
       gameId,
@@ -293,6 +316,7 @@ export async function archiveGameLog(ctx: MutationCtx, gameId: Id<"games">) {
       gameType: game.gameType,
       gameName: game.name,
       winMethod,
+      ...ratingFields,
     });
 
     await bumpPlayerStats(ctx, p.playerId, p.role, outcome);

@@ -3,6 +3,7 @@ import { paginationOptsValidator } from "convex/server";
 import { query } from "../_generated/server";
 import { getAuthenticatedUser } from "../lib/auth";
 import { winMethodLabel } from "../lib/winConditions";
+import { getPlayerRatingValues } from "../lib/playerRatings";
 import { gameType as gameTypeValidator } from "../tables/games";
 import type { Doc } from "../_generated/dataModel";
 
@@ -103,6 +104,9 @@ export const getGameLog = query({
  * The current user's aggregate statistics, read O(1) from the incrementally
  * maintained `playerStats` row. Win rates are derived here (no-contests
  * excluded). Returns zeros if the player has no finished games yet.
+ *
+ * Also returns the player's `japanese_mafia` ELO — a missing `playerRatings`
+ * row reads as the 1000 default (no "unranked" state, /docs/ranking-system.md).
  */
 export const getMyStats = query({
   args: {},
@@ -114,6 +118,12 @@ export const getMyStats = query({
       .withIndex("by_playerId", (q) => q.eq("playerId", userId))
       .unique();
 
+    const { rating, peakRating } = await getPlayerRatingValues(
+      ctx.db,
+      userId,
+      "japanese_mafia",
+    );
+
     if (!stats) {
       return {
         totalMatches: 0,
@@ -123,6 +133,8 @@ export const getMyStats = query({
         winRate: 0,
         currentStreak: 0,
         bestStreak: 0,
+        rating,
+        peakRating,
         roleStats: [] as Array<{
           role: string;
           matches: number;
@@ -141,6 +153,8 @@ export const getMyStats = query({
       winRate: winRatePct(stats.wins, stats.losses),
       currentStreak: stats.currentStreak ?? 0,
       bestStreak: stats.bestStreak ?? 0,
+      rating,
+      peakRating,
       roleStats: stats.roleStats
         .map((r) => ({ ...r, winRate: winRatePct(r.wins, r.losses) }))
         .sort((a, b) => b.matches - a.matches),

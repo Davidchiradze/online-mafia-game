@@ -16,6 +16,7 @@
 - **`/docs/community-chat.md`** — Global community chat channel + online sidebar (subscription-gated, soft-delete moderation, daily prune)
 - **`/docs/game-broadcasts.md`** — Per-game notification channel (staff broadcasts + reusable system pushes) as one-time toasts to players + spectators
 - **`/docs/admin-dashboard.md`** — Admin panel routes + analytics dashboard (KPIs, leaderboards, charts, presence)
+- **`/docs/ranking-system.md`** — Player ELO rating + FACEIT-style Levels 1–10 (faction-calibrated payouts, level badges, leaderboards, backfill)
 - **`/docs/server-time.md`** — Server-corrected client clock for timers
 - **`/docs/decisions.md`** — Architectural decisions (ADR)
 - **`/docs/livekit-server.md`** — Self-hosted LiveKit VPS setup

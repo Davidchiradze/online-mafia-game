@@ -384,7 +384,28 @@
     "rosterUnavailable": "Roster unavailable.",
     "you": "(You)",
     "alive": "Alive",
-    "dead": "Dead"
+    "dead": "Dead",
+    "eloRating": "ELO Rating",
+    "levelTooltip": "{elo} ELO — Level {level}",
+    "toNextLevel": "{points} to Level {level}",
+    "tableAvgTooltip": "Table average: {avg}",
+    "tableAvg": "Table avg {avg}"
+  },
+  "leaderboard": {
+    "pageTitle": "Leaderboard",
+    "pageSubtitle": "Top players ranked by ELO. Win against stronger tables to climb faster.",
+    "loading": "Loading leaderboard…",
+    "empty": "No ranked players yet. Finish a game to claim the first spot.",
+    "record": "{wins}W / {losses}L",
+    "level": "Level {level}",
+    "peak": "Peak {elo}",
+    "levelTooltip": "{elo} ELO — Level {level}",
+    "toNextLevel": "{points} to Level {level}",
+    "statWinRate": "Win Rate",
+    "statMatches": "Matches",
+    "statBestStreak": "Best Streak",
+    "onStreak": "{count} win streak",
+    "topRole": "Top Role"
   },
   "game": {
     "gameTypes": {

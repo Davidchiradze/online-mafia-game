@@ -12,6 +12,7 @@ export { cardPickingSessions } from "./cardPickingSessions";
 export { gameLogs } from "./gameLogs";
 export { gameLogPlayers } from "./gameLogPlayers";
 export { playerStats } from "./playerStats";
+export { playerRatings } from "./playerRatings";
 export { adminAuditLog } from "./adminAuditLog";
 export { communityMessages } from "./communityMessages";
 export { communityReadState } from "./communityReadState";

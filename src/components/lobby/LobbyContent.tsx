@@ -18,6 +18,7 @@ import {
   SubscriptionUpsell,
 } from "@/components/auth/SubscriptionGuard";
 import { FEATURES } from "@convex/lib/entitlements";
+import { RatingCard } from "../dashboard/matchHistory/StatsHeader";
 
 export type LobbyGame = Doc<"games"> & {
   players: (Doc<"gamePlayers"> & { avatar?: string })[];
@@ -70,6 +71,8 @@ export default function LobbyContent({ games }: Props) {
               {t("gameLobbySubtitle")}
             </p>
           </div>
+          <RatingCard stats={myStats} />
+
           <StreakFlame streak={myStats?.currentStreak ?? 0} />
         </div>
 

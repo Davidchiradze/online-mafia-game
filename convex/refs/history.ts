@@ -35,6 +35,9 @@ export type GameLogRow = {
   gameName: string;
   winMethod?: WinMethod;
   winMethodLabel: string | null;
+  ratingDelta?: number;
+  ratingAfter?: number;
+  tableAvgRating?: number;
 };
 
 /** A player inside a full game-log roster. */
@@ -81,6 +84,8 @@ export type PlayerStats = {
   winRate: number;
   currentStreak: number;
   bestStreak: number;
+  rating: number;
+  peakRating: number;
   roleStats: RoleStat[];
 };
 

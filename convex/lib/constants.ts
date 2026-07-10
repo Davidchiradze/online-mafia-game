@@ -128,3 +128,44 @@ export const FOULS = {
     "voting",
   ] as const,
 } as const;
+
+export type RatingConfig = {
+  /** Initial rating on first rated game AND the default read for a missing row. */
+  start: number;
+  /** Rating never drops below this; the clipped delta is what gets recorded. */
+  floor: number;
+  /**
+   * Faction-calibrated base payouts: K × (S − E) rounded to integers, where E
+   * is the faction's observed win rate (see /docs/ranking-system.md §2–§3).
+   * Wins pay ~2× losses because the average player wins only ~33.5% of games.
+   */
+  deltas: Record<"mafia" | "citizens" | "yakuza", { win: number; loss: number }>;
+  /**
+   * Symmetric table-strength term b = clamp(round((T − R) / divisor), ±cap).
+   * divisor 20 is the linear approximation of true Elo at K = 40; the cap
+   * stays below the smallest base numbers so a win can never pay ≤ 0 and a
+   * loss can never turn positive.
+   */
+  tableAdjustment: { divisor: number; cap: number };
+};
+
+/**
+ * Per-game-type rating config — each game variant has its own ELO calculation
+ * and ladder. A game type absent from this record is UNRATED: `archiveGameLog`
+ * skips all rating logic for it. Calibrated from production data (2026-07,
+ * 269 decided games); recalibrate E-derived deltas every ~200 decided games.
+ */
+export const RATING_CONFIG: Partial<
+  Record<"traditional" | "city_mafia" | "japanese_mafia", RatingConfig>
+> = {
+  japanese_mafia: {
+    start: 1000,
+    floor: 100,
+    deltas: {
+      mafia: { win: 24, loss: -15 }, // E = 0.387
+      citizens: { win: 27, loss: -13 }, // E = 0.327
+      yakuza: { win: 28, loss: -11 }, // E = 0.286
+    },
+    tableAdjustment: { divisor: 20, cap: 8 },
+  },
+};

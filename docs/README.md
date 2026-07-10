@@ -27,6 +27,7 @@ This documentation describes the architecture, patterns, and conventions used in
 - **[community-chat.md](./community-chat.md)** - Global community chat channel + online sidebar (subscription-gated, soft-delete moderation, daily prune)
 - **[game-broadcasts.md](./game-broadcasts.md)** - Per-game notification channel (staff broadcasts + reusable system pushes) delivered as one-time toasts to players + spectators
 - **[admin-dashboard.md](./admin-dashboard.md)** - Admin panel routes + the analytics dashboard (KPIs, leaderboards, charts, presence)
+- **[ranking-system.md](./ranking-system.md)** - Player ELO rating + FACEIT-style Levels 1-10 (faction-calibrated payouts, level badges, leaderboards, backfill)
 - **[server-time.md](./server-time.md)** - Server-corrected client clock (use `useServerTime()` for any timer math involving a server timestamp)
 - **[decisions.md](./decisions.md)** - Architectural Decision Records (ADRs)
 - **[livekit-server.md](./livekit-server.md)** - Self-hosted LiveKit server (VPS setup, monitoring, maintenance)

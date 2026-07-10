@@ -106,6 +106,25 @@ export default function MatchRow({
             )}
             {isWin ? t("victory") : isNC ? t("noContest") : t("defeat")}
           </div>
+          {row.ratingDelta !== undefined && (
+            <span
+              className={cn(
+                "font-orbitron text-sm font-bold tracking-wider",
+                row.ratingDelta > 0
+                  ? "text-[#00ff66]"
+                  : row.ratingDelta < 0
+                    ? "text-[#ff2a2a]"
+                    : "text-zinc-400",
+              )}
+            >
+              {row.ratingDelta > 0 ? `+${row.ratingDelta}` : row.ratingDelta}
+            </span>
+          )}
+          {row.tableAvgRating !== undefined && (
+            <span className="font-inter text-xs text-zinc-500">
+              {t("tableAvg", { avg: row.tableAvgRating })}
+            </span>
+          )}
           {row.winMethodLabel && (
             <span className="font-orbitron text-sm font-bold tracking-wider text-zinc-400">
               {row.winMethodLabel}
