@@ -16,6 +16,8 @@ import { LogOut, Settings } from "lucide-react";
 import { useFullscreen } from "@/hooks/game/useFullscreen";
 import ClickableTooltip from "@/components/ui/ClickableTooltip";
 import UserAvatar from "@/components/ui/UserAvatar";
+import LevelBadge from "@/components/ranking/LevelBadge";
+import { getLevelForRating } from "@/lib/ranking/levels";
 import JoinRequestsDrawer from "@/components/host-controls/JoinRequestsDrawer";
 import CreateGameModal from "@/components/modals/CreateGameModal";
 import type { GAME_TYPES } from "@/lib/constants/game";
@@ -89,6 +91,7 @@ export default function GameRoomHeader() {
   useJoinRequestNotification(gameId, isHost);
 
   const roomName = gameData?.name ?? "Game Room";
+  const tableAvgRating = gameData?.tableAvgRating;
   const isGameFinished = Boolean(gameSessionState?.isFinished);
   const canFinishGame =
     isHost && !isGameFinished && gameData?.gameStatus === "playing";
@@ -100,7 +103,24 @@ export default function GameRoomHeader() {
     <>
       <header className="relative z-20 px-4 sm:px-6 py-3 border-b border-white/10 bg-black/60">
         <div className="flex items-center justify-between">
-          <LandingLogo size="sm" />
+          <div className="flex items-center gap-2 sm:gap-3">
+            <LandingLogo size="sm" />
+
+            {tableAvgRating !== undefined && (
+              <div
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/10"
+                title={t("header.tableAvgElo", { avg: tableAvgRating })}
+              >
+                <LevelBadge
+                  level={getLevelForRating(tableAvgRating).level}
+                  size="sm"
+                />
+                <span className="text-gray-400 font-sans text-sm font-semibold">
+                  {tableAvgRating}
+                </span>
+              </div>
+            )}
+          </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
             {isSpectator && (

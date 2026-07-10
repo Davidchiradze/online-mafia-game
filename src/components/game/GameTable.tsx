@@ -14,11 +14,12 @@ export default function GameTable({ rooms }: Props) {
   const t = useTranslations("game");
 
   const COL_HEADERS = [
-    { label: t("table.colRoomName"), className: "w-[28%]" },
-    { label: t("table.colMode"), className: "w-[14%]" },
-    { label: t("table.colPlayers"), className: "w-[16%]" },
-    { label: t("table.colSpectators"), className: "w-[16%]" },
-    { label: t("table.colStatus"), className: "w-[14%]" },
+    { label: t("table.colRoomName"), className: "w-[24%]" },
+    { label: t("table.colMode"), className: "w-[13%]" },
+    { label: t("table.colPlayers"), className: "w-[14%]" },
+    { label: t("table.colSpectators"), className: "w-[14%]" },
+    { label: t("table.colAvgElo"), className: "w-[11%]" },
+    { label: t("table.colStatus"), className: "w-[12%]" },
     { label: t("table.colAction"), className: "w-[12%] text-right" },
   ];
 
@@ -75,7 +76,7 @@ export default function GameTable({ rooms }: Props) {
           <tbody className="divide-y divide-white/[0.05]">
             {rooms.length === 0 ? (
               <tr>
-                <td colSpan={6}>
+                <td colSpan={7}>
                   <EmptyState noRoomsFound={t("table.noRoomsFound")} />
                 </td>
               </tr>

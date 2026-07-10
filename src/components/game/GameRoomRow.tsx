@@ -12,6 +12,8 @@ import { SUBSCRIPTIONS_PATH } from "@/components/auth/SubscriptionGuard";
 import { LobbyGame } from "@/components/lobby/LobbyContent";
 import { GAME_TYPE_MAX_PLAYER_NUMBER } from "@/lib/constants/game";
 import GameStatusBadge from "./GameStatusBadge";
+import LevelBadge from "@/components/ranking/LevelBadge";
+import { getLevelForRating } from "@/lib/ranking/levels";
 import ClickableTooltip from "@/components/ui/ClickableTooltip";
 import UserAvatar from "@/components/ui/UserAvatar";
 import { LobbyConfirmModal } from "@/components/lobby/LobbyConfirmModal";
@@ -105,6 +107,30 @@ function PlayerCountWithTooltip({ room }: { room: LobbyGame }) {
           <Info className="w-4 h-4 text-gray-500 hover:text-gray-300" />
         </span>
       </ClickableTooltip>
+    </div>
+  );
+}
+
+function TableAvgElo({ room }: { room: LobbyGame }) {
+  const t = useTranslations("game");
+
+  if (room.tableAvgRating === undefined) {
+    return (
+      <span className="text-gray-600 font-sans font-semibold text-[0.9rem]">
+        —
+      </span>
+    );
+  }
+
+  return (
+    <div
+      className="flex items-center gap-2"
+      title={t("row.tableAvgEloTooltip", { avg: room.tableAvgRating })}
+    >
+      <LevelBadge level={getLevelForRating(room.tableAvgRating).level} size="sm" />
+      <span className="text-white font-sans font-semibold text-[0.9rem]">
+        {room.tableAvgRating}
+      </span>
     </div>
   );
 }
@@ -315,6 +341,9 @@ function DesktopRoomRow({
         <SpectatorCountWithTooltip room={room} />
       </td>
       <td className="px-6 py-4">
+        <TableAvgElo room={room} />
+      </td>
+      <td className="px-6 py-4">
         <GameStatusBadge status={room.gameStatus} />
       </td>
       <td className="px-6 py-4 text-right">
@@ -390,6 +419,12 @@ function MobileRoomRow({
             {t("table.colSpectators")}
           </div>
           <SpectatorCountWithTooltip room={room} />
+        </div>
+        <div>
+          <div className="text-gray-400 font-sans text-[0.75rem] mb-1">
+            {t("table.colAvgElo")}
+          </div>
+          <TableAvgElo room={room} />
         </div>
         <div>
           <div className="text-gray-400 font-sans text-[0.75rem] mb-1">

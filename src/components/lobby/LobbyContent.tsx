@@ -23,6 +23,8 @@ import { RatingCard } from "../dashboard/matchHistory/StatsHeader";
 export type LobbyGame = Doc<"games"> & {
   players: (Doc<"gamePlayers"> & { avatar?: string })[];
   spectators: (Doc<"gameSpectators"> & { avatar?: string })[];
+  /** Live table average ELO (non-host roster). Undefined when unrated or only the host has joined. */
+  tableAvgRating?: number;
 };
 
 type Props = {

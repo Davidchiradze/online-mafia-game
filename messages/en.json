@@ -389,7 +389,7 @@
     "levelTooltip": "{elo} ELO — Level {level}",
     "toNextLevel": "{points} to Level {level}",
     "tableAvgTooltip": "Table average: {avg}",
-    "tableAvg": "Table avg {avg}"
+    "tableAvgLabel": "Table avg"
   },
   "leaderboard": {
     "pageTitle": "Leaderboard",
@@ -582,6 +582,7 @@
       "colMode": "Mode",
       "colPlayers": "Players",
       "colSpectators": "Spectators",
+      "colAvgElo": "Avg ELO",
       "colStatus": "Status",
       "colAction": "Action",
       "noRoomsFound": "No rooms found"
@@ -599,10 +600,12 @@
       "join": "Join",
       "joinGame": "Join Game",
       "spectatorsTooltipTitle": "Spectators ({count})",
-      "playersTooltipTitle": "Players ({count}/{max})"
+      "playersTooltipTitle": "Players ({count}/{max})",
+      "tableAvgEloTooltip": "Table average ELO: {avg}"
     },
     "header": {
       "spectating": "Spectating",
+      "tableAvgElo": "Table average ELO: {avg}",
       "viewSpectators": "View spectators",
       "manageJoinRequests": "Manage join requests",
       "joinRequests": "Join requests",

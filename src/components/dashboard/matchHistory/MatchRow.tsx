@@ -5,6 +5,8 @@ import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { factionIcon, factionBadgeClass } from "@/lib/game/roleDisplay";
 import { useRoleLabel } from "@/lib/game/useRoleLabel";
+import { getLevelForRating } from "@/lib/ranking/levels";
+import LevelBadge from "@/components/ranking/LevelBadge";
 import { formatDate, formatTime, formatDuration } from "./format";
 import MatchRosterPanel from "./MatchRosterPanel";
 import type { GameLogRow } from "@convex/refs/history";
@@ -121,9 +123,23 @@ export default function MatchRow({
             </span>
           )}
           {row.tableAvgRating !== undefined && (
-            <span className="font-inter text-xs text-zinc-500">
-              {t("tableAvg", { avg: row.tableAvgRating })}
-            </span>
+            <div
+              className="flex items-center gap-2"
+              title={t("tableAvgTooltip", { avg: row.tableAvgRating })}
+            >
+              <LevelBadge
+                level={getLevelForRating(row.tableAvgRating).level}
+                size="sm"
+              />
+              <div className="flex flex-col leading-tight">
+                <span className="font-inter text-[0.6rem] uppercase tracking-wider text-zinc-500">
+                  {t("tableAvgLabel")}
+                </span>
+                <span className="font-orbitron text-xs font-bold text-zinc-300">
+                  {row.tableAvgRating}
+                </span>
+              </div>
+            </div>
           )}
           {row.winMethodLabel && (
             <span className="font-orbitron text-sm font-bold tracking-wider text-zinc-400">

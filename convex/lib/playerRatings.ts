@@ -128,6 +128,24 @@ export async function loadRatingSnapshot(
   return { config, gameType, tableAvg: sum / preRatings.size, preRatings };
 }
 
+/**
+ * Live table average for lobby/game-room surfaces: mean of the current
+ * non-host roster's ratings, rounded the same way as the archived
+ * `tableAvgRating`. Undefined for unrated game types or when nobody but the
+ * host has joined yet.
+ */
+export async function getLiveTableAvgRating(
+  db: DatabaseReader,
+  game: Doc<"games">,
+  players: Doc<"gamePlayers">[],
+): Promise<number | undefined> {
+  const nonHostIds = players
+    .filter((p) => p.playerId !== game.hostId)
+    .map((p) => p.playerId);
+  const snapshot = await loadRatingSnapshot(db, game.gameType, nonHostIds);
+  return snapshot ? Math.round(snapshot.tableAvg) : undefined;
+}
+
 /** Per-game rating fields stamped on a `gameLogPlayers` row. */
 export type RatingFields = {
   ratingDelta?: number;

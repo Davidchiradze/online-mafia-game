@@ -389,7 +389,7 @@
     "levelTooltip": "{elo} ELO — ლეველი {level}",
     "toNextLevel": "{points} ელო {level} ლეველამდე",
     "tableAvgTooltip": "მაგიდის საშუალო: {avg}",
-    "tableAvg": "მაგიდის საშ. {avg}"
+    "tableAvgLabel": "მაგიდის საშ."
   },
   "leaderboard": {
     "pageTitle": "ლიდერბორდი",
@@ -582,6 +582,7 @@
       "colMode": "რეჟიმი",
       "colPlayers": "მოთამაშეები",
       "colSpectators": "მაყურებლები",
+      "colAvgElo": "საშ. ELO",
       "colStatus": "სტატუსი",
       "colAction": "მოქმედება",
       "noRoomsFound": "ოთახები ვერ მოიძებნა"
@@ -599,10 +600,12 @@
       "join": "შესვლა",
       "joinGame": "თამაშში შესვლა",
       "spectatorsTooltipTitle": "მაყურებლები ({count})",
-      "playersTooltipTitle": "მოთამაშეები ({count}/{max})"
+      "playersTooltipTitle": "მოთამაშეები ({count}/{max})",
+      "tableAvgEloTooltip": "მაგიდის საშუალო ELO: {avg}"
     },
     "header": {
       "spectating": "მაყურებელი",
+      "tableAvgElo": "მაგიდის საშუალო ELO: {avg}",
       "viewSpectators": "მაყურებლების ნახვა",
       "manageJoinRequests": "შესვლის მოთხოვნების მართვა",
       "joinRequests": "შესვლის მოთხოვნები",

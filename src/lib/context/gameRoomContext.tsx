@@ -96,6 +96,8 @@ type GameData = {
   maxPlayers: number;
   code: string;
   isPrivate: boolean;
+  /** Live table average ELO (non-host roster). Undefined when unrated or only the host has joined. */
+  tableAvgRating?: number;
 };
 
 type GameSpectator = {
@@ -301,6 +303,7 @@ export function GameRoomProvider({
             maxPlayers: game.maxPlayers,
             code: game.code,
             isPrivate: game.isPrivate,
+            tableAvgRating: game.tableAvgRating,
           }
         : null,
       spectators: (game?.spectators ?? []) as GameSpectator[],

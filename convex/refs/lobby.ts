@@ -39,6 +39,8 @@ type GameWithRelations = {
   isPrivate: boolean;
   players: GamePlayer[];
   spectators: GameSpectator[];
+  /** Live table average ELO (non-host roster). Undefined when unrated or only the host has joined. */
+  tableAvgRating?: number;
 };
 
 type Profile = {
