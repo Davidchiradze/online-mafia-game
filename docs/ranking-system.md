@@ -67,31 +67,38 @@ Average per-player win rate (weighted by faction size): **~33.5%**.
 
 ## 3. Rating formula
 
-Two parts: a **faction-calibrated base** (expected-score ELO, K = 40) plus a
+Two parts: a **faction-calibrated base** (expected-score ELO, K = 120 — the
+K = 40 ratios scaled 3×, see below) plus a
 **bounded table-strength adjustment**:
 
 ```
 ΔR = base + b
 
-base = K × (S − E)          K = 40
+base = K × (S − E)          K = 120 (the K = 40 ratios scaled 3×)
 S    = 1 (faction won) | 0 (faction lost)
 E    = faction's calibrated win rate (§2)
 
-b    = clamp( round((T − R) / 20), −8, +8 )
+b    = clamp( round((T − R) / 20), −24, +24 )
 T    = table average ELO — mean rating of ALL role-holders in the game,
        including yourself (host excluded; players with no rating row count
        as the default 1000)
 R    = your ELO before the game
 ```
 
-Rounded to integers, the **base** payouts are:
+Rounded to integers, the **base** payouts are (the original K = 40 numbers ×3):
 
 | Faction  | E     | **Win** | **Loss** | EV/game for an average player |
 | -------- | ----- | ------- | -------- | ----------------------------- |
-| Mafia    | 0.387 | **+24** | **−15**  | +0.08                         |
-| Citizens | 0.327 | **+27** | **−13**  | +0.08                         |
-| Yakuza   | 0.286 | **+28** | **−11**  | +0.16                         |
+| Mafia    | 0.387 | **+72** | **−45**  | +0.24                         |
+| Citizens | 0.327 | **+81** | **−39**  | +0.24                         |
+| Yakuza   | 0.286 | **+84** | **−33**  | +0.48                         |
 | No contest | —   | 0       | 0        | 0                             |
+
+> **Why 3×?** The K = 40 base was tuned for stability, but with a median of
+> only ~6 rated games per player the ladder over-compressed: replaying the real
+> archive left 85% of players stuck in Level 4 (rating std ≈ 46). Tripling the
+> payouts (formula and E untouched) spreads the same players across Levels 2–7
+> (std ≈ 138) while preserving their ranking order. See §5 pacing.
 
 ### The table adjustment `b`
 
@@ -102,22 +109,23 @@ Rounded to integers, the **base** payouts are:
 | Stronger (`T > R`) | pays more | costs less |
 | Weaker (`T < R`)   | pays less | costs more |
 
-Worked examples (Citizens base +27 / −13):
+Worked examples (Citizens base +81 / −39):
 
-- You are `1000`, table average `1140` → `b = +7`. Win **+34**, loss **−6**.
-- You are `1400`, table average `1150` → `b = −8` (clamped from −12.5).
-  Win **+19**, loss **−21**.
+- You are `1000`, table average `1140` → `b = +7`. Win **+88**, loss **−32**.
+- You are `1400`, table average `1150` → `b = −13` (rounded from −12.5, within
+  the ±24 cap). Win **+68**, loss **−52**.
 - You are `1050`, table average `1050` → `b = 0`. Base numbers apply as-is.
 
 Why these numbers are safe:
 
-- `1 point per 20 ELO` is the **linear approximation of true Elo at K = 40** —
-  not an invented knob. The hard cap of ±8 (reached at ±160 table difference)
-  bounds how much any lobby can swing a result.
-- Because the cap (8) is **below the smallest base numbers** (win +24,
-  loss −11), a win always pays **at least +16** and a loss always costs **at
-  least −3** — a win can never become ≤ 0 and a loss can never turn positive,
-  no matter how lopsided the table. Maximum possible swing: win +36, loss −23.
+- `1 point per 20 ELO` keeps the divisor deliberately loose (a weaker spring
+  than the K-linear value would give at K = 120) so skilled players can
+  separate. The hard cap of ±24 (reached at ±480 table difference) bounds how
+  much any lobby can swing a result.
+- Because the cap (24) is **below the smallest base numbers** (win +72,
+  loss −33), a win always pays **at least +48** and a loss always costs **at
+  least −9** — a win can never become ≤ 0 and a loss can never turn positive,
+  no matter how lopsided the table. Maximum possible swing: win +108, loss −69.
 
 Properties:
 
@@ -128,7 +136,7 @@ Properties:
   beginner lobbies for full value.
 - **Win ≈ 2× loss** at a balanced table — compensates for the ~33.5% average
   win rate.
-- The tiny positive drift (+0.08…+0.16/game ≈ +10 rating per 100 games) is a
+- The tiny positive drift (+0.24…+0.48/game ≈ +30 rating per 100 games) is a
   deliberate rounding choice: imperceptibly slow inflation beats slow decay.
   The symmetric `b` adds no drift of its own.
 
@@ -187,12 +195,12 @@ Rating is bucketed into **10 levels** using the official FACEIT ELO brackets:
 - New players (1000) start at **Level 4** — same as FACEIT.
 - **Progress within a level** (for progress bars / badge tooltips):
   `progress = (rating − min) / (max − min)`, Level 10 is always shown full.
-- Pacing sanity check: max single-game gain is +36 (base +28 + table cap +8)
-  and the narrowest bracket is 150 wide, so a player can never skip a level in
-  one game. A solidly above-average player (~40% personal win rate) gains
-  ~+2.6/game at balanced tables — Level 10 is a long-term aspiration, as on
-  FACEIT (and the symmetric table adjustment slows climbing further once a
-  player out-rates their usual tables).
+- Pacing sanity check: max single-game gain is +108 (base +84 + table cap +24)
+  and the narrowest bracket is 150 wide, so a player still can never skip a
+  level in one game. A solidly above-average player (~40% personal win rate)
+  gains ~+7.8/game at balanced tables — brisk enough that levels move with real
+  play, while the symmetric table adjustment still slows climbing once a player
+  out-rates their usual tables.
 
 ## 6. Level badges (our own design)
 
@@ -283,8 +291,9 @@ rate, so the E values are good but not gospel.
   (or quarterly) and update the payout constants.
 - Payout changes apply **forward only** — past deltas are never re-adjusted.
 - Only the faction win rates (E) recalibrate. The table-adjustment constants
-  (`divisor: 20`, `cap: 8`) are structural — they derive from K, not from
-  data — and only change if K changes.
+  (`divisor: 20`, `cap: 24`) are structural — the cap scales with K (the base
+  payout magnitude), the divisor is a deliberately loose spring — and only
+  change if K changes.
 - If faction balance shifts (e.g. after rule tweaks), the payouts follow it
   automatically at the next recalibration.
 - Per game type: each rated `gameType` gets its own E table (§4).
@@ -293,7 +302,7 @@ rate, so the E values are good but not gospel.
 
 | # | Piece | Where | Notes |
 | - | ----- | ----- | ----- |
-| 1 | `RATING_CONFIG: Record<gameType, { start, floor, K, deltas, tableAdjustment: { divisor: 20, cap: 8 } }>` — one entry per **rated** game type (today: `japanese_mafia` only) | `convex/lib/constants.ts` | Server-only — clients never compute deltas (they read stored ones). A game type absent from the record is unrated. |
+| 1 | `RATING_CONFIG: Record<gameType, { start, floor, K, deltas, tableAdjustment: { divisor: 20, cap: 24 } }>` — one entry per **rated** game type (today: `japanese_mafia` only) | `convex/lib/constants.ts` | Server-only — clients never compute deltas (they read stored ones). A game type absent from the record is unrated. |
 | 2 | `RANK_LEVELS` brackets + colors, `getLevelForRating()`, `getLevelProgress()` | `src/lib/constants/ranking.ts`, `src/lib/ranking/levels.ts` | Client-only, pure functions (same spirit as `visibility.ts`). Shared across game types by default (§1). |
 | 3 | New `playerRatings` table: `{ playerId, gameType, rating, peakRating }`; indexes `by_playerId_gameType` + `by_gameType_rating`; register in `convex/schema.ts` | `convex/tables/playerRatings.ts` | One row per player per rated game type, created lazily on first rated game. Missing row ⇒ read as the default `1000` / Level 4 (no "unranked" state, §4). |
 | 4 | Schema: `ratingDelta` + `ratingAfter` + `tableAvgRating` (`v.optional(v.number())`) on `gameLogPlayers`; optional `by_finishedAt` index for season sums | `convex/tables/gameLogPlayers.ts` | Denormalized for match-history cards — no parent join. `tableAvgRating` lets the card explain the delta ("table avg 1140"). |
