@@ -27,8 +27,8 @@
       "badgeKey": "packages.basic.badge",
       "badgeColor": "bg-red-600",
       "titleKey": "packages.basic.title",
-      "oldPrice": "19₾",
-      "price": "0",
+      "oldPrice": "",
+      "price": "19₾",
       "periodKey": "packages.basic.period",
       "featureKeys": [
         "features.fullAccess",
