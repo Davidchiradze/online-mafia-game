@@ -9,7 +9,7 @@ import { Doc } from "@convex/_generated/dataModel";
 import GameTable from "@/components/game/GameTable";
 import CreateGameModal from "@/components/modals/CreateGameModal";
 import { Plus } from "lucide-react";
-import LobbyStats from "./LobbyStats";
+// import LobbyStats from "./LobbyStats";
 import StreakFlame from "./StreakFlame";
 import PromoBanner from "./PromoBanner";
 import { LobbySubscriptionModal } from "./LobbySubscriptionModal";
@@ -73,7 +73,7 @@ export default function LobbyContent({ games }: Props) {
           <StreakFlame streak={myStats?.currentStreak ?? 0} />
         </div>
 
-        <LobbyStats stats={myStats} />
+        {/* <LobbyStats stats={myStats} /> */}
 
         <div className="mb-8">
           <PromoBanner
