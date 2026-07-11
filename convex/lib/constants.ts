@@ -136,8 +136,8 @@ export type RatingConfig = {
   floor: number;
   /**
    * Faction-calibrated base payouts: the K × (S − E) ratios (E = the faction's
-   * observed win rate, see /docs/ranking-system.md §2–§3) scaled 3× — effective
-   * K = 120 — to widen level movement given the low games-per-player volume.
+   * observed win rate, see /docs/ranking-system.md §2–§3) scaled 2× — effective
+   * K = 80 — to widen level movement given the low games-per-player volume.
    * Wins still pay ~2× losses because the average player wins only ~33.5% of
    * games, and the average per-role EV stays ~zero.
    */
@@ -146,7 +146,7 @@ export type RatingConfig = {
    * Symmetric table-strength term b = clamp(round((T − R) / divisor), ±cap).
    * divisor 20 is kept deliberately loose (a weaker spring than the K-linear
    * value) so skilled players can separate; the cap scales with the base and
-   * stays below the smallest base number (yakuza loss 33) so a win can never
+   * stays below the smallest base number (yakuza loss 22) so a win can never
    * pay ≤ 0 and a loss can never turn positive.
    */
   tableAdjustment: { divisor: number; cap: number };
@@ -165,10 +165,10 @@ export const RATING_CONFIG: Partial<
     start: 1000,
     floor: 100,
     deltas: {
-      mafia: { win: 72, loss: -45 }, // E = 0.387 (3x)
-      citizens: { win: 81, loss: -39 }, // E = 0.327 (3x)
-      yakuza: { win: 84, loss: -33 }, // E = 0.286 (3x)
+      mafia: { win: 48, loss: -30 }, // E = 0.387 (2x)
+      citizens: { win: 54, loss: -26 }, // E = 0.327 (2x)
+      yakuza: { win: 56, loss: -22 }, // E = 0.286 (2x)
     },
-    tableAdjustment: { divisor: 20, cap: 24 },
+    tableAdjustment: { divisor: 20, cap: 16 },
   },
 };
