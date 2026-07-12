@@ -163,9 +163,10 @@ function PodiumCard({
           <Crown className="mb-1 h-6 w-6 text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]" />
         )}
         <div
-          className="rounded-full p-[2px]"
+          className="rounded-full border-2 p-[2px]"
           style={{
-            boxShadow: `0 0 0 2px ${level.hex}, 0 0 16px ${level.hex}55`,
+            borderColor: level.hex,
+            boxShadow: `0 0 16px ${level.hex}55`,
           }}
         >
           <UserAvatar
@@ -299,9 +300,10 @@ function RankedRow({
 
         {/* Identity */}
         <div
-          className="shrink-0 rounded-full p-[2px]"
+          className="shrink-0 rounded-full border-2 p-[2px]"
           style={{
-            boxShadow: `0 0 0 2px ${level.hex}, 0 0 10px ${level.hex}44`,
+            borderColor: level.hex,
+            boxShadow: `0 0 10px ${level.hex}44`,
           }}
         >
           <UserAvatar src={player.avatar} name={player.nickname} size={38} />

@@ -33,7 +33,7 @@ export default function UserAvatar({
 
   return (
     <div
-      className={`relative inline-flex shrink-0 ${className}`}
+      className={`relative inline-flex shrink-0 align-middle ${className}`}
       style={{ width: size, height: size }}
     >
       <div className="h-full w-full overflow-hidden rounded-full bg-gradient-to-br from-purple-500 to-red-600 shadow flex items-center justify-center">
