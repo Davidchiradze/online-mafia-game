@@ -196,11 +196,12 @@ export async function recordWinnerIfDecided(
   const result = describeWin(aliveRoles, context);
   if (!result) return null;
 
-  // Total mutual elimination — nobody left alive. Pause on the draw banner; no
-  // faction won, so there is no winMethod snapshot (the log records no contest).
-  if (result === "draw") {
-    await ctx.db.patch(session._id, { winner: "draw" });
-    return "draw";
+  // Total mutual elimination — nobody left alive. Pause on the banner as a
+  // no-contest; no faction won, so there is no winMethod snapshot (the log
+  // records it as no contest, just like an admin force-end).
+  if (result === "no_contest") {
+    await ctx.db.patch(session._id, { winner: "no_contest" });
+    return "no_contest";
   }
 
   // Capture the structured endgame snapshot now — the game pauses once a winner
@@ -272,9 +273,10 @@ export async function archiveGameLog(ctx: MutationCtx, gameId: Id<"games">) {
 
   const finishedAt = Date.now();
   const startedAt = session?.startedAt ?? session?._creationTime ?? finishedAt;
-  // A "draw" (mutual elimination) is logged as no contest: winner null, no ELO.
+  // A "no_contest" (mutual elimination) session outcome is logged like an admin
+  // force-end: winner null, no ELO.
   const rawWinner = session?.winner ?? null;
-  const winner: Winner | null = rawWinner === "draw" ? null : rawWinner;
+  const winner: Winner | null = rawWinner === "no_contest" ? null : rawWinner;
   const winMethod = session?.winMethod;
 
   // ELO pass 1 — snapshot every player's pre-game rating (null for unrated

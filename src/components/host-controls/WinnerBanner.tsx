@@ -7,13 +7,14 @@ import { useCountdown } from "@/hooks/game/useCountdown";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 
 type Winner = "mafia" | "yakuza" | "citizens";
-type Outcome = Winner | "draw";
+type Outcome = Winner | "no_contest";
 
 type WinnerBannerProps = {
   gameId: string;
   /**
-   * Decided winning faction, `"draw"` for a total mutual elimination (nobody
-   * left alive), or `null` when the game ended with no contest.
+   * Decided winning faction, `"no_contest"` for a total mutual elimination
+   * (nobody left alive, still host-confirmable), or `null` when the game was
+   * already finished with no winner (e.g. an admin force-end).
    */
   winner: Outcome | null;
   /** When true, show the host's "Finish Game" button (pending-win state). */
@@ -29,9 +30,10 @@ const WINNER_ACCENT: Record<Winner, string> = {
 /**
  * Banner shown when a game ends. The host sees it while a win is pending
  * (`canFinish`) with a "Finish Game" button to confirm the end; everyone sees
- * the title-only version once the game is finished. `"draw"` shows a neutral
- * "Draw" end state (still host-confirmable), and `null` (e.g. an admin
- * force-ended the game) shows a "No Contest" end state instead of a faction win.
+ * the title-only version once the game is finished. Both `"no_contest"` (a total
+ * mutual elimination, still host-confirmable) and `null` (a game already
+ * finished with no winner, e.g. an admin force-end) show the same "No Contest"
+ * end state instead of a faction win.
  */
 export default function WinnerBanner({
   gameId,
@@ -63,16 +65,14 @@ export default function WinnerBanner({
         </p>
         <h2
           className={`font-orbitron text-lg font-bold uppercase tracking-wider break-words sm:text-2xl ${
-            winner && winner !== "draw"
+            winner && winner !== "no_contest"
               ? WINNER_ACCENT[winner]
               : "text-slate-300"
           }`}
         >
-          {winner === "draw"
-            ? t("draw")
-            : winner
-              ? `${t("winSuffix")} - ${WINNER_LABELS[winner]}`
-              : t("noContest")}
+          {winner && winner !== "no_contest"
+            ? `${t("winSuffix")} - ${WINNER_LABELS[winner]}`
+            : t("noContest")}
         </h2>
       </div>
 
