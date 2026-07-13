@@ -29,6 +29,7 @@ export type WinMethod = {
 };
 
 const MAFIA_ROLES: ReadonlySet<string> = new Set(MAFIA_TEAM_ROLES);
+const YAKUZA_CLAN_ROLES: ReadonlySet<string> = new Set(["YAKUZA", "SHOGUN"]);
 
 /** Remove the first occurrence of `value` from `arr` (non-mutating). */
 function removeOnce(arr: string[], value: string): string[] {
@@ -80,8 +81,17 @@ export function describeWin(
     ...base,
   });
 
-  // Global Citizens sweep (highest priority, any N).
-  if (m === 0 && !YA && !SH) return win("citizens");
+  // Global "last faction standing" sweeps (highest priority, any N): if every
+  // remaining player belongs to a single faction, that faction has won. Mafia
+  // caps at 3 and the Yakuza clan at 3, so a non-town sweep never exceeds N ≤ 6.
+  // These also cover N = 1, which the per-N tables below stop short of: two
+  // players can die in one night, dropping the count straight past the N = 2
+  // boundary (e.g. N=3 `CIT,YA,M` → both CIT and M die → lone `YAKUZA`), so the
+  // per-N checks never fire and only the sweep can end the game.
+  if (m === 0 && !YA && !SH) return win("citizens"); // only Town remain
+  if (N > 0 && m === N) return win("mafia"); // only Mafia remain
+  if (N > 0 && m === 0 && aliveRoles.every((r) => YAKUZA_CLAN_ROLES.has(r)))
+    return win("yakuza", SH ? "SHOGUN" : "YAKUZA"); // only Yakuza clan remain
 
   // Nothing else can be decided above 6 players.
   if (N > 6) return null;

@@ -126,11 +126,19 @@ actually eliminates the player, i.e. the 4th foul).
 
 ## 5. Global rules (apply at any `N`)
 
-1. **Citizens sweep (highest priority).** If **all** Mafia **and** Yakuza **and**
-   Shogun are dead (`m = 0` and `!YA` and `!SH`), **Citizens win** — at _any_ player
-   count, even above 6.
-2. **No Mafia/Yakuza win above 6 players.** Apart from the Citizens-sweep above, the
-   game can only be decided when **`N ≤ 6`**.
+1. **Single-faction sweep (highest priority).** If **every** alive player belongs to
+   a single faction, that faction wins — at _any_ player count, even above 6:
+   - all **Town** (`m = 0` and `!YA` and `!SH`) → **Citizens win**
+   - all **Mafia** (`m = N`) → **Mafia win**
+   - all **Yakuza clan** (`m = 0` and every survivor is `YAKUZA`/`SHOGUN`) → **Yakuza win**
+
+   The Mafia/Yakuza sweeps matter because **two players can die in one night**,
+   dropping the count straight past the `N = 2` boundary the per-`N` tables stop at —
+   e.g. `N = 3` `CIT,YA,M`, mafia kills the citizen and yakuza kills the mafia → a lone
+   `YAKUZA` (`N = 1`). Only the sweep can end the game in that case. (Mafia caps at 3
+   and the Yakuza clan at 3, so a non-Town sweep never exceeds `N ≤ 6`.)
+2. **No Mafia/Yakuza win above 6 players.** Apart from the single-faction sweeps above,
+   the game can only be decided when **`N ≤ 6`**.
 
 ## 6. Decision tables (with examples)
 
@@ -203,6 +211,19 @@ Priority: Citizens-sweep → Yakuza-pair win → Mafia win → continue.
 | `SH, CIT,CIT` | **continue**     | lone Shogun, `m = 0`, not a sweep    |
 | `DOC,DET,CIT` | **CITIZENS win** | sweep                                |
 
+### N = 1
+
+Reachable only when two players die in one night (see §5 rule 1). The lone survivor
+is always the last faction standing — decided by the single-faction sweep, so context
+is irrelevant.
+
+| Alive  | Result           | Why                         |
+| ------ | ---------------- | --------------------------- |
+| `YA`   | **YAKUZA win**   | only Yakuza clan remains    |
+| `SH`   | **YAKUZA win**   | only Yakuza clan remains    |
+| `M`    | **MAFIA win**    | only Mafia remains          |
+| `CIT`  | **CITIZENS win** | Town sweep                  |
+
 ### N = 2
 
 | Alive      | Result           | Why                                     |
@@ -223,7 +244,11 @@ Priority: Citizens-sweep → Yakuza-pair win → Mafia win → continue.
 
 ```
 function decideWinner(alive, context):           // context ∈ {beforeNight, beforeDay}
-  if m == 0 and !YA and !SH:        return CITIZENS      // global sweep (any N)
+  // Single-faction sweeps — last faction standing wins at any N (incl. N = 1).
+  if m == 0 and !YA and !SH:        return CITIZENS      // only Town remain
+  if N >= 1 and m == N:             return MAFIA         // only Mafia remain
+  if N >= 1 and m == 0 and allYakuzaClan(alive):
+                                    return YAKUZA        // only Yakuza clan remain
   if N > 6:                         return CONTINUE      // nothing else above 6
 
   switch N:
@@ -277,6 +302,12 @@ These were confirmed and are baked into the rules above:
 - **`N ≥ 7`:** only the Citizens-sweep can end the game; no Mafia/Yakuza win.
 - **Foul elimination triggers an immediate full check** (`beforeNight` context) — see
   §4. Only `giveFoul` triggers it; manual `kill` and `markDeadAndAdvance` do not.
+- **Two deaths in one night can skip the `N = 2` boundary.** When both the Mafia and
+  the Yakuza kill on the same night, the count can drop by 2 (e.g. `N = 3` → `N = 1`),
+  so a game can reach a lone non-Town survivor without ever passing through an `N = 2`
+  check. The **single-faction sweeps** (§5 rule 1: all-Mafia → Mafia, all-Yakuza-clan →
+  Yakuza) resolve this — without them a lone Yakuza/Shogun/Mafia would loop back into
+  `day_phase` forever. (A lone Town survivor was already covered by the Citizens sweep.)
 
 ## 9. Implementation (built)
 
