@@ -142,9 +142,7 @@ The primary function is `getVisibilityStateWithDeath()` which accounts for game 
 - `name` - Game name
 - `hostId` - Reference to `profiles` table
 - `gameStatus` - `"not_started"` | `"playing"` | `"finished"`
-- `gameType` - `"sports_mafia"` | `"city_mafia"` | `"japanese_mafia"` (plus the
-  legacy `"traditional"` literal, still accepted by the schema until its
-  rename migration runs — see [game-types.md](./game-types.md))
+- `gameType` - `"sports_mafia"` | `"city_mafia"` | `"japanese_mafia"`
 - `maxPlayers` - Maximum players (10 or 12)
 
 ### Game Players Table (`gamePlayers`)

@@ -139,7 +139,7 @@ const DEFINITIONS = {
 export function getGameDefinition(gameType: string): GameDefinition {
   const def = DEFINITIONS[gameType as keyof typeof DEFINITIONS];
   if (!def) throw new ConvexError(`No game definition for "${gameType}"`);
-  return def;   // "traditional" legacy rows resolve via an alias → sports_mafia
+  return def;
 }
 ```
 
@@ -204,7 +204,7 @@ convex/
       definition.ts  phases.ts  roles.ts  nightModel.ts  winConditions.ts  visibility.ts
     sports/
       definition.ts  phases.ts  roles.ts  nightModel.ts  winConditions.ts  visibility.ts
-    registry.ts               # gameType → GameDefinition (+ "traditional" alias)
+    registry.ts               # gameType → GameDefinition
 
 src/
   game/
@@ -255,13 +255,12 @@ no behavior change). Convex's flat function namespace means moving files changes
 
 Each phase is independently shippable and leaves the Japanese game fully working.
 
-- **Phase 0 — Rename (DONE).** `traditional → sports_mafia` across schema
+- **Phase 0 — Rename (DONE).** `traditional → sports_mafia` across the schema
   validator, `RATING_CONFIG`, `refs/*`, frontend constants, i18n (`en`/`ka`),
-  and docs. Added idempotent migration `migrations:renameTraditionalGameType`
-  (rewrites `games` / `gameLogs` / `gameLogPlayers` / `playerRatings`). The
-  schema still accepts the legacy `"traditional"` literal so existing rows
-  validate; drop it after the migration runs everywhere (see §7). `sports_mafia`
-  is defined but **not creatable** (filtered out in `CreateGameModal`).
+  and docs. The legacy `"traditional"` literal was dropped outright — there are
+  no `traditional` rows in any deployment, so no data migration is needed (see
+  §7). `sports_mafia` is defined but **not creatable** (filtered out in
+  `CreateGameModal`).
 
 - **Phase 1 — Introduce the abstraction, extract Japanese (no behavior change).**
   Define `GameDefinition` + the `NightModel` / `VisibilityRuleset` interfaces.
@@ -311,14 +310,14 @@ Sports game would render two phantom empty seats and mis-place the host slot
 
 ## 7. Data & migration notes
 
-- **Legacy `"traditional"` rows.** Not creatable since the UI filter was added,
-  so most deployments have **none** — but the value is a valid historical
-  literal. The schema keeps `v.literal("traditional")` so any such row still
-  validates on read. Run `npx convex run migrations:renameTraditionalGameType`
-  (add `--prod` for prod) to rewrite them to `sports_mafia`, then drop the
-  legacy literal from `convex/tables/games.ts` and the `RATING_CONFIG` type in a
-  follow-up deploy. Convex validates existing documents against the schema at
-  deploy time, so the literal **cannot** be removed before the migration runs.
+- **Legacy `"traditional"` rows — none exist, literal removed.** The type was
+  never creatable in the UI, and there are no `traditional` rows in any
+  deployment, so the literal was dropped from the `gameType` validator outright
+  (no data migration). Convex validates existing documents against the schema at
+  deploy time: if a stray `traditional` row ever did exist, the deploy would
+  **fail with a clear "document does not match validator" error** (nothing is
+  corrupted) — that error is the signal to reintroduce a one-shot rename
+  migration (recoverable from git history) before retrying.
 - **`winMethod` snapshot.** `tables/gameLogs.ts` → `winMethodValidator` carries
   `yakuzaAlive` / `shogunAlive`. Sports has neither faction; it should populate
   them `false` (backward-compatible) until `winMethod` is generalized. The

@@ -34,17 +34,6 @@ export const GAME_TYPE_MAX_PLAYER_NUMBER: Record<
   japanese_mafia: 12,
 };
 
-/**
- * Seat count for a game type, tolerant of unknown/legacy values (e.g. the
- * pre-rename `"traditional"` that still validates in the schema until its
- * migration runs — see convex/tables/games.ts). Falls back to 10.
- */
-export function maxPlayersForGameType(gameType: string): number {
-  return (
-    (GAME_TYPE_MAX_PLAYER_NUMBER as Record<string, number>)[gameType] ?? 10
-  );
-}
-
 export const JAPANESE_MAFIA_ROLES = [
   "DON",
   "MAFIA",
