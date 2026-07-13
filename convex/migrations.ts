@@ -66,6 +66,52 @@ export const clearLegacyUsername = internalMutation({
 });
 
 /**
+ * One-time migration: rename the legacy `gameType: "traditional"` value to
+ * `"sports_mafia"` across every table that stores a game type. The type was
+ * renamed (it was never creatable in the UI, but historical rows may exist).
+ *
+ * Rewrites `games`, `gameLogs`, `gameLogPlayers`, and `playerRatings`. Must run
+ * BEFORE the `"traditional"` literal is dropped from the `gameType` validator
+ * (convex/tables/games.ts) — until then both values validate, so this is safe
+ * to run against a live deployment.
+ *
+ * Run order to fully retire the legacy literal:
+ *   1. Deploy this code (validator still accepts both values). (current)
+ *   2. `npx convex run migrations:renameTraditionalGameType` (add `--prod` for prod).
+ *   3. Drop `v.literal("traditional")` from `gameType` and redeploy.
+ *
+ * Idempotent — rows already at `"sports_mafia"` are skipped.
+ */
+export const renameTraditionalGameType = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const counts: Record<string, number> = {};
+    const rename = async (
+      table: "games" | "gameLogs" | "gameLogPlayers" | "playerRatings",
+    ) => {
+      const rows = await ctx.db.query(table).collect();
+      let renamed = 0;
+      for (const row of rows) {
+        if ((row as { gameType?: string }).gameType === "traditional") {
+          await ctx.db.patch(row._id, {
+            gameType: "sports_mafia",
+          } as Partial<typeof row>);
+          renamed++;
+        }
+      }
+      counts[table] = renamed;
+    };
+
+    await rename("games");
+    await rename("gameLogs");
+    await rename("gameLogPlayers");
+    await rename("playerRatings");
+
+    return counts;
+  },
+});
+
+/**
  * ELO backfill: replay every archived rated game in global chronological
  * order and rebuild all rating state (see /docs/ranking-system.md §8).
  *

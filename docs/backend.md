@@ -15,7 +15,7 @@ import { v } from "convex/values";
 export const create = mutation({
   args: {
     name: v.string(),
-    type: v.union(v.literal("traditional"), v.literal("city_mafia"), v.literal("japanese_mafia")),
+    type: v.union(v.literal("sports_mafia"), v.literal("city_mafia"), v.literal("japanese_mafia")),
   },
   handler: async (ctx, args) => {
     // 1. Authenticate user

@@ -46,8 +46,11 @@ async function withRosterAvatars(
   };
 }
 
+// Creatable game types and their seat counts. The legacy "traditional" value
+// (renamed to "sports_mafia") is intentionally absent: creating it now fails
+// with INVALID_GAME_TYPE.
 const GAME_TYPE_MAX_PLAYERS: Record<string, number> = {
-  traditional: 10,
+  sports_mafia: 10,
   city_mafia: 12,
   japanese_mafia: 12,
 };

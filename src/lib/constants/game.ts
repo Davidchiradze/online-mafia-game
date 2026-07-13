@@ -1,5 +1,5 @@
 export const GAME_TYPES = [
-  "traditional",
+  "sports_mafia",
   "city_mafia",
   "japanese_mafia",
 ] as const;
@@ -13,7 +13,7 @@ export enum JOIN_REQUEST_STATUSES {
 }
 
 export const GAME_TYPE_LABEL: Record<(typeof GAME_TYPES)[number], string> = {
-  traditional: "Traditional",
+  sports_mafia: "Sports Mafia",
   city_mafia: "City mafia",
   japanese_mafia: "Japanese",
 };
@@ -29,10 +29,21 @@ export const GAME_TYPE_MAX_PLAYER_NUMBER: Record<
   (typeof GAME_TYPES)[number],
   number
 > = {
-  traditional: 10,
+  sports_mafia: 10,
   city_mafia: 12,
   japanese_mafia: 12,
 };
+
+/**
+ * Seat count for a game type, tolerant of unknown/legacy values (e.g. the
+ * pre-rename `"traditional"` that still validates in the schema until its
+ * migration runs — see convex/tables/games.ts). Falls back to 10.
+ */
+export function maxPlayersForGameType(gameType: string): number {
+  return (
+    (GAME_TYPE_MAX_PLAYER_NUMBER as Record<string, number>)[gameType] ?? 10
+  );
+}
 
 export const JAPANESE_MAFIA_ROLES = [
   "DON",

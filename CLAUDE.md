@@ -7,8 +7,10 @@
 - **`/docs/README.md`** — Entry point (start here)
 - **`/docs/architecture.md`** — Stack, boundaries, data flow
 - **`/docs/realtime.md`** — Convex reactive queries (real-time)
-- **`/docs/game-design.md`** — Mafia rules, phases, role visibility
+- **`/docs/game-design.md`** — Mafia rules, phases, role visibility (Japanese variant)
 - **`/docs/game-end-conditions.md`** — Auto win-detection rules
+- **`/docs/game-types.md`** — Multi-variant architecture (`GameDefinition` registry, shared-core vs per-variant split, refactor plan)
+- **`/docs/sports-mafia.md`** — Sports Mafia ruleset spec (10 players, 2 factions) as a diff from Japanese
 - **`/docs/frontend.md`** — React / UI conventions
 - **`/docs/backend.md`** — Server patterns
 - **`/docs/authorization.md`** — Access roles (admin/moderator), permissions, `/admin` gating

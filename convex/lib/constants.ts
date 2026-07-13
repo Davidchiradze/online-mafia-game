@@ -159,7 +159,12 @@ export type RatingConfig = {
  * 269 decided games); recalibrate E-derived deltas every ~200 decided games.
  */
 export const RATING_CONFIG: Partial<
-  Record<"traditional" | "city_mafia" | "japanese_mafia", RatingConfig>
+  // "traditional" is the legacy key for "sports_mafia" — kept in the type only
+  // while the schema still accepts it (see convex/tables/games.ts).
+  Record<
+    "sports_mafia" | "city_mafia" | "japanese_mafia" | "traditional",
+    RatingConfig
+  >
 > = {
   japanese_mafia: {
     start: 1000,

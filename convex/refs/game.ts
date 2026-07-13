@@ -86,7 +86,7 @@ type DoctorAuthorityCheck = AuthorityCheck & {
   healedPlayers: number[];
 };
 
-type GameType = "traditional" | "city_mafia" | "japanese_mafia";
+type GameType = "sports_mafia" | "city_mafia" | "japanese_mafia";
 type GameStatus = "not_started" | "playing" | "finished";
 
 type GameWithRelations = {

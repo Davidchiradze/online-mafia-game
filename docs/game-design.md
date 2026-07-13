@@ -8,9 +8,11 @@ This is a **Japanese Mafia** game variant with 12 players. The game follows a st
 
 Currently supported:
 
-- `traditional` - 10 players
-- `city_mafia` - 12 players
-- `japanese_mafia` - 12 players (primary variant)
+- `japanese_mafia` - 12 players (**only fully implemented variant** — everything
+  in this document describes it)
+- `sports_mafia` - 10 players (**planned** — see [sports-mafia.md](./sports-mafia.md)
+  and [game-types.md](./game-types.md); renamed from the legacy `traditional`)
+- `city_mafia` - 12 players (reserved; not implemented)
 
 ## Roles (Japanese Mafia - 12 Players)
 
@@ -140,7 +142,9 @@ The primary function is `getVisibilityStateWithDeath()` which accounts for game 
 - `name` - Game name
 - `hostId` - Reference to `profiles` table
 - `gameStatus` - `"not_started"` | `"playing"` | `"finished"`
-- `gameType` - `"traditional"` | `"city_mafia"` | `"japanese_mafia"`
+- `gameType` - `"sports_mafia"` | `"city_mafia"` | `"japanese_mafia"` (plus the
+  legacy `"traditional"` literal, still accepted by the schema until its
+  rename migration runs — see [game-types.md](./game-types.md))
 - `maxPlayers` - Maximum players (10 or 12)
 
 ### Game Players Table (`gamePlayers`)

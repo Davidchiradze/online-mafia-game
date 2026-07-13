@@ -205,7 +205,9 @@ export default function CreateGameModal(props: Props) {
               className="w-full px-4 py-3 rounded-xl bg-white/[0.05] border border-white/[0.08] text-white font-sans text-sm focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 transition appearance-none cursor-pointer"
             >
               {GAME_TYPES.filter(
-                (gt) => gt !== "traditional" && gt !== "city_mafia",
+                // sports_mafia becomes creatable once its ruleset is
+                // implemented — see docs/sports-mafia.md.
+                (gt) => gt !== "sports_mafia" && gt !== "city_mafia",
               ).map((gt) => (
                 <option key={gt} value={gt} className="bg-[#0f0f1a]">
                   {tg(`gameTypes.${gt}` as Parameters<typeof tg>[0])}

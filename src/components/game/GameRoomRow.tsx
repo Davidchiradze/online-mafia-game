@@ -10,7 +10,7 @@ import { FEATURES, hasFeature } from "@convex/lib/entitlements";
 import { PERMISSIONS, roleHasPermission } from "@convex/lib/access";
 import { SUBSCRIPTIONS_PATH } from "@/components/auth/SubscriptionGuard";
 import { LobbyGame } from "@/components/lobby/LobbyContent";
-import { GAME_TYPE_MAX_PLAYER_NUMBER } from "@/lib/constants/game";
+import { maxPlayersForGameType } from "@/lib/constants/game";
 import GameStatusBadge from "./GameStatusBadge";
 import LevelBadge from "@/components/ranking/LevelBadge";
 import { getLevelForRating } from "@/lib/ranking/levels";
@@ -29,7 +29,7 @@ type Props = {
 
 function PlayersTooltipContent({ room }: { room: LobbyGame }) {
   const t = useTranslations("game");
-  const maxPlayers = GAME_TYPE_MAX_PLAYER_NUMBER[room.gameType] + 1;
+  const maxPlayers = maxPlayersForGameType(room.gameType) + 1;
   const { players } = room;
   const slots = maxPlayers - players.length;
 
@@ -90,7 +90,7 @@ function PlayersTooltipContent({ room }: { room: LobbyGame }) {
 }
 
 function PlayerCountWithTooltip({ room }: { room: LobbyGame }) {
-  const maxPlayers = GAME_TYPE_MAX_PLAYER_NUMBER[room.gameType] + 1;
+  const maxPlayers = maxPlayersForGameType(room.gameType) + 1;
 
   return (
     <div className="flex items-center gap-2">
