@@ -72,14 +72,17 @@
 
 ## Testing
 
-- **Vitest** (`npm test`, watch: `npm run test:watch`) — unit tests over the
-  game's **pure logic** (win conditions, visibility, speaking order,
-  role→faction, phases). Config: `vitest.config.mts`; tests in `tests/`.
+- **Vitest** (`npm test`, watch: `npm run test:watch`). Two tiers:
+  - **Unit** — pure logic (win conditions, visibility, speaking order,
+    role→faction, phases, role display, transition-graph spec) in `tests/`
+    (`node` env).
+  - **Integration** — DB-coupled engine (night authority, kill resolution, phase
+    transitions + win check, role deal, promotion) via `convex-test` in
+    `convex/tests/gameEngine.test.ts` (`edge-runtime` env; `*.test.ts` is ignored
+    by the Convex bundler). See `/docs/testing.md` for conventions.
 - These are **characterization tests**: they pin current behavior and act as the
   **regression oracle** for the game-types refactor. When moving modules, change
   only import paths — never the assertions (a forced change = a real regression).
-- Definitions/pure functions are the unit-test surface; DB-coupled Convex
-  functions are integration-tested later with `convex-test` (see `/docs/testing.md`).
 - **CI** (`.github/workflows/tests.yml`) runs `npm run typecheck` + `npm test`
   on every push and PR. A local **pre-push** hook (`.githooks/pre-push`, wired by
   the `prepare` script) runs the same gate before a push; bypass with

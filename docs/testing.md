@@ -29,7 +29,8 @@
 
 ## What is tested
 
-Pure, DB-free logic lives in `tests/`, mirroring the source tree:
+**Unit tier** — pure, DB-free logic in `tests/`, mirroring the source tree
+(runs in the `node` environment):
 
 | Test file | Covers |
 | --- | --- |
@@ -37,21 +38,48 @@ Pure, DB-free logic lives in `tests/`, mirroring the source tree:
 | `tests/convex/roles.test.ts` | `roleToFaction` for every role + unknown → citizens |
 | `tests/convex/speakingOrder.test.ts` | `computeSpeakingOrder` / `getNextSpeaker` (opener selection, wrap, dead-skip) |
 | `tests/game/visibility.test.ts` | `canSeeParticipant`, `getAwakeRoles`, `isNightActivityPhase`, `getVisibilityState`/`WithDeath` |
-| `tests/game/phases.test.ts` | Exact `GAME_PHASES` ordering, Japanese role set, 12-card deck, team membership |
+| `tests/game/roleDisplay.test.ts` | `roleLabel`, `factionIcon`/`factionBadgeClass`, `ROLE_DISPLAY_CONFIG`/`getRoleEmoji`, the duplicated `roleToFaction` |
+| `tests/game/phases.test.ts` | Exact `GAME_PHASES` ordering (both copies), Japanese role set, 12-card deck, team membership |
+| `tests/game/phaseTransitionGraph.test.ts` | The deterministic host-advance graph transcribed from the phase buttons (spec for `definition.nextPhase`) |
 
-Tests live in a top-level `tests/` tree **on purpose** — not colocated inside
+Unit tests live in a top-level `tests/` tree **on purpose** — not colocated in
 `convex/` — so they stay out of the Convex function bundler.
+
+**Integration tier** — DB-coupled Convex logic via
+[`convex-test`](https://docs.convex.dev/testing/convex-test), in
+`convex/tests/gameEngine.test.ts` (runs in the `edge-runtime` environment):
+
+| Area | Covers |
+| --- | --- |
+| Night kill authority | mafia `DON > MAFIA_RIGHT_HAND > MAFIA`, yakuza `SHOGUN > YAKUZA` (lone SHOGUN can't kill), doctor |
+| Night kill resolution | `startFarewellSpeech` — heal saves, dual kills, dedup, no-kill → day, host-only |
+| Phase transitions + win check | `enterNightPhase` / `enterDayPhase` / `enterVotingPhase`, pause-on-win, no-contest, idempotency |
+| Role deal + promotion | `assignRandomRoles` (deck = distribution), `promoteToRightHand` (Don-only, MAFIA-only, once, right phase) |
+
+### convex-test conventions
+
+- **Under `convex/tests/`** and globs the whole tree with
+  `import.meta.glob("../**/*.*s")` — convex-test derives the module root from the
+  `_generated` key, so the `../` prefix is stripped and `api.*` paths resolve.
+  Convex's bundler skips any file whose basename has more than one dot
+  (`bundler/index.js`), so `*.test.ts` is **never deployed** by
+  `convex dev`/deploy. ⚠️ Any non-test helper placed in `convex/tests/` **would**
+  be bundled — give helpers a multi-dot name (e.g. `seed.helpers.ts`) or keep the
+  folder to `*.test.ts` only.
+- **Per-file environment:** the first line is `// @vitest-environment edge-runtime`
+  (convex-test needs it) — the rest of the suite stays on `node`. No Vitest
+  `projects` split needed.
+- **`import.meta.glob` typing:** add `/// <reference types="vite/client" />` so
+  `tsc` (and CI) accept the Vite-only glob.
+- **Helpers** must be typed `TestConvex<typeof schema>` (not
+  `ReturnType<typeof convexTest>`, which drops the schema's table indexes).
 
 ## The testing tiers (strategy)
 
-1. **Unit (now).** Pure logic — highest ROI, deterministic, fast. This is the
-   whole current suite.
-2. **Integration — deferred to refactor Phase 3.** When the night-session DB
-   shape changes (`mafiaTargetSelections`), add a thin layer of
-   [`convex-test`](https://docs.convex.dev/testing/convex-test) tests around
-   night resolution + phase transitions. `convex-test` needs the
-   `edge-runtime` environment; add it via a Vitest `projects` split so it does
-   not disturb the `node` unit config.
+1. **Unit** — pure logic; highest ROI, deterministic, fast.
+2. **Integration** — `convex-test` over the DB-coupled engine (see above). This
+   is where the night model, win detection, and phase transitions are pinned —
+   the deepest migration divergences.
 3. **E2E — deferred / likely skipped.** A real-time, multi-player, WebRTC game
    is a poor fit for E2E and can't serve as a _precise_ regression oracle. If
    ever added, one Playwright smoke test with LiveKit mocked — never the safety
