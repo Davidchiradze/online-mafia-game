@@ -14,7 +14,8 @@ This documentation describes the architecture, patterns, and conventions used in
      (multi-variant architecture) and [sports-mafia.md](./sports-mafia.md).
 5. **Adding roles, permissions, or the admin panel?** Read [authorization.md](./authorization.md)
 6. **Gating features by paid subscription?** Read [subscriptions.md](./subscriptions.md)
-7. **Making architectural decisions?** Review [decisions.md](./decisions.md)
+7. **Writing or running tests?** See [testing.md](./testing.md)
+8. **Making architectural decisions?** Review [decisions.md](./decisions.md)
 
 ## Documentation Structure
 
@@ -33,6 +34,7 @@ This documentation describes the architecture, patterns, and conventions used in
 - **[admin-dashboard.md](./admin-dashboard.md)** - Admin panel routes + the analytics dashboard (KPIs, leaderboards, charts, presence)
 - **[ranking-system.md](./ranking-system.md)** - Player ELO rating + FACEIT-style Levels 1-10 (faction-calibrated payouts, level badges, leaderboards, backfill)
 - **[server-time.md](./server-time.md)** - Server-corrected client clock (use `useServerTime()` for any timer math involving a server timestamp)
+- **[testing.md](./testing.md)** - Vitest setup, pure-logic unit tests, testing tiers, CI, and the game-types refactor regression oracle
 - **[decisions.md](./decisions.md)** - Architectural Decision Records (ADRs)
 - **[livekit-server.md](./livekit-server.md)** - Self-hosted LiveKit server (VPS setup, monitoring, maintenance)
 
@@ -72,4 +74,5 @@ This documentation describes the architecture, patterns, and conventions used in
 2. Check existing patterns in similar features
 3. Use `Doc<"tableName">` types, don't create new ones
 4. Run `npx tsc` after changes to catch type errors
-5. Follow component and hook patterns from existing code
+5. Run `npm test` (add/adjust unit tests when changing pure game logic) — see [testing.md](./testing.md)
+6. Follow component and hook patterns from existing code
