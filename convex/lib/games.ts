@@ -5,7 +5,12 @@ import {
   MutationCtx,
 } from "../_generated/server";
 import { Id } from "../_generated/dataModel";
-import { describeWin, type WinContext, type Winner } from "./winConditions";
+import {
+  describeWin,
+  type WinContext,
+  type Winner,
+  type GameOutcome,
+} from "./winConditions";
 import { roleToFaction } from "./roles";
 import { applyPlayerRating, loadRatingSnapshot } from "./playerRatings";
 
@@ -177,7 +182,7 @@ export async function recordWinnerIfDecided(
   ctx: MutationCtx,
   gameId: Id<"games">,
   context: WinContext,
-): Promise<Winner | null> {
+): Promise<GameOutcome | null> {
   const session = await ctx.db
     .query("gameSessions")
     .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
@@ -188,17 +193,24 @@ export async function recordWinnerIfDecided(
   if (session.winner) return session.winner;
 
   const aliveRoles = await getAliveRoles(ctx.db, gameId);
-  const method = describeWin(aliveRoles, context);
-  if (!method) return null;
+  const result = describeWin(aliveRoles, context);
+  if (!result) return null;
+
+  // Total mutual elimination — nobody left alive. Pause on the draw banner; no
+  // faction won, so there is no winMethod snapshot (the log records no contest).
+  if (result === "draw") {
+    await ctx.db.patch(session._id, { winner: "draw" });
+    return "draw";
+  }
 
   // Capture the structured endgame snapshot now — the game pauses once a winner
   // is recorded, so this is the authoritative state for the eventual game log.
   await ctx.db.patch(session._id, {
-    winner: method.faction,
-    winMethod: method,
+    winner: result.faction,
+    winMethod: result,
   });
 
-  return method.faction;
+  return result.faction;
 }
 
 /**
@@ -260,7 +272,9 @@ export async function archiveGameLog(ctx: MutationCtx, gameId: Id<"games">) {
 
   const finishedAt = Date.now();
   const startedAt = session?.startedAt ?? session?._creationTime ?? finishedAt;
-  const winner: Winner | null = session?.winner ?? null;
+  // A "draw" (mutual elimination) is logged as no contest: winner null, no ELO.
+  const rawWinner = session?.winner ?? null;
+  const winner: Winner | null = rawWinner === "draw" ? null : rawWinner;
   const winMethod = session?.winMethod;
 
   // ELO pass 1 — snapshot every player's pre-game rating (null for unrated

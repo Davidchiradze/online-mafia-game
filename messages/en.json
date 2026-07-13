@@ -728,6 +728,7 @@
       "gameOver": "Game Over",
       "winSuffix": "Win",
       "noContest": "No Contest",
+      "draw": "Draw — No Winner",
       "mafiaWinner": "Mafia",
       "yakuzaWinner": "Yakuza and Shogun",
       "citizensWinner": "Citizens",

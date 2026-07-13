@@ -22,8 +22,17 @@ export const gameSessions = defineTable({
   // ms epoch — set when the game is finished (finishGame / admin force-end);
   // drives the "room closes in Ns" countdown in the winner banner.
   finishedAt: v.optional(v.number()),
+  // A decided faction win, or "draw" (total mutual elimination — nobody left
+  // alive). "draw" pauses the game on the winner banner like a faction win, but
+  // is logged as `winner: null` (no contest) with no ELO change. See
+  // docs/game-end-conditions.md.
   winner: v.optional(
-    v.union(v.literal("mafia"), v.literal("yakuza"), v.literal("citizens")),
+    v.union(
+      v.literal("mafia"),
+      v.literal("yakuza"),
+      v.literal("citizens"),
+      v.literal("draw"),
+    ),
   ),
   // Structured endgame snapshot captured when the winner is first decided.
   winMethod: v.optional(winMethodValidator),

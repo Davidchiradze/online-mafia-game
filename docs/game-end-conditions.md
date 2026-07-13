@@ -126,6 +126,16 @@ actually eliminates the player, i.e. the 4th foul).
 
 ## 5. Global rules (apply at any `N`)
 
+0. **Draw — total mutual elimination (`N = 0`).** If **no** player is left alive, the
+   game is a **draw**: nobody met a win condition. Reachable when the last survivors all
+   leave at once — e.g. the final 3 tie twice, trigger a **"both leave"** vote, and all
+   vote to leave, so all 3 are eliminated in one farewell round. This is checked **first**,
+   because the Citizens-sweep condition below (`m = 0` and `!YA` and `!SH`) is *vacuously
+   true* when nobody is alive and would otherwise mis-declare a Citizens win. A draw
+   **pauses on the winner banner** like a faction win (host confirms via **Finish Game**),
+   but is recorded as `winner: "draw"` on the session and logged as **no contest**
+   (`gameLogs.winner = null`, no `winMethod`, **no ELO change** for anyone).
+
 1. **Single-faction sweep (highest priority).** If **every** alive player belongs to
    a single faction, that faction wins — at _any_ player count, even above 6:
    - all **Town** (`m = 0` and `!YA` and `!SH`) → **Citizens win**
@@ -244,6 +254,7 @@ is irrelevant.
 
 ```
 function decideWinner(alive, context):           // context ∈ {beforeNight, beforeDay}
+  if N == 0:                        return DRAW          // mutual elimination — nobody left alive
   // Single-faction sweeps — last faction standing wins at any N (incl. N = 1).
   if m == 0 and !YA and !SH:        return CITIZENS      // only Town remain
   if N >= 1 and m == N:             return MAFIA         // only Mafia remain
@@ -308,19 +319,30 @@ These were confirmed and are baked into the rules above:
   check. The **single-faction sweeps** (§5 rule 1: all-Mafia → Mafia, all-Yakuza-clan →
   Yakuza) resolve this — without them a lone Yakuza/Shogun/Mafia would loop back into
   `day_phase` forever. (A lone Town survivor was already covered by the Citizens sweep.)
+- **All survivors leaving at once is a draw (`N = 0`).** A repeated tie among the last
+  players triggers a **"both leave"** vote; if it passes for every remaining player they
+  are all eliminated in one farewell round, leaving nobody alive. This is a **draw**
+  (§5 rule 0), not a Citizens win — recorded as `winner: "draw"` (host confirms on the
+  banner) and logged as no contest (`winner: null`, no ELO). Returning `CONTINUE` here
+  instead would transition into a phase with 0 players and loop forever, so `N = 0` must
+  resolve to an explicit outcome.
 
 ## 9. Implementation (built)
 
-1. **Schema:** ✅ optional `winner` (`mafia | yakuza | citizens`) on
-   `convex/tables/gameSessions.ts`.
+1. **Schema:** ✅ optional `winner` (`mafia | yakuza | citizens | draw`) on
+   `convex/tables/gameSessions.ts`. `"draw"` is the total-mutual-elimination outcome
+   (§5 rule 0); it pauses on the banner like a win but logs as no contest.
 2. **Pure helper:** ✅ `decideWinner(aliveRoles, context)` in
-   `convex/lib/winConditions.ts` — returns `"mafia" | "yakuza" | "citizens" | null`,
-   implementing §6/§7. No DB access.
+   `convex/lib/winConditions.ts` — returns `"mafia" | "yakuza" | "citizens" | "draw" |
+   null`, implementing §6/§7. No DB access. (`describeWin` returns the same, with a full
+   `WinMethod` snapshot for faction wins and the bare `"draw"` sentinel for `N = 0`.)
 3. **Record helper:** ✅ `recordWinnerIfDecided(ctx, gameId, context)` in
    `convex/lib/games.ts` — loads the roles of alive role-holders (excludes the host),
-   calls `decideWinner`; if non-null, patches only `winner` on the session and returns
-   it. It does **not** set `isFinished`/`gameStatus` or schedule cleanup — that is the
-   host's `finishGame` step. Idempotent (re-returns an already-recorded winner); no-ops
+   calls `describeWin`; if non-null, patches `winner` (+ `winMethod` for faction wins;
+   `"draw"` carries no `winMethod`) on the session and returns the outcome. It does
+   **not** set `isFinished`/`gameStatus` or schedule cleanup — that is the host's
+   `finishGame` step. `archiveGameLog` maps a `"draw"` session winner to `winner: null`
+   (no contest, no ELO). Idempotent (re-returns an already-recorded outcome); no-ops
    once the session is finished.
 4. **`enterNightPhase`** (`beforeNight`) and **`enterDayPhase`** (`beforeDay`): ✅ both
    take `ctx` and call `recordWinnerIfDecided` _before_ the phase patch; if a winner is

@@ -14,6 +14,13 @@ import { MAFIA_TEAM_ROLES } from "./constants";
 
 export type WinContext = "beforeNight" | "beforeDay";
 export type Winner = "mafia" | "yakuza" | "citizens";
+/**
+ * A finished-game outcome: a faction win, or a `"draw"` — a total mutual
+ * elimination where no player is left alive (e.g. the last survivors all voted
+ * to leave in a "both leave" vote). A draw is not a faction win: it is logged
+ * with `winner: null` (no contest) and applies no ELO change.
+ */
+export type GameOutcome = Winner | "draw";
 
 /**
  * Structured snapshot of the endgame state at the moment a winner is decided.
@@ -63,7 +70,7 @@ function multisetEquals(a: string[], b: string[]): boolean {
 export function describeWin(
   aliveRoles: string[],
   context: WinContext,
-): WinMethod | null {
+): WinMethod | "draw" | null {
   const m = aliveRoles.filter((r) => MAFIA_ROLES.has(r)).length;
   const YA = aliveRoles.includes("YAKUZA");
   const SH = aliveRoles.includes("SHOGUN");
@@ -80,6 +87,13 @@ export function describeWin(
     decidedRole,
     ...base,
   });
+
+  // No players left at all — total mutual elimination (e.g. the last survivors
+  // all voted to leave in a "both leave" vote). Nobody met a win condition, so
+  // it is a draw. This MUST come first: the Citizens sweep below
+  // (`m === 0 && !YA && !SH`) is vacuously true when *nobody* is alive, which
+  // would otherwise mis-declare a Citizens win at N = 0.
+  if (N === 0) return "draw";
 
   // Global "last faction standing" sweeps (highest priority, any N): if every
   // remaining player belongs to a single faction, that faction has won. Mafia
@@ -160,8 +174,10 @@ export function describeWin(
 export function decideWinner(
   aliveRoles: string[],
   context: WinContext,
-): Winner | null {
-  return describeWin(aliveRoles, context)?.faction ?? null;
+): GameOutcome | null {
+  const result = describeWin(aliveRoles, context);
+  if (result === null || result === "draw") return result;
+  return result.faction;
 }
 
 /**

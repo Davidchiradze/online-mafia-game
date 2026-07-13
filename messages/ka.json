@@ -728,6 +728,7 @@
       "gameOver": "თამაში დასრულდა",
       "winSuffix": "გამარჯვებულია",
       "noContest": "ანულირებულია",
+      "draw": "ფრე — გამარჯვებულის გარეშე",
       "mafiaWinner": "მაფია",
       "yakuzaWinner": "იაკუძა და შოგუნი",
       "citizensWinner": "მოქალაქეები",

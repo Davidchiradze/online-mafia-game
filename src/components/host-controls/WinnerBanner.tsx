@@ -7,11 +7,15 @@ import { useCountdown } from "@/hooks/game/useCountdown";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 
 type Winner = "mafia" | "yakuza" | "citizens";
+type Outcome = Winner | "draw";
 
 type WinnerBannerProps = {
   gameId: string;
-  /** Decided winning faction, or `null` when the game ended with no contest. */
-  winner: Winner | null;
+  /**
+   * Decided winning faction, `"draw"` for a total mutual elimination (nobody
+   * left alive), or `null` when the game ended with no contest.
+   */
+  winner: Outcome | null;
   /** When true, show the host's "Finish Game" button (pending-win state). */
   canFinish?: boolean;
 };
@@ -25,9 +29,9 @@ const WINNER_ACCENT: Record<Winner, string> = {
 /**
  * Banner shown when a game ends. The host sees it while a win is pending
  * (`canFinish`) with a "Finish Game" button to confirm the end; everyone sees
- * the title-only version once the game is finished. When `winner` is `null`
- * (e.g. an admin force-ended the game), it shows a "No Contest" end state
- * instead of a faction win.
+ * the title-only version once the game is finished. `"draw"` shows a neutral
+ * "Draw" end state (still host-confirmable), and `null` (e.g. an admin
+ * force-ended the game) shows a "No Contest" end state instead of a faction win.
  */
 export default function WinnerBanner({
   gameId,
@@ -59,12 +63,16 @@ export default function WinnerBanner({
         </p>
         <h2
           className={`font-orbitron text-lg font-bold uppercase tracking-wider break-words sm:text-2xl ${
-            winner ? WINNER_ACCENT[winner] : "text-slate-300"
+            winner && winner !== "draw"
+              ? WINNER_ACCENT[winner]
+              : "text-slate-300"
           }`}
         >
-          {winner
-            ? `${t("winSuffix")} - ${WINNER_LABELS[winner]}`
-            : t("noContest")}
+          {winner === "draw"
+            ? t("draw")
+            : winner
+              ? `${t("winSuffix")} - ${WINNER_LABELS[winner]}`
+              : t("noContest")}
         </h2>
       </div>
 
