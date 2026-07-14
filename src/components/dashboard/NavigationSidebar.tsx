@@ -26,6 +26,7 @@ function NavItem({
 }) {
   const Icon = item.icon;
   const t = useTranslations("nav");
+  console.log("test");
 
   const className = cn(
     "group relative mx-3 flex h-11 items-center rounded-lg px-[14px] transition-all duration-300 ease-in-out",
