@@ -16,6 +16,7 @@ import {
   formatDuration,
 } from "@/components/dashboard/matchHistory/format";
 import type { AdminGameLogRow } from "@convex/refs/admin";
+import ArchiveRowActions from "./ArchiveRowActions";
 
 const WINNER_BAR: Record<string, string> = {
   mafia: "bg-[#ff2a2a] shadow-[0_0_12px_rgba(255,42,42,0.6)]",
@@ -103,8 +104,10 @@ export default function ArchiveRow({ row }: { row: AdminGameLogRow }) {
           )}
         </div>
 
-        {/* Expand chevron */}
-        <div className="absolute right-5 top-5 flex justify-end md:relative md:right-auto md:top-auto md:col-span-1">
+        {/* Actions menu + expand chevron */}
+        <div className="absolute right-4 top-4 flex items-center gap-1 md:relative md:right-auto md:top-auto md:col-span-1 md:justify-end">
+          <ArchiveRowActions gameLogId={row._id} hasWinner={winner !== null} />
+
           <div
             className={cn(
               "rounded-full border p-1.5 transition-colors duration-300",
