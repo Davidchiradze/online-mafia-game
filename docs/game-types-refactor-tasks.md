@@ -391,7 +391,37 @@ definitions (game-types.md §8).
 | P4-T2 | `GamePhaseControls` renders from the variant's phase→controls map | `GamePhaseControls.tsx`, `src/game/{core/types,japanese/phaseControls,sports/{phaseFlow,phaseControls,ruleset}}`, `PhaseAdvanceButton`/`StartSportsMafiaPhaseButton`, `refs/game.ts` | `phaseTransitionGraph` still green; `uiRegistry.test.ts` (+ maps coverage) | ✅ | working tree |
 | P4-T3 | `visibility.ts` + night-authority hooks dispatch to the ruleset | `useParticipantVisibility.ts`, `PhaseCountdown.tsx`, `useNightActionAuthority.ts`, `src/game/{core/types,japanese/nightAuthority,sports/{visibility,nightAuthority,ruleset}}` | `visibility.test.ts` green (**unchanged**); `nightAuthority.test.ts` (7) + `uiRegistry` sports | ✅ | working tree |
 | P4-T4 | **Fix `maxPlayers` plumbing (§6):** thread `maxPlayers` from `useGameRoom()` into both `<PlayerCircle>` renders | `LiveKitTestComponent.tsx`, `SpectatorView.tsx` | needs **G4** ✅; Japanese no-op (`maxPlayers ?? 12` = 12) | ✅ | working tree |
-| P4-T5 | Seat layout from variant `seatLayout` (10-ring + host for Sports; 12-ring for Japanese) instead of hardcoded switch | `PlayerCircle.tsx`, `useSeatShuffleAnimation.ts`, `src/game/*/seatLayout.ts` | `seatLayout.test.ts` extended for 10-seat | ⬜ | |
+| P4-T5 | Seat layout from variant `seatLayout` (10-ring + host for Sports; 12-ring for Japanese) instead of hardcoded switch | `PlayerCircle.tsx`, `useSeatShuffleAnimation.ts`, `src/game/{core/types,japanese/seatLayout,sports/seatLayout}` | `seatLayout.test.ts` extended (8 tests: 12-ring unchanged + 10-ring) | ✅ | working tree |
+
+> **P4-T5 landed (working tree, uncommitted):** seat geometry now comes from
+> `ruleset.seatLayout` (new `SeatLayout` on `UiRuleset`) instead of the hardcoded
+> 4×4 switch.
+> - **Japanese** (`src/game/japanese/seatLayout.ts`): the 12-seat 4×4 ring +
+>   center panel (cols 2–3, rows 2–3), `positionForSeat` moved **verbatim** from
+>   the old `useSeatShuffleAnimation` switch. The G4 oracle's 12-ring assertions
+>   are unchanged (imports repointed only). `PlayerCircle`'s grid template +
+>   center span are now inline styles computed from the layout — for Japanese
+>   they resolve to the exact prior CSS (`grid-cols-4`/`grid-rows-4`,
+>   `col-start-2 … row-end-4`), so it renders identically.
+> - **Sports** (`src/game/sports/seatLayout.ts`): a 4×3, 10-seat ring (top 4,
+>   one seat each side, bottom 4; host+controls in the center row) — no phantom
+>   empty seats (the §6 bug). Pinned by `seatLayout.test.ts` (distinct cells,
+>   all within the 4×3 grid).
+> - `useSeatShuffleAnimation` no longer defines the geometry — it takes
+>   `gridPositionForSeat` (the layout's `positionForSeat`) as a param for its
+>   arc-distance math. `PlayerCircle` resolves `seatLayout` from `useGameRoom()`.
+> - **Visual QA note:** the Sports center panel is 1 grid-row tall (vs Japanese's
+>   2), so host-video/controls proportions want an eyeball once Sports is
+>   creatable (Phase 5) — the mapping is correct, sizing is QA-tunable.
+
+**Phase 4 exit gate:** ✅ T1 (context ruleset) · T2 (phase-controls map) · T3
+(visibility + night-authority dispatch) · T4 (`maxPlayers` §6 fix) · T5 (variant
+seat geometry). Japanese verified byte-identical by the unchanged oracles
+(visibility 80, seatLayout 12-ring, phaseFlow, phaseTransitionGraph) + full suite
+(417). Sports is wired end-to-end in the UI dispatch but stays non-creatable;
+remaining before it is playable: the interactive night UI (§5.4 kill buttons /
+`MafiaTargetIndicator` privacy / 30s banned-speaker timer) and **Phase 5**
+(un-filter in `CreateGameModal`, ship unrated).
 
 ### Phase 5 — Enable + calibrate
 

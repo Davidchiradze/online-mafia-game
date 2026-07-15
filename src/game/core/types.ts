@@ -75,6 +75,26 @@ export type PhaseControlRenderer = (ctx: PhaseControlsContext) => ReactNode;
  */
 export type PhaseControlsMap = Record<string, PhaseControlRenderer>;
 
+/** A cell in the participant-circle CSS grid (1-based row/column). */
+export type GridPosition = { gridRow: number; gridColumn: number };
+
+/**
+ * The participant-circle ring geometry for a variant (docs/game-types.md §6,
+ * P4-T5). Replaces the hardcoded 4×4 switch in `useSeatShuffleAnimation` so a
+ * 10-seat Sports ring and the 12-seat Japanese ring both come from the resolved
+ * ruleset. `center` is the host+controls panel span (grid line numbers, end
+ * exclusive); seats fill the ring around it.
+ */
+export type SeatLayout = {
+  /** Grid template size. */
+  cols: number;
+  rows: number;
+  /** The center host+controls panel span (grid line numbers). */
+  center: { colStart: number; colEnd: number; rowStart: number; rowEnd: number };
+  /** Ring cell for a 1-based seat number. */
+  positionForSeat: (seat: number) => GridPosition;
+};
+
 /** One player as the night-authority computation needs them (role via `roleOf`). */
 export type NightAuthorityPlayer = { playerId: string; isAlive: boolean };
 
@@ -116,4 +136,6 @@ export interface UiRuleset {
   phaseControls: PhaseControlsMap;
   /** Pure: who may take a night action this phase (variant kill model). */
   nightAuthority: (input: NightAuthorityInput) => NightActionAuthority;
+  /** Participant-circle ring geometry (12-ring Japanese, 10-ring Sports). */
+  seatLayout: SeatLayout;
 }
