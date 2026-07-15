@@ -145,6 +145,11 @@ type GameRoomContextValue = {
   healedPlayers: number[];
 };
 
+/** The live game session, non-null — the shape phase-control renderers receive. */
+export type GameSessionState = NonNullable<
+  GameRoomContextValue["gameSessionState"]
+>;
+
 const EMPTY_VOTE_DATA: VoteData = {
   votes: {},
   playersWhoVoted: [],

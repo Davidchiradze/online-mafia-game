@@ -1,7 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { getUiRuleset } from "@/game/registry";
 import { JAPANESE_UI_RULESET } from "@/game/japanese/ruleset";
+import { SPORTS_UI_RULESET } from "@/game/sports/ruleset";
 import { advanceUpdates } from "@/game/japanese/phaseFlow";
+import { sportsAdvanceUpdates } from "@/game/sports/phaseFlow";
 import {
   canSeeParticipant,
   getAwakeRoles,
@@ -30,8 +32,103 @@ describe("getUiRuleset", () => {
     expect(getUiRuleset(undefined)).toBe(JAPANESE_UI_RULESET);
   });
 
-  it("falls back to Japanese for an unregistered type (Phase 1)", () => {
-    expect(getUiRuleset("sports_mafia")).toBe(JAPANESE_UI_RULESET);
+  // Phase 4 (P4-T2) registers Sports → dispatch is now strict. (This assertion
+  // replaces the Phase-1 "sports falls back to Japanese" placeholder; the
+  // registry doc anticipated the flip once other variants ship their rulesets.)
+  it("resolves sports_mafia to the Sports ruleset (P4-T2)", () => {
+    expect(getUiRuleset("sports_mafia")).toBe(SPORTS_UI_RULESET);
+  });
+
+  it("still falls back to Japanese for a genuinely unknown type", () => {
+    expect(getUiRuleset("city_mafia")).toBe(JAPANESE_UI_RULESET);
+  });
+});
+
+describe("phaseControls maps", () => {
+  it("Japanese covers every live phase incl. the yakuza/doctor branches", () => {
+    const keys = Object.keys(JAPANESE_UI_RULESET.phaseControls);
+    for (const phase of [
+      "game_session_started",
+      "picking_roles",
+      "mafia_meet",
+      "don_chooses_right_hand",
+      "yakuda_shogun_meet",
+      "detective_meet",
+      "doctor_meet",
+      "introduction_phase",
+      "night_phase",
+      "mafia_chooses_target",
+      "don_checks_for_detective",
+      "right_hand_checks_for_yakuza",
+      "yakuza_and_shogun_chooses_target",
+      "detective_checks_for_mafia",
+      "doctor_heals_player",
+      "farewell_speech",
+      "day_phase",
+      "nominated_players_speak",
+      "voting",
+      "repeat",
+      "end_game",
+      "phase_transition",
+    ]) {
+      expect(keys).toContain(phase);
+    }
+  });
+
+  it("Sports covers its phases and drops the yakuza/doctor/right-hand ones", () => {
+    const controls = SPORTS_UI_RULESET.phaseControls;
+    for (const phase of [
+      "game_session_started",
+      "picking_roles",
+      "mafia_meet",
+      "detective_meet",
+      "day_phase",
+      "nominated_players_speak",
+      "voting",
+      "night_phase",
+      "mafia_chooses_target",
+      "don_checks_for_detective",
+      "detective_checks_for_mafia",
+      "farewell_speech",
+      "repeat",
+      "end_game",
+      "phase_transition",
+    ]) {
+      expect(controls[phase]).toBeTypeOf("function");
+    }
+    for (const dropped of [
+      "don_chooses_right_hand",
+      "yakuda_shogun_meet",
+      "doctor_meet",
+      "introduction_phase",
+      "right_hand_checks_for_yakuza",
+      "yakuza_and_shogun_chooses_target",
+      "doctor_heals_player",
+    ]) {
+      expect(controls[dropped]).toBeUndefined();
+    }
+  });
+});
+
+describe("SPORTS_UI_RULESET", () => {
+  it("uses the Sports host-advance flow", () => {
+    expect(SPORTS_UI_RULESET.advanceUpdates).toBe(sportsAdvanceUpdates);
+  });
+
+  it("routes the last night check through the buffer as the resolve-marker", () => {
+    // detective_checks_for_mafia parks in phase_transition with nextPhase =
+    // farewell_speech, which StartNextPhaseButton turns into startFarewellSpeech.
+    expect(sportsAdvanceUpdates("detective_checks_for_mafia")).toEqual({
+      gamePhase: "phase_transition",
+      nextPhase: "farewell_speech",
+    });
+  });
+
+  it("advances the mafia-meet to the detective-meet (not the Japanese target)", () => {
+    expect(sportsAdvanceUpdates("mafia_meet")).toEqual({
+      gamePhase: "phase_transition",
+      nextPhase: "detective_meet",
+    });
   });
 });
 

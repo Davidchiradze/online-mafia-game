@@ -4,15 +4,18 @@
  * Resolved once in `gameRoomContext`; shared UI reads the ruleset instead of
  * branching on `gameType`.
  *
- * Phase 1 registers only Japanese (the only creatable variant). Sports is added
- * in Phase 4 alongside its phase-controls map and seat layout.
+ * Phase 1 registered only Japanese. Phase 4 (P4-T2) registers Sports alongside
+ * its host-advance flow + phase-controls map (Sports visibility + seat layout
+ * follow in P4-T3/T5). Sports stays non-creatable in the UI until Phase 5.
  */
 
 import type { UiRuleset } from "./core/types";
 import { JAPANESE_UI_RULESET } from "./japanese/ruleset";
+import { SPORTS_UI_RULESET } from "./sports/ruleset";
 
 const UI_RULESETS: Record<string, UiRuleset> = {
   japanese_mafia: JAPANESE_UI_RULESET,
+  sports_mafia: SPORTS_UI_RULESET,
 };
 
 /**

@@ -334,14 +334,39 @@ definitions (game-types.md §8).
 | P3-T4 | Day-1 single-nominee → skip-to-night rule (+ later-round single-nominee auto-eliminate) gated on `firstDaySingleNomineeSkipsToNight` | `convex/game/dayPhase.ts`, `convex/games/core/dayRound.ts` | `gameEngine.test.ts` sports single-nominee suite (4 tests) | ✅ | working tree |
 | P3-T5 | Route the win-check seam through the definition: added `describeWin` to `GameDefinition` (Japanese reuses the exact `lib/winConditions.describeWin`; Sports ships `describeSportsWin` — parity + `yakuza/shogun:false` §7). `recordWinnerIfDecided` now resolves `getGameDefinition(game.gameType).describeWin`. Japanese byte-for-byte unchanged | `convex/lib/games.ts`, `games/core/types.ts`, `games/{japanese,sports}/*` | `winConditions.test.ts` + `gameEngine` transitions green (Japanese) + Sports `describeWin` (4) + `recordWinnerIfDecided` sports (3) | ✅ | working tree |
 
+> **P4-T2 landed (working tree, uncommitted):** `GamePhaseControls` no longer
+> switches on positional `GAME_PHASES[n]` — it looks the current phase up **by
+> name** in `ruleset.phaseControls` (new required field on `UiRuleset`), killing
+> the last §8 index dependency in the host controls.
+> - **Japanese** (`src/game/japanese/phaseControls.tsx`) is a byte-for-byte
+>   transcription of the old switch — same components, same
+>   `introduction_phase`/`day_phase` conditional branches. Verified by the green
+>   `phaseFlow` + `phaseTransitionGraph` + full suite (404).
+> - **Sports** is now **registered** (`SPORTS_UI_RULESET`): `sports/phaseFlow.ts`
+>   (its own `advanceUpdates` + buffer set), `sports/phaseControls.tsx` (reuses
+>   the shared card-pick/day/vote/farewell/continue/buffer controls; new generic
+>   `PhaseAdvanceButton` for the meet/check advances whose target differs from
+>   Japanese; `StartSportsMafiaPhaseButton` advances into `mafia_chooses_target`
+>   **and arms the 5s window**). The last night check parks in the buffer with
+>   `nextPhase: farewell_speech`, so the shared `StartNextPhaseButton` triggers
+>   `startFarewellSpeech` (dawn resolution) exactly as Japanese's doctor step.
+> - The `uiRegistry` Phase-1 "sports → Japanese fallback" assertion was flipped
+>   to strict Sports dispatch (the planned P4 change the registry doc anticipated
+>   — not a Japanese regression). Added `sportsNightPhase` frontend refs.
+> - **Interim:** `SPORTS_UI_RULESET.visibility` reuses Japanese visibility until
+>   **P4-T3** authors the Sports `VisibilityRuleset` (mafia-target privacy §5.4);
+>   `seatLayout` is added in **P4-T5**. The interactive per-mafia kill buttons +
+>   selection indicator (§5.4) are separate UI, not part of the host controls.
+>   Sports stays non-creatable, so none of this is live yet.
+
 ### Phase 4 — Frontend dispatch + geometry (fixes §6 latent bug)
 
 | ID | Task | Files | Guarding test | Status | Commit |
 | --- | --- | --- | --- | --- | --- |
-| P4-T1 | `gameRoomContext` resolves the UI ruleset from `gameData.gameType` | `gameRoomContext.tsx`, `src/game/registry.ts` | manual + existing visibility | ⬜ | |
-| P4-T2 | `GamePhaseControls` renders from the variant's phase→controls map | `components/game/GamePhaseControls.tsx` | `phaseTransitionGraph` still green | ⬜ | |
+| P4-T1 | `gameRoomContext` resolves the UI ruleset from `gameData.gameType` | `gameRoomContext.tsx`, `src/game/registry.ts` | manual + existing visibility | ✅ (landed in P1-T8) | working tree |
+| P4-T2 | `GamePhaseControls` renders from the variant's phase→controls map | `GamePhaseControls.tsx`, `src/game/{core/types,japanese/phaseControls,sports/{phaseFlow,phaseControls,ruleset}}`, `PhaseAdvanceButton`/`StartSportsMafiaPhaseButton`, `refs/game.ts` | `phaseTransitionGraph` still green; `uiRegistry.test.ts` (+ maps coverage) | ✅ | working tree |
 | P4-T3 | `visibility.ts` + night-authority hooks dispatch to the ruleset | `lib/game/visibility.ts`, `hooks/game/useNight*` | `visibility.test.ts` green, **imports only** | ⬜ | |
-| P4-T4 | **Fix `maxPlayers` plumbing (§6):** thread `maxPlayers` from `useGameRoom()` into both `<PlayerCircle>` renders | `LiveKitTestComponent.tsx`, `SpectatorView.tsx` | needs **G4** ✅ | ⬜ (unblocked — G4 done) | |
+| P4-T4 | **Fix `maxPlayers` plumbing (§6):** thread `maxPlayers` from `useGameRoom()` into both `<PlayerCircle>` renders | `LiveKitTestComponent.tsx`, `SpectatorView.tsx` | needs **G4** ✅; Japanese no-op (`maxPlayers ?? 12` = 12) | ✅ | working tree |
 | P4-T5 | Seat layout from variant `seatLayout` (10-ring + host for Sports; 12-ring for Japanese) instead of hardcoded switch | `PlayerCircle.tsx`, `useSeatShuffleAnimation.ts`, `src/game/*/seatLayout.ts` | `seatLayout.test.ts` extended for 10-seat | ⬜ | |
 
 ### Phase 5 — Enable + calibrate
