@@ -159,6 +159,20 @@ Properties:
   applied together. Processing order within a game never affects the result.
 - **No-contest games** (`winner: null`): zero rating change (no base, no `b`)
   — consistent with `playerStats` win-rate math, which already excludes them.
+- **Annulled games** (staff action): a moderator or admin can annul a finished
+  game from the `/admin/archive` list (`game.annul` permission → `annulGame`),
+  which converts it to a no-contest and **reverses** each player's rating for
+  that game —
+  `rating −= ratingDelta` (the stored, already-clipped delta), re-clamped at the
+  floor. The reversal is **forward-only**: games played *after* the annulled one
+  are **not** recomputed, so their table averages (`T`) keep the values they were
+  computed with — the same "past deltas are never re-adjusted" stance as
+  recalibration (§9). `peakRating` is left untouched (it was genuinely reached).
+  Each player's `playerStats` is fully recomputed from their `gameLogPlayers`
+  history (so wins/losses/streaks self-correct), and the game's rows are rewritten
+  as a no-contest (`outcome: "no_contest"`, `ratingDelta: 0`) — which also makes a
+  second annul a no-op. Only games with a decided `winner` can be annulled; a
+  no-contest has no ELO to reverse. Logic: `annulGameLog` in `convex/lib/games.ts`.
 - **Host & spectators**: never rated. The host holds no role/faction and is
   naturally absent from role-holder archives.
 - **Leavers**: a player who abandons a game that later finishes with a winner

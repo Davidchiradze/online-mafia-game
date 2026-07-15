@@ -49,6 +49,7 @@ export const PERMISSIONS = {
   GAME_SPECTATE_ANY:  "game.spectate_any",  // spectate any live game (bypass private/full)
   GAME_REVEAL_ROLES:  "game.reveal_roles",  // reveal LIVE in-game roles (host POV)
   GAME_FORCE_END:     "game.force_end",     // force-end / cancel a game
+  GAME_ANNUL:         "game.annul",         // annul a finished game (no-contest + reverse ELO)
   GAME_BROADCAST:     "game.broadcast",     // message everyone in a live game room
   GAME_REFUND:        "game.refund",        // trigger PHP refund (money)
 } as const;
@@ -62,16 +63,18 @@ export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
 | `game.view_all` | — | ✅ | ✅ |
 | `game.spectate_any` | — | ✅ | ✅ |
 | `game.force_end` | — | ✅ | ✅ |
+| `game.annul` | — | ✅ | ✅ |
 | `game.broadcast` | — | ✅ | ✅ |
 | `game.reveal_roles` | — | — | ✅ |
 | `role.assign` | — | — | ✅ |
 | `user.ban` | — | — | ✅ |
 | `game.refund` | — | — | ✅ |
 
-Rationale: **moderator** = moderation + read-only visibility; **admin** =
-everything, including the money-sensitive (`refund`), privilege-changing
-(`role.assign`, `user.ban`), and live role-reveal (`game.reveal_roles`)
-operations. Note `game.spectate_any` (join any room) is deliberately split from
+Rationale: **moderator** = moderation + read-only visibility (incl. `game.annul`,
+which rewrites a finished game's permanent ELO + stats — a moderation call);
+**admin** = everything, including the money-sensitive (`refund`),
+privilege-changing (`role.assign`, `user.ban`), and live role-reveal
+(`game.reveal_roles`) operations. Note `game.spectate_any` (join any room) is deliberately split from
 `game.reveal_roles` (see live roles) so moderators can spectate private/full
 games without bypassing in-game visibility. `game.broadcast` (message a room — for
 responding to reports) is a moderation capability, so moderators get it too; see
@@ -155,6 +158,10 @@ export const assignRole = mutation({
   [payments-php-contract.ka.md](./payments-php-contract.ka.md)). An action can't read
   the DB directly, so it authorizes via a permission-checking query/helper, then calls
   PHP with `adminAccountId` for audit (`GAME_REFUND`).
+- `convex/admin/gameLogs.ts` — `listAllGameLogs` (`GAME_VIEW_ALL`, the archive
+  list); `annulGame` (`GAME_ANNUL`) turns a finished game into a no-contest and
+  reverses every player's ELO from it (audits `game.annul`). See
+  [ranking-system.md](./ranking-system.md).
 
 ### Audit log — `convex/tables/adminAuditLog.ts` (new table)
 

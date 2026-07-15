@@ -70,9 +70,14 @@ export default function MatchRow({
 
         {/* Operation & role */}
         <div className="flex flex-col justify-center border-t border-white/5 pt-3 md:col-span-5 md:border-0 md:pt-0">
-          <span className="mb-1.5 font-inter font-medium text-zinc-300">
-            {tg(`gameTypes.${row.gameType}` as Parameters<typeof tg>[0])}
-          </span>
+          <div className="mb-1.5 flex items-baseline gap-2">
+            <span className="truncate font-inter font-semibold text-zinc-100">
+              {row.gameName}
+            </span>
+            <span className="shrink-0 font-inter text-xs text-zinc-500">
+              {tg(`gameTypes.${row.gameType}` as Parameters<typeof tg>[0])}
+            </span>
+          </div>
           <div className="flex items-center gap-2">
             <span className="font-inter text-sm text-zinc-500">{t("assigned")}</span>
             <span

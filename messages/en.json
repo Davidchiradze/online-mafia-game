@@ -86,6 +86,7 @@
           },
           "game": {
             "force_end": "force-ended a game",
+            "annul": "annulled a game",
             "refund": "issued a refund"
           }
         }
@@ -168,6 +169,10 @@
       "dead": "Dead",
       "noWinner": "No winner",
       "filterAll": "All modes",
+      "actions": "Game actions",
+      "annul": "Annul game",
+      "annulConfirm": "Annul this game and mark it as No Contest? Every player's ELO from this game will be reversed and their stats recalculated. This cannot be undone.",
+      "annulDone": "Game annulled — ELO adjusted",
       "faction": {
         "mafia": "Mafia",
         "yakuza": "Yakuza",

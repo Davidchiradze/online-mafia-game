@@ -4,7 +4,7 @@ import {
   DatabaseWriter,
   MutationCtx,
 } from "../_generated/server";
-import { Id } from "../_generated/dataModel";
+import { Doc, Id } from "../_generated/dataModel";
 import {
   describeWin,
   type WinContext,
@@ -12,7 +12,12 @@ import {
   type GameOutcome,
 } from "./winConditions";
 import { roleToFaction } from "./roles";
-import { applyPlayerRating, loadRatingSnapshot } from "./playerRatings";
+import {
+  applyPlayerRating,
+  getPlayerRating,
+  loadRatingSnapshot,
+} from "./playerRatings";
+import { RATING_CONFIG } from "./constants";
 
 export async function getGameById(db: DatabaseReader, gameId: Id<"games">) {
   const game = await db.get(gameId);
@@ -404,4 +409,159 @@ async function bumpPlayerStats(
     bestStreak,
     roleStats,
   });
+}
+
+/**
+ * Annul a finished game — convert it to a no-contest and undo its effect on
+ * player ratings and aggregate stats. Admin moderation; see
+ * `convex/admin/gameLogs.ts` → `annulGame` and /docs/ranking-system.md.
+ *
+ * What it does, per player in the log's roster:
+ *   1. **Reverse ELO.** Subtract this game's stored, already-clipped
+ *      `ratingDelta` back out of `playerRatings.rating` (re-clamped at the
+ *      config floor). This is a FORWARD-ONLY reversal — games played *after*
+ *      this one are not recomputed, matching the ranking system's
+ *      "past deltas are never re-adjusted" policy (ranking-system.md §9).
+ *      `peakRating` is left untouched (it was genuinely reached at the time).
+ *   2. **Rewrite the per-game row** to a no-contest: `outcome: "no_contest"`,
+ *      `winner: null`, no `winMethod`, `ratingDelta: 0`, and `ratingAfter`
+ *      rolled back to the pre-game rating — identical to how a natural
+ *      no-contest is archived. Zeroing `ratingDelta` also makes a re-run a
+ *      no-op, so ELO can never be double-reversed.
+ *   3. **Recompute `playerStats`** from the player's full `gameLogPlayers`
+ *      history (cheap, per-player, order-independent). A full recompute avoids
+ *      the underflow / drift risks of incremental decrements and self-heals any
+ *      prior skew; it reproduces exactly what `bumpPlayerStats` would have built.
+ *
+ * Finally the `gameLogs` row itself is set to `winner: null` / no `winMethod`.
+ *
+ * Idempotency is the caller's responsibility: only annul a game whose `winner`
+ * is non-null (a no-contest has no ELO to reverse — its deltas are already 0).
+ */
+export async function annulGameLog(ctx: MutationCtx, log: Doc<"gameLogs">) {
+  const config = RATING_CONFIG[log.gameType]; // undefined for unrated game types
+
+  const rows = await ctx.db
+    .query("gameLogPlayers")
+    .withIndex("by_gameLogId", (q) => q.eq("gameLogId", log._id))
+    .collect();
+
+  const affectedPlayerIds = new Set<Id<"profiles">>();
+
+  for (const row of rows) {
+    affectedPlayerIds.add(row.playerId);
+
+    // 1) Reverse this game's rating delta on the player's ladder rating.
+    if (config && typeof row.ratingDelta === "number" && row.ratingDelta !== 0) {
+      const ratingRow = await getPlayerRating(
+        ctx.db,
+        row.playerId,
+        log.gameType,
+      );
+      if (ratingRow) {
+        const reverted = Math.max(
+          config.floor,
+          ratingRow.rating - row.ratingDelta,
+        );
+        await ctx.db.patch(ratingRow._id, { rating: reverted });
+      }
+    }
+
+    // 2) Rewrite the per-game row as a no-contest.
+    const patch: Partial<Doc<"gameLogPlayers">> = {
+      outcome: "no_contest",
+      winner: null,
+      winMethod: undefined,
+    };
+    if (typeof row.ratingDelta === "number") {
+      patch.ratingDelta = 0;
+      if (typeof row.ratingAfter === "number") {
+        patch.ratingAfter = row.ratingAfter - row.ratingDelta; // pre-game rating
+      }
+    }
+    await ctx.db.patch(row._id, patch);
+  }
+
+  // 3) Recompute aggregate stats for each affected player from their history.
+  for (const playerId of affectedPlayerIds) {
+    await recomputePlayerStats(ctx, playerId);
+  }
+
+  // 4) The log itself becomes a no-contest.
+  await ctx.db.patch(log._id, { winner: null, winMethod: undefined });
+}
+
+/**
+ * Rebuild a player's `playerStats` row from scratch off their full
+ * `gameLogPlayers` history. Pure re-aggregation of the same counters and streak
+ * rules `bumpPlayerStats` maintains incrementally, so the result is identical to
+ * what incremental updates would have produced for the (now-updated) history.
+ * Used by `annulGameLog` after a game's rows are flipped to no-contest.
+ */
+async function recomputePlayerStats(
+  ctx: MutationCtx,
+  playerId: Id<"profiles">,
+) {
+  const rows = await ctx.db
+    .query("gameLogPlayers")
+    .withIndex("by_playerId", (q) => q.eq("playerId", playerId))
+    .collect();
+  // Chronological order so the streak walk matches how it was built live.
+  rows.sort((a, b) => a.finishedAt - b.finishedAt);
+
+  let wins = 0;
+  let losses = 0;
+  let noContests = 0;
+  let currentStreak = 0;
+  let bestStreak = 0;
+  const roleMap = new Map<
+    string,
+    { role: string; matches: number; wins: number; losses: number }
+  >();
+
+  for (const r of rows) {
+    const entry = roleMap.get(r.role) ?? {
+      role: r.role,
+      matches: 0,
+      wins: 0,
+      losses: 0,
+    };
+    entry.matches += 1;
+
+    if (r.outcome === "win") {
+      wins += 1;
+      entry.wins += 1;
+      currentStreak += 1;
+      bestStreak = Math.max(bestStreak, currentStreak);
+    } else if (r.outcome === "loss") {
+      losses += 1;
+      entry.losses += 1;
+      currentStreak = 0; // a loss resets the streak
+    } else {
+      noContests += 1; // no-contest leaves the streak unchanged
+    }
+
+    roleMap.set(r.role, entry);
+  }
+
+  const stats = await ctx.db
+    .query("playerStats")
+    .withIndex("by_playerId", (q) => q.eq("playerId", playerId))
+    .unique();
+
+  const fields = {
+    totalMatches: rows.length,
+    wins,
+    losses,
+    noContests,
+    currentStreak,
+    bestStreak,
+    roleStats: [...roleMap.values()],
+  };
+
+  if (stats) {
+    await ctx.db.patch(stats._id, fields);
+  } else {
+    await ctx.db.insert("playerStats", { playerId, ...fields });
+  }
 }

@@ -17,12 +17,24 @@ It has four routes, all wrapped by a shared shell:
 | `/admin` | `src/app/admin/page.tsx` | `admin_panel.access` | **Analytics dashboard** (this doc) |
 | `/admin/users` | `UsersTable` | `user.view` | Paginated user list; assign roles, ban/unban |
 | `/admin/games` | `GamesTable` | `game.view_all` | Live games; force-end / cancel |
-| `/admin/archive` | `ArchiveRow` list | `game.view_all` | Every finished game, full rosters + roles |
+| `/admin/archive` | `ArchiveRow` list | `game.view_all` | Every finished game, full rosters + roles; per-row **annul** action (`game.annul`) |
 
 The layout (`src/app/admin/layout.tsx`) wraps all of them in
 `<PermissionGuard permission={ADMIN_PANEL_ACCESS}>` then `AdminShell`. The shell
 (`src/components/admin/AdminShell.tsx`) provides the sticky frosted-glass header,
 the top nav, the ambient glow backdrop, and the `max-w-7xl` content frame.
+
+### Archive row actions
+
+Each `ArchiveRow` renders `ArchiveRowActions` — a 3-dot (kebab) menu, shown only
+to holders of `game.annul` (moderator + admin) on games with a decided winner.
+Its one action — **Annul game** — calls `admin.gameLogs.annulGame`, converting
+the game to a no-contest and reversing every player's ELO from it (see
+[ranking-system.md](./ranking-system.md) §4 and
+[authorization.md](./authorization.md)). It confirms via `window.confirm` (same
+pattern as `GamesTable`'s force-end) and is authoritatively gated server-side —
+the menu is UX only. After annulment the game reads `winner: null`, so it shows
+as "No winner" and the action disappears (a no-contest has no ELO to reverse).
 
 ## The dashboard
 
