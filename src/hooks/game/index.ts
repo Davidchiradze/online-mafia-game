@@ -9,9 +9,6 @@ export { useSpeakingProgress } from "./useSpeakingState";
 export { useNightActionAuthority } from "./useNightActionAuthority";
 export type { NightActionAuthority } from "./useNightActionAuthority";
 
-export { useMafiaTargetSelection } from "./useMafiaTargetSelection";
-export type { MafiaTargetSelectionResult } from "./useMafiaTargetSelection";
-
 export { useYakuzaTargetSelection } from "./useYakuzaTargetSelection";
 export type { YakuzaTargetSelectionResult } from "./useYakuzaTargetSelection";
 

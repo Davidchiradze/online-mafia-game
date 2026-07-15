@@ -138,4 +138,14 @@ export interface UiRuleset {
   nightAuthority: (input: NightAuthorityInput) => NightActionAuthority;
   /** Participant-circle ring geometry (12-ring Japanese, 10-ring Sports). */
   seatLayout: SeatLayout;
+  /**
+   * How the mafia pick their night kill (mirrors the backend `night.kind`):
+   * - `single-authority` (Japanese): one authority picks a SHARED target the
+   *   whole team sees.
+   * - `unanimous-vote` (Sports §5): every living mafia picks PRIVATELY inside a
+   *   timed window; each sees only their own pick.
+   * The shared mafia-kill UI (`useMafiaTargetSelection` / `MafiaKillButton`)
+   * switches on this instead of branching on `gameType`.
+   */
+  mafiaNightModel: "single-authority" | "unanimous-vote";
 }

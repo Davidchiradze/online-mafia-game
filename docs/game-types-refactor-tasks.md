@@ -417,11 +417,40 @@ definitions (game-types.md §8).
 **Phase 4 exit gate:** ✅ T1 (context ruleset) · T2 (phase-controls map) · T3
 (visibility + night-authority dispatch) · T4 (`maxPlayers` §6 fix) · T5 (variant
 seat geometry). Japanese verified byte-identical by the unchanged oracles
-(visibility 80, seatLayout 12-ring, phaseFlow, phaseTransitionGraph) + full suite
-(417). Sports is wired end-to-end in the UI dispatch but stays non-creatable;
-remaining before it is playable: the interactive night UI (§5.4 kill buttons /
-`MafiaTargetIndicator` privacy / 30s banned-speaker timer) and **Phase 5**
-(un-filter in `CreateGameModal`, ship unrated).
+(visibility 80, seatLayout 12-ring, phaseFlow, phaseTransitionGraph) + full suite.
+
+> **§5.4 interactive mafia night UI landed (working tree, uncommitted):** the
+> per-mafia private kill selection is wired through the ruleset — using the same
+> **boundary-dispatch** discipline as `phaseControls`/`nightAuthority`, with NO
+> `gameType` branching inside shared units.
+> - New `UiRuleset.mafiaNightModel` discriminant (`single-authority` Japanese /
+>   `unanimous-vote` Sports).
+> - New `MafiaKillControl` (one component) is the single dispatch boundary: it
+>   picks a cohesive per-model hook — `useSingleAuthorityMafiaKill` (Japanese
+>   shared target; the old `useMafiaTargetSelection` logic verbatim) or
+>   `useUnanimousMafiaKill` (Sports: caller's OWN pick via
+>   `sportsNightPhase.getMySelection` §5.4, kill button gated on the open 5s
+>   window, re-pickable last-write-wins) — and renders one shared presentational
+>   `MafiaKillView`.
+> - `MafiaKillButton` is now **purely presentational** (injected `onClick` +
+>   flags; no ruleset, no mutations). The old `useMafiaTargetSelection` hook and
+>   the mafia section of `NightActionButtons` were removed; `NightActionWrapper`
+>   was extracted for reuse.
+> - Combined with `sportsNightAuthority` (every living mafia acts) + the P4-T2
+>   `StartSportsMafiaPhaseButton` (opens the window), the full loop works: start
+>   → all mafia pick privately → window closes → host Finish → dawn unanimity.
+> - Exposed `mafiaTargetWindowActive`/`StartedAt` on the client night-session
+>   types (per-mafia selections stay server-private). Pinned by the
+>   `mafiaNightModel` registry assertion; full suite 418. Japanese path preserved
+>   verbatim (single-authority hook + view reproduce the prior behavior).
+>
+> **Remaining before Sports is playable:** (1) the visible 5s countdown for the
+> Sports `mafia_chooses_target` — `PHASE_TIMERS` is a flat shared map (shows the
+> Japanese 20s); the window is server-enforced regardless, so this is a cosmetic
+> per-variant-timer follow-up. (2) the 30s banned-speaker timer (P3-T3 UI side).
+> (3) **Phase 5** (un-filter in `CreateGameModal`, ship unrated).
+> **Not yet visually QA'd** — the interactive night flow is logic-guarded (tsc +
+> registry test) but a live multiplayer run is still needed to confirm the UX.
 
 ### Phase 5 — Enable + calibrate
 

@@ -126,6 +126,11 @@ describe("SPORTS_UI_RULESET", () => {
     );
   });
 
+  it("declares the unanimous-vote mafia night model (§5.4)", () => {
+    expect(SPORTS_UI_RULESET.mafiaNightModel).toBe("unanimous-vote");
+    expect(JAPANESE_UI_RULESET.mafiaNightModel).toBe("single-authority");
+  });
+
   it("routes the last night check through the buffer as the resolve-marker", () => {
     // detective_checks_for_mafia parks in phase_transition with nextPhase =
     // farewell_speech, which StartNextPhaseButton turns into startFarewellSpeech.

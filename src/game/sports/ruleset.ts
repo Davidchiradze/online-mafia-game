@@ -20,4 +20,5 @@ export const SPORTS_UI_RULESET: UiRuleset = {
   phaseControls: SPORTS_PHASE_CONTROLS,
   nightAuthority: sportsNightAuthority,
   seatLayout: SPORTS_SEAT_LAYOUT,
+  mafiaNightModel: "unanimous-vote",
 };

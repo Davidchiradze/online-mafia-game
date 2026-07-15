@@ -44,6 +44,10 @@ type NightPhaseSessionDoc = {
   mafiaTarget?: number;
   yakuzaTarget?: number;
   healedPlayer?: number;
+  // Sports unanimous-vote window (§5). `mafiaTargetSelections` is intentionally
+  // omitted from the client shape — it is private per mafia (§5.4).
+  mafiaTargetWindowActive?: boolean;
+  mafiaTargetWindowStartedAt?: string;
 } | null;
 
 type VotingSessionDoc = {
