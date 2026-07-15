@@ -10,6 +10,13 @@ import {
 import { enterNightPhase, enterVotingPhase } from "../lib/phaseTransitions";
 import { SPEAKING_STATE, FOULS } from "../lib/constants";
 import { computeSpeakingOrder, getNextSpeaker } from "../lib/speakingOrder";
+import { getGameDefinition } from "../games/registry";
+import { dayRoundFromNightNumber, isFirstDayRound } from "../games/core/dayRound";
+import {
+  THIRD_FOUL_BAN_COUNT,
+  foulSpeakingBanRound,
+  isSpeakingBanned,
+} from "../games/core/fouls";
 import type { Id } from "../_generated/dataModel";
 import type { DatabaseReader } from "../_generated/server";
 
@@ -48,9 +55,23 @@ export const startDaySpeaking = mutation({
       (p) => p.seatNumber !== undefined && p.seatNumber <= maxSeats,
     );
 
+    // 3rd-foul speaking ban (Sports §4.2): players muted this round drop out of
+    // the day speaking order entirely — unless it is the final day phase
+    // (≤ 4 alive), where the ban is lifted. Japanese leaves the flag false, so
+    // its order is unchanged (and it never sets `foulSpeakingBanRound` anyway).
+    const definition = getGameDefinition(game.gameType);
+    let speakingPlayers = gamePlayers;
+    if (definition.flags.thirdFoulSpeakingBan) {
+      const aliveCount = gamePlayers.filter((p) => p.isAlive).length;
+      const currentDayRound = dayRoundFromNightNumber(session.currentNightNumber);
+      speakingPlayers = gamePlayers.filter(
+        (p) => !isSpeakingBanned(p, currentDayRound, aliveCount),
+      );
+    }
+
     const previousOpener = session.dayRoundOpenerIndex ?? null;
     const { speakingOrder, openerIndex } = computeSpeakingOrder(
-      gamePlayers,
+      speakingPlayers,
       previousOpener,
       maxSeats,
     );
@@ -211,7 +232,7 @@ export const startNominatedPlayersSpeaking = mutation({
   args: { gameId: v.id("games") },
   handler: async (ctx, { gameId }) => {
     const userId = await getAuthenticatedUser(ctx);
-    await assertIsHost(ctx.db, gameId, userId);
+    const game = await assertIsHost(ctx.db, gameId, userId);
     const session = await getGameSession(ctx.db, gameId);
 
     if (session.gamePhase !== "day_phase") {
@@ -223,6 +244,30 @@ export const startNominatedPlayersSpeaking = mutation({
     const nominatedPlayers = session.nominatedPlayers ?? [];
     if (nominatedPlayers.length === 0) {
       throw new ConvexError("No players nominated");
+    }
+
+    // Variant single-nominee rule (Sports §4.1), gated on the definition flag.
+    // Day 1: a lone nominee is NOT eliminated → skip voting straight to night.
+    // Day 2+: a lone nominee is eliminated without a vote → farewell speech,
+    // then night (advanceFromFarewell routes to night while nominatedPlayers is
+    // non-empty). Japanese leaves the flag false → falls through to the shared
+    // behavior below (a single nominee still goes to voting).
+    const definition = getGameDefinition(game.gameType);
+    if (
+      definition.flags.firstDaySingleNomineeSkipsToNight &&
+      nominatedPlayers.length === 1
+    ) {
+      if (isFirstDayRound(session.currentNightNumber)) {
+        await enterNightPhase(ctx, gameId);
+      } else {
+        await ctx.db.patch(session._id, {
+          gamePhase: "farewell_speech",
+          speakingOrder: [nominatedPlayers[0]],
+          currentSpeakerIndex: undefined,
+          speakerStartedAt: undefined,
+        });
+      }
+      return;
     }
 
     // Skip self-justification when the host disabled it, or when there is a
@@ -334,7 +379,7 @@ export const giveFoul = mutation({
   },
   handler: async (ctx, { gameId, seatNumber }) => {
     const userId = await getAuthenticatedUser(ctx);
-    await assertIsHost(ctx.db, gameId, userId);
+    const game = await assertIsHost(ctx.db, gameId, userId);
     const session = await getGameSession(ctx.db, gameId);
 
     const allowedPhases = FOULS.ALLOWED_PHASES as readonly string[];
@@ -354,6 +399,19 @@ export const giveFoul = mutation({
 
     const newFoulCount = currentFouls + 1;
     await ctx.db.patch(player._id, { fouls: newFoulCount });
+
+    // 3rd-foul speaking ban (Sports §4.2): mute the player from their day speech
+    // on the NEXT day phase. Gated on the definition flag; Japanese never sets
+    // this. The 4th-foul elimination below is retained across all variants.
+    const definition = getGameDefinition(game.gameType);
+    if (
+      definition.flags.thirdFoulSpeakingBan &&
+      newFoulCount === THIRD_FOUL_BAN_COUNT
+    ) {
+      await ctx.db.patch(player._id, {
+        foulSpeakingBanRound: foulSpeakingBanRound(session.currentNightNumber),
+      });
+    }
 
     if (newFoulCount === FOULS.ELIMINATION_THRESHOLD) {
       await ctx.db.patch(player._id, { isAlive: false });

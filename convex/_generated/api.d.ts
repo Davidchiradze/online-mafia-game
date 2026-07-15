@@ -31,6 +31,8 @@ import type * as game_spectators from "../game/spectators.js";
 import type * as game_sportsNightPhase from "../game/sportsNightPhase.js";
 import type * as game_voting from "../game/voting.js";
 import type * as game_webhookHandler from "../game/webhookHandler.js";
+import type * as games_core_dayRound from "../games/core/dayRound.js";
+import type * as games_core_fouls from "../games/core/fouls.js";
 import type * as games_core_types from "../games/core/types.js";
 import type * as games_japanese_definition from "../games/japanese/definition.js";
 import type * as games_japanese_nightModel from "../games/japanese/nightModel.js";
@@ -116,6 +118,8 @@ declare const fullApi: ApiFromModules<{
   "game/sportsNightPhase": typeof game_sportsNightPhase;
   "game/voting": typeof game_voting;
   "game/webhookHandler": typeof game_webhookHandler;
+  "games/core/dayRound": typeof games_core_dayRound;
+  "games/core/fouls": typeof games_core_fouls;
   "games/core/types": typeof games_core_types;
   "games/japanese/definition": typeof games_japanese_definition;
   "games/japanese/nightModel": typeof games_japanese_nightModel;

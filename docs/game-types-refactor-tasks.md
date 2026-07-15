@@ -296,10 +296,33 @@ definitions (game-types.md §8).
 > architectural (no Japanese hardcoding in the shared seam), the correct
 > 2-faction snapshot, and future-proofing if the deck changes.
 >
+> **P3-T3 + P3-T4 landed (working tree, uncommitted):** the two shared-engine
+> day-phase mechanics, both gated on definition flags with the Japanese flags
+> false → its behavior byte-for-byte unchanged (full 377-test baseline still
+> green; only additive tests + assertions added, total 377 → 395).
+> - **Day-round groundwork:** `convex/games/core/dayRound.ts` — the monotonic day
+>   round is DERIVED from the session's existing `currentNightNumber` (day round
+>   = `nightNumber + 1`; the first day runs at night 0), so no new counter /
+>   schema field. Both tasks key off it.
+> - **P3-T4 (single-nominee rule, §4.1):** `startNominatedPlayersSpeaking` now
+>   branches on `flags.firstDaySingleNomineeSkipsToNight`. Sports: a lone nominee
+>   on day 1 skips voting → `enterNightPhase` (no elimination); on day 2+ it goes
+>   straight to `farewell_speech` (→ night via `advanceFromFarewell`, since
+>   `nominatedPlayers` stays non-empty). Japanese (flag off) is unchanged — a
+>   single nominee still goes to `voting`.
+> - **P3-T3 (3rd-foul speaking ban, §4.2):** `convex/games/core/fouls.ts` (pure
+>   ban arithmetic) + `foulSpeakingBanRound` (optional) on `gamePlayers`.
+>   `giveFoul` stamps the ban round on the 3rd foul when
+>   `flags.thirdFoulSpeakingBan`; `startDaySpeaking` drops a player muted for the
+>   current round from the day speaking order, EXCEPT on the final day phase
+>   (≤ 4 alive) where the ban is lifted (the shortened 30s speech is a Phase-4 UI
+>   concern). The 4th-foul elimination is retained across variants.
+>
 > **Known remaining gaps (Sports not yet playable):**
-> - **P3-T3 / P3-T4:** 3rd-foul speaking ban + day-1 single-nominee rule not yet built.
 > - **Phase 4:** no Sports UI, no phase buttons calling `startMafiaTargetWindow` /
->   `selectMafiaTarget`, no frontend refs for them yet. Sports stays non-creatable.
+>   `selectMafiaTarget`, no frontend refs for them yet; the 30s banned-speaker
+>   timer + `MafiaTargetIndicator` privacy gating are also Phase-4 UI. Sports
+>   stays non-creatable.
 
 ### Phase 3 — Sports night model + new mechanics
 
@@ -307,8 +330,8 @@ definitions (game-types.md §8).
 | --- | --- | --- | --- | --- | --- |
 | P3-T1 | Add optional `mafiaTargetSelections` + `mafiaTargetWindowStartedAt` + `mafiaTargetWindowActive` to `nightPhaseSessions` (all optional; Japanese scalars untouched) | `convex/tables/nightPhaseSessions.ts` | `gameEngine` night tests green (Japanese unchanged); `tsc`; codegen validated vs dev | ✅ | working tree |
 | P3-T2 | Unanimous-vote `NightModel`: pure `resolveKills` (Phase 2) + `convex/game/sportsNightPhase.ts` (5s window open/close scheduler, private per-mafia `selectMafiaTarget` w/ last-write-wins, `getMySelection`) + `startFarewellSpeech` branch on `night.kind` passing `livingMafiaSeats` (Japanese branch byte-for-byte unchanged) | `convex/game/sportsNightPhase.ts`, `convex/game/farewellSpeech.ts`, `SPORTS` const | `sportsDefinition.test.ts` (§5.2) + `gameEngine.test.ts` sports-night suites (11 tests: window, selection, privacy, dawn resolution) | ✅ | working tree |
-| P3-T3 | 3rd-foul speaking ban as shared-engine behavior gated on definition flag | `convex/games/core/fouls.ts` | new flagged test (G2 baseline ✅) | ⬜ (unblocked — G2 done) | |
-| P3-T4 | Day-1 single-nominee → skip-to-night rule (+ later-round single-nominee auto-eliminate) gated on `firstDaySingleNomineeSkipsToNight` | `convex/game/dayPhase.ts` | new flagged test (G1 baseline ✅) | ⬜ (unblocked — G1 done) | |
+| P3-T3 | 3rd-foul speaking ban as shared-engine behavior gated on definition flag | `convex/games/core/fouls.ts`, `convex/games/core/dayRound.ts`, `convex/game/dayPhase.ts`, `tables/gamePlayers.ts` | `tests/game/dayRoundFouls.test.ts` + `gameEngine.test.ts` sports-foul-ban suite (5 tests) | ✅ | working tree |
+| P3-T4 | Day-1 single-nominee → skip-to-night rule (+ later-round single-nominee auto-eliminate) gated on `firstDaySingleNomineeSkipsToNight` | `convex/game/dayPhase.ts`, `convex/games/core/dayRound.ts` | `gameEngine.test.ts` sports single-nominee suite (4 tests) | ✅ | working tree |
 | P3-T5 | Route the win-check seam through the definition: added `describeWin` to `GameDefinition` (Japanese reuses the exact `lib/winConditions.describeWin`; Sports ships `describeSportsWin` — parity + `yakuza/shogun:false` §7). `recordWinnerIfDecided` now resolves `getGameDefinition(game.gameType).describeWin`. Japanese byte-for-byte unchanged | `convex/lib/games.ts`, `games/core/types.ts`, `games/{japanese,sports}/*` | `winConditions.test.ts` + `gameEngine` transitions green (Japanese) + Sports `describeWin` (4) + `recordWinnerIfDecided` sports (3) | ✅ | working tree |
 
 ### Phase 4 — Frontend dispatch + geometry (fixes §6 latent bug)

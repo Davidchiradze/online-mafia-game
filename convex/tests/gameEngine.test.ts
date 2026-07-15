@@ -1819,3 +1819,260 @@ describe("sports win detection (recordWinnerIfDecided → definition)", () => {
     expect(outcome).toBeNull();
   });
 });
+
+// ===========================================================================
+// P3-T4 — Sports single-nominee day rule (docs/sports-mafia.md §4.1), gated on
+// `flags.firstDaySingleNomineeSkipsToNight`:
+//   • Day 1 (night 0), one nominee → NO elimination, skip voting → night.
+//   • Day 2+ (night ≥ 1), one nominee → eliminated without a vote → farewell →
+//     night.
+//   • Two+ nominees → identical to Japanese (self-justification speaking).
+// Japanese leaves the flag false → a single nominee still goes to voting.
+// ===========================================================================
+
+async function setNominated(
+  t: TestConvex<typeof schema>,
+  gameId: Seeded["gameId"],
+  seats: number[],
+) {
+  await t.run(async (ctx) => {
+    const session = await ctx.db
+      .query("gameSessions")
+      .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
+      .unique();
+    await ctx.db.patch(session!._id, { nominatedPlayers: seats });
+  });
+}
+
+const startNominated = (t: TestConvex<typeof schema>, s: Seeded) =>
+  t
+    .withIdentity({ subject: s.hostAccountId })
+    .mutation(api.game.dayPhase.startNominatedPlayersSpeaking, {
+      gameId: s.gameId,
+    });
+
+describe("sports single-nominee day rule (startNominatedPlayersSpeaking)", () => {
+  it("day 1: a lone nominee skips voting straight to night (no elimination)", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      gameType: "sports_mafia",
+      phase: "day_phase",
+      currentNightNumber: 0, // first day
+      players: SPORTS_NIGHT_ROSTER,
+    });
+    await setNominated(t, s.gameId, [5]);
+
+    await startNominated(t, s);
+
+    const session = await getSession(t, s.gameId);
+    expect(session?.gamePhase).toBe("night_phase");
+    expect(session?.currentNightNumber).toBe(1); // night entered
+    expect(session?.nominatedPlayers).toEqual([]); // cleared on night entry
+    // The nominee is untouched — no elimination on day 1.
+    expect((await getPlayerBySeat(t, s.gameId, 5))?.isAlive).toBe(true);
+  });
+
+  it("day 2+: a lone nominee is eliminated without a vote → farewell → night", async () => {
+    const t = convexTest(schema, modules);
+    // A 10-alive roster so eliminating one citizen (→ 3 mafia vs 6 citizens)
+    // does not decide the game — the win check would otherwise pause on night.
+    const s = await seedGame(t, {
+      gameType: "sports_mafia",
+      phase: "day_phase",
+      currentNightNumber: 1, // second day
+      players: [
+        { seat: 1, role: "DON" },
+        { seat: 2, role: "MAFIA" },
+        { seat: 3, role: "MAFIA" },
+        { seat: 4, role: "DETECTIVE" },
+        { seat: 5, role: "CITIZEN" },
+        { seat: 6, role: "CITIZEN" },
+        { seat: 7, role: "CITIZEN" },
+        { seat: 8, role: "CITIZEN" },
+        { seat: 9, role: "CITIZEN" },
+        { seat: 10, role: "CITIZEN" },
+      ],
+    });
+    await setNominated(t, s.gameId, [5]);
+
+    await startNominated(t, s);
+
+    let session = await getSession(t, s.gameId);
+    expect(session?.gamePhase).toBe("farewell_speech");
+    expect(session?.speakingOrder).toEqual([5]);
+    // The nominee is not dead yet — farewell kills them on markDeadAndAdvance.
+    expect((await getPlayerBySeat(t, s.gameId, 5))?.isAlive).toBe(true);
+
+    // Drive the farewell to completion: the eliminated player speaks, dies, and
+    // (nominatedPlayers non-empty) the game advances to night.
+    const asHost = t.withIdentity({ subject: s.hostAccountId });
+    await asHost.mutation(api.game.farewellSpeech.grantFarewellTime, {
+      gameId: s.gameId,
+    });
+    await asHost.mutation(api.game.farewellSpeech.markDeadAndAdvance, {
+      gameId: s.gameId,
+    });
+    await asHost.mutation(api.game.farewellSpeech.advanceFromFarewell, {
+      gameId: s.gameId,
+    });
+
+    session = await getSession(t, s.gameId);
+    expect(session?.gamePhase).toBe("night_phase");
+    expect((await getPlayerBySeat(t, s.gameId, 5))?.isAlive).toBe(false);
+  });
+
+  it("two+ nominees behave like Japanese (self-justification speaking)", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      gameType: "sports_mafia",
+      phase: "day_phase",
+      currentNightNumber: 0,
+      players: SPORTS_NIGHT_ROSTER,
+    });
+    await setNominated(t, s.gameId, [4, 5]);
+
+    await startNominated(t, s);
+
+    const session = await getSession(t, s.gameId);
+    expect(session?.gamePhase).toBe("nominated_players_speak");
+    expect(session?.speakingOrder).toEqual([4, 5]);
+    expect(session?.currentSpeakerIndex).toBe(4);
+  });
+
+  it("Japanese: a single nominee still goes to voting (flag off, unchanged)", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      phase: "day_phase",
+      currentNightNumber: 0,
+      players: WIN_SAFE_ROSTER,
+    });
+    await setNominated(t, s.gameId, [8]);
+
+    await startNominated(t, s);
+
+    const session = await getSession(t, s.gameId);
+    expect(session?.gamePhase).toBe("voting");
+  });
+});
+
+// ===========================================================================
+// P3-T3 — Sports 3rd-foul speaking ban (docs/sports-mafia.md §4.2), gated on
+// `flags.thirdFoulSpeakingBan`. `giveFoul` stamps `foulSpeakingBanRound` on the
+// 3rd foul; `startDaySpeaking` drops a player muted for the current round from
+// the day speaking order — unless it is the final day phase (≤ 4 alive), where
+// the ban is lifted. Japanese (flag off) never stamps the field and its order
+// is unchanged. The 4th-foul elimination is retained across variants (above).
+// ===========================================================================
+
+async function setBanRound(
+  t: TestConvex<typeof schema>,
+  gameId: Seeded["gameId"],
+  seat: number,
+  round: number,
+) {
+  await t.run(async (ctx) => {
+    const players = await ctx.db
+      .query("gamePlayers")
+      .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
+      .collect();
+    const player = players.find((p) => p.seatNumber === seat);
+    await ctx.db.patch(player!._id, { foulSpeakingBanRound: round });
+  });
+}
+
+const startDaySpeaking = (t: TestConvex<typeof schema>, s: Seeded) =>
+  t
+    .withIdentity({ subject: s.hostAccountId })
+    .mutation(api.game.dayPhase.startDaySpeaking, { gameId: s.gameId });
+
+describe("sports 3rd-foul speaking ban", () => {
+  it("stamps foulSpeakingBanRound on the 3rd foul (next day round)", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      gameType: "sports_mafia",
+      phase: "day_phase",
+      currentNightNumber: 0, // day round 1 → ban applies to round 2
+      players: SPORTS_NIGHT_ROSTER,
+    });
+    await setFouls(t, s.gameId, 5, 2);
+
+    const res = await giveFoul(t, s, 5);
+    expect(res).toEqual({ playerEliminated: false });
+
+    const p = await getPlayerBySeat(t, s.gameId, 5);
+    expect(p?.fouls).toBe(3);
+    expect(p?.isAlive).toBe(true);
+    expect(p?.foulSpeakingBanRound).toBe(2);
+  });
+
+  it("Japanese: the 3rd foul does NOT stamp a ban (flag off)", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      phase: "day_phase",
+      currentNightNumber: 0,
+      players: WIN_SAFE_ROSTER,
+    });
+    await setFouls(t, s.gameId, 8, 2);
+
+    await giveFoul(t, s, 8);
+
+    const p = await getPlayerBySeat(t, s.gameId, 8);
+    expect(p?.fouls).toBe(3);
+    expect(p?.foulSpeakingBanRound).toBeUndefined();
+  });
+
+  it("startDaySpeaking drops a muted player from the order (>4 alive)", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      gameType: "sports_mafia",
+      phase: "day_phase",
+      currentNightNumber: 1, // day round 2
+      players: SPORTS_NIGHT_ROSTER, // 7 alive
+    });
+    await setBanRound(t, s.gameId, 5, 2); // banned for the current round
+
+    await startDaySpeaking(t, s);
+
+    const session = await getSession(t, s.gameId);
+    expect(session?.speakingOrder).not.toContain(5);
+    expect(session?.speakingOrder).toEqual([1, 2, 3, 4, 6, 7]);
+  });
+
+  it("a ban for another round does not affect the order", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      gameType: "sports_mafia",
+      phase: "day_phase",
+      currentNightNumber: 1, // day round 2
+      players: SPORTS_NIGHT_ROSTER,
+    });
+    await setBanRound(t, s.gameId, 5, 3); // banned for a LATER round
+
+    await startDaySpeaking(t, s);
+
+    const session = await getSession(t, s.gameId);
+    expect(session?.speakingOrder).toContain(5);
+  });
+
+  it("lifts the ban on the final day phase (≤ 4 alive → still speaks)", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      gameType: "sports_mafia",
+      phase: "day_phase",
+      currentNightNumber: 1, // day round 2
+      players: [
+        { seat: 1, role: "DON" },
+        { seat: 2, role: "MAFIA" },
+        { seat: 3, role: "CITIZEN" },
+        { seat: 4, role: "CITIZEN" },
+      ], // 4 alive → final day phase
+    });
+    await setBanRound(t, s.gameId, 3, 2); // banned for the current round
+
+    await startDaySpeaking(t, s);
+
+    const session = await getSession(t, s.gameId);
+    expect(session?.speakingOrder).toContain(3);
+    expect(session?.speakingOrder).toHaveLength(4);
+  });
+});
