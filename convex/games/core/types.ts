@@ -63,6 +63,19 @@ export type NightState = {
 export type NightKind = "single-authority" | "unanimous-vote";
 
 /**
+ * Roster facts a variant's `resolveKills` may need beyond the recorded night
+ * state. Optional and additive: Japanese (`single-authority`) ignores it;
+ * Sports (`unanimous-vote`) reads `livingMafiaSeats` to decide whether *every*
+ * living mafia submitted a selection. The shared caller (`startFarewellSpeech`)
+ * assembles this from the live roster; the field stays optional so callers that
+ * don't need it (Japanese) keep compiling unchanged.
+ */
+export type NightResolveContext = {
+  /** Seats of living players in the mafia faction. */
+  livingMafiaSeats?: number[];
+};
+
+/**
  * How a variant chooses AND resolves night kills — the deepest divergence
  * (docs/game-types.md §2.3). Only `resolveKills` is pure/shared here; the
  * DB-coupled "who has authority / record a selection" logic stays in the
@@ -74,10 +87,11 @@ export interface NightModel {
   actingRoles: readonly Role[];
   /**
    * Pure resolution of a recorded night into the seats that die this night.
-   * The shared `startFarewellSpeech` will call this instead of reading the
-   * night-session scalars directly (wired later in Phase 1).
+   * The shared `startFarewellSpeech` calls this instead of reading the
+   * night-session scalars directly. `context` carries roster facts a variant
+   * needs (Japanese ignores it; Sports uses `livingMafiaSeats`).
    */
-  resolveKills: (state: NightState) => number[];
+  resolveKills: (state: NightState, context?: NightResolveContext) => number[];
 }
 
 /** Variant switches the shared engine reads (docs/game-types.md §2.1). */

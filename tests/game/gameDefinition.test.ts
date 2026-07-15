@@ -36,8 +36,8 @@ describe("registry — getGameDefinition", () => {
     expect(() => getGameDefinition("nope")).toThrow();
   });
 
-  it("does not yet resolve sports_mafia (registered in Phase 2)", () => {
-    expect(() => getGameDefinition("sports_mafia")).toThrow();
+  it("resolves sports_mafia (registered in Phase 2)", () => {
+    expect(getGameDefinition("sports_mafia").id).toBe("sports_mafia");
   });
 });
 

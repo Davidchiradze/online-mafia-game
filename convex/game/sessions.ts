@@ -10,7 +10,6 @@ import {
   archiveGameLog,
 } from "../lib/games";
 import {
-  GAME_PHASES,
   JAPANESE_MAFIA_ROLE_DISTRIBUTION,
   GAME_CLEANUP,
 } from "../lib/constants";
@@ -46,7 +45,7 @@ export const create = mutation({
 
     return await ctx.db.insert("gameSessions", {
       gameId,
-      gamePhase: GAME_PHASES[0],
+      gamePhase: "game_session_started",
       isFinished: false,
       currentNightNumber: 0,
       nominatedPlayers: [],
@@ -169,7 +168,7 @@ export const startGame = mutation({
 
     return await ctx.db.insert("gameSessions", {
       gameId,
-      gamePhase: GAME_PHASES[0],
+      gamePhase: "game_session_started",
       isFinished: false,
       currentNightNumber: 0,
       nominatedPlayers: [],

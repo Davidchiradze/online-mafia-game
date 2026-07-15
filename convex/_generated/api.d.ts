@@ -35,6 +35,11 @@ import type * as games_japanese_definition from "../games/japanese/definition.js
 import type * as games_japanese_nightModel from "../games/japanese/nightModel.js";
 import type * as games_japanese_phases from "../games/japanese/phases.js";
 import type * as games_registry from "../games/registry.js";
+import type * as games_sports_definition from "../games/sports/definition.js";
+import type * as games_sports_nightModel from "../games/sports/nightModel.js";
+import type * as games_sports_phases from "../games/sports/phases.js";
+import type * as games_sports_roles from "../games/sports/roles.js";
+import type * as games_sports_winConditions from "../games/sports/winConditions.js";
 import type * as lib_access from "../lib/access.js";
 import type * as lib_admin from "../lib/admin.js";
 import type * as lib_auth from "../lib/auth.js";
@@ -113,6 +118,11 @@ declare const fullApi: ApiFromModules<{
   "games/japanese/nightModel": typeof games_japanese_nightModel;
   "games/japanese/phases": typeof games_japanese_phases;
   "games/registry": typeof games_registry;
+  "games/sports/definition": typeof games_sports_definition;
+  "games/sports/nightModel": typeof games_sports_nightModel;
+  "games/sports/phases": typeof games_sports_phases;
+  "games/sports/roles": typeof games_sports_roles;
+  "games/sports/winConditions": typeof games_sports_winConditions;
   "lib/access": typeof lib_access;
   "lib/admin": typeof lib_admin;
   "lib/auth": typeof lib_auth;

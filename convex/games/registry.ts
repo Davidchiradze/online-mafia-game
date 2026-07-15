@@ -6,16 +6,18 @@
  * (docs/game-types.md §8). Shared engine code calls `getGameDefinition(...)`
  * and reads the definition instead of branching on `gameType`.
  *
- * Phase 1 registers only Japanese. `sports_mafia` is added in Phase 2 once its
- * definition exists; it stays non-creatable in the UI until Phase 5.
+ * Registers Japanese (Phase 1) and Sports (Phase 2). `sports_mafia` stays
+ * non-creatable in the UI (filtered in `CreateGameModal`) until Phase 5.
  */
 
 import { ConvexError } from "convex/values";
 import type { GameDefinition } from "./core/types";
 import { JAPANESE_DEFINITION } from "./japanese/definition";
+import { SPORTS_DEFINITION } from "./sports/definition";
 
 const DEFINITIONS: Record<string, GameDefinition> = {
   japanese_mafia: JAPANESE_DEFINITION,
+  sports_mafia: SPORTS_DEFINITION,
 };
 
 export function getGameDefinition(gameType: string): GameDefinition {
