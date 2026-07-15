@@ -8,8 +8,8 @@
  *
  * `resolveKills` is pure. It reads `state.mafiaTargetSelections` (per-mafia
  * picks recorded during the window) and `context.livingMafiaSeats` (the roster
- * fact it can't derive itself), deduping to one target per voter (last write
- * wins) and restricting to living-mafia voters.
+ * fact it can't derive itself), deduping to one target per mafia seat (last
+ * write wins) and restricting to living-mafia seats.
  *
  * Phase-2 note: this is the pure resolution only. The DB fields
  * (`mafiaTargetSelections`, the 5s window scheduler) and the per-mafia
@@ -26,17 +26,17 @@ export const SPORTS_NIGHT_MODEL: NightModel = {
     const livingMafiaSeats = context?.livingMafiaSeats ?? [];
     if (livingMafiaSeats.length === 0) return [];
 
-    // One target per living-mafia voter (last write wins).
-    const byVoter = new Map<number, number>();
+    // One target per living-mafia seat (last write wins).
+    const byMafiaSeat = new Map<number, number>();
     for (const sel of state.mafiaTargetSelections ?? []) {
-      if (livingMafiaSeats.includes(sel.voterSeat)) {
-        byVoter.set(sel.voterSeat, sel.targetSeat);
+      if (livingMafiaSeats.includes(sel.mafiaSeat)) {
+        byMafiaSeat.set(sel.mafiaSeat, sel.targetSeat);
       }
     }
 
     // Every living mafia must have selected, and all on the same target.
-    if (byVoter.size !== livingMafiaSeats.length) return [];
-    const targets = new Set(byVoter.values());
+    if (byMafiaSeat.size !== livingMafiaSeats.length) return [];
+    const targets = new Set(byMafiaSeat.values());
     if (targets.size !== 1) return [];
     return [[...targets][0]];
   },

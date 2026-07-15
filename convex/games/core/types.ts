@@ -57,7 +57,7 @@ export type NightState = {
   yakuzaTarget?: number;
   healedPlayer?: number;
   // Sports `unanimous-vote` selections (added in Phase 3).
-  mafiaTargetSelections?: { voterSeat: number; targetSeat: number }[];
+  mafiaTargetSelections?: { mafiaSeat: number; targetSeat: number }[];
 };
 
 export type NightKind = "single-authority" | "unanimous-vote";

@@ -1355,3 +1355,135 @@ describe("card-picking — getState role visibility", () => {
     expect(asHost!.cards.every((c) => c.role !== null)).toBe(true); // host sees all
   });
 });
+
+// ===========================================================================
+// G2 — Fouls (SHARED engine). Pins the server-observable foul behavior in
+// `dayPhase.giveFoul`: phase gating, increment, the 4th-foul elimination
+// (ELIMINATION_THRESHOLD = 4; the 3rd is a warning only), the
+// `foulEliminationOccurred` flag, and the immediate `beforeNight` win check on
+// elimination. This is the mechanic Phase 3 layers the Sports 3rd-foul speaking
+// ban on top of (gated on `flags.thirdFoulSpeakingBan`); the 4th-foul
+// elimination is retained across variants. The 5s foul-speak window itself is
+// UI timing (`useFoulSpeak`) and is out of scope for this server oracle.
+// ===========================================================================
+
+function getPlayerBySeat(
+  t: TestConvex<typeof schema>,
+  gameId: Seeded["gameId"],
+  seat: number,
+) {
+  return t.run(async (ctx) => {
+    const players = await ctx.db
+      .query("gamePlayers")
+      .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
+      .collect();
+    return players.find((p) => p.seatNumber === seat) ?? null;
+  });
+}
+
+async function setFouls(
+  t: TestConvex<typeof schema>,
+  gameId: Seeded["gameId"],
+  seat: number,
+  fouls: number,
+) {
+  await t.run(async (ctx) => {
+    const players = await ctx.db
+      .query("gamePlayers")
+      .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
+      .collect();
+    const player = players.find((p) => p.seatNumber === seat);
+    await ctx.db.patch(player!._id, { fouls });
+  });
+}
+
+const giveFoul = (t: TestConvex<typeof schema>, s: Seeded, seatNumber: number) =>
+  t
+    .withIdentity({ subject: s.hostAccountId })
+    .mutation(api.game.dayPhase.giveFoul, { gameId: s.gameId, seatNumber });
+
+describe("fouls — giveFoul", () => {
+  it("increments the count without eliminating for fouls 1–3", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, { phase: "day_phase", players: WIN_SAFE_ROSTER });
+
+    for (const expected of [1, 2, 3]) {
+      const res = await giveFoul(t, s, 8);
+      expect(res).toEqual({ playerEliminated: false });
+      const p = await getPlayerBySeat(t, s.gameId, 8);
+      expect(p?.fouls).toBe(expected);
+      expect(p?.isAlive).toBe(true);
+    }
+  });
+
+  it("eliminates on the 4th foul and sets foulEliminationOccurred", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, { phase: "day_phase", players: WIN_SAFE_ROSTER });
+    await setFouls(t, s.gameId, 8, 3);
+
+    const res = await giveFoul(t, s, 8);
+    expect(res).toMatchObject({ playerEliminated: true, winnerDecided: false });
+
+    const p = await getPlayerBySeat(t, s.gameId, 8);
+    expect(p?.fouls).toBe(4);
+    expect(p?.isAlive).toBe(false);
+
+    const session = await getSession(t, s.gameId);
+    expect(session?.foulEliminationOccurred).toBe(true);
+  });
+
+  it("records the winner when a foul elimination decides the game", async () => {
+    const t = convexTest(schema, modules);
+    // Removing the lone citizen leaves only mafia alive (N=2, m=2 → mafia).
+    const s = await seedGame(t, {
+      phase: "day_phase",
+      players: [
+        { seat: 1, role: "DON" },
+        { seat: 2, role: "MAFIA" },
+        { seat: 3, role: "CITIZEN" },
+      ],
+    });
+    await setFouls(t, s.gameId, 3, 3);
+
+    const res = await giveFoul(t, s, 3);
+    expect(res).toMatchObject({ playerEliminated: true, winnerDecided: true });
+
+    const session = await getSession(t, s.gameId);
+    expect(session?.winner).toBe("mafia");
+  });
+
+  it("rejects a foul outside the allowed phases", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, { phase: "night_phase", players: WIN_SAFE_ROSTER });
+    await expect(giveFoul(t, s, 8)).rejects.toThrow();
+  });
+
+  it("rejects fouling a dead player", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      phase: "day_phase",
+      players: [
+        { seat: 1, role: "DON" },
+        { seat: 8, role: "CITIZEN", alive: false },
+      ],
+    });
+    await expect(giveFoul(t, s, 8)).rejects.toThrow();
+  });
+
+  it("rejects fouling a player already at the elimination threshold", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, { phase: "day_phase", players: WIN_SAFE_ROSTER });
+    await setFouls(t, s.gameId, 8, 4);
+    await expect(giveFoul(t, s, 8)).rejects.toThrow();
+  });
+
+  it("rejects a non-host caller", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, { phase: "day_phase", players: WIN_SAFE_ROSTER });
+    await expect(
+      t
+        .withIdentity({ subject: s.bySeat[1].accountId })
+        .mutation(api.game.dayPhase.giveFoul, { gameId: s.gameId, seatNumber: 8 }),
+    ).rejects.toThrow();
+  });
+});

@@ -193,7 +193,7 @@ The Japanese `nightPhaseSessions` scalars (`mafiaTarget`, `yakuzaTarget`,
 ```ts
 // tables/nightPhaseSessions.ts  (additive, optional)
 mafiaTargetSelections: v.optional(
-  v.array(v.object({ voterSeat: v.number(), targetSeat: v.number() })),
+  v.array(v.object({ mafiaSeat: v.number(), targetSeat: v.number() })),
 ),
 mafiaTargetWindowStartedAt: v.optional(v.string()), // ISO, for the 5s countdown
 mafiaTargetWindowActive: v.optional(v.boolean()),   // flipped false by the scheduler at +5s

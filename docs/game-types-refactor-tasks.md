@@ -22,13 +22,13 @@
 | 🔵 | Deferred (intentionally, per plan) |
 | ⚠️ | Blocked — needs a prerequisite (usually an oracle gap) closed first |
 
-Baseline: **352 tests passing** across 12 files (`npm test`), `npx tsc --noEmit`
+Baseline: **359 tests passing** across 12 files (`npm test`), `npx tsc --noEmit`
 clean. (Was 222/8 before Phase 1. New files: `tests/game/gameDefinition.test.ts`
 — definition-equivalence oracle; `tests/game/phaseFlow.test.ts` — host-advance
 `updates` payloads; `tests/game/uiRegistry.test.ts` — frontend UI-ruleset
 registry; `tests/game/sportsDefinition.test.ts` — Sports definition (36 tests).
-`convex/tests/gameEngine.test.ts` grew 27→53 with the G1 voting + G3
-card-picking suites.)
+`convex/tests/gameEngine.test.ts` grew 27→60 with the G1 voting + G3
+card-picking + G2 foul suites.)
 
 ---
 
@@ -93,7 +93,7 @@ relocation, and **G2 + G4** before Phase 3 / Phase 4 respectively.
 | ID | Task | Add test at | Status | Commit |
 | --- | --- | --- | --- | --- |
 | G1 | Characterize voting: open/close window, auto-vote on last candidate, tie-break, both-candidates-leave | `convex/tests/gameEngine.test.ts` (5 new `describe`s, 16 tests) | ✅ | working tree |
-| G2 | Characterize fouls: increment, foul-speak 5s window, elimination on the Nth foul | `convex/tests/` + a pure `tests/` unit if extractable | ⬜ | |
+| G2 | Characterize fouls: `giveFoul` increment, phase gating, 4th-foul elimination + `foulEliminationOccurred`, on-elimination win check (5s foul-speak window is UI timing, out of scope) | `convex/tests/gameEngine.test.ts` (1 new `describe`, 7 tests) | ✅ | working tree |
 | G3 | Characterize card-picking flow: turn order, auto-pick on timeout, OCC/double-pick rejection | `convex/tests/gameEngine.test.ts` (4 new `describe`s, 10 tests) | ✅ | working tree |
 | G4 | Unit-test `gridPositionForSeat` for the 12-seat grid (pure fn) so Phase 4's 10-seat layout is a visible diff | `tests/game/seatLayout.test.ts` (new) | ⬜ | |
 
@@ -254,9 +254,9 @@ definitions (game-types.md §8).
 
 | ID | Task | Files | Guarding test | Status | Commit |
 | --- | --- | --- | --- | --- | --- |
-| P3-T1 | Add optional `mafiaTargetSelections: {voterSeat,targetSeat}[]` to `nightPhaseSessions` (additive; Japanese scalars untouched) | `convex/tables/nightPhaseSessions.ts` | existing `gameEngine` night tests stay green (Japanese unchanged) | ⬜ | |
+| P3-T1 | Add optional `mafiaTargetSelections` + `mafiaTargetWindowStartedAt` + `mafiaTargetWindowActive` to `nightPhaseSessions` (all optional; Japanese scalars untouched) | `convex/tables/nightPhaseSessions.ts` | `gameEngine` night tests green (Japanese unchanged); `tsc`; codegen validated vs dev | ✅ | working tree |
 | P3-T2 | Unanimous-vote `NightModel`: **pure `resolveKills` (unanimity, lone-abstain, last-write-wins) done + tested in Phase 2** ✅; remaining = DB `recordSelection` mutation, 5s window scheduler, and `startFarewellSpeech` passing `livingMafiaSeats` | `convex/games/sports/nightModel.ts` (pure ✅), night-phase mutation (todo) | `sportsDefinition.test.ts` (§5.2, 8 cases) ✅ for pure; new `convex/tests` sports night suite for DB wiring | 🟡 partial | working tree |
-| P3-T3 | 3rd-foul speaking ban as shared-engine behavior gated on definition flag | `convex/games/core/fouls.ts` | needs **G2**; new flagged test | ⚠️ (needs G2) | |
+| P3-T3 | 3rd-foul speaking ban as shared-engine behavior gated on definition flag | `convex/games/core/fouls.ts` | new flagged test (G2 baseline ✅) | ⬜ (unblocked — G2 done) | |
 | P3-T4 | Day-1 single-nominee → skip-to-night rule gated on flag | `convex/games/core/voting.ts` | needs **G1**; new flagged test | ⚠️ (needs G1) | |
 
 ### Phase 4 — Frontend dispatch + geometry (fixes §6 latent bug)

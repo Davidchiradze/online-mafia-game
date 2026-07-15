@@ -148,9 +148,9 @@ describe("SPORTS_DEFINITION.night — unanimous-vote resolution (§5.2)", () => 
       night.resolveKills(
         {
           mafiaTargetSelections: [
-            { voterSeat: 1, targetSeat: 5 },
-            { voterSeat: 2, targetSeat: 5 },
-            { voterSeat: 3, targetSeat: 5 },
+            { mafiaSeat: 1, targetSeat: 5 },
+            { mafiaSeat: 2, targetSeat: 5 },
+            { mafiaSeat: 3, targetSeat: 5 },
           ],
         },
         { livingMafiaSeats: [1, 2, 3] },
@@ -163,9 +163,9 @@ describe("SPORTS_DEFINITION.night — unanimous-vote resolution (§5.2)", () => 
       night.resolveKills(
         {
           mafiaTargetSelections: [
-            { voterSeat: 1, targetSeat: 5 },
-            { voterSeat: 2, targetSeat: 5 },
-            { voterSeat: 3, targetSeat: 6 },
+            { mafiaSeat: 1, targetSeat: 5 },
+            { mafiaSeat: 2, targetSeat: 5 },
+            { mafiaSeat: 3, targetSeat: 6 },
           ],
         },
         { livingMafiaSeats: [1, 2, 3] },
@@ -178,8 +178,8 @@ describe("SPORTS_DEFINITION.night — unanimous-vote resolution (§5.2)", () => 
       night.resolveKills(
         {
           mafiaTargetSelections: [
-            { voterSeat: 1, targetSeat: 5 },
-            { voterSeat: 2, targetSeat: 5 },
+            { mafiaSeat: 1, targetSeat: 5 },
+            { mafiaSeat: 2, targetSeat: 5 },
           ],
         },
         { livingMafiaSeats: [1, 2, 3] },
@@ -196,7 +196,7 @@ describe("SPORTS_DEFINITION.night — unanimous-vote resolution (§5.2)", () => 
   it("kills when a lone mafia selects (trivially unanimous)", () => {
     expect(
       night.resolveKills(
-        { mafiaTargetSelections: [{ voterSeat: 1, targetSeat: 7 }] },
+        { mafiaTargetSelections: [{ mafiaSeat: 1, targetSeat: 7 }] },
         { livingMafiaSeats: [1] },
       ),
     ).toEqual([7]);
@@ -205,7 +205,7 @@ describe("SPORTS_DEFINITION.night — unanimous-vote resolution (§5.2)", () => 
   it("no kill when there are no living mafia", () => {
     expect(
       night.resolveKills(
-        { mafiaTargetSelections: [{ voterSeat: 1, targetSeat: 7 }] },
+        { mafiaTargetSelections: [{ mafiaSeat: 1, targetSeat: 7 }] },
         { livingMafiaSeats: [] },
       ),
     ).toEqual([]);
@@ -216,9 +216,9 @@ describe("SPORTS_DEFINITION.night — unanimous-vote resolution (§5.2)", () => 
       night.resolveKills(
         {
           mafiaTargetSelections: [
-            { voterSeat: 1, targetSeat: 5 },
-            { voterSeat: 1, targetSeat: 6 }, // seat 1 changed to 6
-            { voterSeat: 2, targetSeat: 6 },
+            { mafiaSeat: 1, targetSeat: 5 },
+            { mafiaSeat: 1, targetSeat: 6 }, // seat 1 changed to 6
+            { mafiaSeat: 2, targetSeat: 6 },
           ],
         },
         { livingMafiaSeats: [1, 2] },
@@ -231,9 +231,9 @@ describe("SPORTS_DEFINITION.night — unanimous-vote resolution (§5.2)", () => 
       night.resolveKills(
         {
           mafiaTargetSelections: [
-            { voterSeat: 1, targetSeat: 5 },
-            { voterSeat: 2, targetSeat: 5 },
-            { voterSeat: 9, targetSeat: 3 }, // stray non-mafia seat
+            { mafiaSeat: 1, targetSeat: 5 },
+            { mafiaSeat: 2, targetSeat: 5 },
+            { mafiaSeat: 9, targetSeat: 3 }, // stray non-mafia seat
           ],
         },
         { livingMafiaSeats: [1, 2] },

@@ -165,7 +165,7 @@ is an interface, not a shared function:
 The night session table must therefore stop being Japanese-shaped. Two options:
 
 1. **Add variant-specific optional fields** to `nightPhaseSessions` (e.g.
-   `mafiaTargetSelections: {voterSeat, targetSeat}[]`) alongside the existing
+   `mafiaTargetSelections: {mafiaSeat, targetSeat}[]`) alongside the existing
    scalars. Lowest-risk; the shared cleanup/query code is unchanged. Preferred
    for the first extra variant.
 2. **Generalize** to a `nightActions` sub-document keyed by action type. Cleaner
