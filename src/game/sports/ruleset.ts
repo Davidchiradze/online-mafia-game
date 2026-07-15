@@ -2,23 +2,20 @@
  * The Sports frontend UI ruleset — the UI-side counterpart to
  * `convex/games/sports/definition.ts` (docs/game-types.md §2.2).
  *
- * Assembles the pieces the shared UI consults for a Sports game: the
- * host-advance flow (`sportsAdvanceUpdates`) and the phase → host-controls map.
- *
- * INTERIM (P4-T2): `visibility` reuses the Japanese ruleset. Sports visibility
- * is nearly identical to Japanese; the one real difference — mafia kill
- * selections being PRIVATE to each mafia (§5.4) — is authored in P4-T3, which
- * swaps this for a Sports-specific `VisibilityRuleset`. Sports stays
- * non-creatable until Phase 5, so the interim reuse has no live effect.
+ * Assembles the pieces the shared UI consults for a Sports game: visibility,
+ * the host-advance flow (`sportsAdvanceUpdates`), the phase → host-controls map,
+ * and the night-action authority (every living mafia acts, §5).
  */
 
 import type { UiRuleset } from "../core/types";
-import { JAPANESE_VISIBILITY } from "../japanese/visibility";
+import { SPORTS_VISIBILITY } from "./visibility";
 import { sportsAdvanceUpdates } from "./phaseFlow";
 import { SPORTS_PHASE_CONTROLS } from "./phaseControls";
+import { sportsNightAuthority } from "./nightAuthority";
 
 export const SPORTS_UI_RULESET: UiRuleset = {
-  visibility: JAPANESE_VISIBILITY, // interim — replaced in P4-T3
+  visibility: SPORTS_VISIBILITY,
   advanceUpdates: sportsAdvanceUpdates,
   phaseControls: SPORTS_PHASE_CONTROLS,
+  nightAuthority: sportsNightAuthority,
 };

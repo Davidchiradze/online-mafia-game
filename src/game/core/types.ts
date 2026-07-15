@@ -75,10 +75,38 @@ export type PhaseControlRenderer = (ctx: PhaseControlsContext) => ReactNode;
  */
 export type PhaseControlsMap = Record<string, PhaseControlRenderer>;
 
+/** One player as the night-authority computation needs them (role via `roleOf`). */
+export type NightAuthorityPlayer = { playerId: string; isAlive: boolean };
+
+/** Everything a variant needs to decide who may act tonight (pure inputs). */
+export type NightAuthorityInput = {
+  phase: string | null;
+  isHost: boolean;
+  userId: string;
+  viewerRole: string | null;
+  players: readonly NightAuthorityPlayer[];
+  roleOf: (playerId: string) => string | null;
+};
+
+/**
+ * Whether the viewer may take each night action, and whether the current phase
+ * is each night phase. The shape `useNightActionAuthority` returns; a variant's
+ * `nightAuthority` computes it (Japanese: single kill authority DON>RH>MAFIA,
+ * SHOGUN>YAKUZA, DOCTOR; Sports: EVERY living mafia acts, no yakuza/doctor §5).
+ */
+export type NightActionAuthority = {
+  hasMafiaKillAuthority: boolean;
+  isMafiaPhase: boolean;
+  hasYakuzaKillAuthority: boolean;
+  isYakuzaPhase: boolean;
+  hasDoctorHealAuthority: boolean;
+  isDoctorPhase: boolean;
+};
+
 /**
  * The per-`gameType` frontend UI ruleset, resolved once in `gameRoomContext`.
- * Grows through the refactor: Phase 4 adds `phaseControls` (phase→controls map)
- * and (P4-T5) `seatLayout` (ring geometry) here.
+ * Grows through the refactor: Phase 4 adds `phaseControls` (phase→controls map),
+ * `nightAuthority` (who may act tonight), and (P4-T5) `seatLayout`.
  */
 export interface UiRuleset {
   visibility: VisibilityRuleset;
@@ -86,4 +114,6 @@ export interface UiRuleset {
   advanceUpdates: (phase: string) => PhaseAdvanceUpdates;
   /** Phase id → host-controls renderer (replaces the positional switch). */
   phaseControls: PhaseControlsMap;
+  /** Pure: who may take a night action this phase (variant kill model). */
+  nightAuthority: (input: NightAuthorityInput) => NightActionAuthority;
 }

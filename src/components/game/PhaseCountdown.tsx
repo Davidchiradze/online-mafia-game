@@ -3,7 +3,7 @@
 import React from "react";
 import { useTranslations } from "next-intl";
 import { PHASE_TIMERS } from "@/lib/constants/game";
-import { getAwakeRoles, type GamePhase, type Role } from "@/lib/game/visibility";
+import { type GamePhase, type Role } from "@/lib/game/visibility";
 import { useCountdown } from "@/hooks/game/useCountdown";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 
@@ -20,7 +20,8 @@ import { useGameRoom } from "@/lib/context/gameRoomContext";
  */
 export default function PhaseCountdown() {
   const t = useTranslations("game.phaseTimer");
-  const { gameSessionState, viewerRole, isHost, isSpectator } = useGameRoom();
+  const { gameSessionState, viewerRole, isHost, isSpectator, ruleset } =
+    useGameRoom();
 
   const phase = gameSessionState?.gamePhase as GamePhase | undefined;
   const durationMs = phase ? PHASE_TIMERS[phase] : undefined;
@@ -30,7 +31,7 @@ export default function PhaseCountdown() {
     !isSpectator &&
     !!phase &&
     !!viewerRole &&
-    getAwakeRoles(phase).includes(viewerRole as Role);
+    ruleset.visibility.getAwakeRoles(phase).includes(viewerRole as Role);
   const canSee = isHost || isActingRole;
 
   const { secondsLeft, isExpired } = useCountdown(

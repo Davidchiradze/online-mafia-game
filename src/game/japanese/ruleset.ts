@@ -9,9 +9,11 @@ import type { UiRuleset } from "../core/types";
 import { JAPANESE_VISIBILITY } from "./visibility";
 import { advanceUpdates } from "./phaseFlow";
 import { JAPANESE_PHASE_CONTROLS } from "./phaseControls";
+import { japaneseNightAuthority } from "./nightAuthority";
 
 export const JAPANESE_UI_RULESET: UiRuleset = {
   visibility: JAPANESE_VISIBILITY,
   advanceUpdates,
   phaseControls: JAPANESE_PHASE_CONTROLS,
+  nightAuthority: japaneseNightAuthority,
 };

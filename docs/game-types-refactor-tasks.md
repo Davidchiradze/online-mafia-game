@@ -359,13 +359,37 @@ definitions (game-types.md §8).
 >   selection indicator (§5.4) are separate UI, not part of the host controls.
 >   Sports stays non-creatable, so none of this is live yet.
 
+> **P4-T3 landed (working tree, uncommitted):** shared UI now consults the
+> resolved ruleset for visibility + night authority instead of importing the
+> Japanese lib directly.
+> - **Visibility dispatch:** `useParticipantVisibility` (`getVisibilityStateWithDeath`)
+>   and `PhaseCountdown` (`getAwakeRoles`) call `ruleset.visibility.*`. The
+>   `VisibilityState` enum + `GamePhase`/`Role` types stay imported from `lib`
+>   (shared vocabulary). `lib/game/visibility.ts` and its 80-case oracle are
+>   **untouched** — the functions didn't move, so the guard held trivially.
+> - **Sports visibility** (`src/game/sports/visibility.ts`): wraps the same shared
+>   fns (video-tile visibility is identical; Sports roles are a subset). Replaces
+>   the P4-T2 interim Japanese reuse in `SPORTS_UI_RULESET`.
+> - **Night-authority dispatch:** new `ruleset.nightAuthority(input)` (pure).
+>   `useNightActionAuthority` now just gathers room context and delegates.
+>   Japanese logic extracted verbatim (`japanese/nightAuthority.ts` — DON>RH>MAFIA,
+>   SHOGUN>YAKUZA, lone-shogun-can't-kill, DOCTOR, host-never); Sports
+>   (`sports/nightAuthority.ts`) gives EVERY living mafia authority during
+>   `mafia_chooses_target`, no yakuza/doctor (§5). Pinned by `nightAuthority.test.ts`.
+> - **Out of scope (interactive night UI, not these hooks):** the `MafiaTargetIndicator`
+>   privacy gating + per-mafia kill buttons calling `sportsNightPhase.selectMafiaTarget`
+>   (§5.4), and the 30s banned-speaker timer, remain follow-on UI.
+>   `useNightPhaseReadiness` stays Japanese-scoped by construction — its only
+>   consumers are the Japanese-only `End*` night buttons; Sports uses the
+>   always-enabled `PhaseAdvanceButton` ("Finish Mafia Phase", host-manual §5.1).
+
 ### Phase 4 — Frontend dispatch + geometry (fixes §6 latent bug)
 
 | ID | Task | Files | Guarding test | Status | Commit |
 | --- | --- | --- | --- | --- | --- |
 | P4-T1 | `gameRoomContext` resolves the UI ruleset from `gameData.gameType` | `gameRoomContext.tsx`, `src/game/registry.ts` | manual + existing visibility | ✅ (landed in P1-T8) | working tree |
 | P4-T2 | `GamePhaseControls` renders from the variant's phase→controls map | `GamePhaseControls.tsx`, `src/game/{core/types,japanese/phaseControls,sports/{phaseFlow,phaseControls,ruleset}}`, `PhaseAdvanceButton`/`StartSportsMafiaPhaseButton`, `refs/game.ts` | `phaseTransitionGraph` still green; `uiRegistry.test.ts` (+ maps coverage) | ✅ | working tree |
-| P4-T3 | `visibility.ts` + night-authority hooks dispatch to the ruleset | `lib/game/visibility.ts`, `hooks/game/useNight*` | `visibility.test.ts` green, **imports only** | ⬜ | |
+| P4-T3 | `visibility.ts` + night-authority hooks dispatch to the ruleset | `useParticipantVisibility.ts`, `PhaseCountdown.tsx`, `useNightActionAuthority.ts`, `src/game/{core/types,japanese/nightAuthority,sports/{visibility,nightAuthority,ruleset}}` | `visibility.test.ts` green (**unchanged**); `nightAuthority.test.ts` (7) + `uiRegistry` sports | ✅ | working tree |
 | P4-T4 | **Fix `maxPlayers` plumbing (§6):** thread `maxPlayers` from `useGameRoom()` into both `<PlayerCircle>` renders | `LiveKitTestComponent.tsx`, `SpectatorView.tsx` | needs **G4** ✅; Japanese no-op (`maxPlayers ?? 12` = 12) | ✅ | working tree |
 | P4-T5 | Seat layout from variant `seatLayout` (10-ring + host for Sports; 12-ring for Japanese) instead of hardcoded switch | `PlayerCircle.tsx`, `useSeatShuffleAnimation.ts`, `src/game/*/seatLayout.ts` | `seatLayout.test.ts` extended for 10-seat | ⬜ | |
 

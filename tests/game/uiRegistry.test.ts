@@ -115,6 +115,17 @@ describe("SPORTS_UI_RULESET", () => {
     expect(SPORTS_UI_RULESET.advanceUpdates).toBe(sportsAdvanceUpdates);
   });
 
+  it("has its own visibility + night-authority (P4-T3)", () => {
+    // Video visibility wraps the same shared fns as Japanese (subset roles),
+    // but the ruleset object is distinct and carries the Sports night model.
+    expect(SPORTS_UI_RULESET.visibility.getAwakeRoles).toBe(
+      JAPANESE_UI_RULESET.visibility.getAwakeRoles,
+    );
+    expect(SPORTS_UI_RULESET.nightAuthority).not.toBe(
+      JAPANESE_UI_RULESET.nightAuthority,
+    );
+  });
+
   it("routes the last night check through the buffer as the resolve-marker", () => {
     // detective_checks_for_mafia parks in phase_transition with nextPhase =
     // farewell_speech, which StartNextPhaseButton turns into startFarewellSpeech.
