@@ -12,18 +12,38 @@
  * m = living mafia-faction players (DON + MAFIA); N = living role-holders.
  */
 
-import type { Outcome, Role, WinContext } from "../core/types";
+import type { Outcome, Role, WinContext, WinMethod } from "../core/types";
 
 const MAFIA_ROLES: ReadonlySet<string> = new Set(["DON", "MAFIA"]);
 
-export function decideSportsWinner(
+/**
+ * Structured endgame snapshot for Sports. Two factions → `yakuzaAlive` /
+ * `shogunAlive` are always false (docs/sports-mafia.md §7) and there is no
+ * headline `decidedRole`. `context` is ignored (parity is boundary-independent).
+ */
+export function describeSportsWin(
   aliveRoles: Role[],
   _context: WinContext,
-): Outcome | null {
+): WinMethod | "no_contest" | null {
   const N = aliveRoles.length;
   if (N === 0) return "no_contest";
   const m = aliveRoles.filter((r) => MAFIA_ROLES.has(r)).length;
-  if (m === 0) return "citizens";
-  if (m >= N - m) return "mafia";
+  const base = {
+    aliveTotal: N,
+    mafiaAlive: m,
+    yakuzaAlive: false,
+    shogunAlive: false,
+  };
+  if (m === 0) return { faction: "citizens", ...base };
+  if (m >= N - m) return { faction: "mafia", ...base };
   return null;
+}
+
+export function decideSportsWinner(
+  aliveRoles: Role[],
+  context: WinContext,
+): Outcome | null {
+  const result = describeSportsWin(aliveRoles, context);
+  if (result === null || result === "no_contest") return result;
+  return result.faction;
 }

@@ -6,12 +6,12 @@ import {
 } from "../_generated/server";
 import { Doc, Id } from "../_generated/dataModel";
 import {
-  describeWin,
   type WinContext,
   type Winner,
   type GameOutcome,
 } from "./winConditions";
 import { roleToFaction } from "./roles";
+import { getGameDefinition } from "../games/registry";
 import {
   applyPlayerRating,
   getPlayerRating,
@@ -197,8 +197,14 @@ export async function recordWinnerIfDecided(
   // Already decided on a previous transition — keep the game paused.
   if (session.winner) return session.winner;
 
+  // Dispatch the win decision to the game's variant (sports-mafia.md §6). The
+  // Japanese definition reuses the exact `describeWin` this seam called before,
+  // so Japanese behavior is unchanged; Sports gets its parity snapshot.
+  const game = await getGameById(ctx.db, gameId);
+  const definition = getGameDefinition(game.gameType);
+
   const aliveRoles = await getAliveRoles(ctx.db, gameId);
-  const result = describeWin(aliveRoles, context);
+  const result = definition.describeWin(aliveRoles, context);
   if (!result) return null;
 
   // Total mutual elimination — nobody left alive. Pause on the banner as a

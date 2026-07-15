@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
+import { decideWinner, describeWin } from "@convex/games/japanese/winConditions";
 import {
-  decideWinner,
-  describeWin,
   winMethodLabel,
   type WinContext,
   type GameOutcome,

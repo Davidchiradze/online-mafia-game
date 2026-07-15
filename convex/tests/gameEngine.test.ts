@@ -53,11 +53,15 @@ async function seedGame(
   opts: {
     phase?: string;
     currentNightNumber?: number;
+    gameType?: "japanese_mafia" | "sports_mafia" | "city_mafia";
     players: SeatSpec[];
     night?: {
       mafiaTarget?: number;
       yakuzaTarget?: number;
       healedPlayer?: number;
+      mafiaTargetSelections?: { mafiaSeat: number; targetSeat: number }[];
+      mafiaTargetWindowActive?: boolean;
+      mafiaTargetWindowStartedAt?: string;
     };
   },
 ): Promise<Seeded> {
@@ -74,7 +78,7 @@ async function seedGame(
       code: "TEST01",
       name: "Test Game",
       hostId,
-      gameType: "japanese_mafia",
+      gameType: opts.gameType ?? "japanese_mafia",
       gameStatus: "playing",
       maxPlayers: 12,
       isPrivate: false,
@@ -1485,5 +1489,333 @@ describe("fouls — giveFoul", () => {
         .withIdentity({ subject: s.bySeat[1].accountId })
         .mutation(api.game.dayPhase.giveFoul, { gameId: s.gameId, seatNumber: 8 }),
     ).rejects.toThrow();
+  });
+});
+
+// ===========================================================================
+// P3-T2 — Sports unanimous-vote night (docs/sports-mafia.md §5).
+// The window lifecycle + per-mafia private selection (`sportsNightPhase.ts`),
+// and the dawn resolution wired through the SHARED `startFarewellSpeech` (which
+// branches on `definition.night.kind`). The Japanese single-authority path is
+// unchanged — its kill-resolution tests above still pass.
+// ===========================================================================
+
+// DON + 2 MAFIA (living mafia) + Detective + citizens; a Sports roster.
+const SPORTS_NIGHT_ROSTER: SeatSpec[] = [
+  { seat: 1, role: "DON" },
+  { seat: 2, role: "MAFIA" },
+  { seat: 3, role: "MAFIA" },
+  { seat: 4, role: "DETECTIVE" },
+  { seat: 5, role: "CITIZEN" },
+  { seat: 6, role: "CITIZEN" },
+  { seat: 7, role: "CITIZEN" },
+];
+
+function getNightRow(
+  t: TestConvex<typeof schema>,
+  gameId: Seeded["gameId"],
+  nightNumber = 1,
+) {
+  return t.run(async (ctx) =>
+    ctx.db
+      .query("nightPhaseSessions")
+      .withIndex("by_gameId_nightNumber", (q) =>
+        q.eq("gameId", gameId).eq("nightNumber", nightNumber),
+      )
+      .unique(),
+  );
+}
+
+const openWindow = (t: TestConvex<typeof schema>, s: Seeded) =>
+  t
+    .withIdentity({ subject: s.hostAccountId })
+    .mutation(api.game.sportsNightPhase.startMafiaTargetWindow, {
+      gameId: s.gameId,
+    });
+
+const select = (t: TestConvex<typeof schema>, s: Seeded, seat: number, target: number) =>
+  t
+    .withIdentity({ subject: s.bySeat[seat].accountId })
+    .mutation(api.game.sportsNightPhase.selectMafiaTarget, {
+      gameId: s.gameId,
+      targetSeatNumber: target,
+    });
+
+describe("sports night — kill-selection window & selections", () => {
+  it("opens the window; a second open is rejected", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      gameType: "sports_mafia",
+      phase: "mafia_chooses_target",
+      players: SPORTS_NIGHT_ROSTER,
+    });
+
+    await openWindow(t, s);
+    const night = await getNightRow(t, s.gameId);
+    expect(night?.mafiaTargetWindowActive).toBe(true);
+    expect(night?.mafiaTargetWindowStartedAt).toBeTruthy();
+
+    await expect(openWindow(t, s)).rejects.toThrow();
+  });
+
+  it("records a living mafia's pick with last-write-wins", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      gameType: "sports_mafia",
+      phase: "mafia_chooses_target",
+      players: SPORTS_NIGHT_ROSTER,
+    });
+    await openWindow(t, s);
+
+    await select(t, s, 1, 5);
+    let night = await getNightRow(t, s.gameId);
+    expect(night?.mafiaTargetSelections).toEqual([{ mafiaSeat: 1, targetSeat: 5 }]);
+
+    await select(t, s, 1, 6); // same mafia changes their mind
+    night = await getNightRow(t, s.gameId);
+    expect(night?.mafiaTargetSelections).toEqual([{ mafiaSeat: 1, targetSeat: 6 }]);
+  });
+
+  it("rejects a non-mafia caller", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      gameType: "sports_mafia",
+      phase: "mafia_chooses_target",
+      players: SPORTS_NIGHT_ROSTER,
+    });
+    await openWindow(t, s);
+    await expect(select(t, s, 4, 5)).rejects.toThrow(); // seat 4 = DETECTIVE
+  });
+
+  it("rejects a selection when the window is closed", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      gameType: "sports_mafia",
+      phase: "mafia_chooses_target",
+      players: SPORTS_NIGHT_ROSTER,
+      night: { mafiaTargetWindowActive: false },
+    });
+    await expect(select(t, s, 1, 5)).rejects.toThrow();
+  });
+
+  it("rejects targeting a dead player", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      gameType: "sports_mafia",
+      phase: "mafia_chooses_target",
+      players: [...SPORTS_NIGHT_ROSTER, { seat: 8, role: "CITIZEN", alive: false }],
+    });
+    await openWindow(t, s);
+    await expect(select(t, s, 1, 8)).rejects.toThrow();
+  });
+
+  it("getMySelection returns only the caller's own pick (privacy)", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      gameType: "sports_mafia",
+      phase: "mafia_chooses_target",
+      players: SPORTS_NIGHT_ROSTER,
+    });
+    await openWindow(t, s);
+    await select(t, s, 1, 5); // DON → 5
+    await select(t, s, 2, 6); // MAFIA(2) → 6
+
+    const mineDon = await t
+      .withIdentity({ subject: s.bySeat[1].accountId })
+      .query(api.game.sportsNightPhase.getMySelection, { gameId: s.gameId });
+    const mineMafia2 = await t
+      .withIdentity({ subject: s.bySeat[2].accountId })
+      .query(api.game.sportsNightPhase.getMySelection, { gameId: s.gameId });
+    const mineMafia3 = await t
+      .withIdentity({ subject: s.bySeat[3].accountId })
+      .query(api.game.sportsNightPhase.getMySelection, { gameId: s.gameId });
+
+    expect(mineDon).toBe(5); // sees own
+    expect(mineMafia2).toBe(6); // sees own, NOT the Don's 5
+    expect(mineMafia3).toBeNull(); // didn't pick
+  });
+
+  it("closeMafiaTargetWindowInternal flips the window inactive", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      gameType: "sports_mafia",
+      phase: "mafia_chooses_target",
+      players: SPORTS_NIGHT_ROSTER,
+    });
+    await openWindow(t, s);
+
+    await t.mutation(
+      internal.game.sportsNightPhase.closeMafiaTargetWindowInternal,
+      { gameId: s.gameId },
+    );
+    expect((await getNightRow(t, s.gameId))?.mafiaTargetWindowActive).toBe(false);
+  });
+});
+
+describe("sports night — dawn resolution via startFarewellSpeech", () => {
+  const startFarewell = (t: TestConvex<typeof schema>, s: Seeded) =>
+    t
+      .withIdentity({ subject: s.hostAccountId })
+      .mutation(api.game.farewellSpeech.startFarewellSpeech, {
+        gameId: s.gameId,
+      });
+
+  it("kills the target when all living mafia chose it unanimously", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      gameType: "sports_mafia",
+      phase: "detective_checks_for_mafia",
+      players: SPORTS_NIGHT_ROSTER,
+      night: {
+        mafiaTargetSelections: [
+          { mafiaSeat: 1, targetSeat: 5 },
+          { mafiaSeat: 2, targetSeat: 5 },
+          { mafiaSeat: 3, targetSeat: 5 },
+        ],
+      },
+    });
+
+    const res = await startFarewell(t, s);
+    expect(res).toEqual({ skipToDay: false });
+
+    const session = await getSession(t, s.gameId);
+    expect(session?.gamePhase).toBe("farewell_speech");
+    expect(session?.speakingOrder).toEqual([5]);
+  });
+
+  it("no kill (→ day) when the mafia disagree", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      gameType: "sports_mafia",
+      phase: "detective_checks_for_mafia",
+      players: SPORTS_NIGHT_ROSTER, // 7 alive → win check continues
+      night: {
+        mafiaTargetSelections: [
+          { mafiaSeat: 1, targetSeat: 5 },
+          { mafiaSeat: 2, targetSeat: 5 },
+          { mafiaSeat: 3, targetSeat: 6 },
+        ],
+      },
+    });
+
+    const res = await startFarewell(t, s);
+    expect(res).toEqual({ skipToDay: true });
+    expect((await getSession(t, s.gameId))?.gamePhase).toBe("day_phase");
+  });
+
+  it("no kill (→ day) when a lone mafia abstains", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      gameType: "sports_mafia",
+      phase: "detective_checks_for_mafia",
+      players: [
+        { seat: 1, role: "DON" }, // lone living mafia
+        { seat: 2, role: "CITIZEN" },
+        { seat: 3, role: "CITIZEN" },
+        { seat: 4, role: "CITIZEN" },
+        { seat: 5, role: "DETECTIVE" },
+      ],
+      night: { mafiaTargetSelections: [] },
+    });
+
+    const res = await startFarewell(t, s);
+    expect(res).toEqual({ skipToDay: true });
+    expect((await getSession(t, s.gameId))?.gamePhase).toBe("day_phase");
+  });
+
+  it("kills when a lone mafia selects (trivially unanimous)", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      gameType: "sports_mafia",
+      phase: "detective_checks_for_mafia",
+      players: [
+        { seat: 1, role: "DON" },
+        { seat: 2, role: "CITIZEN" },
+        { seat: 3, role: "CITIZEN" },
+        { seat: 4, role: "CITIZEN" },
+        { seat: 5, role: "DETECTIVE" },
+      ],
+      night: { mafiaTargetSelections: [{ mafiaSeat: 1, targetSeat: 5 }] },
+    });
+
+    const res = await startFarewell(t, s);
+    expect(res).toEqual({ skipToDay: false });
+    const session = await getSession(t, s.gameId);
+    expect(session?.gamePhase).toBe("farewell_speech");
+    expect(session?.speakingOrder).toEqual([5]);
+  });
+});
+
+// ===========================================================================
+// P3-T5 — win-check seam dispatches to definition.decideWinner/describeWin.
+// For a sports_mafia game, recordWinnerIfDecided must use the parity rule and a
+// 2-faction snapshot (yakuza/shogun false), NOT the Japanese tables. (For the
+// current 3-mafia deck the outcome happens to coincide with Japanese on every
+// reachable roster; these tests pin that the SPORTS game resolves through its
+// own definition and records the Sports-shaped snapshot.)
+// ===========================================================================
+
+describe("sports win detection (recordWinnerIfDecided → definition)", () => {
+  it("records a parity mafia win (3 mafia vs 3 citizens)", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      gameType: "sports_mafia",
+      phase: "day_phase",
+      players: [
+        { seat: 1, role: "DON" },
+        { seat: 2, role: "MAFIA" },
+        { seat: 3, role: "MAFIA" },
+        { seat: 4, role: "CITIZEN" },
+        { seat: 5, role: "CITIZEN" },
+        { seat: 6, role: "CITIZEN" },
+      ],
+    });
+
+    const outcome = await t.run((ctx) =>
+      recordWinnerIfDecided(ctx, s.gameId, "beforeDay"),
+    );
+    expect(outcome).toBe("mafia");
+
+    const session = await getSession(t, s.gameId);
+    expect(session?.winner).toBe("mafia");
+    expect(session?.winMethod).toMatchObject({
+      faction: "mafia",
+      yakuzaAlive: false,
+      shogunAlive: false,
+    });
+  });
+
+  it("records a citizens win once all mafia are gone", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      gameType: "sports_mafia",
+      phase: "day_phase",
+      players: [
+        { seat: 1, role: "DON", alive: false },
+        { seat: 4, role: "CITIZEN" },
+        { seat: 5, role: "DETECTIVE" },
+      ],
+    });
+    const outcome = await t.run((ctx) =>
+      recordWinnerIfDecided(ctx, s.gameId, "beforeDay"),
+    );
+    expect(outcome).toBe("citizens");
+  });
+
+  it("continues when mafia are below parity (1 mafia vs 2 citizens)", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      gameType: "sports_mafia",
+      phase: "day_phase",
+      players: [
+        { seat: 1, role: "DON" },
+        { seat: 4, role: "CITIZEN" },
+        { seat: 5, role: "CITIZEN" },
+      ],
+    });
+    const outcome = await t.run((ctx) =>
+      recordWinnerIfDecided(ctx, s.gameId, "beforeDay"),
+    );
+    expect(outcome).toBeNull();
   });
 });

@@ -22,13 +22,13 @@
 | 🔵 | Deferred (intentionally, per plan) |
 | ⚠️ | Blocked — needs a prerequisite (usually an oracle gap) closed first |
 
-Baseline: **359 tests passing** across 12 files (`npm test`), `npx tsc --noEmit`
+Baseline: **377 tests passing** across 12 files (`npm test`), `npx tsc --noEmit`
 clean. (Was 222/8 before Phase 1. New files: `tests/game/gameDefinition.test.ts`
 — definition-equivalence oracle; `tests/game/phaseFlow.test.ts` — host-advance
 `updates` payloads; `tests/game/uiRegistry.test.ts` — frontend UI-ruleset
 registry; `tests/game/sportsDefinition.test.ts` — Sports definition (36 tests).
-`convex/tests/gameEngine.test.ts` grew 27→60 with the G1 voting + G3
-card-picking + G2 foul suites.)
+`convex/tests/gameEngine.test.ts` grew 27→71 with the G1 voting + G3
+card-picking + G2 foul + P3-T2 sports-night suites.)
 
 ---
 
@@ -121,7 +121,7 @@ relocation, and **G2 + G4** before Phase 3 / Phase 4 respectively.
 | P1-T0 | Close relocation oracle gaps **G1** (voting) + **G3** (card-picking) before moving them | see §2 | 26 new convex-test cases green | ✅ | working tree |
 | P1-T1 | Define **backend** core interfaces: `GameDefinition`, `NightModel`, `NightState`, `PhaseContext`, `Outcome`, `GameFlags` (`VisibilityRuleset` is a UI type → moved to P1-T8) | `convex/games/core/types.ts` (new) | `npx tsc --noEmit` | ✅ | working tree |
 | P1-T2 | ~~Pure move of variant-agnostic engine into `convex/games/core/`~~ | `convex/games/core/*` | — | ⚠️ RESCOPE (see Finding) | |
-| P1-T3 | ~~Move Japanese constants/logic into `convex/games/japanese/*`~~ | `convex/games/japanese/*` | — | ⚠️ RESCOPE (see Finding) | |
+| P1-T3 | Move Japanese constants/logic into `convex/games/japanese/*`. **winConditions ✅ done** (Incr. 6 — pure move, no shared-consumer entanglement); `roles`/`constants` still ⚠️ deferred (see Finding) | `convex/games/japanese/*` | `winConditions.test.ts` (oracle, path-only change) | 🟡 partial | working tree |
 | P1-T4 | Assemble `JAPANESE_DEFINITION` (**wraps** current `lib/*` modules; no move yet) + pure `nightModel.resolveKills` + `phases.nextPhase` graph | `convex/games/japanese/{definition,nightModel,phases}.ts` | `tests/game/gameDefinition.test.ts` (46 equivalence assertions) | ✅ | working tree |
 | P1-T5 | Registry `getGameDefinition(gameType)` (Japanese only; Sports in Phase 2) | `convex/games/registry.ts` | `gameDefinition.test.ts` registry block | ✅ | working tree |
 | P1-T6 | Replace positional `GAME_PHASES[n]` in all 14 phase buttons with `advanceUpdates(...)` (backed by `definition.nextPhase`); centralize the graph + buffer-routing in `src/game/japanese/phaseFlow.ts` | `phaseButtonsForHost/*` (14 files), `src/game/japanese/phaseFlow.ts` (new) | `tests/game/phaseFlow.test.ts` (15 payload assertions); `GAME_PHASES` now absent from every button | ✅ | working tree |
@@ -224,6 +224,28 @@ relocation, and **G2 + G4** before Phase 3 / Phase 4 respectively.
 > functional goal (variant rules behind stable interfaces, consumed via the
 > registries) is met without T2/T3.**
 
+> **Increment 6 landed (working tree, uncommitted) — Japanese winConditions
+> relocated (the SAFE subset of T3).** The Finding above deferred T3 wholesale on
+> the grounds that `lib/winConditions` had shared consumers (admin/game-logs).
+> Re-checking the import graph after P3-T5 showed that entanglement no longer
+> applies to the *logic*: the only shared consumers (`admin/stats`,
+> `admin/gameLogs`, `game/gameLogs`) import **`winMethodLabel`** (a generic
+> formatter), and `recordWinnerIfDecided` was already rerouted through
+> `getGameDefinition().describeWin` in P3-T5. So the file split cleanly in three:
+> - **`convex/games/japanese/winConditions.ts` (new):** the Japanese decision
+>   tables — `describeWin`, `decideWinner`, and their private helpers.
+> - **`convex/lib/winConditions.ts` (kept):** only the shared vocabulary
+>   (`WinContext`, `Winner`, `GameOutcome`, `WinMethod`) + `winMethodLabel`.
+> - `games/japanese/definition.ts` + the two test files repointed (path only).
+>
+> **Why this one was safe** (unlike the still-deferred `voting.ts`/`cardPicking.ts`
+> and `roles.ts` moves): winConditions holds **no registered Convex function**, so
+> nothing points at it via a `makeFunctionReference` string ref — zero runtime-typo
+> risk, every importer is a `tsc`-checked ES import. Verified: `tsc` clean, **377
+> tests** unchanged (the winConditions oracle's 41 assertions green → Japanese
+> behavior byte-identical). Still deferred: `lib/roles` (auth-entangled) + the
+> registered-function moves (T2/T7).
+
 **Phase 1 exit gate:** full suite green with **only import paths changed** in
 `tests/` and `convex/tests/`; no `gameType` string literal outside the registry /
 definitions (game-types.md §8).
@@ -250,14 +272,44 @@ definitions (game-types.md §8).
 > are untouched. **Nothing is wired to the UI**, and Sports stays non-creatable.
 > Total suite 316 → 352.
 
+> **P3-T1 + P3-T2 landed (working tree, uncommitted):** the Sports night runs
+> server-side.
+> - **Schema (P3-T1):** `nightPhaseSessions` gained `mafiaTargetSelections`,
+>   `mafiaTargetWindowStartedAt`, `mafiaTargetWindowActive` (all optional →
+>   Japanese rows validate unchanged; codegen validated vs the dev deployment).
+> - **Night wiring (P3-T2):** new `convex/game/sportsNightPhase.ts` —
+>   `startMafiaTargetWindow` (arms a 5s scheduler via the type-safe generated
+>   `internal`, closes the window without advancing the phase),
+>   `selectMafiaTarget` (living-mafia-only, in-window, last-write-wins, private),
+>   `getMySelection` (own pick only, §5.4). `startFarewellSpeech` now branches on
+>   `definition.night.kind`; the `single-authority` (Japanese) branch is the
+>   **exact prior call**, so the kill-resolution oracle stays green. 11 new
+>   convex-test cases. Suite 359 → 370.
+>
+> **P3-T5 landed:** the win-check seam now dispatches through
+> `definition.describeWin` (added to `GameDefinition`). Japanese reuses the exact
+> existing `describeWin` (provably unchanged — 41 winCondition + phase-transition
+> tests green); Sports gets the parity snapshot with `yakuza/shogun:false`.
+> _Observation:_ for the current 3-mafia Sports deck the parity outcome coincides
+> with Japanese on every reachable roster (Sports has no yakuza/doctor and caps
+> mafia at 3), so this changes no reachable outcome today — its value is
+> architectural (no Japanese hardcoding in the shared seam), the correct
+> 2-faction snapshot, and future-proofing if the deck changes.
+>
+> **Known remaining gaps (Sports not yet playable):**
+> - **P3-T3 / P3-T4:** 3rd-foul speaking ban + day-1 single-nominee rule not yet built.
+> - **Phase 4:** no Sports UI, no phase buttons calling `startMafiaTargetWindow` /
+>   `selectMafiaTarget`, no frontend refs for them yet. Sports stays non-creatable.
+
 ### Phase 3 — Sports night model + new mechanics
 
 | ID | Task | Files | Guarding test | Status | Commit |
 | --- | --- | --- | --- | --- | --- |
 | P3-T1 | Add optional `mafiaTargetSelections` + `mafiaTargetWindowStartedAt` + `mafiaTargetWindowActive` to `nightPhaseSessions` (all optional; Japanese scalars untouched) | `convex/tables/nightPhaseSessions.ts` | `gameEngine` night tests green (Japanese unchanged); `tsc`; codegen validated vs dev | ✅ | working tree |
-| P3-T2 | Unanimous-vote `NightModel`: **pure `resolveKills` (unanimity, lone-abstain, last-write-wins) done + tested in Phase 2** ✅; remaining = DB `recordSelection` mutation, 5s window scheduler, and `startFarewellSpeech` passing `livingMafiaSeats` | `convex/games/sports/nightModel.ts` (pure ✅), night-phase mutation (todo) | `sportsDefinition.test.ts` (§5.2, 8 cases) ✅ for pure; new `convex/tests` sports night suite for DB wiring | 🟡 partial | working tree |
+| P3-T2 | Unanimous-vote `NightModel`: pure `resolveKills` (Phase 2) + `convex/game/sportsNightPhase.ts` (5s window open/close scheduler, private per-mafia `selectMafiaTarget` w/ last-write-wins, `getMySelection`) + `startFarewellSpeech` branch on `night.kind` passing `livingMafiaSeats` (Japanese branch byte-for-byte unchanged) | `convex/game/sportsNightPhase.ts`, `convex/game/farewellSpeech.ts`, `SPORTS` const | `sportsDefinition.test.ts` (§5.2) + `gameEngine.test.ts` sports-night suites (11 tests: window, selection, privacy, dawn resolution) | ✅ | working tree |
 | P3-T3 | 3rd-foul speaking ban as shared-engine behavior gated on definition flag | `convex/games/core/fouls.ts` | new flagged test (G2 baseline ✅) | ⬜ (unblocked — G2 done) | |
-| P3-T4 | Day-1 single-nominee → skip-to-night rule gated on flag | `convex/games/core/voting.ts` | needs **G1**; new flagged test | ⚠️ (needs G1) | |
+| P3-T4 | Day-1 single-nominee → skip-to-night rule (+ later-round single-nominee auto-eliminate) gated on `firstDaySingleNomineeSkipsToNight` | `convex/game/dayPhase.ts` | new flagged test (G1 baseline ✅) | ⬜ (unblocked — G1 done) | |
+| P3-T5 | Route the win-check seam through the definition: added `describeWin` to `GameDefinition` (Japanese reuses the exact `lib/winConditions.describeWin`; Sports ships `describeSportsWin` — parity + `yakuza/shogun:false` §7). `recordWinnerIfDecided` now resolves `getGameDefinition(game.gameType).describeWin`. Japanese byte-for-byte unchanged | `convex/lib/games.ts`, `games/core/types.ts`, `games/{japanese,sports}/*` | `winConditions.test.ts` + `gameEngine` transitions green (Japanese) + Sports `describeWin` (4) + `recordWinnerIfDecided` sports (3) | ✅ | working tree |
 
 ### Phase 4 — Frontend dispatch + geometry (fixes §6 latent bug)
 

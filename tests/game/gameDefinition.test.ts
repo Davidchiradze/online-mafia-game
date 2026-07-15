@@ -8,7 +8,8 @@ import {
   YAKUZA_TEAM_ROLES,
 } from "@convex/lib/constants";
 import { roleToFaction, type Faction } from "@convex/lib/roles";
-import { decideWinner, type WinContext } from "@convex/lib/winConditions";
+import { decideWinner } from "@convex/games/japanese/winConditions";
+import type { WinContext } from "@convex/lib/winConditions";
 import { JAPANESE_MAFIA_ROLES } from "@/lib/constants/game";
 
 /**

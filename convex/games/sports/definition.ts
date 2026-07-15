@@ -16,7 +16,7 @@ import {
   sportsRoleToFaction,
 } from "./roles";
 import { SPORTS_PHASES, sportsNextPhase } from "./phases";
-import { decideSportsWinner } from "./winConditions";
+import { decideSportsWinner, describeSportsWin } from "./winConditions";
 import { SPORTS_NIGHT_MODEL } from "./nightModel";
 
 const SPORTS_FACTIONS: readonly Faction[] = ["mafia", "citizens"];
@@ -39,6 +39,7 @@ export const SPORTS_DEFINITION: GameDefinition = {
   night: SPORTS_NIGHT_MODEL,
 
   decideWinner: decideSportsWinner,
+  describeWin: describeSportsWin,
 
   flags: {
     hasIntroductionPhase: false,

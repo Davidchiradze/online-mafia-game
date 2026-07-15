@@ -1,12 +1,13 @@
 /**
  * The Japanese Mafia game definition (docs/game-types.md §2.1).
  *
- * Phase-1 note: this ASSEMBLES the definition from the current module
- * locations (`convex/lib/*`) rather than owning copies. It introduces the
- * abstraction with zero behavior change and zero `api.*` churn. The physical
- * move of these modules into `convex/games/japanese/*` (P1-T2/T3/T7) is a
- * separate, mechanical step; when it happens, only the import paths below
- * change — never the values (guarded by tests/game/gameDefinition.test.ts).
+ * This assembles the definition from the variant's own modules where they have
+ * been relocated (`./winConditions`, `./nightModel`, `./phases`) and from the
+ * still-shared `convex/lib/*` for the pieces not yet moved (constants deck,
+ * `roleToFaction`). Each relocation is a pure move: only the import paths change,
+ * never the values (guarded by tests/game/gameDefinition.test.ts and the
+ * winConditions oracle). The remaining lib-owned pieces (roles, constants) are a
+ * separate mechanical step (P1-T2/T3).
  */
 
 import {
@@ -16,8 +17,8 @@ import {
   YAKUZA_TEAM_ROLES,
 } from "../../lib/constants";
 import { roleToFaction } from "../../lib/roles";
-import { decideWinner } from "../../lib/winConditions";
 import type { Faction, GameDefinition, Role } from "../core/types";
+import { decideWinner, describeWin } from "./winConditions";
 import { JAPANESE_NIGHT_MODEL } from "./nightModel";
 import { japaneseNextPhase } from "./phases";
 
@@ -59,6 +60,7 @@ export const JAPANESE_DEFINITION: GameDefinition = {
   night: JAPANESE_NIGHT_MODEL,
 
   decideWinner,
+  describeWin,
 
   flags: {
     hasIntroductionPhase: true,

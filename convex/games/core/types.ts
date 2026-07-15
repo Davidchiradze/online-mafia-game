@@ -19,9 +19,9 @@
  */
 
 import type { Faction } from "../../lib/roles";
-import type { WinContext, GameOutcome } from "../../lib/winConditions";
+import type { WinContext, GameOutcome, WinMethod } from "../../lib/winConditions";
 
-export type { Faction, WinContext };
+export type { Faction, WinContext, WinMethod };
 
 /** Roles and phases are string ids across the engine — never referenced by index. */
 export type Role = string;
@@ -136,6 +136,18 @@ export interface GameDefinition {
 
   /** Generalizes `decideWinner`; each variant ships its own tables. */
   decideWinner: (aliveRoles: Role[], context: WinContext) => Outcome | null;
+
+  /**
+   * Structured endgame snapshot (or `"no_contest"` / `null`) recorded on the
+   * session and used for the win-method label. Japanese ships the 3-faction
+   * snapshot; Sports a 2-faction one (`yakuzaAlive`/`shogunAlive` always false,
+   * per sports-mafia.md §7). `decideWinner` is the faction-only convenience;
+   * both agree on the outcome.
+   */
+  describeWin: (
+    aliveRoles: Role[],
+    context: WinContext,
+  ) => WinMethod | "no_contest" | null;
 
   flags: GameFlags;
 }

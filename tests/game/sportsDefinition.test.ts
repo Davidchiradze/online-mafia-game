@@ -241,3 +241,46 @@ describe("SPORTS_DEFINITION.night — unanimous-vote resolution (§5.2)", () => 
     ).toEqual([5]);
   });
 });
+
+describe("SPORTS_DEFINITION.describeWin — 2-faction snapshot (§7)", () => {
+  const def = SPORTS_DEFINITION;
+
+  it("snapshots a mafia parity win with yakuza/shogun always false", () => {
+    expect(
+      def.describeWin(
+        ["DON", "MAFIA", "MAFIA", "CITIZEN", "CITIZEN", "CITIZEN"],
+        "beforeDay",
+      ),
+    ).toEqual({
+      faction: "mafia",
+      aliveTotal: 6,
+      mafiaAlive: 3,
+      yakuzaAlive: false,
+      shogunAlive: false,
+    });
+  });
+
+  it("snapshots a citizens sweep", () => {
+    expect(
+      def.describeWin(["DETECTIVE", "CITIZEN", "CITIZEN", "CITIZEN"], "beforeDay"),
+    ).toEqual({
+      faction: "citizens",
+      aliveTotal: 4,
+      mafiaAlive: 0,
+      yakuzaAlive: false,
+      shogunAlive: false,
+    });
+  });
+
+  it("returns no_contest for an empty table, null while continuing", () => {
+    expect(def.describeWin([], "beforeDay")).toBe("no_contest");
+    expect(def.describeWin(["DON", "CITIZEN", "CITIZEN"], "beforeDay")).toBeNull();
+  });
+
+  it("never sets a headline decidedRole (no clan mechanic)", () => {
+    const r = def.describeWin(["DON", "MAFIA", "CITIZEN"], "beforeDay");
+    expect(r).not.toBe("no_contest");
+    expect(r).not.toBeNull();
+    expect((r as { decidedRole?: string }).decidedRole).toBeUndefined();
+  });
+});
