@@ -5,7 +5,7 @@ import { useMutation } from "convex/react";
 import { gameSessions } from "@convex/refs/game";
 import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
-import { GAME_PHASES } from "@/lib/constants/game";
+import { advanceUpdates } from "@/game/japanese/phaseFlow";
 import PhaseButton from "@/components/ui/PhaseButton";
 
 type EndMafiaMeetButtonProps = {
@@ -26,9 +26,7 @@ const EndMafiaMeetButton = ({ gameSessionState }: EndMafiaMeetButtonProps) => {
     try {
       await updateSession({
         sessionId: gameSessionState._id,
-        updates: {
-          gamePhase: GAME_PHASES[3], // "don_chooses_right_hand"
-        },
+        updates: advanceUpdates("mafia_meet"),
       });
     } finally {
       setIsLoading(false);

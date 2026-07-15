@@ -7,7 +7,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { useCardPicking } from "@/hooks/game";
-import { GAME_PHASES } from "@/lib/constants/game";
+import { advanceUpdates } from "@/game/japanese/phaseFlow";
 import PhaseButton from "@/components/ui/PhaseButton";
 
 type ConfirmRolesButtonProps = {
@@ -34,9 +34,7 @@ const ConfirmRolesButton = ({ gameSessionState }: ConfirmRolesButtonProps) => {
     try {
       await updateSession({
         sessionId: gameSessionState._id,
-        updates: {
-          gamePhase: GAME_PHASES[2], // "mafia_meet"
-        },
+        updates: advanceUpdates("picking_roles"),
       });
     } finally {
       setIsLoading(false);

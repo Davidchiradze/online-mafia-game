@@ -255,6 +255,10 @@ no behavior change). Convex's flat function namespace means moving files changes
 
 ## 5. Phased refactor plan
 
+> The live, task-by-task checklist that operationalizes this plan — with the
+> guarding test for each task and status boxes to flip as work lands — is
+> [game-types-refactor-tasks.md](./game-types-refactor-tasks.md).
+
 Each phase is independently shippable and leaves the Japanese game fully working.
 
 - **Phase 0 — Rename (DONE).** `traditional → sports_mafia` across the schema

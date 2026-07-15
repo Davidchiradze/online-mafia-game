@@ -3,7 +3,7 @@
 import { convexTest, type TestConvex } from "convex-test";
 import { describe, it, expect } from "vitest";
 import schema from "../schema";
-import { api } from "../_generated/api";
+import { api, internal } from "../_generated/api";
 import {
   enterNightPhase,
   enterDayPhase,
@@ -671,5 +671,687 @@ describe("right-hand promotion (promoteToRightHand)", () => {
           targetPlayerId: s.bySeat[2].playerId,
         }),
     ).rejects.toThrow();
+  });
+});
+
+// ===========================================================================
+// G1 — Voting mechanics (SHARED engine; relocated to core/ in Phase 1).
+// Pins the vote window, per-round casting, auto-vote on the last candidate,
+// results tally, tie-break detection, and the both-leave threshold — the flow
+// docs/game-types.md §4 keeps shared while Phase 3 layers the day-1
+// single-nominee rule on top as a definition flag. Scheduler *timing*
+// (endVoteWindowInternal firing after VOTE_WINDOW_MS) is infra, not game logic,
+// and is out of scope; the window state changes are pinned directly.
+// ===========================================================================
+
+const VOTE_ROSTER: SeatSpec[] = [1, 2, 3, 4, 5].map((seat) => ({
+  seat,
+  role: "CITIZEN",
+}));
+
+function getVotingSession(
+  t: TestConvex<typeof schema>,
+  gameId: Seeded["gameId"],
+) {
+  return t.run(async (ctx) =>
+    ctx.db
+      .query("votingSessions")
+      .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
+      .unique(),
+  );
+}
+
+function getVoteRows(
+  t: TestConvex<typeof schema>,
+  votingSessionId: import("../_generated/dataModel").Id<"votingSessions">,
+) {
+  return t.run(async (ctx) =>
+    ctx.db
+      .query("votes")
+      .withIndex("by_votingSessionId", (q) =>
+        q.eq("votingSessionId", votingSessionId),
+      )
+      .collect(),
+  );
+}
+
+async function createVotingSession(
+  t: TestConvex<typeof schema>,
+  s: Seeded,
+  candidates: number[],
+) {
+  return await t
+    .withIdentity({ subject: s.hostAccountId })
+    .mutation(api.game.voting.createSession, { gameId: s.gameId, candidates });
+}
+
+describe("voting — window state", () => {
+  it("startVoteWindow activates voting; a second start is rejected", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, { phase: "voting", players: VOTE_ROSTER });
+    await createVotingSession(t, s, [2, 5]);
+
+    await t
+      .withIdentity({ subject: s.hostAccountId })
+      .mutation(api.game.voting.startVoteWindow, { gameId: s.gameId });
+
+    const active = await getVotingSession(t, s.gameId);
+    expect(active?.votingActive).toBe(true);
+    expect(active?.votingStartedAt).toBeTruthy();
+
+    await expect(
+      t
+        .withIdentity({ subject: s.hostAccountId })
+        .mutation(api.game.voting.startVoteWindow, { gameId: s.gameId }),
+    ).rejects.toThrow();
+  });
+
+  it("endVoteWindow deactivates; ending when inactive is rejected", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, { phase: "voting", players: VOTE_ROSTER });
+    await createVotingSession(t, s, [2, 5]);
+    await t
+      .withIdentity({ subject: s.hostAccountId })
+      .mutation(api.game.voting.startVoteWindow, { gameId: s.gameId });
+
+    await t
+      .withIdentity({ subject: s.hostAccountId })
+      .mutation(api.game.voting.endVoteWindow, { gameId: s.gameId });
+    expect((await getVotingSession(t, s.gameId))?.votingActive).toBe(false);
+
+    await expect(
+      t
+        .withIdentity({ subject: s.hostAccountId })
+        .mutation(api.game.voting.endVoteWindow, { gameId: s.gameId }),
+    ).rejects.toThrow();
+  });
+});
+
+describe("voting — casting votes", () => {
+  it("records a vote for the current candidate", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, { phase: "voting", players: VOTE_ROSTER });
+    const vsId = await createVotingSession(t, s, [2, 5]); // currentCandidate = 2
+
+    await t
+      .withIdentity({ subject: s.bySeat[1].accountId })
+      .mutation(api.game.voting.castVote, { gameId: s.gameId });
+
+    const votes = await getVoteRows(t, vsId);
+    expect(votes).toHaveLength(1);
+    expect(votes[0]).toMatchObject({
+      voterSeat: 1,
+      seatNumber: 2,
+      isAutoVote: false,
+      isBothLeave: false,
+    });
+  });
+
+  it("rejects a duplicate vote from the same seat", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, { phase: "voting", players: VOTE_ROSTER });
+    await createVotingSession(t, s, [2, 5]);
+    await t
+      .withIdentity({ subject: s.bySeat[1].accountId })
+      .mutation(api.game.voting.castVote, { gameId: s.gameId });
+
+    await expect(
+      t
+        .withIdentity({ subject: s.bySeat[1].accountId })
+        .mutation(api.game.voting.castVote, { gameId: s.gameId }),
+    ).rejects.toThrow();
+  });
+
+  it("rejects a vote from a dead player", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      phase: "voting",
+      players: [
+        { seat: 1, role: "CITIZEN", alive: false },
+        { seat: 2, role: "CITIZEN" },
+        { seat: 5, role: "CITIZEN" },
+      ],
+    });
+    await createVotingSession(t, s, [2, 5]);
+
+    await expect(
+      t
+        .withIdentity({ subject: s.bySeat[1].accountId })
+        .mutation(api.game.voting.castVote, { gameId: s.gameId }),
+    ).rejects.toThrow();
+  });
+});
+
+describe("voting — advanceCandidate auto-votes on the last candidate", () => {
+  it("auto-votes every non-voter for the last candidate", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, { phase: "voting", players: VOTE_ROSTER });
+    const vsId = await createVotingSession(t, s, [2, 5]);
+
+    // Seat 1 votes for candidate 2 (the current candidate at index 0).
+    await t
+      .withIdentity({ subject: s.bySeat[1].accountId })
+      .mutation(api.game.voting.castVote, { gameId: s.gameId });
+
+    const res = await t
+      .withIdentity({ subject: s.hostAccountId })
+      .mutation(api.game.voting.advanceCandidate, { gameId: s.gameId });
+    expect(res).toEqual({ allDone: false });
+    expect((await getVotingSession(t, s.gameId))?.currentCandidateIndex).toBe(1);
+
+    const votes = await getVoteRows(t, vsId);
+    // Seat 1 manual → candidate 2; seats 2..5 auto → candidate 5 (the last).
+    const manual = votes.filter((v) => !v.isAutoVote);
+    const auto = votes.filter((v) => v.isAutoVote);
+    expect(manual).toHaveLength(1);
+    expect(manual[0]).toMatchObject({ voterSeat: 1, seatNumber: 2 });
+    expect(auto).toHaveLength(4);
+    expect(new Set(auto.map((v) => v.voterSeat))).toEqual(new Set([2, 3, 4, 5]));
+    expect(auto.every((v) => v.seatNumber === 5)).toBe(true);
+  });
+
+  it("returns allDone once past the final candidate", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, { phase: "voting", players: VOTE_ROSTER });
+    await createVotingSession(t, s, [2, 5]);
+    // Park on the last candidate so the next advance runs off the end.
+    await t.run(async (ctx) => {
+      const vs = await ctx.db
+        .query("votingSessions")
+        .withIndex("by_gameId", (q) => q.eq("gameId", s.gameId))
+        .unique();
+      await ctx.db.patch(vs!._id, { currentCandidateIndex: 1 });
+    });
+
+    const res = await t
+      .withIdentity({ subject: s.hostAccountId })
+      .mutation(api.game.voting.advanceCandidate, { gameId: s.gameId });
+    expect(res).toEqual({ allDone: true });
+  });
+
+  it("rejects advancing while the vote window is active", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, { phase: "voting", players: VOTE_ROSTER });
+    await createVotingSession(t, s, [2, 5]);
+    await t
+      .withIdentity({ subject: s.hostAccountId })
+      .mutation(api.game.voting.startVoteWindow, { gameId: s.gameId });
+
+    await expect(
+      t
+        .withIdentity({ subject: s.hostAccountId })
+        .mutation(api.game.voting.advanceCandidate, { gameId: s.gameId }),
+    ).rejects.toThrow();
+  });
+});
+
+describe("voting — processResults tally", () => {
+  const seedVotes = async (
+    t: TestConvex<typeof schema>,
+    vsId: import("../_generated/dataModel").Id<"votingSessions">,
+    rows: Array<{
+      voterSeat: number;
+      seatNumber?: number;
+      isBothLeave?: boolean;
+      isAutoVote?: boolean;
+    }>,
+  ) => {
+    await t.run(async (ctx) => {
+      for (const r of rows) {
+        await ctx.db.insert("votes", {
+          votingSessionId: vsId,
+          voterSeat: r.voterSeat,
+          seatNumber: r.seatNumber,
+          isBothLeave: r.isBothLeave ?? false,
+          isAutoVote: r.isAutoVote ?? false,
+        });
+      }
+    });
+  };
+
+  it("declares a unique winner", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, { phase: "voting", players: VOTE_ROSTER });
+    const vsId = await createVotingSession(t, s, [2, 5]);
+    await seedVotes(t, vsId, [
+      { voterSeat: 1, seatNumber: 2 },
+      { voterSeat: 3, seatNumber: 2 },
+      { voterSeat: 4, seatNumber: 5 },
+    ]);
+
+    const res = await t
+      .withIdentity({ subject: s.hostAccountId })
+      .mutation(api.game.voting.processResults, { gameId: s.gameId });
+    expect(res).toEqual({ result: "winner", winner: 2 });
+  });
+
+  it("reports a tie when the top candidates are level", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, { phase: "voting", players: VOTE_ROSTER });
+    const vsId = await createVotingSession(t, s, [2, 5]);
+    await seedVotes(t, vsId, [
+      { voterSeat: 1, seatNumber: 2 },
+      { voterSeat: 3, seatNumber: 5 },
+    ]);
+
+    const res = await t
+      .withIdentity({ subject: s.hostAccountId })
+      .mutation(api.game.voting.processResults, { gameId: s.gameId });
+    expect(res.result).toBe("tie");
+    expect(new Set((res as { tiedCandidates: number[] }).tiedCandidates)).toEqual(
+      new Set([2, 5]),
+    );
+  });
+
+  it("excludes both-leave votes from the tally", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, { phase: "voting", players: VOTE_ROSTER });
+    const vsId = await createVotingSession(t, s, [2, 5]);
+    await seedVotes(t, vsId, [
+      { voterSeat: 1, seatNumber: 2 },
+      { voterSeat: 2, isBothLeave: true },
+      { voterSeat: 3, isBothLeave: true },
+    ]);
+
+    const res = await t
+      .withIdentity({ subject: s.hostAccountId })
+      .mutation(api.game.voting.processResults, { gameId: s.gameId });
+    // Both-leave rows don't count toward any candidate → 2 wins with 1 vote.
+    expect(res).toEqual({ result: "winner", winner: 2 });
+  });
+});
+
+describe("voting — tie-break vs both-leave", () => {
+  it("first tie-break re-opens self-justification for the tied seats", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, { phase: "voting", players: VOTE_ROSTER });
+    await createVotingSession(t, s, [2, 5]);
+
+    const res = await t
+      .withIdentity({ subject: s.hostAccountId })
+      .mutation(api.game.voting.startTieBreak, {
+        gameId: s.gameId,
+        tiedCandidates: [2, 5],
+      });
+    expect(res).toEqual({ bothLeaveVote: false });
+
+    const vs = await getVotingSession(t, s.gameId);
+    expect(vs?.isTieBreak).toBe(true);
+    expect(vs?.tieBreakRound).toBe(1);
+    expect(vs?.candidates).toEqual([2, 5]);
+    expect(vs?.previousTiedCandidates).toEqual([2, 5]);
+
+    const gs = await getSession(t, s.gameId);
+    expect(gs?.gamePhase).toBe("nominated_players_speak");
+    expect(gs?.speakingOrder).toEqual([2, 5]);
+  });
+
+  it("a repeated tie on the same seats escalates to a both-leave vote", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, { phase: "voting", players: VOTE_ROSTER });
+    await createVotingSession(t, s, [2, 5]);
+    await t
+      .withIdentity({ subject: s.hostAccountId })
+      .mutation(api.game.voting.startTieBreak, {
+        gameId: s.gameId,
+        tiedCandidates: [2, 5],
+      });
+
+    const res = await t
+      .withIdentity({ subject: s.hostAccountId })
+      .mutation(api.game.voting.startTieBreak, {
+        gameId: s.gameId,
+        tiedCandidates: [2, 5],
+      });
+    expect(res).toEqual({ bothLeaveVote: true });
+    expect((await getVotingSession(t, s.gameId))?.bothLeaveVoteActive).toBe(true);
+  });
+});
+
+describe("voting — processBothLeaveResult threshold (>50%)", () => {
+  const seedBothLeave = async (
+    t: TestConvex<typeof schema>,
+    vsId: import("../_generated/dataModel").Id<"votingSessions">,
+    voterSeats: number[],
+  ) => {
+    await t.run(async (ctx) => {
+      for (const voterSeat of voterSeats) {
+        await ctx.db.insert("votes", {
+          votingSessionId: vsId,
+          voterSeat,
+          isBothLeave: true,
+          isAutoVote: false,
+        });
+      }
+    });
+  };
+
+  it("passes when strictly more than half vote to leave", async () => {
+    const t = convexTest(schema, modules);
+    // 4 alive non-host seats.
+    const s = await seedGame(t, {
+      phase: "voting",
+      players: [1, 2, 3, 4].map((seat) => ({ seat, role: "CITIZEN" })),
+    });
+    const vsId = await createVotingSession(t, s, [2, 3]);
+    await seedBothLeave(t, vsId, [1, 2, 3]); // 3/4 = 0.75 > 0.5
+
+    const res = await t
+      .withIdentity({ subject: s.hostAccountId })
+      .mutation(api.game.voting.processBothLeaveResult, { gameId: s.gameId });
+    expect(res).toMatchObject({ allLeave: true, voteCount: 3, totalVoters: 4 });
+  });
+
+  it("does NOT pass at exactly half", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      phase: "voting",
+      players: [1, 2, 3, 4].map((seat) => ({ seat, role: "CITIZEN" })),
+    });
+    const vsId = await createVotingSession(t, s, [2, 3]);
+    await seedBothLeave(t, vsId, [1, 2]); // 2/4 = 0.5, not > 0.5
+
+    const res = await t
+      .withIdentity({ subject: s.hostAccountId })
+      .mutation(api.game.voting.processBothLeaveResult, { gameId: s.gameId });
+    expect(res).toMatchObject({ allLeave: false, voteCount: 2, totalVoters: 4 });
+  });
+});
+
+// ===========================================================================
+// G3 — Card-picking flow (SHARED engine; relocated to core/ in Phase 1).
+// Pins turn order, the claim → role write → advance contract, double-pick /
+// out-of-turn / already-taken rejections, completion, the auto-pick watchdog
+// (expireTurnInternal), its stale/complete/missing no-ops, and the role
+// visibility in getState. The deck comes from JAPANESE_MAFIA_ROLE_DISTRIBUTION
+// today; in the refactor it comes from `def.roleDistribution` (unchanged flow).
+// ===========================================================================
+
+const PICK_ROSTER: SeatSpec[] = [1, 2, 3].map((seat) => ({
+  seat,
+  role: "CITIZEN", // placeholder; overwritten by the deal
+}));
+
+function getCardSession(
+  t: TestConvex<typeof schema>,
+  gameId: Seeded["gameId"],
+) {
+  return t.run(async (ctx) =>
+    ctx.db
+      .query("cardPickingSessions")
+      .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
+      .unique(),
+  );
+}
+
+function getDealtRole(
+  t: TestConvex<typeof schema>,
+  gameId: Seeded["gameId"],
+  playerId: PlayerRef["playerId"],
+) {
+  return t.run(async (ctx) =>
+    ctx.db
+      .query("gamePlayerRoles")
+      .withIndex("by_gameId_playerId", (q) =>
+        q.eq("gameId", gameId).eq("playerId", playerId),
+      )
+      .unique(),
+  );
+}
+
+describe("card-picking — start", () => {
+  it("deals the full 12-card deck and orders picks by seat", async () => {
+    const t = convexTest(schema, modules);
+    const players: SeatSpec[] = Array.from({ length: 12 }, (_, i) => ({
+      seat: i + 1,
+      role: "CITIZEN",
+    }));
+    const s = await seedGame(t, { phase: "night_phase", players });
+
+    await t
+      .withIdentity({ subject: s.hostAccountId })
+      .mutation(api.game.cardPicking.start, { gameId: s.gameId });
+
+    const cs = await getCardSession(t, s.gameId);
+    expect(cs?.pickOrder).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+    expect(cs?.currentPickIndex).toBe(0);
+    expect(cs?.isComplete).toBe(false);
+    expect(cs?.currentTurnStartedAt).toBeTruthy();
+    expect(cs?.deck.map((c) => c.role).sort()).toEqual(
+      [...JAPANESE_MAFIA_ROLE_DISTRIBUTION].sort(),
+    );
+
+    const gs = await getSession(t, s.gameId);
+    expect(gs?.gamePhase).toBe("picking_roles");
+  });
+
+  it("deals a subset deck for a partial lobby", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, { phase: "night_phase", players: PICK_ROSTER });
+    await t
+      .withIdentity({ subject: s.hostAccountId })
+      .mutation(api.game.cardPicking.start, { gameId: s.gameId });
+
+    const cs = await getCardSession(t, s.gameId);
+    expect(cs?.deck).toHaveLength(3);
+    expect(cs?.pickOrder).toEqual([1, 2, 3]);
+    for (const card of cs!.deck) {
+      expect(JAPANESE_MAFIA_ROLE_DISTRIBUTION).toContain(card.role);
+    }
+  });
+
+  it("is idempotent — a second start returns the same session", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, { phase: "night_phase", players: PICK_ROSTER });
+    const first = await t
+      .withIdentity({ subject: s.hostAccountId })
+      .mutation(api.game.cardPicking.start, { gameId: s.gameId });
+    const second = await t
+      .withIdentity({ subject: s.hostAccountId })
+      .mutation(api.game.cardPicking.start, { gameId: s.gameId });
+    expect(second).toBe(first);
+  });
+
+  it("rejects a non-host caller", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, { phase: "night_phase", players: PICK_ROSTER });
+    await expect(
+      t
+        .withIdentity({ subject: s.bySeat[1].accountId })
+        .mutation(api.game.cardPicking.start, { gameId: s.gameId }),
+    ).rejects.toThrow();
+  });
+});
+
+describe("card-picking — pickCard turn contract", () => {
+  it("claims a card in turn, writes the role, and advances the pick index", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, { phase: "night_phase", players: PICK_ROSTER });
+    await t
+      .withIdentity({ subject: s.hostAccountId })
+      .mutation(api.game.cardPicking.start, { gameId: s.gameId });
+
+    const before = await getCardSession(t, s.gameId);
+    const card1Role = before!.deck.find((c) => c.cardId === "card_1")!.role;
+
+    await t
+      .withIdentity({ subject: s.bySeat[1].accountId })
+      .mutation(api.game.cardPicking.pickCard, {
+        gameId: s.gameId,
+        cardId: "card_1",
+      });
+
+    const after = await getCardSession(t, s.gameId);
+    expect(after?.currentPickIndex).toBe(1);
+    expect(after?.deck.find((c) => c.cardId === "card_1")?.claimedBySeat).toBe(1);
+
+    const role = await getDealtRole(t, s.gameId, s.bySeat[1].playerId);
+    expect(role?.role).toBe(card1Role);
+  });
+
+  it("rejects an out-of-turn pick, an already-taken card, and an unknown card", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, { phase: "night_phase", players: PICK_ROSTER });
+    await t
+      .withIdentity({ subject: s.hostAccountId })
+      .mutation(api.game.cardPicking.start, { gameId: s.gameId });
+
+    // Seat 2 is not first in the pick order.
+    await expect(
+      t
+        .withIdentity({ subject: s.bySeat[2].accountId })
+        .mutation(api.game.cardPicking.pickCard, {
+          gameId: s.gameId,
+          cardId: "card_1",
+        }),
+    ).rejects.toThrow();
+
+    // Seat 1 claims card_1.
+    await t
+      .withIdentity({ subject: s.bySeat[1].accountId })
+      .mutation(api.game.cardPicking.pickCard, {
+        gameId: s.gameId,
+        cardId: "card_1",
+      });
+
+    // Seat 2 (now in turn) cannot take the already-claimed card_1.
+    await expect(
+      t
+        .withIdentity({ subject: s.bySeat[2].accountId })
+        .mutation(api.game.cardPicking.pickCard, {
+          gameId: s.gameId,
+          cardId: "card_1",
+        }),
+    ).rejects.toThrow();
+
+    // Unknown card id.
+    await expect(
+      t
+        .withIdentity({ subject: s.bySeat[2].accountId })
+        .mutation(api.game.cardPicking.pickCard, {
+          gameId: s.gameId,
+          cardId: "card_999",
+        }),
+    ).rejects.toThrow();
+  });
+
+  it("marks the session complete after the last pick and rejects further picks", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, { phase: "night_phase", players: PICK_ROSTER });
+    await t
+      .withIdentity({ subject: s.hostAccountId })
+      .mutation(api.game.cardPicking.start, { gameId: s.gameId });
+
+    for (const seat of [1, 2, 3]) {
+      await t
+        .withIdentity({ subject: s.bySeat[seat].accountId })
+        .mutation(api.game.cardPicking.pickCard, {
+          gameId: s.gameId,
+          cardId: `card_${seat}`,
+        });
+    }
+
+    expect((await getCardSession(t, s.gameId))?.isComplete).toBe(true);
+
+    await expect(
+      t
+        .withIdentity({ subject: s.bySeat[1].accountId })
+        .mutation(api.game.cardPicking.pickCard, {
+          gameId: s.gameId,
+          cardId: "card_1",
+        }),
+    ).rejects.toThrow();
+  });
+});
+
+describe("card-picking — expireTurnInternal watchdog", () => {
+  it("auto-picks an unclaimed card for the stalled seat and advances", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, { phase: "night_phase", players: PICK_ROSTER });
+    await t
+      .withIdentity({ subject: s.hostAccountId })
+      .mutation(api.game.cardPicking.start, { gameId: s.gameId });
+
+    await t.mutation(internal.game.cardPicking.expireTurnInternal, {
+      gameId: s.gameId,
+      expectedPickIndex: 0,
+    });
+
+    const cs = await getCardSession(t, s.gameId);
+    expect(cs?.currentPickIndex).toBe(1);
+    // Seat 1 (the stalled seat) was auto-dealt exactly one role.
+    const role = await getDealtRole(t, s.gameId, s.bySeat[1].playerId);
+    expect(role).not.toBeNull();
+    expect(cs?.deck.filter((c) => c.claimedBySeat === 1)).toHaveLength(1);
+  });
+
+  it("is a no-op on a stale pick index", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, { phase: "night_phase", players: PICK_ROSTER });
+    await t
+      .withIdentity({ subject: s.hostAccountId })
+      .mutation(api.game.cardPicking.start, { gameId: s.gameId });
+    // Seat 1 picks → index advances to 1.
+    await t
+      .withIdentity({ subject: s.bySeat[1].accountId })
+      .mutation(api.game.cardPicking.pickCard, {
+        gameId: s.gameId,
+        cardId: "card_1",
+      });
+
+    // A watchdog scheduled for index 0 fires late — must do nothing.
+    await t.mutation(internal.game.cardPicking.expireTurnInternal, {
+      gameId: s.gameId,
+      expectedPickIndex: 0,
+    });
+    expect((await getCardSession(t, s.gameId))?.currentPickIndex).toBe(1);
+  });
+
+  it("is a no-op when no card-picking session exists", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, { phase: "night_phase", players: PICK_ROSTER });
+    await expect(
+      t.mutation(internal.game.cardPicking.expireTurnInternal, {
+        gameId: s.gameId,
+        expectedPickIndex: 0,
+      }),
+    ).resolves.toBeNull();
+  });
+});
+
+describe("card-picking — getState role visibility", () => {
+  it("hides unclaimed/other roles from a non-host player but shows own + all to host", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, { phase: "night_phase", players: PICK_ROSTER });
+    await t
+      .withIdentity({ subject: s.hostAccountId })
+      .mutation(api.game.cardPicking.start, { gameId: s.gameId });
+    await t
+      .withIdentity({ subject: s.bySeat[1].accountId })
+      .mutation(api.game.cardPicking.pickCard, {
+        gameId: s.gameId,
+        cardId: "card_1",
+      });
+
+    const asClaimer = await t
+      .withIdentity({ subject: s.bySeat[1].accountId })
+      .query(api.game.cardPicking.getState, { gameId: s.gameId });
+    const claimerCard1 = asClaimer!.cards.find((c) => c.cardId === "card_1")!;
+    expect(claimerCard1.claimed).toBe(true);
+    expect(claimerCard1.role).not.toBeNull(); // claimer sees own role
+    expect(asClaimer!.isMyTurn).toBe(false); // seat 2's turn now
+
+    const asOther = await t
+      .withIdentity({ subject: s.bySeat[2].accountId })
+      .query(api.game.cardPicking.getState, { gameId: s.gameId });
+    expect(
+      asOther!.cards.find((c) => c.cardId === "card_1")!.role,
+    ).toBeNull(); // non-claimer cannot see the claimed role
+    expect(asOther!.isMyTurn).toBe(true); // seat 2 is up
+
+    const asHost = await t
+      .withIdentity({ subject: s.hostAccountId })
+      .query(api.game.cardPicking.getState, { gameId: s.gameId });
+    expect(asHost!.cards.every((c) => c.role !== null)).toBe(true); // host sees all
   });
 });

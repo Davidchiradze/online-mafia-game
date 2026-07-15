@@ -5,7 +5,7 @@ import { useMutation } from "convex/react";
 import { gameSessions } from "@convex/refs/game";
 import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
-import { GAME_PHASES } from "@/lib/constants/game";
+import { advanceUpdates } from "@/game/japanese/phaseFlow";
 import PhaseButton from "@/components/ui/PhaseButton";
 
 type EndRightHandCheckButtonProps = {
@@ -28,10 +28,7 @@ const EndRightHandCheckButton = ({
     try {
       await updateSession({
         sessionId: gameSessionState._id,
-        updates: {
-          gamePhase: GAME_PHASES[21], // "phase_transition" (neutral sleep buffer)
-          nextPhase: GAME_PHASES[12], // "yakuza_and_shogun_chooses_target"
-        },
+        updates: advanceUpdates("right_hand_checks_for_yakuza"),
       });
     } finally {
       setIsLoading(false);

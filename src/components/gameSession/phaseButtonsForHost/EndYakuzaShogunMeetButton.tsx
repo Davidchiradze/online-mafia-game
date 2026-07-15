@@ -5,7 +5,7 @@ import { useMutation } from "convex/react";
 import { gameSessions } from "@convex/refs/game";
 import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
-import { GAME_PHASES } from "@/lib/constants/game";
+import { advanceUpdates } from "@/game/japanese/phaseFlow";
 import PhaseButton from "@/components/ui/PhaseButton";
 
 type EndYakuzaShogunMeetButtonProps = {
@@ -28,10 +28,7 @@ const EndYakuzaShogunMeetButton = ({
     try {
       await updateSession({
         sessionId: gameSessionState._id,
-        updates: {
-          gamePhase: GAME_PHASES[21], // "phase_transition" (neutral sleep buffer)
-          nextPhase: GAME_PHASES[5], // "detective_meet"
-        },
+        updates: advanceUpdates("yakuda_shogun_meet"),
       });
     } finally {
       setIsLoading(false);

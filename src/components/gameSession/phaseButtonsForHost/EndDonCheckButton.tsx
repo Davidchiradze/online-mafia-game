@@ -5,7 +5,7 @@ import { useMutation } from "convex/react";
 import { gameSessions } from "@convex/refs/game";
 import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
-import { GAME_PHASES } from "@/lib/constants/game";
+import { advanceUpdates } from "@/game/japanese/phaseFlow";
 import PhaseButton from "@/components/ui/PhaseButton";
 
 type EndDonCheckButtonProps = {
@@ -28,9 +28,7 @@ const EndDonCheckButton = ({ gameSessionState }: EndDonCheckButtonProps) => {
     try {
       await updateSession({
         sessionId: gameSessionState._id,
-        updates: {
-          gamePhase: GAME_PHASES[11], // "right_hand_checks_for_yakuza"
-        },
+        updates: advanceUpdates("don_checks_for_detective"),
       });
     } finally {
       setIsLoading(false);

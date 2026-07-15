@@ -3,6 +3,7 @@ import { query, mutation } from "../_generated/server";
 import { getAuthenticatedUser } from "../lib/auth";
 import { assertIsHost, getPlayersByGameId } from "../lib/games";
 import { enterNightPhase, enterDayPhase } from "../lib/phaseTransitions";
+import { getGameDefinition } from "../games/registry";
 import type { Id } from "../_generated/dataModel";
 import type { DatabaseReader } from "../_generated/server";
 
@@ -98,21 +99,19 @@ export const startFarewellSpeech = mutation({
 
     if (!nightSession) throw new ConvexError("Night phase session not found");
 
-    const mafiaTarget = nightSession.mafiaTarget;
-    const yakuzaTarget = nightSession.yakuzaTarget;
-    const healedPlayer = nightSession.healedPlayer;
+    // Resolve the night to killed seats via the variant's night model
+    // (docs/game-types.md §2.3). For Japanese this reproduces the previous
+    // inline logic verbatim (mafia first, then a distinct yakuza target, each
+    // suppressed if it equals the healed seat).
+    const game = await ctx.db.get(gameId);
+    if (!game) throw new ConvexError("Game not found");
+    const definition = getGameDefinition(game.gameType);
 
-    const killedPlayers: number[] = [];
-    if (mafiaTarget !== undefined && mafiaTarget !== healedPlayer) {
-      killedPlayers.push(mafiaTarget);
-    }
-    if (
-      yakuzaTarget !== undefined &&
-      yakuzaTarget !== healedPlayer &&
-      !killedPlayers.includes(yakuzaTarget)
-    ) {
-      killedPlayers.push(yakuzaTarget);
-    }
+    const killedPlayers = definition.night.resolveKills({
+      mafiaTarget: nightSession.mafiaTarget,
+      yakuzaTarget: nightSession.yakuzaTarget,
+      healedPlayer: nightSession.healedPlayer,
+    });
 
     if (killedPlayers.length === 0) {
       await enterDayPhase(ctx, gameId);

@@ -6,7 +6,7 @@ import { gameSessions } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
 import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
-import { GAME_PHASES } from "@/lib/constants/game";
+import { advanceUpdates } from "@/game/japanese/phaseFlow";
 import PhaseButton from "@/components/ui/PhaseButton";
 
 type StartMafiaTargetButtonProps = {
@@ -34,9 +34,7 @@ const StartMafiaTargetButton = ({
     try {
       await updateSession({
         sessionId: gameSessionState._id,
-        updates: {
-          gamePhase: GAME_PHASES[9], // "mafia_chooses_target"
-        },
+        updates: advanceUpdates("night_phase"),
       });
     } catch (error) {
       console.error("Failed to start mafia target:", error);

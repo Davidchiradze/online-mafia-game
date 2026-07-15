@@ -6,7 +6,7 @@ import { gameSessions, dayPhase } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
 import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
-import { GAME_PHASES } from "@/lib/constants/game";
+import { advanceUpdates } from "@/game/japanese/phaseFlow";
 import PhaseButton from "@/components/ui/PhaseButton";
 
 type EndDoctorMeetButtonProps = {
@@ -31,10 +31,7 @@ const EndDoctorMeetButton = ({
     try {
       await updateSession({
         sessionId: gameSessionState._id,
-        updates: {
-          gamePhase: GAME_PHASES[21], // "phase_transition" (neutral sleep buffer)
-          nextPhase: GAME_PHASES[7], // "introduction_phase"
-        },
+        updates: advanceUpdates("doctor_meet"),
       });
 
       // Clearing speaking state is phase-agnostic; running it now keeps it clean

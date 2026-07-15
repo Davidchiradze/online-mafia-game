@@ -15,6 +15,8 @@ import {
 } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import { getUiRuleset } from "@/game/registry";
+import type { UiRuleset } from "@/game/core/types";
 import { useGameRoomConnection, type JoinStatus } from "./useGameRoomConnection";
 
 // ---------------------------------------------------------------------------
@@ -115,6 +117,8 @@ type GameRoomContextValue = {
   isHost: boolean;
   isSpectator: boolean;
   gameData: GameData | null;
+  /** Variant UI ruleset (visibility, host-advance flow) resolved from gameType. */
+  ruleset: UiRuleset;
   spectators: GameSpectator[];
   room: LiveKitRoom;
   maxPlayers: number | null;
@@ -306,6 +310,7 @@ export function GameRoomProvider({
             tableAvgRating: game.tableAvgRating,
           }
         : null,
+      ruleset: getUiRuleset(game?.gameType),
       spectators: (game?.spectators ?? []) as GameSpectator[],
       room,
       maxPlayers: game?.maxPlayers ?? null,
