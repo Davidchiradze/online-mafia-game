@@ -95,7 +95,7 @@ relocation, and **G2 + G4** before Phase 3 / Phase 4 respectively.
 | G1 | Characterize voting: open/close window, auto-vote on last candidate, tie-break, both-candidates-leave | `convex/tests/gameEngine.test.ts` (5 new `describe`s, 16 tests) | ✅ | working tree |
 | G2 | Characterize fouls: `giveFoul` increment, phase gating, 4th-foul elimination + `foulEliminationOccurred`, on-elimination win check (5s foul-speak window is UI timing, out of scope) | `convex/tests/gameEngine.test.ts` (1 new `describe`, 7 tests) | ✅ | working tree |
 | G3 | Characterize card-picking flow: turn order, auto-pick on timeout, OCC/double-pick rejection | `convex/tests/gameEngine.test.ts` (4 new `describe`s, 10 tests) | ✅ | working tree |
-| G4 | Unit-test `gridPositionForSeat` for the 12-seat grid (pure fn) so Phase 4's 10-seat layout is a visible diff | `tests/game/seatLayout.test.ts` (new) | ⬜ | |
+| G4 | Unit-test `gridPositionForSeat` for the 12-seat grid (pure fn) so Phase 4's 10-seat layout is a visible diff | `tests/game/seatLayout.test.ts` (new) | ✅ | working tree |
 
 > These are characterization tests: assert **current** behavior, then never
 > change the assertions during the move.
@@ -341,7 +341,7 @@ definitions (game-types.md §8).
 | P4-T1 | `gameRoomContext` resolves the UI ruleset from `gameData.gameType` | `gameRoomContext.tsx`, `src/game/registry.ts` | manual + existing visibility | ⬜ | |
 | P4-T2 | `GamePhaseControls` renders from the variant's phase→controls map | `components/game/GamePhaseControls.tsx` | `phaseTransitionGraph` still green | ⬜ | |
 | P4-T3 | `visibility.ts` + night-authority hooks dispatch to the ruleset | `lib/game/visibility.ts`, `hooks/game/useNight*` | `visibility.test.ts` green, **imports only** | ⬜ | |
-| P4-T4 | **Fix `maxPlayers` plumbing (§6):** thread `maxPlayers` from `useGameRoom()` into both `<PlayerCircle>` renders | `LiveKitTestComponent.tsx`, `SpectatorView.tsx` | needs **G4** | ⚠️ (needs G4) | |
+| P4-T4 | **Fix `maxPlayers` plumbing (§6):** thread `maxPlayers` from `useGameRoom()` into both `<PlayerCircle>` renders | `LiveKitTestComponent.tsx`, `SpectatorView.tsx` | needs **G4** ✅ | ⬜ (unblocked — G4 done) | |
 | P4-T5 | Seat layout from variant `seatLayout` (10-ring + host for Sports; 12-ring for Japanese) instead of hardcoded switch | `PlayerCircle.tsx`, `useSeatShuffleAnimation.ts`, `src/game/*/seatLayout.ts` | `seatLayout.test.ts` extended for 10-seat | ⬜ | |
 
 ### Phase 5 — Enable + calibrate

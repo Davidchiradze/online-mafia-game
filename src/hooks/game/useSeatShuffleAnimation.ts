@@ -6,7 +6,7 @@ import type { useGameRoom } from "@/lib/context/gameRoomContext";
 
 type GamePlayer = ReturnType<typeof useGameRoom>["players"][number];
 
-type GridPosition = {
+export type GridPosition = {
   gridRow: number;
   gridColumn: number;
 };
@@ -22,7 +22,14 @@ export type SeatShuffleResult = {
 
 const ARC_CLEAR_DELAY_MS = 1800;
 
-function gridPositionForSeat(seatNumber: number): GridPosition {
+/**
+ * Fixed 4×4 grid ring geometry for the current (Japanese, 12-seat) layout.
+ * Exported for characterization (docs/game-types-refactor-tasks.md §2 G4) so
+ * Phase 4's variant-driven `seatLayout` (10-ring for Sports) lands as a visible
+ * diff against this pinned mapping. Seats 1–12 walk the ring clockwise; the
+ * default (unknown seat) falls back to the bottom-right cell.
+ */
+export function gridPositionForSeat(seatNumber: number): GridPosition {
   switch (seatNumber) {
     case 1:
       return { gridRow: 1, gridColumn: 3 };
