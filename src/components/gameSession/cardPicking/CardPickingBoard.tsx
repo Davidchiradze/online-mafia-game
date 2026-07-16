@@ -36,8 +36,13 @@ import RoleCard from "./RoleCard";
  */
 export default function CardPickingBoard() {
   const t = useTranslations("game");
-  const { gameId, gameSessionState } = useGameRoom();
+  const { gameId, gameSessionState, gameData } = useGameRoom();
   const { state, pickCard } = useCardPicking(gameId as Id<"games">);
+
+  // Sports Mafia has a fixed 10-card deck that we lay out as 5 top / 5 bottom
+  // and size to fill the viewport. Other variants keep the compact,
+  // scrollable grid (they can carry up to 12 cards).
+  const isSports = gameData?.gameType === "sports_mafia";
 
   const [pickedCardId, setPickedCardId] = useState<string | null>(null);
   const [isPicking, setIsPicking] = useState(false);
@@ -104,7 +109,13 @@ export default function CardPickingBoard() {
           <Countdown turnStartedAt={state.currentTurnStartedAt} />
         )}
 
-        <div className="mt-6 grid w-full max-w-6xl grid-cols-3 gap-3 sm:grid-cols-4 sm:gap-4 lg:grid-cols-6 lg:gap-6 overflow-y-auto p-4">
+        <div
+          className={
+            isSports
+              ? "mt-6 grid w-full max-w-[1280px] grid-cols-5 place-items-center gap-3 overflow-y-auto px-2 sm:gap-5 sm:px-4"
+              : "mt-6 grid w-full max-w-6xl grid-cols-3 gap-3 sm:grid-cols-4 sm:gap-4 lg:grid-cols-6 lg:gap-6 overflow-y-auto p-4"
+          }
+        >
           {state.cards.map((card) => {
             if (card.cardId === pickedCardId) {
               return <Placeholder key={card.cardId} />;
