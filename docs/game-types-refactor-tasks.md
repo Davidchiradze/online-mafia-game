@@ -456,9 +456,32 @@ seat geometry). Japanese verified byte-identical by the unchanged oracles
 
 | ID | Task | Files | Status | Commit |
 | --- | --- | --- | --- | --- |
-| P5-T1 | Un-filter `sports_mafia` in `CreateGameModal` | `components/.../CreateGameModal` | ⬜ | |
-| P5-T2 | Ship **unrated** first (absent from `RATING_CONFIG` → ELO skipped) | `convex/lib/ratings.ts` | ⬜ | |
-| P5-T3 | Add Sports `RATING_CONFIG` + E-table after ~200 decided games | `convex/lib/ratings.ts` | 🔵 (deferred by design) | |
+| P5-T1 | Un-filter `sports_mafia` in `CreateGameModal` (only `city_mafia` stays hidden — no ruleset yet) | `components/modals/CreateGameModal.tsx` | ✅ | working tree |
+| P5-T2 | Ship **unrated** first (absent from `RATING_CONFIG` → ELO skipped) | `convex/lib/constants.ts` (`RATING_CONFIG`) | ✅ (no-op — already absent; consumers guard `undefined`) | working tree |
+| P5-T3 | Add Sports `RATING_CONFIG` + E-table after ~200 decided games | `convex/lib/constants.ts` | 🔵 (deferred by design) | |
+
+> **P5-T1 + P5-T2 landed (working tree, uncommitted):** `sports_mafia` is now
+> **creatable, shipping unrated.**
+> - **P5-T1:** the `CreateGameModal` game-type filter drops only `city_mafia`
+>   now; `sports_mafia` shows in the dropdown. Server-side, `maxPlayers` is
+>   already derived from `GAME_TYPE_MAX_PLAYERS[gameType]` (Sports → 10), the
+>   schema validator + create path accept `sports_mafia`, and the i18n labels
+>   exist in `en`/`ka` — so no other create-path change was needed.
+> - **P5-T2:** already satisfied by omission — `RATING_CONFIG` has no
+>   `sports_mafia` key, and every consumer guards the `undefined`
+>   (`playerRatings` `?.start ?? 1000` / `annulGameLog` "undefined for unrated"),
+>   so a finished Sports game archives with zero ELO change, exactly like an
+>   unrated type. Nothing to change.
+>
+> **The refactor's core goal is met: two variants behind stable interfaces,
+> Sports live + playable, Japanese byte-for-byte unchanged** (418-test suite,
+> `tsc` clean). **Ship-blocker before real players:** the Sports UI has **not**
+> been visually QA'd in a live multiplayer room — the interactive night flow,
+> the 10-seat ring proportions, and the Sports center-panel sizing are all
+> logic-guarded only. Recommend a live smoke test (host + ≥3 clients) before
+> announcing. Cosmetic follow-ups still open: the visible 5s `mafia_chooses_target`
+> countdown (per-variant `PHASE_TIMERS`) and the 30s banned-speaker timer (P3-T3
+> UI side).
 
 ---
 

@@ -71,26 +71,32 @@ describe("JAPANESE_SEAT_LAYOUT — 12-seat grid (G4 oracle, unchanged)", () => {
 // ---------------------------------------------------------------------------
 
 const SPORTS_GRID: Record<number, GridPosition> = {
-  1: { gridRow: 1, gridColumn: 1 },
-  2: { gridRow: 1, gridColumn: 2 },
-  3: { gridRow: 1, gridColumn: 3 },
-  4: { gridRow: 1, gridColumn: 4 },
-  5: { gridRow: 2, gridColumn: 4 },
-  6: { gridRow: 3, gridColumn: 4 },
-  7: { gridRow: 3, gridColumn: 3 },
-  8: { gridRow: 3, gridColumn: 2 },
-  9: { gridRow: 3, gridColumn: 1 },
-  10: { gridRow: 2, gridColumn: 1 },
+  1: { gridRow: 1, gridColumn: 3 },
+  2: { gridRow: 1, gridColumn: 4 },
+  3: { gridRow: 2, gridColumn: 4 },
+  4: { gridRow: 3, gridColumn: 4 },
+  5: { gridRow: 3, gridColumn: 3 },
+  6: { gridRow: 3, gridColumn: 2 },
+  7: { gridRow: 3, gridColumn: 1 },
+  8: { gridRow: 2, gridColumn: 1 },
+  9: { gridRow: 1, gridColumn: 1 },
+  10: { gridRow: 1, gridColumn: 2 },
 };
 
 describe("SPORTS_SEAT_LAYOUT — 10-seat grid (P4-T5)", () => {
   const { positionForSeat } = SPORTS_SEAT_LAYOUT;
 
-  it("is a 4×3 grid with the center panel at cols 2–3, row 2", () => {
+  it("is a 4×3 grid with a SPLIT center: host col 2, controls col 3 (row 2)", () => {
     expect(SPORTS_SEAT_LAYOUT.cols).toBe(4);
     expect(SPORTS_SEAT_LAYOUT.rows).toBe(3);
-    expect(SPORTS_SEAT_LAYOUT.center).toEqual({
+    expect(SPORTS_SEAT_LAYOUT.hostPanel).toEqual({
       colStart: 2,
+      colEnd: 3,
+      rowStart: 2,
+      rowEnd: 3,
+    });
+    expect(SPORTS_SEAT_LAYOUT.controlsPanel).toEqual({
+      colStart: 3,
       colEnd: 4,
       rowStart: 2,
       rowEnd: 3,
@@ -101,6 +107,14 @@ describe("SPORTS_SEAT_LAYOUT — 10-seat grid (P4-T5)", () => {
     for (const [seat, cell] of Object.entries(SPORTS_GRID)) {
       expect(positionForSeat(Number(seat))).toEqual(cell);
     }
+  });
+
+  it("leaves the split-center cells (2,2) and (2,3) free of seats", () => {
+    const seatCells = new Set(
+      Object.values(SPORTS_GRID).map((c) => `${String(c.gridRow)},${String(c.gridColumn)}`),
+    );
+    expect(seatCells.has("2,2")).toBe(false); // host cell
+    expect(seatCells.has("2,3")).toBe(false); // controls cell
   });
 
   it("keeps all 10 seats within the 4×3 grid (no phantom row-4 cells)", () => {

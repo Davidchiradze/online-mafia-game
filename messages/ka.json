@@ -415,8 +415,8 @@
   },
   "game": {
     "gameTypes": {
-      "sports_mafia": "სპორტული მაფია",
-      "city_mafia": "ქალაქის მაფია",
+      "sports_mafia": "სპორტული",
+      "city_mafia": "ქალაქური",
       "japanese_mafia": "იაპონური"
     },
     "phaseTitle": {

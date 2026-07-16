@@ -78,19 +78,38 @@ export type PhaseControlsMap = Record<string, PhaseControlRenderer>;
 /** A cell in the participant-circle CSS grid (1-based row/column). */
 export type GridPosition = { gridRow: number; gridColumn: number };
 
+/** A rectangular grid span (line numbers, end exclusive — CSS grid-line style). */
+export type GridSpan = {
+  colStart: number;
+  colEnd: number;
+  rowStart: number;
+  rowEnd: number;
+};
+
 /**
  * The participant-circle ring geometry for a variant (docs/game-types.md §6,
  * P4-T5). Replaces the hardcoded 4×4 switch in `useSeatShuffleAnimation` so a
  * 10-seat Sports ring and the 12-seat Japanese ring both come from the resolved
- * ruleset. `center` is the host+controls panel span (grid line numbers, end
- * exclusive); seats fill the ring around it.
+ * ruleset. `center` is the region the host + host-controls occupy; seats fill
+ * the ring around it.
+ *
+ * Center layout has two modes:
+ * - **Merged** (default, Japanese): host video + controls stack inside the one
+ *   `center` panel.
+ * - **Split** (Sports): host video and controls render in separate cells,
+ *   `hostPanel` and `controlsPanel`. When both are set the renderer uses the
+ *   split layout; otherwise it falls back to the merged `center` panel.
  */
 export type SeatLayout = {
   /** Grid template size. */
   cols: number;
   rows: number;
-  /** The center host+controls panel span (grid line numbers). */
-  center: { colStart: number; colEnd: number; rowStart: number; rowEnd: number };
+  /** The center region host + controls occupy (used as the merged panel span). */
+  center: GridSpan;
+  /** Split-center: the host-video cell (paired with `controlsPanel`). */
+  hostPanel?: GridSpan;
+  /** Split-center: the host-controls / voting cell (paired with `hostPanel`). */
+  controlsPanel?: GridSpan;
   /** Ring cell for a 1-based seat number. */
   positionForSeat: (seat: number) => GridPosition;
 };
