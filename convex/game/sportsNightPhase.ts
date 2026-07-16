@@ -202,3 +202,56 @@ export const getMySelection = query({
     return mine?.targetSeat ?? null;
   },
 });
+
+// ---------------------------------------------------------------------------
+// Host-only read: EVERY living mafia's pick (the night-actions summary the host
+// sees). Distinct from getMySelection (§5.4 privacy) — only the host may see
+// who each mafia targeted. Returns a row per living mafia so the host can also
+// see who has NOT yet picked (`targetSeat: null`).
+// ---------------------------------------------------------------------------
+
+type HostMafiaSelection = { mafiaSeat: number; targetSeat: number | null };
+
+export const getHostSelections = query({
+  args: { gameId: v.id("games") },
+  handler: async (ctx, { gameId }): Promise<HostMafiaSelection[]> => {
+    const userId = await getAuthenticatedUser(ctx);
+
+    const game = await ctx.db.get(gameId);
+    if (!game || game.hostId !== userId) return [];
+    const definition = getGameDefinition(game.gameType);
+
+    const session = await getGameSession(ctx.db, gameId);
+    if (!session.currentNightNumber) return [];
+
+    const nightSession = await getNightSession(
+      ctx.db,
+      gameId,
+      session.currentNightNumber,
+    );
+    const selections = nightSession?.mafiaTargetSelections ?? [];
+
+    // Resolve living mafia seats (by the variant's faction mapping) so the host
+    // sees a row for every mafia, including those who have not yet chosen.
+    const players = await getPlayersByGameId(ctx.db, gameId);
+    const roleRows = await ctx.db
+      .query("gamePlayerRoles")
+      .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
+      .collect();
+    const roleByPlayerId = new Map(roleRows.map((r) => [r.playerId, r.role]));
+
+    return players
+      .filter((p): p is typeof p & { seatNumber: number } => {
+        if (typeof p.seatNumber !== "number" || !p.isAlive) return false;
+        const role = roleByPlayerId.get(p.playerId);
+        return role !== undefined && definition.roleToFaction(role) === "mafia";
+      })
+      .sort((a, b) => a.seatNumber - b.seatNumber)
+      .map((p) => ({
+        mafiaSeat: p.seatNumber,
+        targetSeat:
+          selections.find((s) => s.mafiaSeat === p.seatNumber)?.targetSeat ??
+          null,
+      }));
+  },
+});

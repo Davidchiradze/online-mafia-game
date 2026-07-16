@@ -67,6 +67,15 @@ export type PhaseControlsContext = {
 export type PhaseControlRenderer = (ctx: PhaseControlsContext) => ReactNode;
 
 /**
+ * Renders the host-only night-actions summary — the compact "who targeted whom"
+ * strip shown above the host controls during night phases. Japanese shows the
+ * single-authority scalars (M/Y/H); Sports shows one pill per living mafia's
+ * private pick (resolved from the host-only `getHostSelections`). Each variant's
+ * renderer reads what it needs from `useGameRoom()`, so it takes no props.
+ */
+export type NightActionsRenderer = () => ReactNode;
+
+/**
  * A variant's phase id → host-controls renderer map (docs/game-types.md §2.2,
  * Phase 4). Replaces the positional `GAME_PHASES[n]` switch that
  * `GamePhaseControls` hardcoded — the shared component looks up the current
@@ -153,6 +162,8 @@ export interface UiRuleset {
   advanceUpdates: (phase: string) => PhaseAdvanceUpdates;
   /** Phase id → host-controls renderer (replaces the positional switch). */
   phaseControls: PhaseControlsMap;
+  /** Host-only night-actions summary strip (variant kill model). */
+  nightActionsDisplay: NightActionsRenderer;
   /** Pure: who may take a night action this phase (variant kill model). */
   nightAuthority: (input: NightAuthorityInput) => NightActionAuthority;
   /** Participant-circle ring geometry (12-ring Japanese, 10-ring Sports). */

@@ -13,11 +13,13 @@ import { sportsAdvanceUpdates } from "./phaseFlow";
 import { SPORTS_PHASE_CONTROLS } from "./phaseControls";
 import { sportsNightAuthority } from "./nightAuthority";
 import { SPORTS_SEAT_LAYOUT } from "./seatLayout";
+import SportsNightActionsDisplay from "./nightActionsDisplay";
 
 export const SPORTS_UI_RULESET: UiRuleset = {
   visibility: SPORTS_VISIBILITY,
   advanceUpdates: sportsAdvanceUpdates,
   phaseControls: SPORTS_PHASE_CONTROLS,
+  nightActionsDisplay: SportsNightActionsDisplay,
   nightAuthority: sportsNightAuthority,
   seatLayout: SPORTS_SEAT_LAYOUT,
   mafiaNightModel: "unanimous-vote",

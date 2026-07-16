@@ -9,10 +9,8 @@ import {
   getPlayersByGameId,
   archiveGameLog,
 } from "../lib/games";
-import {
-  JAPANESE_MAFIA_ROLE_DISTRIBUTION,
-  GAME_CLEANUP,
-} from "../lib/constants";
+import { getGameDefinition } from "../games/registry";
+import { GAME_CLEANUP } from "../lib/constants";
 
 const removeGameInternal = makeFunctionReference<
   "mutation",
@@ -196,7 +194,8 @@ export const assignRandomRoles = mutation({
       (p) => p.seatNumber !== undefined && p.seatNumber !== hostSeat,
     );
 
-    const roles = [...JAPANESE_MAFIA_ROLE_DISTRIBUTION];
+    // Deck comes from THIS variant's definition (never hardcode Japanese).
+    const roles = [...getGameDefinition(game.gameType).roleDistribution];
     // Fisher-Yates shuffle
     for (let i = roles.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));

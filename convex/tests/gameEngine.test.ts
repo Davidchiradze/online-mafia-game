@@ -11,6 +11,7 @@ import {
 } from "../lib/phaseTransitions";
 import { recordWinnerIfDecided } from "../lib/games";
 import { JAPANESE_MAFIA_ROLE_DISTRIBUTION } from "../lib/constants";
+import { SPORTS_MAFIA_ROLE_DISTRIBUTION } from "../games/sports/roles";
 
 /**
  * CONVEX-TEST INTEGRATION — the DB-coupled game engine (regression oracle).
@@ -1144,6 +1145,35 @@ describe("card-picking — start", () => {
     }
   });
 
+  it("deals the SPORTS deck for a sports_mafia game (not the Japanese deck)", async () => {
+    const t = convexTest(schema, modules);
+    const players: SeatSpec[] = Array.from({ length: 10 }, (_, i) => ({
+      seat: i + 1,
+      role: "CITIZEN",
+    }));
+    const s = await seedGame(t, {
+      phase: "night_phase",
+      gameType: "sports_mafia",
+      players,
+    });
+
+    await t
+      .withIdentity({ subject: s.hostAccountId })
+      .mutation(api.game.cardPicking.start, { gameId: s.gameId });
+
+    const cs = await getCardSession(t, s.gameId);
+    expect(cs?.pickOrder).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    expect(cs?.deck.map((c) => c.role).sort()).toEqual(
+      [...SPORTS_MAFIA_ROLE_DISTRIBUTION].sort(),
+    );
+    // No Japanese-only roles leak into a Sports deck.
+    for (const card of cs!.deck) {
+      expect(["SHOGUN", "YAKUZA", "DOCTOR", "MAFIA_RIGHT_HAND"]).not.toContain(
+        card.role,
+      );
+    }
+  });
+
   it("is idempotent — a second start returns the same session", async () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, { phase: "night_phase", players: PICK_ROSTER });
@@ -1633,6 +1663,35 @@ describe("sports night — kill-selection window & selections", () => {
     expect(mineDon).toBe(5); // sees own
     expect(mineMafia2).toBe(6); // sees own, NOT the Don's 5
     expect(mineMafia3).toBeNull(); // didn't pick
+  });
+
+  it("getHostSelections returns every living mafia's pick to the host only", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      gameType: "sports_mafia",
+      phase: "mafia_chooses_target",
+      players: SPORTS_NIGHT_ROSTER,
+    });
+    await openWindow(t, s);
+    await select(t, s, 1, 5); // DON → 5
+    await select(t, s, 2, 6); // MAFIA(2) → 6, MAFIA(3) hasn't picked
+
+    const hostView = await t
+      .withIdentity({ subject: s.hostAccountId })
+      .query(api.game.sportsNightPhase.getHostSelections, { gameId: s.gameId });
+
+    // One row per living mafia, seat-ordered; pending mafia → targetSeat null.
+    expect(hostView).toEqual([
+      { mafiaSeat: 1, targetSeat: 5 },
+      { mafiaSeat: 2, targetSeat: 6 },
+      { mafiaSeat: 3, targetSeat: null },
+    ]);
+
+    // A non-host (even a mafia) gets nothing — the summary is host-only.
+    const mafiaView = await t
+      .withIdentity({ subject: s.bySeat[1].accountId })
+      .query(api.game.sportsNightPhase.getHostSelections, { gameId: s.gameId });
+    expect(mafiaView).toEqual([]);
   });
 
   it("closeMafiaTargetWindowInternal flips the window inactive", async () => {

@@ -483,6 +483,25 @@ seat geometry). Japanese verified byte-identical by the unchanged oracles
 > countdown (per-variant `PHASE_TIMERS`) and the 30s banned-speaker timer (P3-T3
 > UI side).
 
+### Phase 6 — Post-QA fixes (bugs found in the first live Sports run)
+
+> The first live Sports game (2026-07-16) surfaced two wiring gaps the
+> logic-only suite couldn't catch: the card-picking flow and the host
+> night-actions display were still hardcoded to Japanese. Both are now
+> dispatched through the registries (backend `getGameDefinition`, frontend
+> `ruleset`), matching the §8 "no `gameType` branching in shared units" rule.
+
+| ID | Task | Files | Guarding test | Status | Commit |
+| --- | --- | --- | --- | --- | --- |
+| P6-T1 | **Card deck by variant.** `cardPicking.start` dealt `JAPANESE_MAFIA_ROLE_DISTRIBUTION` for **every** game, so Sports players drew SHOGUN/DOCTOR/YAKUZA. Now the deck + deck-size cap come from `getGameDefinition(game.gameType).roleDistribution` (Sports → the 10-card DON/2×MAFIA/DETECTIVE/6×CITIZEN deck; Japanese → the same 12-card deck, unchanged). This completes the seam the plan already documented (game-types.md §L203/L232) but left unwired. The legacy (now UI-unwired) `sessions.assignRandomRoles` deal path got the same fix for defense-in-depth. | `convex/game/cardPicking.ts`, `convex/game/sessions.ts` | `gameEngine.test.ts` "card-picking — start" (Japanese 12-deck assertions unchanged + new "deals the SPORTS deck" case) | ✅ | working tree |
+| P6-T2 | **Sports night-actions display.** `NightActionsDisplay` was Japanese-only (keyed on `GAME_PHASES[8..14]` + the single-authority `mafiaTarget`/`yakuzaTarget`/`healedPlayer` scalars). It is now a pure dispatch boundary rendering `ruleset.nightActionsDisplay`. New `UiRuleset.nightActionsDisplay` renderer: Japanese moved **verbatim** into `src/game/japanese/nightActionsDisplay.tsx`; Sports (`src/game/sports/nightActionsDisplay.tsx`) shows one pill per living mafia (`#seat → #target`, or `-` while pending) from a NEW **host-only** query `sportsNightPhase.getHostSelections` (per-mafia picks stay private to everyone else, §5.4). | `src/components/game/NightActionsDisplay.tsx`, `src/game/{core/types,japanese/nightActionsDisplay,sports/nightActionsDisplay}`, both rulesets, `convex/game/sportsNightPhase.ts`, `convex/refs/game.ts` | `gameEngine.test.ts` new "getHostSelections … host only" case; `uiRegistry.test.ts` green (additive field) | ✅ | working tree |
+
+> **Verification:** `tsc` clean, **421 tests** (was 419; +2 additive cases — a
+> Sports-deck card-picking assertion and a `getHostSelections` host-only
+> assertion). No existing assertion changed → Japanese byte-for-byte unchanged.
+> Still needs a live multiplayer smoke test to confirm the Sports night-actions
+> strip renders as expected in the host UI.
+
 ---
 
 ## 4. Per-task regression protocol

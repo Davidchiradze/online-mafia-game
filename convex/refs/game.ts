@@ -334,6 +334,12 @@ export const sportsNightPhase = {
     { gameId: Id<"games"> },
     number | null
   >("game/sportsNightPhase:getMySelection"),
+  /** Host-only: EVERY living mafia's pick (the host night-actions summary). */
+  getHostSelections: makeFunctionReference<
+    "query",
+    { gameId: Id<"games"> },
+    { mafiaSeat: number; targetSeat: number | null }[]
+  >("game/sportsNightPhase:getHostSelections"),
 };
 
 // ============================================================================
