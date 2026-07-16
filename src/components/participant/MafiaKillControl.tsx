@@ -40,6 +40,8 @@ type MafiaKillState = {
   showIndicator: boolean;
   disabled: boolean;
   isLoading: boolean;
+  /** Keep the button permanently visible (Sports) vs hover-revealed (Japanese). */
+  alwaysVisible: boolean;
   onSelect: () => void;
 };
 
@@ -49,6 +51,7 @@ const NOOP_STATE: MafiaKillState = {
   showIndicator: false,
   disabled: false,
   isLoading: false,
+  alwaysVisible: false,
   onSelect: () => {},
 };
 
@@ -68,7 +71,8 @@ function useSingleAuthorityMafiaKill({
   const [isLoading, setIsLoading] = useState(false);
   const selectTarget = useMutation(nightPhase.selectMafiaTarget);
 
-  const isViewerOnMafiaTeam = !!viewerRole &&
+  const isViewerOnMafiaTeam =
+    !!viewerRole &&
     MAFIA_TEAM_ROLES.includes(viewerRole as (typeof MAFIA_TEAM_ROLES)[number]);
 
   const isSelected =
@@ -106,6 +110,7 @@ function useSingleAuthorityMafiaKill({
     showIndicator: isSelected && (isViewerHost || isViewerOnMafiaTeam),
     disabled: isLoading || isSelected,
     isLoading,
+    alwaysVisible: false, // Japanese: hover-revealed on the visible tile.
     onSelect,
   };
 }
@@ -132,17 +137,23 @@ function useUnanimousMafiaKill({
   );
 
   const isSelected = isMafiaPhase && myPick === seatNumber;
+  const windowActive = nightPhaseSession?.mafiaTargetWindowActive === true;
 
+  // Buttons appear on EVERY alive tile for the whole phase — the tiles are
+  // covered (Sports visibility), so there is nothing to hover-reveal over, and
+  // removing them on window-close would just make the screen go blank. Instead
+  // they stay visible and DISABLE once the 5s window closes (§5.1).
   const canShowButton =
     isMafiaPhase &&
     hasMafiaKillAuthority &&
     !isTargetHost &&
     isPlayerAlive &&
-    nightPhaseSession?.mafiaTargetWindowActive === true;
+    windowActive;
 
   const onSelect = useCallback(async () => {
     // Re-pickable within the window (last-write-wins) — not locked by isSelected.
-    if (seatNumber === null || isLoading) return;
+    // No-op once the window has closed (the server also rejects late picks).
+    if (seatNumber === null || isLoading || !windowActive) return;
     setIsLoading(true);
     try {
       await selectTarget({
@@ -154,14 +165,17 @@ function useUnanimousMafiaKill({
     } finally {
       setIsLoading(false);
     }
-  }, [gameId, seatNumber, isLoading, selectTarget]);
+  }, [gameId, seatNumber, isLoading, windowActive, selectTarget]);
 
   return {
     canShowButton,
     isSelected,
     showIndicator: isSelected, // private: only the picker sees their own mark
-    disabled: isLoading,
+    // Selecting is only possible during the open window; after +5s the buttons
+    // stay on-screen but locked.
+    disabled: isLoading || !windowActive,
     isLoading,
+    alwaysVisible: true, // Sports: persistent on covered tiles, not hover-gated.
     onSelect,
   };
 }
@@ -174,7 +188,10 @@ function MafiaKillView(state: MafiaKillState) {
   return (
     <>
       {state.canShowButton && (
-        <NightActionWrapper isSelected={state.isSelected}>
+        <NightActionWrapper
+          isSelected={state.isSelected}
+          alwaysVisible={state.alwaysVisible}
+        >
           <MafiaKillButton
             isSelected={state.isSelected}
             isLoading={state.isLoading}

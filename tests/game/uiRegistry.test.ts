@@ -116,14 +116,38 @@ describe("SPORTS_UI_RULESET", () => {
   });
 
   it("has its own visibility + night-authority (P4-T3)", () => {
-    // Video visibility wraps the same shared fns as Japanese (subset roles),
-    // but the ruleset object is distinct and carries the Sports night model.
-    expect(SPORTS_UI_RULESET.visibility.getAwakeRoles).toBe(
+    // Sports now ships a REAL, distinct visibility ruleset — no longer the
+    // interim Japanese re-export — with Sports-specific phase+role rules.
+    const sports = SPORTS_UI_RULESET.visibility;
+    expect(sports.getAwakeRoles).not.toBe(
       JAPANESE_UI_RULESET.visibility.getAwakeRoles,
     );
     expect(SPORTS_UI_RULESET.nightAuthority).not.toBe(
       JAPANESE_UI_RULESET.nightAuthority,
     );
+
+    // mafia_chooses_target is PRIVATE: the acting mafia see NO video (every
+    // tile covered), only the host monitors. Contrast Japanese, where mafia
+    // see each other + the table during this phase.
+    expect(
+      sports.canSeeParticipant("DON", "MAFIA", "mafia_chooses_target", false, false),
+    ).toBe(false);
+    expect(
+      sports.canSeeParticipant("MAFIA", "CITIZEN", "mafia_chooses_target", false, false),
+    ).toBe(false);
+    expect(
+      sports.canSeeParticipant(null, "MAFIA", "mafia_chooses_target", true, false),
+    ).toBe(true); // host still monitors
+
+    // But mafia DO meet face-to-face at mafia_meet.
+    expect(
+      sports.canSeeParticipant("DON", "MAFIA", "mafia_meet", false, false),
+    ).toBe(true);
+
+    // Awake roles are the Sports set (no yakuza/doctor/right-hand); mafia are
+    // still "awake" at mafia_chooses_target so they see the 5s countdown badge.
+    expect(sports.getAwakeRoles("mafia_chooses_target")).toEqual(["DON", "MAFIA"]);
+    expect(sports.getAwakeRoles("detective_checks_for_mafia")).toEqual(["DETECTIVE"]);
   });
 
   it("declares the unanimous-vote mafia night model (§5.4)", () => {

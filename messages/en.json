@@ -556,6 +556,8 @@
       "readyLabel": "ready",
       "noPlayersYet": "Room is empty",
       "startMafiaPhase": "Start Mafia Phase",
+      "openMafiaTargetWindow": "Open Kill Window (5s)",
+      "mafiaChoosing": "Mafia choosing…",
       "startNight": "Start Night",
       "playerEliminatedByFoulsTitle": "Player eliminated by fouls",
       "noVotingThisRound": "No voting will occur this round",

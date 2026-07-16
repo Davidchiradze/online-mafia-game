@@ -18,7 +18,7 @@ import type { PhaseControlsMap } from "../core/types";
 import StartPickingRolesButton from "@/components/gameSession/phaseButtonsForHost/StartPickingRolesButton";
 import ConfirmRolesButton from "@/components/gameSession/phaseButtonsForHost/ConfirmRolesButton";
 import PhaseAdvanceButton from "@/components/gameSession/phaseButtonsForHost/PhaseAdvanceButton";
-import StartSportsMafiaPhaseButton from "@/components/gameSession/phaseButtonsForHost/StartSportsMafiaPhaseButton";
+import SportsMafiaTargetControls from "@/components/gameSession/phaseButtonsForHost/SportsMafiaTargetControls";
 import FarewellSpeechControls from "@/components/gameSession/phaseButtonsForHost/FarewellSpeechControls";
 import VotingPhaseControls from "@/components/gameSession/vote/VotingPhaseControls";
 import ContinueNextRoundButton from "@/components/gameSession/phaseButtonsForHost/ContinueNextRoundButton";
@@ -76,14 +76,16 @@ export const SPORTS_PHASE_CONTROLS: PhaseControlsMap = {
   ),
   voting: () => <VotingPhaseControls />,
   night_phase: ({ gameSessionState }) => (
-    <StartSportsMafiaPhaseButton gameSessionState={gameSessionState} />
-  ),
-  mafia_chooses_target: ({ gameSessionState }) => (
     <PhaseAdvanceButton
       gameSessionState={gameSessionState}
-      sourcePhase="mafia_chooses_target"
-      labelKey="endMafiaPhase"
+      sourcePhase="night_phase"
+      labelKey="startMafiaPhase"
     />
+  ),
+  // The night start no longer arms the kill window — the host opens it (and the
+  // next-phase button unlocks) from within `mafia_chooses_target` (§5).
+  mafia_chooses_target: ({ gameSessionState }) => (
+    <SportsMafiaTargetControls gameSessionState={gameSessionState} />
   ),
   don_checks_for_detective: ({ gameSessionState }) => (
     <PhaseAdvanceButton

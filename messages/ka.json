@@ -556,6 +556,8 @@
       "readyLabel": "მზადაა",
       "noPlayersYet": "მაგიდა ცარიელია",
       "startMafiaPhase": "მაფიის შეხვედრა",
+      "openMafiaTargetWindow": "მკვლელობის ფანჯრის გახსნა (5წმ)",
+      "mafiaChoosing": "მაფია ირჩევს…",
       "startNight": "ღამის დაწყება",
       "playerEliminatedByFoulsTitle": "მოთამაშე ფოლებით გარიცხულია",
       "noVotingThisRound": "ამ რაუნდში კენჭისყრა არ ჩატარდება",
