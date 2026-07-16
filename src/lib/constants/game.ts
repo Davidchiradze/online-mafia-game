@@ -228,6 +228,14 @@ export const PHASE_TIMERS: Partial<
   doctor_heals_player: 15 * 1000,
 } as const;
 
+// Sports Mafia night constants (mirrors convex/lib/constants.ts SPORTS).
+export const SPORTS = {
+  /** Duration of the host-opened mafia kill-selection window (§5.3). */
+  MAFIA_TARGET_WINDOW_MS: 5 * 1000,
+  /** Same, in whole seconds. */
+  MAFIA_TARGET_WINDOW_SECONDS: 5,
+} as const;
+
 // Card-picking phase constants
 export const CARD_PICK = {
   /** Per-pick timeout in milliseconds (15 seconds) */

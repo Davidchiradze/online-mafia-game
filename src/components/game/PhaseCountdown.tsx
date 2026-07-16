@@ -2,10 +2,61 @@
 
 import React from "react";
 import { useTranslations } from "next-intl";
-import { PHASE_TIMERS } from "@/lib/constants/game";
+import { PHASE_TIMERS, SPORTS } from "@/lib/constants/game";
 import { type GamePhase, type Role } from "@/lib/game/visibility";
 import { useCountdown } from "@/hooks/game/useCountdown";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
+
+type TimerSource = { durationMs: number; startMs: number };
+
+/**
+ * Resolves the countdown source for the current phase, or null when no timer
+ * should run right now.
+ *
+ *  - Sports `unanimous-vote` mafia (§5.3): the `mafia_chooses_target` phase does
+ *    NOT use the generic phase timer. It counts the 5s host-opened kill window
+ *    from `mafiaTargetWindowStartedAt`, and only while the window is active —
+ *    so no badge shows before the host opens it or after it closes.
+ *  - Every other phase: the generic `PHASE_TIMERS[phase]` counted from
+ *    `phaseStartedAt`.
+ */
+function usePhaseTimerSource(): TimerSource | null {
+  const { gameSessionState, nightPhaseSession, ruleset } = useGameRoom();
+  const phase = gameSessionState?.gamePhase as GamePhase | undefined;
+  if (!phase) return null;
+
+  if (
+    ruleset.mafiaNightModel === "unanimous-vote" &&
+    phase === "mafia_chooses_target"
+  ) {
+    const startedAt = nightPhaseSession?.mafiaTargetWindowStartedAt;
+    if (nightPhaseSession?.mafiaTargetWindowActive !== true || !startedAt) {
+      return null;
+    }
+    return {
+      durationMs: SPORTS.MAFIA_TARGET_WINDOW_MS,
+      startMs: Date.parse(startedAt),
+    };
+  }
+
+  const durationMs = PHASE_TIMERS[phase];
+  const startMs = gameSessionState?.phaseStartedAt;
+  if (durationMs == null || startMs == null) return null;
+  return { durationMs, startMs };
+}
+
+/** Acting role(s) for the current phase, or the host. Never spectators. */
+function useCanSeeTimer(): boolean {
+  const { gameSessionState, viewerRole, isHost, isSpectator, ruleset } =
+    useGameRoom();
+  const phase = gameSessionState?.gamePhase as GamePhase | undefined;
+  if (isSpectator || !phase) return false;
+  if (isHost) return true;
+  return (
+    !!viewerRole &&
+    ruleset.visibility.getAwakeRoles(phase).includes(viewerRole as Role)
+  );
+}
 
 /**
  * Per-phase decision countdown badge.
@@ -14,42 +65,39 @@ import { useGameRoom } from "@/lib/context/gameRoomContext";
  * (e.g. mafia choosing a target, detective checking). The host always sees it;
  * spectators never do. When the timer hits 0 nothing auto-advances — the host
  * still ends the phase manually.
- *
- * Renders nothing unless the current phase has a configured timer in
- * `PHASE_TIMERS` and the viewer is allowed to see it.
  */
 export default function PhaseCountdown() {
   const t = useTranslations("game.phaseTimer");
-  const { gameSessionState, viewerRole, isHost, isSpectator, ruleset } =
-    useGameRoom();
+  const canSee = useCanSeeTimer();
+  const timer = usePhaseTimerSource();
 
-  const phase = gameSessionState?.gamePhase as GamePhase | undefined;
-  const durationMs = phase ? PHASE_TIMERS[phase] : undefined;
-
-  // Gate: acting role(s) for this phase, or the host. Never spectators.
-  const isActingRole =
-    !isSpectator &&
-    !!phase &&
-    !!viewerRole &&
-    ruleset.visibility.getAwakeRoles(phase).includes(viewerRole as Role);
-  const canSee = isHost || isActingRole;
-
+  // `useCountdown` must run every render — pass null to disable it when there
+  // is no timer or the viewer may not see it.
   const { secondsLeft, isExpired } = useCountdown(
-    canSee && durationMs ? gameSessionState?.phaseStartedAt : null,
-    durationMs ?? 0,
+    canSee && timer ? timer.startMs : null,
+    timer?.durationMs ?? 0,
   );
 
-  if (!canSee || !durationMs || gameSessionState?.phaseStartedAt == null) {
-    return null;
-  }
+  if (!canSee || !timer) return null;
 
-  const isUrgent = secondsLeft <= 5;
+  const seconds = isExpired ? 0 : secondsLeft;
+  return (
+    <TimerBadge seconds={seconds} urgent={isExpired || secondsLeft <= 5} t={t} />
+  );
+}
 
+function TimerBadge({
+  seconds,
+  urgent,
+  t,
+}: {
+  seconds: number;
+  urgent: boolean;
+  t: ReturnType<typeof useTranslations>;
+}) {
   return (
     <div
-      className={`badge ${
-        isExpired || isUrgent ? "badge-timer-urgent" : "badge-timer"
-      }`}
+      className={`badge ${urgent ? "badge-timer-urgent" : "badge-timer"}`}
       role="timer"
       aria-live="off"
     >
@@ -63,9 +111,7 @@ export default function PhaseCountdown() {
         <circle cx="12" cy="12" r="9" />
         <path strokeLinecap="round" d="M12 7v5l3 2" />
       </svg>
-      <span className="tabular-nums">
-        {t("seconds", { seconds: isExpired ? 0 : secondsLeft })}
-      </span>
+      <span className="tabular-nums">{t("seconds", { seconds })}</span>
     </div>
   );
 }

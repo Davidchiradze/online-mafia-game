@@ -155,10 +155,18 @@ Sports replaces this entirely.
 
 ### 5.1 Behaviour (confirmed)
 
-- On **entering** `mafia_chooses_target`, a **5-second kill window opens
-  immediately** — a scheduler is armed at phase entry, not on a host click.
+- On entering `mafia_chooses_target` **no window is open yet**. The **host opens
+  the 5-second kill window by clicking "Open Kill Window"** — the scheduler is
+  armed on that click, not automatically at phase entry. (This is a deliberate
+  deviation from the original spec: the host controls exactly when the window
+  starts.)
 - During the window, **every living mafia** (DON + each alive MAFIA) sees a
   **kill button on every alive participant** and picks **one** target.
+- **The phase's generic decision timer is NOT shown for this phase in Sports.**
+  Instead the acting mafia (and host) see the **kill-window countdown** — the
+  seconds remaining in the 5s window — which appears only while the host-opened
+  window is active. Before the host opens it, and after it closes, no timer
+  badge is shown.
 - **Each mafia's selection is private — mafia do NOT see who the other mafia
   targeted** (a mafia may see their *own* pick highlighted, but not others').
   This is the opposite of Japanese, where the shared target is visible to the
@@ -214,9 +222,11 @@ else → killedSeats = []   // no kill
 Mirror the existing **voting window** shape, but the scheduler only **closes the
 window** (disables buttons) — it does **not** advance the phase:
 
-- Entering `mafia_chooses_target` stamps `mafiaTargetWindowStartedAt` and arms
+- The **host** opens the window by clicking "Open Kill Window"
+  (`startMafiaTargetWindow`), which stamps `mafiaTargetWindowStartedAt`, sets
+  `mafiaTargetWindowActive: true`, and arms
   `scheduler.runAfter(SPORTS.MAFIA_TARGET_WINDOW_MS, closeMafiaTargetWindowInternal)`
-  (add `SPORTS.MAFIA_TARGET_WINDOW_MS = 5000`). The internal handler flips
+  (`SPORTS.MAFIA_TARGET_WINDOW_MS = 5000`). The internal handler flips
   `mafiaTargetWindowActive: false`. (Same pattern as
   `voting.ts → startVoteWindow` / `endVoteWindowInternal`, which likewise flips a
   boolean without advancing.)
@@ -229,9 +239,13 @@ window** (disables buttons) — it does **not** advance the phase:
   lands, leaving only the private target indicator on the chosen tile.)
 - **Host advance is manual**: the `EndMafiaTargetButton` equivalent ("Finish
   Mafia Phase") is always enabled and transitions to `don_checks_for_detective`.
-- The window countdown is shown to the acting mafia (and host) via the existing
-  `PHASE_TIMERS` / `<PhaseCountdown>` mechanism; set the Sports timer for this
-  phase to `5000`.
+- The **generic `PHASE_TIMERS` badge for `mafia_chooses_target` is suppressed in
+  Sports**. `<PhaseCountdown>` detects the `unanimous-vote` model for this phase
+  and, instead of counting the shared phase timer from `phaseStartedAt`, counts
+  the **kill window** (`SPORTS.MAFIA_TARGET_WINDOW_MS = 5000`) from
+  `mafiaTargetWindowStartedAt`, shown to the acting mafia (and host) **only while
+  `mafiaTargetWindowActive` is true**. No badge appears before the host opens the
+  window or after it closes.
 
 ### 5.4 Frontend selection privacy
 
