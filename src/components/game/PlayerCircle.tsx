@@ -153,7 +153,7 @@ export default function PlayerCircle({
 
           {/* Split center — host controls / voting cell */}
           <div
-            className="center-panel rounded-2xl border overflow-hidden flex flex-col items-center justify-center gap-2 p-3"
+            className="center-panel rounded-2xl border overflow-auto flex flex-col items-center justify-center gap-2 p-3"
             style={spanStyle(controlsPanel)}
           >
             {controls}
