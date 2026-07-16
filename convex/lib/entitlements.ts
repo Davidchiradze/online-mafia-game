@@ -26,7 +26,11 @@ import { normalizeRole } from "./access";
  * Tiers — these are the PHP `subscription.packageId` values.
  * -------------------------------------------------------------------------- */
 
-export const SUBSCRIPTION_TIERS = [1, 2, 3] as const;
+// PHP `subscription.packageId` values: 4 = daily, 1 = basic, 2 = standard,
+// 3 = premium. Order matters — `HIGHEST_TIER` is the LAST element and is what
+// staff are granted, so premium (3) is kept last. Daily (4) is the lowest tier
+// and is listed first despite its numeric value.
+export const SUBSCRIPTION_TIERS = [4, 1, 2, 3] as const;
 export type SubscriptionTier = (typeof SUBSCRIPTION_TIERS)[number];
 
 /** Highest tier — staff are treated as holding this (see `getFeatures`). */
@@ -65,11 +69,12 @@ const ALL_FEATURES = Object.values(FEATURES) as Feature[];
 /* ----------------------------------------------------------------------------
  * Tier → features
  *
- * Today all three tiers unlock the same set. Future divergence is a one-line
+ * Today all four tiers unlock the same set. Future divergence is a one-line
  * change here — no call site changes.
  * -------------------------------------------------------------------------- */
 
 export const TIER_FEATURES: Record<SubscriptionTier, readonly Feature[]> = {
+  4: ALL_FEATURES,
   1: ALL_FEATURES,
   2: ALL_FEATURES,
   3: ALL_FEATURES,
@@ -101,9 +106,12 @@ function isStaffRole(role: string | null | undefined): boolean {
 }
 
 /** The effective tier for a profile (staff ⇒ highest), or `null` if none. */
-export function getActiveTier(input: EntitlementInput): SubscriptionTier | null {
+export function getActiveTier(
+  input: EntitlementInput,
+): SubscriptionTier | null {
   if (isStaffRole(input.role)) return HIGHEST_TIER;
-  if (input.subscription?.active) return normalizeTier(input.subscription.packageId);
+  if (input.subscription?.active)
+    return normalizeTier(input.subscription.packageId);
   return null;
 }
 
@@ -123,6 +131,37 @@ export function hasFeature(input: EntitlementInput, feature: Feature): boolean {
 /** True if the profile has any active access (staff or active subscription). */
 export function isSubscriptionActive(input: EntitlementInput): boolean {
   return isStaffRole(input.role) || input.subscription?.active === true;
+}
+
+/**
+ * REPORTING-ONLY validity: is the subscription still active by its own end
+ * date, rather than by the synced `active` snapshot?
+ *
+ * PHP recomputes `active` (= packageId>0 && to>now) only when the user visits
+ * the site, so a lapsed user's `active` flag stays `true` until their next sync
+ * — which for someone who never returns is never. For ACCESS gating that
+ * stale-but-generous behavior is intentional (see docs/subscriptions.md), but
+ * for admin ANALYTICS it inflates the subscriber count. This resolver treats the
+ * `to` date as the source of truth.
+ *
+ * Semantics: when a parseable `to` date exists it alone decides (future ⇒
+ * active); only when `to` is missing/unparseable do we fall back to the flag.
+ *
+ * Do NOT use this for access control — use `hasFeature` / `isSubscriptionActive`.
+ */
+export function isSubscriptionActiveByDate(
+  subscription: { to?: string; active: boolean } | null | undefined,
+  now: number,
+): boolean {
+  if (!subscription) return false;
+  const to = subscription.to?.trim();
+  if (to) {
+    // PHP MySQL datetime, e.g. "2026-07-20 12:00:00" — same parse as the
+    // display helper in the admin users table.
+    const parsed = new Date(to.replace(" ", "T")).getTime();
+    if (!Number.isNaN(parsed)) return parsed > now;
+  }
+  return subscription.active === true;
 }
 
 /** Validator for a feature key (for mutation args, if ever needed). */

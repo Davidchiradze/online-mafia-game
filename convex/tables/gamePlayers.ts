@@ -9,6 +9,10 @@ export const gamePlayers = defineTable({
   isAlive: v.boolean(),
   fouls: v.number(),
   foulSpeakStartedAt: v.optional(v.number()),
+  // Day round for which this player is muted from their main day speech after a
+  // 3rd foul (Sports `thirdFoulSpeakingBan`, docs/sports-mafia.md §4.2). Optional
+  // and additive — Japanese never sets it, so existing rows validate unchanged.
+  foulSpeakingBanRound: v.optional(v.number()),
   state: v.optional(v.string()),
   isReady: v.optional(v.boolean()),
 })

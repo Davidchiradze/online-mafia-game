@@ -32,6 +32,7 @@ const KNOWN_SOUNDS = [
 
 const cache = new Map<string, HTMLAudioElement>();
 let unlocked = false;
+let visibilityBound = false;
 
 function getAudio(src: string): HTMLAudioElement {
   let el = cache.get(src);
@@ -41,6 +42,25 @@ function getAudio(src: string): HTMLAudioElement {
     cache.set(src, el);
   }
   return el;
+}
+
+/**
+ * Stop and reset every cached sound. Called when the tab is hidden so no
+ * playback is left "in flight": browsers defer `play()` calls issued on a
+ * backgrounded tab (and pause audio already playing) and then flush them all
+ * at once when the tab regains focus. That flush is why every countdown gong
+ * and notification chime that fired while you were away appeared to "ring"
+ * together the moment you switched back.
+ */
+function stopAllSounds(): void {
+  for (const el of cache.values()) {
+    try {
+      el.pause();
+      el.currentTime = 0;
+    } catch {
+      // Element may be mid-load — nothing to stop.
+    }
+  }
 }
 
 function unlock() {
@@ -73,7 +93,18 @@ function unlock() {
  * user gesture. Safe to call repeatedly; only the first call has effect.
  */
 export function initAudioUnlock(): void {
-  if (typeof window === "undefined" || unlocked) return;
+  if (typeof window === "undefined") return;
+
+  // Bind once, independent of the unlock gesture: whenever the tab is hidden,
+  // silence everything so the browser has nothing to defer-and-flush on return.
+  if (!visibilityBound) {
+    visibilityBound = true;
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) stopAllSounds();
+    });
+  }
+
+  if (unlocked) return;
   window.addEventListener("pointerdown", unlock);
   window.addEventListener("touchend", unlock);
   window.addEventListener("keydown", unlock);
@@ -85,6 +116,10 @@ export function initAudioUnlock(): void {
  * iOS unlock carries across plays. Fails silently if audio is unavailable.
  */
 export function playSound(src: string, volume = 0.5): HTMLAudioElement | null {
+  // Never start playback on a hidden tab. Browsers queue play() calls made in
+  // the background and fire them together on tab return — so a sound the user
+  // can't see the context for anyway would just blast when they switch back.
+  if (typeof document !== "undefined" && document.hidden) return null;
   try {
     const el = getAudio(src);
     el.muted = false;

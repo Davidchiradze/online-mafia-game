@@ -15,6 +15,8 @@ import {
 } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import { getUiRuleset } from "@/game/registry";
+import type { UiRuleset } from "@/game/core/types";
 import { useGameRoomConnection, type JoinStatus } from "./useGameRoomConnection";
 
 // ---------------------------------------------------------------------------
@@ -40,6 +42,7 @@ type ConvexGameSession = {
   _creationTime: number;
   gameId: Id<"games">;
   gamePhase: string;
+  nextPhase?: string;
   isFinished: boolean;
   currentNightNumber: number;
   currentSpeakerIndex?: number;
@@ -62,6 +65,10 @@ type ConvexNightPhaseSession = {
   mafiaTarget?: number;
   yakuzaTarget?: number;
   healedPlayer?: number;
+  // Sports unanimous-vote window (§5). Per-mafia selections are NOT surfaced
+  // here (privacy §5.4) — a mafia reads only their own pick via getMySelection.
+  mafiaTargetWindowActive?: boolean;
+  mafiaTargetWindowStartedAt?: string;
 };
 
 type ConvexVotingSession = {
@@ -95,6 +102,8 @@ type GameData = {
   maxPlayers: number;
   code: string;
   isPrivate: boolean;
+  /** Live table average ELO (non-host roster). Undefined when unrated or only the host has joined. */
+  tableAvgRating?: number;
 };
 
 type GameSpectator = {
@@ -112,6 +121,8 @@ type GameRoomContextValue = {
   isHost: boolean;
   isSpectator: boolean;
   gameData: GameData | null;
+  /** Variant UI ruleset (visibility, host-advance flow) resolved from gameType. */
+  ruleset: UiRuleset;
   spectators: GameSpectator[];
   room: LiveKitRoom;
   maxPlayers: number | null;
@@ -137,6 +148,11 @@ type GameRoomContextValue = {
   voteData: VoteData;
   healedPlayers: number[];
 };
+
+/** The live game session, non-null — the shape phase-control renderers receive. */
+export type GameSessionState = NonNullable<
+  GameRoomContextValue["gameSessionState"]
+>;
 
 const EMPTY_VOTE_DATA: VoteData = {
   votes: {},
@@ -300,8 +316,10 @@ export function GameRoomProvider({
             maxPlayers: game.maxPlayers,
             code: game.code,
             isPrivate: game.isPrivate,
+            tableAvgRating: game.tableAvgRating,
           }
         : null,
+      ruleset: getUiRuleset(game?.gameType),
       spectators: (game?.spectators ?? []) as GameSpectator[],
       room,
       maxPlayers: game?.maxPlayers ?? null,

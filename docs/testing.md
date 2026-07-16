@@ -1,0 +1,140 @@
+# Testing
+
+> Unit tests over the game's **pure logic**, plus CI that runs them on every
+> push. The suite's primary job right now is to be the **regression oracle** for
+> the game-types refactor (see [game-types.md](./game-types.md) §8: "Japanese is
+> the regression oracle").
+
+## Stack
+
+- **Vitest** — pinned to the **v3 line** (`vitest@^3`), _not_ v4. Vitest 4 pulls
+  in `rolldown`, whose native binding fails to install on darwin-arm64
+  (`Cannot find module ./rolldown-binding.darwin-arm64.node`). Stay on v3 until
+  that upstream issue is resolved.
+- **Config**: [`vitest.config.mts`](../vitest.config.mts) — `node` environment,
+  ESM (avoids the "CJS Vite Node API deprecated" warning). Aliases `@` → `src`
+  and `@convex` → `convex` mirror `tsconfig.json` so tests import exactly like
+  the app does. They point at directory roots, so they keep resolving as the
+  refactor relocates modules.
+- No `convex-test`, no running backend, no React renderer needed — the modules
+  under test are pure functions.
+
+## Commands
+
+| Command | What it does |
+| --- | --- |
+| `npm test` | Run the whole suite once (what CI runs). |
+| `npm run test:watch` | Watch mode for local development. |
+| `npx tsc --noEmit` | Typecheck (also gated in CI). |
+
+## What is tested
+
+**Unit tier** — pure, DB-free logic in `tests/`, mirroring the source tree
+(runs in the `node` environment):
+
+| Test file | Covers |
+| --- | --- |
+| `tests/convex/winConditions.test.ts` | `decideWinner` / `describeWin` / `winMethodLabel` — all N, sweeps, the N=5 Doctor+Yakuza `beforeNight` exception, N=4 clan exception, 1v1s |
+| `tests/convex/roles.test.ts` | `roleToFaction` for every role + unknown → citizens |
+| `tests/convex/speakingOrder.test.ts` | `computeSpeakingOrder` / `getNextSpeaker` (opener selection, wrap, dead-skip) |
+| `tests/game/visibility.test.ts` | `canSeeParticipant`, `getAwakeRoles`, `isNightActivityPhase`, `getVisibilityState`/`WithDeath` |
+| `tests/game/roleDisplay.test.ts` | `roleLabel`, `factionIcon`/`factionBadgeClass`, `ROLE_DISPLAY_CONFIG`/`getRoleEmoji`, the duplicated `roleToFaction` |
+| `tests/game/phases.test.ts` | Exact `GAME_PHASES` ordering (both copies), Japanese role set, 12-card deck, team membership |
+| `tests/game/phaseTransitionGraph.test.ts` | The deterministic host-advance graph transcribed from the phase buttons (spec for `definition.nextPhase`) |
+
+Unit tests live in a top-level `tests/` tree **on purpose** — not colocated in
+`convex/` — so they stay out of the Convex function bundler.
+
+**Integration tier** — DB-coupled Convex logic via
+[`convex-test`](https://docs.convex.dev/testing/convex-test), in
+`convex/tests/gameEngine.test.ts` (runs in the `edge-runtime` environment):
+
+| Area | Covers |
+| --- | --- |
+| Night kill authority | mafia `DON > MAFIA_RIGHT_HAND > MAFIA`, yakuza `SHOGUN > YAKUZA` (lone SHOGUN can't kill), doctor |
+| Night kill resolution | `startFarewellSpeech` — heal saves, dual kills, dedup, no-kill → day, host-only |
+| Phase transitions + win check | `enterNightPhase` / `enterDayPhase` / `enterVotingPhase`, pause-on-win, no-contest, idempotency |
+| Role deal + promotion | `assignRandomRoles` (deck = distribution), `promoteToRightHand` (Don-only, MAFIA-only, once, right phase) |
+
+### convex-test conventions
+
+- **Under `convex/tests/`** and globs the whole tree with
+  `import.meta.glob("../**/*.*s")` — convex-test derives the module root from the
+  `_generated` key, so the `../` prefix is stripped and `api.*` paths resolve.
+  Convex's bundler skips any file whose basename has more than one dot
+  (`bundler/index.js`), so `*.test.ts` is **never deployed** by
+  `convex dev`/deploy. ⚠️ Any non-test helper placed in `convex/tests/` **would**
+  be bundled — give helpers a multi-dot name (e.g. `seed.helpers.ts`) or keep the
+  folder to `*.test.ts` only.
+- **Per-file environment:** the first line is `// @vitest-environment edge-runtime`
+  (convex-test needs it) — the rest of the suite stays on `node`. No Vitest
+  `projects` split needed.
+- **`import.meta.glob` typing:** add `/// <reference types="vite/client" />` so
+  `tsc` (and CI) accept the Vite-only glob.
+- **Helpers** must be typed `TestConvex<typeof schema>` (not
+  `ReturnType<typeof convexTest>`, which drops the schema's table indexes).
+
+## The testing tiers (strategy)
+
+1. **Unit** — pure logic; highest ROI, deterministic, fast.
+2. **Integration** — `convex-test` over the DB-coupled engine (see above). This
+   is where the night model, win detection, and phase transitions are pinned —
+   the deepest migration divergences.
+3. **E2E — deferred / likely skipped.** A real-time, multi-player, WebRTC game
+   is a poor fit for E2E and can't serve as a _precise_ regression oracle. If
+   ever added, one Playwright smoke test with LiveKit mocked — never the safety
+   net.
+
+## Using the suite during the game-types refactor
+
+These are **characterization tests**: they pin _current Japanese behavior_, not
+idealized behavior.
+
+- As the refactor moves modules (e.g. `convex/lib/winConditions.ts` →
+  `convex/games/japanese/winConditions.ts`), update **only the import paths** in
+  the tests. **The assertions must stay constant.**
+- If an assertion has to change to stay green, that is a **behavior regression**,
+  not a refactor — investigate before changing it.
+- New pure logic (e.g. the Sports `decideWinner`) gets its own characterization
+  tests _as it is written_ (refactor Phase 2), validated against
+  [sports-mafia.md](./sports-mafia.md).
+
+### Known drift the suite pins
+
+`GAME_PHASES` is **duplicated and out of sync**:
+`src/lib/constants/game.ts` has **22** phases (includes `phase_transition`),
+`convex/lib/constants.ts` has **21** (no `phase_transition`).
+`tests/game/phases.test.ts` locks both current forms and flags this, so when the
+refactor collapses them into `definition.phases` it is a deliberate, visible
+diff rather than a silent change.
+
+## Pre-push hook (local)
+
+A local Git **pre-push** hook runs the same checks before a push leaves your
+machine, so failures are caught earlier than CI:
+
+- Script: [`.githooks/pre-push`](../.githooks/pre-push) — runs
+  `npm run typecheck` then `npm test`; a failure aborts the push.
+- It is **version-controlled** (committed under `.githooks/`) and wired via
+  `core.hooksPath=.githooks`, which the `prepare` npm script sets automatically
+  on `npm install`. No `husky` dependency. To activate manually in a fresh
+  clone: `git config core.hooksPath .githooks`.
+- **Bypass in an emergency:** `git push --no-verify`.
+
+## CI
+
+[`.github/workflows/tests.yml`](../.github/workflows/tests.yml) runs on **every
+push (any branch) and every pull request**: `npm ci` → `npm run typecheck` →
+`npm test`. In-progress runs are cancelled when new commits land on the same
+ref. Because `convex/_generated` is committed, the typecheck needs no Convex
+deployment. CI is the backstop; the pre-push hook is the same gate run locally.
+
+**Why `next-env.d.ts` is committed (not gitignored):** it supplies the ambient
+declarations for static asset imports (`import don from "….png"` →
+`StaticImageData`). Next only (re)generates it during `next dev`/`next build`, so
+it is absent in a fresh CI checkout — and then `tsc --noEmit` fails on image
+imports (`TS2307`, or the wrong `string` type) even though it passes locally.
+Committing it keeps the typecheck identical in CI and locally. (A `types/*.d.ts`
+shim was tried first but a subdirectory `declare module "*.png"` did not take
+effect; the real root-level file is the reliable fix, and Next's docs sanction
+committing it.)

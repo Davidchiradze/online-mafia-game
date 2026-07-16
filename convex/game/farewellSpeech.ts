@@ -3,6 +3,8 @@ import { query, mutation } from "../_generated/server";
 import { getAuthenticatedUser } from "../lib/auth";
 import { assertIsHost, getPlayersByGameId } from "../lib/games";
 import { enterNightPhase, enterDayPhase } from "../lib/phaseTransitions";
+import { getGameDefinition } from "../games/registry";
+import type { GameDefinition } from "../games/core/types";
 import type { Id } from "../_generated/dataModel";
 import type { DatabaseReader } from "../_generated/server";
 
@@ -26,6 +28,34 @@ function shuffleArray<T>(array: T[]): T[] {
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
   return shuffled;
+}
+
+/**
+ * Seats of living players in the mafia faction, per the variant's own
+ * `roleToFaction`. Used by the Sports `unanimous-vote` night model to decide
+ * whether every living mafia submitted a selection (docs/sports-mafia.md §5.2).
+ */
+async function getLivingMafiaSeats(
+  db: DatabaseReader,
+  gameId: Id<"games">,
+  definition: GameDefinition,
+): Promise<number[]> {
+  const players = await getPlayersByGameId(db, gameId);
+  const roleRows = await db
+    .query("gamePlayerRoles")
+    .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
+    .collect();
+  const roleByPlayer = new Map(roleRows.map((r) => [r.playerId, r.role]));
+
+  const seats: number[] = [];
+  for (const p of players) {
+    if (!p.isAlive || p.seatNumber === undefined) continue;
+    const role = roleByPlayer.get(p.playerId);
+    if (role && definition.roleToFaction(role) === "mafia") {
+      seats.push(p.seatNumber);
+    }
+  }
+  return seats;
 }
 
 // ---------------------------------------------------------------------------
@@ -98,20 +128,33 @@ export const startFarewellSpeech = mutation({
 
     if (!nightSession) throw new ConvexError("Night phase session not found");
 
-    const mafiaTarget = nightSession.mafiaTarget;
-    const yakuzaTarget = nightSession.yakuzaTarget;
-    const healedPlayer = nightSession.healedPlayer;
+    // Resolve the night to killed seats via the variant's night model
+    // (docs/game-types.md §2.3). For Japanese this reproduces the previous
+    // inline logic verbatim (mafia first, then a distinct yakuza target, each
+    // suppressed if it equals the healed seat).
+    const game = await ctx.db.get(gameId);
+    if (!game) throw new ConvexError("Game not found");
+    const definition = getGameDefinition(game.gameType);
 
-    const killedPlayers: number[] = [];
-    if (mafiaTarget !== undefined && mafiaTarget !== healedPlayer) {
-      killedPlayers.push(mafiaTarget);
-    }
-    if (
-      yakuzaTarget !== undefined &&
-      yakuzaTarget !== healedPlayer &&
-      !killedPlayers.includes(yakuzaTarget)
-    ) {
-      killedPlayers.push(yakuzaTarget);
+    let killedPlayers: number[];
+    if (definition.night.kind === "unanimous-vote") {
+      // Sports: resolve from the per-mafia selections + living-mafia roster.
+      const livingMafiaSeats = await getLivingMafiaSeats(
+        ctx.db,
+        gameId,
+        definition,
+      );
+      killedPlayers = definition.night.resolveKills(
+        { mafiaTargetSelections: nightSession.mafiaTargetSelections },
+        { livingMafiaSeats },
+      );
+    } else {
+      // Japanese (single-authority): unchanged — read the scalar targets.
+      killedPlayers = definition.night.resolveKills({
+        mafiaTarget: nightSession.mafiaTarget,
+        yakuzaTarget: nightSession.yakuzaTarget,
+        healedPlayer: nightSession.healedPlayer,
+      });
     }
 
     if (killedPlayers.length === 0) {

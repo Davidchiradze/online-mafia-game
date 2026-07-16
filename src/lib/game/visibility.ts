@@ -70,6 +70,16 @@ export function canSeeParticipant(
     return false;
   }
 
+  // PHASE TRANSITION: Neutral sleep buffer between meetings. Players and
+  // spectators are covered so the just-active role settles before the next one
+  // wakes. The host, however, sees every player dimmed (blurred) so they can
+  // keep monitoring the table during the buffer. Non-host must return false
+  // here or the default `return true` below would reveal everyone and
+  // re-introduce the cross-faction leak.
+  if (gamePhase === "phase_transition") {
+    return isViewerHost;
+  }
+
   // INTRODUCTION PHASE: Everyone can see everyone (day time)
   if (gamePhase === "introduction_phase") {
     return true;
@@ -245,6 +255,7 @@ export function isNightActivityPhase(gamePhase: GamePhase): boolean {
   const nightPhases: GamePhase[] = [
     "picking_roles",
     "night_phase",
+    "phase_transition",
     "mafia_meet",
     "don_chooses_right_hand",
     "yakuda_shogun_meet",
@@ -261,135 +272,192 @@ export function isNightActivityPhase(gamePhase: GamePhase): boolean {
 }
 
 /**
- * Determines the visibility state for a participant
- *
- * Enhanced version of canSeeParticipant that returns granular visibility states:
- * - VISIBLE: Full visibility
- * - DIMMED: Visible but blurred (host or awake role seeing sleeping players)
- * - COVERED: Completely hidden behind a sleeping cover
- *
- * @param viewerRole - The role of the person viewing
- * @param targetRole - The role of the person being viewed (or null if host)
- * @param gamePhase - Current phase of the game
- * @param isViewerHost - Whether the viewer is the host
- * @param isTargetHost - Whether the target is the host
- * @returns VisibilityState indicating how the participant should be displayed
+ * The variant-specific primitives the shared visibility-state layering is built
+ * on: "who can see whom", "who is awake", and "is this a night phase". Japanese
+ * and Sports each supply their own; the layering that consumes them (below) is
+ * identical across variants.
  */
-export function getVisibilityState(
-  viewerRole: Role,
-  targetRole: Role,
-  gamePhase: GamePhase | null,
-  isViewerHost: boolean,
-  isTargetHost: boolean,
-): VisibilityState {
-  // Use existing logic to determine base visibility
-  const isVisible = canSeeParticipant(
-    viewerRole,
-    targetRole,
-    gamePhase,
-    isViewerHost,
-    isTargetHost,
-  );
+export type VisibilityPrimitives = {
+  canSeeParticipant: (
+    viewerRole: Role,
+    targetRole: Role,
+    gamePhase: GamePhase | null,
+    isViewerHost: boolean,
+    isTargetHost: boolean,
+  ) => boolean;
+  getAwakeRoles: (gamePhase: GamePhase) => Role[];
+  isNightActivityPhase: (gamePhase: GamePhase) => boolean;
+};
 
-  // If not visible at all, return covered
-  if (!isVisible) {
-    return VisibilityState.COVERED;
-  }
+/**
+ * Optional hooks a variant can inject into the shared layering. Kept out of the
+ * primitives so Japanese (which passes none) stays byte-for-byte identical.
+ */
+export type VisibilityOptions = {
+  /**
+   * Consulted at the TOP of `getVisibilityState` (so it also flows through
+   * `getVisibilityStateWithDeath`, after the DEAD / dead-viewer rules). Return a
+   * concrete `VisibilityState` to force it, or `null` to fall through to the
+   * default layering. Sports uses this so the HOST sees every player clearly
+   * while the mafia privately pick their target.
+   */
+  visibilityStateOverride?: (
+    viewerRole: Role,
+    targetRole: Role,
+    gamePhase: GamePhase | null,
+    isViewerHost: boolean,
+    isTargetHost: boolean,
+  ) => VisibilityState | null;
+};
 
-  // During night phases, dim sleeping players for both the host and the awake role
-  if (gamePhase && isNightActivityPhase(gamePhase)) {
-    // Host always sees host tile as visible
-    if (isTargetHost) {
-      return VisibilityState.VISIBLE;
+/**
+ * Builds the shared visibility-STATE layering (COVERED / DIMMED / VISIBLE / DEAD)
+ * from a variant's phase+role primitives.
+ *
+ * Per docs/game-types.md §2.4 the layering — the `VisibilityState` enum and the
+ * `getVisibilityStateWithDeath` death-layering — is IDENTICAL across variants;
+ * only the injected `canSeeParticipant` / `getAwakeRoles` / `isNightActivityPhase`
+ * differ. Japanese derives its module exports below from the Japanese primitives
+ * defined in this file; Sports builds its own from `src/game/sports/visibility.ts`.
+ */
+export function createVisibilityHelpers(
+  primitives: VisibilityPrimitives,
+  options: VisibilityOptions = {},
+) {
+  const { canSeeParticipant, getAwakeRoles, isNightActivityPhase } = primitives;
+  const { visibilityStateOverride } = options;
+
+  /**
+   * Determines the visibility state for a participant
+   *
+   * Enhanced version of canSeeParticipant that returns granular visibility states:
+   * - VISIBLE: Full visibility
+   * - DIMMED: Visible but blurred (host or awake role seeing sleeping players)
+   * - COVERED: Completely hidden behind a sleeping cover
+   */
+  function getVisibilityState(
+    viewerRole: Role,
+    targetRole: Role,
+    gamePhase: GamePhase | null,
+    isViewerHost: boolean,
+    isTargetHost: boolean,
+  ): VisibilityState {
+    // Variant override (e.g. Sports host-monitoring) takes precedence over the
+    // default layering. A null result falls through to the standard rules.
+    if (visibilityStateOverride) {
+      const forced = visibilityStateOverride(
+        viewerRole,
+        targetRole,
+        gamePhase,
+        isViewerHost,
+        isTargetHost,
+      );
+      if (forced != null) return forced;
     }
 
-    // During picking_roles and night_phase, everyone is "asleep"
-    if (gamePhase === "picking_roles" || gamePhase === "night_phase") {
+    // Use existing logic to determine base visibility
+    const isVisible = canSeeParticipant(
+      viewerRole,
+      targetRole,
+      gamePhase,
+      isViewerHost,
+      isTargetHost,
+    );
+
+    // If not visible at all, return covered
+    if (!isVisible) {
+      return VisibilityState.COVERED;
+    }
+
+    // During night phases, dim sleeping players for both the host and the awake role
+    if (gamePhase && isNightActivityPhase(gamePhase)) {
+      // Host always sees host tile as visible
+      if (isTargetHost) {
+        return VisibilityState.VISIBLE;
+      }
+
+      // During picking_roles and night_phase, everyone is "asleep"
+      if (gamePhase === "picking_roles" || gamePhase === "night_phase") {
+        return VisibilityState.DIMMED;
+      }
+
+      // Get which roles are awake during this phase
+      const awakeRoles = getAwakeRoles(gamePhase);
+
+      // If target's role is in the awake list, they're visible; otherwise dimmed
+      if (awakeRoles.length > 0 && awakeRoles.includes(targetRole)) {
+        return VisibilityState.VISIBLE;
+      }
+
+      // Target is sleeping during this phase
       return VisibilityState.DIMMED;
     }
 
-    // Get which roles are awake during this phase
-    const awakeRoles = getAwakeRoles(gamePhase);
-
-    // If target's role is in the awake list, they're visible; otherwise dimmed
-    if (awakeRoles.length > 0 && awakeRoles.includes(targetRole)) {
-      return VisibilityState.VISIBLE;
-    }
-
-    // // During the detective's mafia check and the doctor's heal, show sleeping
-    // // players un-blurred with a crossed-eye marker instead of the dimmed night
-    // // overlay, so the active role can read faces clearly while choosing a target.
-    // if (
-    //   (gamePhase === "detective_checks_for_mafia" &&
-    //     viewerRole === "DETECTIVE") ||
-    //   (gamePhase === "doctor_heals_player" && viewerRole === "DOCTOR")
-    // ) {
-    //   return VisibilityState.MASKED;
-    // }
-
-    // Target is sleeping during this phase
-    return VisibilityState.DIMMED;
-  }
-
-  // Default: fully visible
-  return VisibilityState.VISIBLE;
-}
-
-/**
- * Determines the visibility state for a participant, accounting for dead players.
- *
- * Dead player rules:
- * - If game is finished: everyone is VISIBLE (reveal phase)
- * - If target is dead: always show DEAD state (regardless of phase)
- * - If viewer is dead during night phases: show COVERED (Zzz) for all targets
- * - Host always sees everything (dead overlay for dead, dimmed for sleeping)
- *
- * @param viewerRole - The role of the person viewing
- * @param targetRole - The role of the person being viewed (or null if host)
- * @param gamePhase - Current phase of the game
- * @param isViewerHost - Whether the viewer is the host
- * @param isTargetHost - Whether the target is the host
- * @param viewerIsAlive - Whether the viewer is alive
- * @param targetIsAlive - Whether the target is alive
- * @param isGameFinished - Whether the game has finished (reveal phase)
- * @returns VisibilityState indicating how the participant should be displayed
- */
-export function getVisibilityStateWithDeath(
-  viewerRole: Role,
-  targetRole: Role,
-  gamePhase: GamePhase | null,
-  isViewerHost: boolean,
-  isTargetHost: boolean,
-  viewerIsAlive: boolean,
-  targetIsAlive: boolean,
-  isGameFinished: boolean = false,
-): VisibilityState {
-  // If game is finished, everyone is visible (reveal phase)
-  if (isGameFinished) {
+    // Default: fully visible
     return VisibilityState.VISIBLE;
   }
 
-  // If target is dead, always show dead overlay (except for host tile)
-  if (!targetIsAlive && !isTargetHost) {
-    return VisibilityState.DEAD;
+  /**
+   * Determines the visibility state for a participant, accounting for dead players.
+   *
+   * Dead player rules:
+   * - If game is finished: everyone is VISIBLE (reveal phase)
+   * - If target is dead: always show DEAD state (regardless of phase)
+   * - If viewer is dead during night phases: show COVERED (Zzz) for all targets
+   * - Host always sees everything (dead overlay for dead, dimmed for sleeping)
+   */
+  function getVisibilityStateWithDeath(
+    viewerRole: Role,
+    targetRole: Role,
+    gamePhase: GamePhase | null,
+    isViewerHost: boolean,
+    isTargetHost: boolean,
+    viewerIsAlive: boolean,
+    targetIsAlive: boolean,
+    isGameFinished: boolean = false,
+  ): VisibilityState {
+    // If game is finished, everyone is visible (reveal phase)
+    if (isGameFinished) {
+      return VisibilityState.VISIBLE;
+    }
+
+    // If target is dead, always show dead overlay (except for host tile)
+    if (!targetIsAlive && !isTargetHost) {
+      return VisibilityState.DEAD;
+    }
+
+    // If viewer is dead (not host) and it's a night phase, show Zzz for everyone
+    if (
+      !viewerIsAlive &&
+      !isViewerHost &&
+      gamePhase &&
+      isNightActivityPhase(gamePhase)
+    ) {
+      return VisibilityState.COVERED;
+    }
+
+    // Otherwise, use the standard visibility logic
+    return getVisibilityState(
+      viewerRole,
+      targetRole,
+      gamePhase,
+      isViewerHost,
+      isTargetHost,
+    );
   }
 
-  // If viewer is dead (not host) and it's a night phase, show Zzz for everyone
-  if (
-    !viewerIsAlive &&
-    !isViewerHost &&
-    gamePhase &&
-    isNightActivityPhase(gamePhase)
-  ) {
-    return VisibilityState.COVERED;
-  }
-
-  // Otherwise, use the standard visibility logic
-  return getVisibilityState(
-    viewerRole,
-    targetRole,
-    gamePhase,
-    isViewerHost,
-    isTargetHost,
-  );
+  return { getVisibilityState, getVisibilityStateWithDeath };
 }
+
+// The shared (Japanese) exports, derived from the Japanese primitives defined
+// above. Behavior is byte-for-byte identical to the previous standalone
+// functions (pinned by tests/game/visibility.test.ts).
+const _sharedHelpers = createVisibilityHelpers({
+  canSeeParticipant,
+  getAwakeRoles,
+  isNightActivityPhase,
+});
+
+export const getVisibilityState = _sharedHelpers.getVisibilityState;
+export const getVisibilityStateWithDeath =
+  _sharedHelpers.getVisibilityStateWithDeath;

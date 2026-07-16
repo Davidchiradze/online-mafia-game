@@ -9,7 +9,7 @@ import { Doc } from "@convex/_generated/dataModel";
 import GameTable from "@/components/game/GameTable";
 import CreateGameModal from "@/components/modals/CreateGameModal";
 import { Plus } from "lucide-react";
-import LobbyStats from "./LobbyStats";
+// import LobbyStats from "./LobbyStats";
 import StreakFlame from "./StreakFlame";
 import PromoBanner from "./PromoBanner";
 import { LobbySubscriptionModal } from "./LobbySubscriptionModal";
@@ -18,10 +18,13 @@ import {
   SubscriptionUpsell,
 } from "@/components/auth/SubscriptionGuard";
 import { FEATURES } from "@convex/lib/entitlements";
+import { RatingCard } from "../dashboard/matchHistory/StatsHeader";
 
 export type LobbyGame = Doc<"games"> & {
   players: (Doc<"gamePlayers"> & { avatar?: string })[];
   spectators: (Doc<"gameSpectators"> & { avatar?: string })[];
+  /** Live table average ELO (non-host roster). Undefined when unrated or only the host has joined. */
+  tableAvgRating?: number;
 };
 
 type Props = {
@@ -70,10 +73,12 @@ export default function LobbyContent({ games }: Props) {
               {t("gameLobbySubtitle")}
             </p>
           </div>
+          <RatingCard stats={myStats} />
+
           <StreakFlame streak={myStats?.currentStreak ?? 0} />
         </div>
 
-        <LobbyStats stats={myStats} />
+        {/* <LobbyStats stats={myStats} /> */}
 
         <div className="mb-8">
           <PromoBanner

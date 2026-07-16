@@ -5,6 +5,8 @@ import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { factionIcon, factionBadgeClass } from "@/lib/game/roleDisplay";
 import { useRoleLabel } from "@/lib/game/useRoleLabel";
+import { getLevelForRating } from "@/lib/ranking/levels";
+import LevelBadge from "@/components/ranking/LevelBadge";
 import { formatDate, formatTime, formatDuration } from "./format";
 import MatchRosterPanel from "./MatchRosterPanel";
 import type { GameLogRow } from "@convex/refs/history";
@@ -68,9 +70,14 @@ export default function MatchRow({
 
         {/* Operation & role */}
         <div className="flex flex-col justify-center border-t border-white/5 pt-3 md:col-span-5 md:border-0 md:pt-0">
-          <span className="mb-1.5 font-inter font-medium text-zinc-300">
-            {tg(`gameTypes.${row.gameType}` as Parameters<typeof tg>[0])}
-          </span>
+          <div className="mb-1.5 flex items-baseline gap-2">
+            <span className="truncate font-inter font-semibold text-zinc-100">
+              {row.gameName}
+            </span>
+            <span className="shrink-0 font-inter text-xs text-zinc-500">
+              {tg(`gameTypes.${row.gameType}` as Parameters<typeof tg>[0])}
+            </span>
+          </div>
           <div className="flex items-center gap-2">
             <span className="font-inter text-sm text-zinc-500">{t("assigned")}</span>
             <span
@@ -106,6 +113,39 @@ export default function MatchRow({
             )}
             {isWin ? t("victory") : isNC ? t("noContest") : t("defeat")}
           </div>
+          {row.ratingDelta !== undefined && (
+            <span
+              className={cn(
+                "font-orbitron text-sm font-bold tracking-wider",
+                row.ratingDelta > 0
+                  ? "text-[#00ff66]"
+                  : row.ratingDelta < 0
+                    ? "text-[#ff2a2a]"
+                    : "text-zinc-400",
+              )}
+            >
+              {row.ratingDelta > 0 ? `+${row.ratingDelta}` : row.ratingDelta}
+            </span>
+          )}
+          {row.tableAvgRating !== undefined && (
+            <div
+              className="flex items-center gap-2"
+              title={t("tableAvgTooltip", { avg: row.tableAvgRating })}
+            >
+              <LevelBadge
+                level={getLevelForRating(row.tableAvgRating).level}
+                size="sm"
+              />
+              <div className="flex flex-col leading-tight">
+                <span className="font-inter text-[0.6rem] uppercase tracking-wider text-zinc-500">
+                  {t("tableAvgLabel")}
+                </span>
+                <span className="font-orbitron text-xs font-bold text-zinc-300">
+                  {row.tableAvgRating}
+                </span>
+              </div>
+            </div>
+          )}
           {row.winMethodLabel && (
             <span className="font-orbitron text-sm font-bold tracking-wider text-zinc-400">
               {row.winMethodLabel}

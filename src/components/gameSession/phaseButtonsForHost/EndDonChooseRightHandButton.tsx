@@ -5,7 +5,7 @@ import { useMutation } from "convex/react";
 import { gameSessions } from "@convex/refs/game";
 import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
-import { GAME_PHASES } from "@/lib/constants/game";
+import { advanceUpdates } from "@/game/japanese/phaseFlow";
 import PhaseButton from "@/components/ui/PhaseButton";
 
 type EndDonChooseRightHandButtonProps = {
@@ -45,9 +45,7 @@ const EndDonChooseRightHandButton = ({
     try {
       await updateSession({
         sessionId: gameSessionState._id,
-        updates: {
-          gamePhase: GAME_PHASES[4], // "yakuda_shogun_meet"
-        },
+        updates: advanceUpdates("don_chooses_right_hand"),
       });
     } finally {
       setIsLoading(false);

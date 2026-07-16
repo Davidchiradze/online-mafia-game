@@ -1,7 +1,7 @@
 import { makeFunctionReference } from "convex/server";
 import type { Id } from "../_generated/dataModel";
 
-type GameType = "traditional" | "city_mafia" | "japanese_mafia";
+type GameType = "sports_mafia" | "city_mafia" | "japanese_mafia";
 type GameStatus = "not_started" | "playing" | "finished";
 
 type GamePlayer = {
@@ -39,6 +39,8 @@ type GameWithRelations = {
   isPrivate: boolean;
   players: GamePlayer[];
   spectators: GameSpectator[];
+  /** Live table average ELO (non-host roster). Undefined when unrated or only the host has joined. */
+  tableAvgRating?: number;
 };
 
 type Profile = {

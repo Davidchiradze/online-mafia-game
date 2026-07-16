@@ -1,5 +1,5 @@
 export const GAME_TYPES = [
-  "traditional",
+  "sports_mafia",
   "city_mafia",
   "japanese_mafia",
 ] as const;
@@ -13,7 +13,7 @@ export enum JOIN_REQUEST_STATUSES {
 }
 
 export const GAME_TYPE_LABEL: Record<(typeof GAME_TYPES)[number], string> = {
-  traditional: "Traditional",
+  sports_mafia: "Sports Mafia",
   city_mafia: "City mafia",
   japanese_mafia: "Japanese",
 };
@@ -29,7 +29,7 @@ export const GAME_TYPE_MAX_PLAYER_NUMBER: Record<
   (typeof GAME_TYPES)[number],
   number
 > = {
-  traditional: 10,
+  sports_mafia: 10,
   city_mafia: 12,
   japanese_mafia: 12,
 };
@@ -87,6 +87,10 @@ export const GAME_PHASES = [
   "voting",
   "repeat",
   "end_game",
+  // Neutral "everyone asleep" buffer inserted between meetings where the awake
+  // role changes across teams (and on Doctor→wake exits). Appended last so the
+  // numeric GAME_PHASES[0..20] indices used across the app stay stable.
+  "phase_transition",
 ] as const;
 
 /** Human-readable labels for each game phase */
@@ -112,6 +116,7 @@ export const GAME_PHASE_LABELS: Record<(typeof GAME_PHASES)[number], string> = {
   voting: "Voting",
   repeat: "Next Round",
   end_game: "Game Over",
+  phase_transition: "Everyone Asleep",
 };
 
 // Day Phase Speaking Constants
@@ -196,16 +201,6 @@ export const VOTING = {
   BOTH_LEAVE_THRESHOLD: 0.5,
 } as const;
 
-// Game Cleanup Constants
-export const GAME_CLEANUP = {
-  /**
-   * Delay before deleting a finished game and its relations.
-   * MUST match `GAME_CLEANUP.DELAY_MS` in `convex/lib/constants.ts` — this
-   * client copy drives the "room closes in Ns" countdown in the winner banner.
-   */
-  DELAY_MS: 90_000,
-} as const;
-
 /**
  * Per-phase decision countdown durations (milliseconds).
  *
@@ -231,6 +226,14 @@ export const PHASE_TIMERS: Partial<
   yakuza_and_shogun_chooses_target: 20 * 1000,
   detective_checks_for_mafia: 15 * 1000,
   doctor_heals_player: 15 * 1000,
+} as const;
+
+// Sports Mafia night constants (mirrors convex/lib/constants.ts SPORTS).
+export const SPORTS = {
+  /** Duration of the host-opened mafia kill-selection window (§5.3). */
+  MAFIA_TARGET_WINDOW_MS: 5 * 1000,
+  /** Same, in whole seconds. */
+  MAFIA_TARGET_WINDOW_SECONDS: 5,
 } as const;
 
 // Card-picking phase constants

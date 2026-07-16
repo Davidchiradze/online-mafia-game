@@ -5,6 +5,7 @@ import { winMethodValidator } from "./gameLogs";
 export const gameSessions = defineTable({
   gameId: v.id("games"),
   gamePhase: v.string(),
+  nextPhase: v.optional(v.string()),
   isFinished: v.boolean(),
   currentNightNumber: v.number(),
   currentSpeakerIndex: v.optional(v.number()),
@@ -21,8 +22,18 @@ export const gameSessions = defineTable({
   // ms epoch — set when the game is finished (finishGame / admin force-end);
   // drives the "room closes in Ns" countdown in the winner banner.
   finishedAt: v.optional(v.number()),
+  // A decided faction win, or "no_contest" (total mutual elimination — nobody
+  // left alive). "no_contest" pauses the game on the winner banner like a
+  // faction win, but is logged as `winner: null` (no contest) with no ELO
+  // change — the same terminal outcome as an admin force-end. See
+  // docs/game-end-conditions.md.
   winner: v.optional(
-    v.union(v.literal("mafia"), v.literal("yakuza"), v.literal("citizens")),
+    v.union(
+      v.literal("mafia"),
+      v.literal("yakuza"),
+      v.literal("citizens"),
+      v.literal("no_contest"),
+    ),
   ),
   // Structured endgame snapshot captured when the winner is first decided.
   winMethod: v.optional(winMethodValidator),

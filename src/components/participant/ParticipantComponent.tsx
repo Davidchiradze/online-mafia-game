@@ -22,7 +22,6 @@ import {
   useNomination,
   useFoulSpeak,
   useSpeakingProgress,
-  useMafiaTargetSelection,
   useYakuzaTargetSelection,
   useDoctorHealSelection,
   useNightActionAuthority,
@@ -168,21 +167,6 @@ export default function ParticipantComponent({
 
   const { healedPlayers } = useGameRoom();
 
-  // Mafia target selection
-  const {
-    isMafiaTargetSelected,
-    shouldShowMafiaTargetIndicator,
-    canShowMafiaKillButton,
-  } = useMafiaTargetSelection(
-    gameSessionState,
-    player.seatNumber ?? null,
-    isViewerHost,
-    isTargetHost,
-    player.isAlive !== false,
-    hasMafiaKillAuthority,
-    isMafiaPhase,
-  );
-
   // Yakuza target selection
   const {
     isYakuzaTargetSelected,
@@ -327,14 +311,16 @@ export default function ParticipantComponent({
         startFoulSpeak={startFoulSpeak}
       />
 
-      {/* Night action buttons (Mafia kill, Yakuza kill, Doctor heal, Don's
-          Right Hand promotion) */}
+      {/* Night action buttons (Mafia kill — variant-dispatched inside —, Yakuza
+          kill, Doctor heal, Don's Right Hand promotion) */}
       <NightActionButtons
         seatNumber={player.seatNumber ?? null}
         targetPlayerId={player.playerId ?? null}
-        canShowMafiaKillButton={canShowMafiaKillButton}
-        isMafiaTargetSelected={isMafiaTargetSelected}
-        shouldShowMafiaTargetIndicator={shouldShowMafiaTargetIndicator}
+        isViewerHost={isViewerHost}
+        isTargetHost={isTargetHost}
+        isPlayerAlive={player.isAlive !== false}
+        hasMafiaKillAuthority={hasMafiaKillAuthority}
+        isMafiaPhase={isMafiaPhase}
         canShowYakuzaKillButton={canShowYakuzaKillButton}
         isYakuzaTargetSelected={isYakuzaTargetSelected}
         shouldShowYakuzaTargetIndicator={shouldShowYakuzaTargetIndicator}

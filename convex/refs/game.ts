@@ -24,6 +24,7 @@ type GameSessionDoc = {
   _creationTime: number;
   gameId: Id<"games">;
   gamePhase: string;
+  nextPhase?: string;
   isFinished: boolean;
   currentNightNumber: number;
   currentSpeakerIndex?: number;
@@ -43,6 +44,10 @@ type NightPhaseSessionDoc = {
   mafiaTarget?: number;
   yakuzaTarget?: number;
   healedPlayer?: number;
+  // Sports unanimous-vote window (§5). `mafiaTargetSelections` is intentionally
+  // omitted from the client shape — it is private per mafia (§5.4).
+  mafiaTargetWindowActive?: boolean;
+  mafiaTargetWindowStartedAt?: string;
 } | null;
 
 type VotingSessionDoc = {
@@ -85,7 +90,7 @@ type DoctorAuthorityCheck = AuthorityCheck & {
   healedPlayers: number[];
 };
 
-type GameType = "traditional" | "city_mafia" | "japanese_mafia";
+type GameType = "sports_mafia" | "city_mafia" | "japanese_mafia";
 type GameStatus = "not_started" | "playing" | "finished";
 
 type GameWithRelations = {
@@ -114,6 +119,7 @@ type GameWithRelations = {
 
 type GameSessionUpdates = {
   gamePhase?: string;
+  nextPhase?: string | null;
   isFinished?: boolean;
   currentNightNumber?: number;
   currentSpeakerIndex?: number | null;
@@ -306,6 +312,37 @@ export const nightPhase = {
 };
 
 // ============================================================================
+// SPORTS NIGHT PHASE (unanimous-vote kill model — docs/sports-mafia.md §5)
+// ============================================================================
+
+export const sportsNightPhase = {
+  /** Host opens the 5s mafia kill-selection window (during mafia_chooses_target). */
+  startMafiaTargetWindow: makeFunctionReference<
+    "mutation",
+    { gameId: Id<"games"> },
+    null
+  >("game/sportsNightPhase:startMafiaTargetWindow"),
+  /** Living mafia privately picks one target (last-write-wins, in-window). */
+  selectMafiaTarget: makeFunctionReference<
+    "mutation",
+    { gameId: Id<"games">; targetSeatNumber: number },
+    null
+  >("game/sportsNightPhase:selectMafiaTarget"),
+  /** The caller's OWN pick only (never other mafia's) — §5.4. */
+  getMySelection: makeFunctionReference<
+    "query",
+    { gameId: Id<"games"> },
+    number | null
+  >("game/sportsNightPhase:getMySelection"),
+  /** Host-only: EVERY living mafia's pick (the host night-actions summary). */
+  getHostSelections: makeFunctionReference<
+    "query",
+    { gameId: Id<"games"> },
+    { mafiaSeat: number; targetSeat: number | null }[]
+  >("game/sportsNightPhase:getHostSelections"),
+};
+
+// ============================================================================
 // VOTING
 // ============================================================================
 
@@ -399,9 +436,6 @@ export const dayPhase = {
   ),
   finishCurrentSpeaker: makeFunctionReference<"mutation", { gameId: Id<"games"> }, null>(
     "game/dayPhase:finishCurrentSpeaker",
-  ),
-  resetSpeakingState: makeFunctionReference<"mutation", { gameId: Id<"games"> }, null>(
-    "game/dayPhase:resetSpeakingState",
   ),
   nominatePlayer: makeFunctionReference<
     "mutation",

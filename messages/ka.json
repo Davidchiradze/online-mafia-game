@@ -86,6 +86,7 @@
           },
           "game": {
             "force_end": "იძულებით დაასრულა თამაში",
+            "annul": "გააუქმა თამაში",
             "refund": "გასცა თანხის დაბრუნება"
           }
         }
@@ -112,6 +113,8 @@
       "subActive": "აქტიური",
       "subExpired": "ვადაგასული",
       "subNone": "არ აქვს",
+      "subUntil": "{date}-მდე",
+      "subEndedOn": "დასრულდა {date}",
       "filter": "ფილტრი",
       "filterAll": "ყველა მომხმარებელი",
       "filterAdmins": "მხოლოდ ადმინები",
@@ -144,7 +147,7 @@
       "endedDone": "თამაში დასრულდა"
     },
     "gameType": {
-      "traditional": "ტრადიციული",
+      "sports_mafia": "სპორტული მაფია",
       "city_mafia": "ქალაქის მაფია",
       "japanese_mafia": "იაპონური"
     },
@@ -166,6 +169,10 @@
       "dead": "მკვდარი",
       "noWinner": "გამარჯვებულის გარეშე",
       "filterAll": "ყველა რეჟიმი",
+      "actions": "თამაშის მოქმედებები",
+      "annul": "თამაშის გაუქმება",
+      "annulConfirm": "გავაუქმო ეს თამაში და მოვნიშნო ჩაუთვლელად? ამ თამაშიდან ყველა მოთამაშის ELO დაბრუნდება და მათი სტატისტიკა თავიდან გამოითვლება. ამის გაუქმება ვეღარ მოხერხდება.",
+      "annulDone": "თამაში გაუქმდა — ELO დაკორექტირდა",
       "faction": {
         "mafia": "მაფია",
         "yakuza": "იაკუძა",
@@ -261,6 +268,7 @@
     "matchHistory": "მატჩების ისტორია",
     "leaderboard": "ლიდერბორდი",
     "subscriptions": "გამოწერები",
+    "bookSpace": "დაჯავშნე სივრცეში",
     "logout": "გასვლა"
   },
   "subscriptions": {
@@ -280,14 +288,15 @@
     },
     "upsellModal": {
       "badge": "პრემიუმ წვდომა",
-      "title": "გახსენი",
-      "titleHighlight": "სრული თამაში",
-      "body": "თქვენ არ გაქვთ აქტიური გამოწერა. გამოიწერეთ, რომ შექმნათ და შეუერთდეთ თამაშებს, უყუროთ ცოცხალ მატჩებს და სხვა.",
+      "title": "ითამაშე",
+      "titleHighlight": "შეზღუდვების გარეშე",
+      "body": "ახალი მოთამაშეებისთვის პირველი დღე უფასოა, შეიძინეთ უფასო, ან ფასიანი პაკეტი და გაერთეთ ჩვენთან ერთად.",
       "cta": "პაკეტების ნახვა",
       "dismiss": "შემდეგ"
     },
     "yourPackage": "შენი პაკეტი",
     "owned": "ნაყიდი გაქვს",
+    "hasActiveSubscription": "აქტიური გამოწერა გაქვს",
     "footerNote": "აქტიური გამოწერის ვადის გასვლის შემდეგ შეგიძლიათ ახალი პაკეტის შეძენა. ონლაინ თამაში —",
     "footerLink": "online.mafia.ge",
     "features": {
@@ -296,6 +305,11 @@
       "noAutoPayments": "ავტომატური გადახდების გარეშე"
     },
     "packages": {
+      "daily": {
+        "title": "1 დღე",
+        "period": "/ 1 დღე",
+        "button": "შეძენა"
+      },
       "basic": {
         "label": "ბაზისური",
         "badge": "-100%",
@@ -308,14 +322,14 @@
         "badge": "მალე",
         "title": "სტანდარტული — 2 კვირა",
         "period": "/ 14 დღე",
-        "button": "მალე იქნება ხელმისაწვდომი"
+        "button": "შეძენა"
       },
       "premium": {
         "label": "პრემიუმი",
         "badge": "მალე",
         "title": "პრემიუმი — 1 თვე",
         "period": "/ 30 დღე",
-        "button": "მალე იქნება ხელმისაწვდომი"
+        "button": "შეძენა"
       }
     }
   },
@@ -375,12 +389,34 @@
     "rosterUnavailable": "სია მიუწვდომელია.",
     "you": "(შენ)",
     "alive": "ცოცხალი",
-    "dead": "მკვდარი"
+    "dead": "მკვდარი",
+    "eloRating": "ELO რეიტინგი",
+    "levelTooltip": "{elo} ELO — ლეველი {level}",
+    "toNextLevel": "{points} ელო {level} ლეველამდე",
+    "tableAvgTooltip": "მაგიდის საშუალო: {avg}",
+    "tableAvgLabel": "მაგიდის საშ."
+  },
+  "leaderboard": {
+    "pageTitle": "ლიდერბორდი",
+    "pageSubtitle": "საუკეთესო მოთამაშეები ELO რეიტინგით. მოიგე ძლიერ მაგიდებთან, რომ უფრო სწრაფად აიწიო.",
+    "loading": "ლიდერბორდი იტვირთება…",
+    "empty": "რეიტინგული მოთამაშეები ჯერ არ არიან. დაასრულე თამაში პირველი ადგილის დასაკავებლად.",
+    "record": "{wins}მ / {losses}წ",
+    "level": "ლეველი {level}",
+    "peak": "პიკი {elo}",
+    "levelTooltip": "{elo} ELO — ლეველი {level}",
+    "toNextLevel": "{points} ქულა {level} ლეველამდე",
+    "statWinRate": "მოგების %",
+    "statMatches": "პარტიები",
+    "statBestStreak": "საუკეთესო სერია",
+    "onStreak": "{count} მოგება ზედიზედ",
+    "topRole": "საუკეთესო როლი",
+    "you": "შენ"
   },
   "game": {
     "gameTypes": {
-      "traditional": "ტრადიციული",
-      "city_mafia": "ქალაქის მაფია",
+      "sports_mafia": "სპორტული",
+      "city_mafia": "ქალაქური",
       "japanese_mafia": "იაპონური"
     },
     "phaseTitle": {
@@ -388,7 +424,8 @@
       "dayLabel": "დღე{night} — {label}",
       "speaking": "#{seat} საუბრობს",
       "nextSpeaker": "შემდეგი მოსაუბრე: #{seat}",
-      "nominated": "დასახელებული: {list}"
+      "nominated": "დასახელებული: {list}",
+      "nextPhase": "შემდეგი: {label}"
     },
     "ready": "მზადაა",
     "revealRole": "როლის ჩვენება",
@@ -414,6 +451,7 @@
       "introduction_phase": "გაცნობის წრე",
       "night_phase": "ღამის ფაზა",
       "mafia_chooses_target": "მაფია ირჩევს სამიზნეს",
+      "mafia_meets_first_night": "მაფია ხვდება და გეგმავს",
       "don_checks_for_detective": "დონი ამოწმებს დეტექტივს",
       "right_hand_checks_for_yakuza": "მარჯვენა ხელი ამოწმებს იაკუძას",
       "yakuza_and_shogun_chooses_target": "იაკუძა და შოგუნი ირჩევს სამიზნეს",
@@ -424,7 +462,8 @@
       "nominated_players_speak": "თავის მართლება",
       "voting": "კენჭისყრა",
       "repeat": "შემდეგი რაუნდი",
-      "end_game": "თამაში დასრულდა"
+      "end_game": "თამაში დასრულდა",
+      "phase_transition": "ყველას სძინავს"
     },
     "killConfirmTitle": "მოთამაშის მოკვლა",
     "killConfirmBody": "დარწმუნებული ხართ, რომ გსურთ მოკლათ მოთამაშე {seatNumber}? ეს მოქმედება შეუქცევადია.",
@@ -517,6 +556,8 @@
       "readyLabel": "მზადაა",
       "noPlayersYet": "მაგიდა ცარიელია",
       "startMafiaPhase": "მაფიის შეხვედრა",
+      "openMafiaTargetWindow": "მკვლელობის ფანჯრის გახსნა (5წმ)",
+      "mafiaChoosing": "მაფია ირჩევს…",
       "startNight": "ღამის დაწყება",
       "playerEliminatedByFoulsTitle": "მოთამაშე ფოლებით გარიცხულია",
       "noVotingThisRound": "ამ რაუნდში კენჭისყრა არ ჩატარდება",
@@ -549,6 +590,7 @@
       "colMode": "რეჟიმი",
       "colPlayers": "მოთამაშეები",
       "colSpectators": "მაყურებლები",
+      "colAvgElo": "საშ. ELO",
       "colStatus": "სტატუსი",
       "colAction": "მოქმედება",
       "noRoomsFound": "ოთახები ვერ მოიძებნა"
@@ -566,10 +608,12 @@
       "join": "შესვლა",
       "joinGame": "თამაშში შესვლა",
       "spectatorsTooltipTitle": "მაყურებლები ({count})",
-      "playersTooltipTitle": "მოთამაშეები ({count}/{max})"
+      "playersTooltipTitle": "მოთამაშეები ({count}/{max})",
+      "tableAvgEloTooltip": "მაგიდის საშუალო ELO: {avg}"
     },
     "header": {
       "spectating": "მაყურებელი",
+      "tableAvgElo": "მაგიდის საშუალო ELO: {avg}",
       "viewSpectators": "მაყურებლების ნახვა",
       "manageJoinRequests": "შესვლის მოთხოვნების მართვა",
       "joinRequests": "შესვლის მოთხოვნები",

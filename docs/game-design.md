@@ -8,9 +8,11 @@ This is a **Japanese Mafia** game variant with 12 players. The game follows a st
 
 Currently supported:
 
-- `traditional` - 10 players
-- `city_mafia` - 12 players
-- `japanese_mafia` - 12 players (primary variant)
+- `japanese_mafia` - 12 players (**only fully implemented variant** — everything
+  in this document describes it)
+- `sports_mafia` - 10 players (**planned** — see [sports-mafia.md](./sports-mafia.md)
+  and [game-types.md](./game-types.md); renamed from the legacy `traditional`)
+- `city_mafia` - 12 players (reserved; not implemented)
 
 ## Roles (Japanese Mafia - 12 Players)
 
@@ -66,13 +68,13 @@ Visibility rules determine who can see whom during each phase. See `src/lib/game
 
 Participant tiles are driven by a single `VisibilityState` enum:
 
-| State | Meaning |
-|---|---|
-| `VISIBLE` | Full video shown |
-| `DIMMED` | Video with blur overlay -- host or awake role viewing sleeping players |
-| `COVERED` | Video replaced with sleeping cover -- player cannot see this target |
-| `DEAD` | Permanent dead overlay |
-| `DISCONNECTED` | No video track / connection lost |
+| State          | Meaning                                                                |
+| -------------- | ---------------------------------------------------------------------- |
+| `VISIBLE`      | Full video shown                                                       |
+| `DIMMED`       | Video with blur overlay -- host or awake role viewing sleeping players |
+| `COVERED`      | Video replaced with sleeping cover -- player cannot see this target    |
+| `DEAD`         | Permanent dead overlay                                                 |
+| `DISCONNECTED` | No video track / connection lost                                       |
 
 The primary function is `getVisibilityStateWithDeath()` which accounts for game phase, roles, alive status, and game-finished state. See `src/lib/game/visibility.ts` for the full implementation.
 
@@ -140,7 +142,7 @@ The primary function is `getVisibilityStateWithDeath()` which accounts for game 
 - `name` - Game name
 - `hostId` - Reference to `profiles` table
 - `gameStatus` - `"not_started"` | `"playing"` | `"finished"`
-- `gameType` - `"traditional"` | `"city_mafia"` | `"japanese_mafia"`
+- `gameType` - `"sports_mafia"` | `"city_mafia"` | `"japanese_mafia"`
 - `maxPlayers` - Maximum players (10 or 12)
 
 ### Game Players Table (`gamePlayers`)

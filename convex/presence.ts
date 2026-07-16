@@ -38,9 +38,14 @@ export const heartbeat = mutation({
 });
 
 /**
- * Live list of users in a room, keyed by the opaque roomToken the hook
- * received from `heartbeat`. Public + cache-shared: do not add per-user reads
- * here or every heartbeat would invalidate the shared subscription cache.
+ * Live list of users in a room, keyed by the opaque roomToken from `heartbeat`.
+ *
+ * NOTE: no client currently subscribes to this. `PresenceBootstrap` heartbeats
+ * write-only (it does not use `@convex-dev/presence`'s `usePresence`, which
+ * would subscribe here on every page for every user — the source of the huge
+ * `presence.list` call volume). The online panels read `listRoom` instead. Kept
+ * for completeness / any future per-room list UI. If you DO subscribe to it,
+ * keep it free of per-user reads so all subscriptions share one cache entry.
  */
 export const list = query({
   args: { roomToken: v.string() },

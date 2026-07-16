@@ -12,10 +12,7 @@
 import { useMemo } from "react";
 import type { TrackReferenceOrPlaceholder } from "@livekit/components-react";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
-import {
-  getVisibilityStateWithDeath,
-  VisibilityState,
-} from "@/lib/game/visibility";
+import { VisibilityState } from "@/lib/game/visibility";
 import type { GamePhase, Role } from "@/lib/game/visibility";
 
 type ConvexGamePlayer = NonNullable<
@@ -50,6 +47,7 @@ export function useParticipantVisibility(
     viewerRole: fetchedViewerRole,
     getRoleForUser,
     hostVisionEnabled,
+    ruleset,
   } = useGameRoom();
 
   // A staff spectator with host-POV reveal on sees video exactly like the host
@@ -96,7 +94,7 @@ export function useParticipantVisibility(
   const isGameFinished = Boolean(gameSessionState?.isFinished);
 
   const visibilityState = useMemo(() => {
-    return getVisibilityStateWithDeath(
+    return ruleset.visibility.getVisibilityStateWithDeath(
       viewerRole,
       targetRole,
       gamePhase,
@@ -106,7 +104,7 @@ export function useParticipantVisibility(
       targetIsAlive,
       isGameFinished
     );
-  }, [viewerRole, targetRole, gamePhase, isViewerHost, isTargetHost, viewerIsAlive, targetIsAlive, isGameFinished]);
+  }, [ruleset, viewerRole, targetRole, gamePhase, isViewerHost, isTargetHost, viewerIsAlive, targetIsAlive, isGameFinished]);
 
   return {
     visibilityState,

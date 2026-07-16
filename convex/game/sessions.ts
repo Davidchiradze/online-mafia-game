@@ -9,11 +9,8 @@ import {
   getPlayersByGameId,
   archiveGameLog,
 } from "../lib/games";
-import {
-  GAME_PHASES,
-  JAPANESE_MAFIA_ROLE_DISTRIBUTION,
-  GAME_CLEANUP,
-} from "../lib/constants";
+import { getGameDefinition } from "../games/registry";
+import { GAME_CLEANUP } from "../lib/constants";
 
 const removeGameInternal = makeFunctionReference<
   "mutation",
@@ -46,7 +43,7 @@ export const create = mutation({
 
     return await ctx.db.insert("gameSessions", {
       gameId,
-      gamePhase: GAME_PHASES[0],
+      gamePhase: "game_session_started",
       isFinished: false,
       currentNightNumber: 0,
       nominatedPlayers: [],
@@ -60,6 +57,7 @@ export const update = mutation({
     sessionId: v.id("gameSessions"),
     updates: v.object({
       gamePhase: v.optional(v.string()),
+      nextPhase: v.optional(v.union(v.string(), v.null())),
       isFinished: v.optional(v.boolean()),
       currentNightNumber: v.optional(v.number()),
       currentSpeakerIndex: v.optional(v.union(v.number(), v.null())),
@@ -168,7 +166,7 @@ export const startGame = mutation({
 
     return await ctx.db.insert("gameSessions", {
       gameId,
-      gamePhase: GAME_PHASES[0],
+      gamePhase: "game_session_started",
       isFinished: false,
       currentNightNumber: 0,
       nominatedPlayers: [],
@@ -196,7 +194,8 @@ export const assignRandomRoles = mutation({
       (p) => p.seatNumber !== undefined && p.seatNumber !== hostSeat,
     );
 
-    const roles = [...JAPANESE_MAFIA_ROLE_DISTRIBUTION];
+    // Deck comes from THIS variant's definition (never hardcode Japanese).
+    const roles = [...getGameDefinition(game.gameType).roleDistribution];
     // Fisher-Yates shuffle
     for (let i = roles.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));

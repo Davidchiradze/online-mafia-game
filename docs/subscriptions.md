@@ -36,26 +36,29 @@ one-line edit to the map and nothing else moves.
 ```ts
 // convex/lib/entitlements.ts
 
-// Tiers = the PHP `subscription.packageId` values.
-export const SUBSCRIPTION_TIERS = [1, 2, 3] as const; // Basic / Standard / Premium
+// Tiers = the PHP `subscription.packageId` values. Ordered so premium (3) stays
+// last — HIGHEST_TIER (staff override) is the last element, so daily (4), the
+// lowest tier, is listed first despite its numeric value.
+export const SUBSCRIPTION_TIERS = [4, 1, 2, 3] as const; // Daily / Basic / Standard / Premium
 
 export const FEATURES = {
   PLAY_GAME:     "game.play",     // create or join a game as a player
   SPECTATE_GAME: "game.spectate", // watch a game as a spectator
 } as const;
 
-// Today all three tiers unlock the same set. Future divergence happens HERE only.
+// Today all four tiers unlock the same set. Future divergence happens HERE only.
 export const TIER_FEATURES: Record<SubscriptionTier, readonly Feature[]> = {
+  4: ALL_FEATURES,
   1: ALL_FEATURES,
   2: ALL_FEATURES,
   3: ALL_FEATURES,
 };
 ```
 
-| Feature | tier 1 | tier 2 | tier 3 | no sub | moderator/admin |
-|---|:--:|:--:|:--:|:--:|:--:|
-| `game.play` | ✅ | ✅ | ✅ | — | ✅ |
-| `game.spectate` | ✅ | ✅ | ✅ | — | ✅ |
+| Feature | tier 4 | tier 1 | tier 2 | tier 3 | no sub | moderator/admin |
+|---|:--:|:--:|:--:|:--:|:--:|:--:|
+| `game.play` | ✅ | ✅ | ✅ | ✅ | — | ✅ |
+| `game.spectate` | ✅ | ✅ | ✅ | ✅ | — | ✅ |
 
 ## Single source of truth — `convex/lib/entitlements.ts`
 
@@ -88,6 +91,15 @@ A subscription is treated as active iff `subscription.active === true`. We do
 **not** re-compute validity from the `to` date — the PHP-computed `active` flag
 is authoritative. Trade-off: a subscription that expires *between* page loads
 stays active in Convex until the next sync. `from`/`to` are display-only.
+
+**Exception — reporting/analytics.** The stale-`active` trade-off is fine for
+*access* (a user must load a page to play, which re-syncs), but it inflates
+*counts*: a user who never returns keeps `active === true` forever after their
+`to` date passes. So admin **analytics** count subscribers by the `to` date
+instead, via `isSubscriptionActiveByDate(subscription, now)` — when a parseable
+`to` exists it alone decides (future ⇒ active), else it falls back to the flag.
+This resolver is **reporting-only**; access gating still uses `hasFeature` /
+`isSubscriptionActive`.
 
 ### Staff override
 

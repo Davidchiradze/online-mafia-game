@@ -26,27 +26,62 @@ export default function PlayerCircle({
   userId: string;
   maxPlayers?: number;
 }) {
-  const { players, gameSessionState, isHost } = useGameRoom();
+  const { players, gameSessionState, isHost, ruleset } = useGameRoom();
+  const { seatLayout } = ruleset;
+  const gridPositionForSeat = seatLayout.positionForSeat;
 
-  const {
-    seatedPlayers,
-    occupiedSeats,
-    trackByPlayerId,
-    hostTrack,
-    gridPositionForSeat,
-  } = useSeatShuffleAnimation({
-    players,
-    tracks,
-    hostUserId,
-    maxPlayers,
-    gameSessionId: gameSessionState?._id ?? null,
-  });
+  const { seatedPlayers, occupiedSeats, trackByPlayerId, hostTrack } =
+    useSeatShuffleAnimation({
+      players,
+      tracks,
+      hostUserId,
+      maxPlayers,
+      gameSessionId: gameSessionState?._id ?? null,
+      gridPositionForSeat,
+    });
 
   const hostSlotKey = maxPlayers + 1;
   const hostPlayer = players.find((p) => p.seatNumber === hostSlotKey);
 
+  const { hostPanel, controlsPanel } = seatLayout;
+  const isSplitCenter = !!hostPanel && !!controlsPanel;
+
+  const hostVideo = (
+    <div className="relative h-full aspect-[4/3] overflow-hidden rounded-xl">
+      {hostPlayer ? (
+        <ParticipantComponent
+          player={hostPlayer}
+          gameId={gameId}
+          hostProfileId={hostUserId}
+          currentProfileId={userId}
+          trackRef={hostTrack}
+          playerIndex={hostSlotKey}
+        />
+      ) : (
+        <EmptySeat seatIndex={hostSlotKey} />
+      )}
+    </div>
+  );
+
+  const controls = isHost ? (
+    <GamePhaseControls />
+  ) : gameSessionState?.isFinished ? (
+    <WinnerBanner gameId={gameId} winner={gameSessionState.winner ?? null} />
+  ) : (
+    <>
+      {gameSessionState && <PhaseTitle gameSessionState={gameSessionState} />}
+      {gameSessionState?.gamePhase === "voting" && <VotingDisplay />}
+    </>
+  );
+
   return (
-    <div className="grid w-full h-full gap-2 md:gap-3 lg:gap-4 grid-cols-4 grid-rows-4">
+    <div
+      className="grid w-full h-full gap-2 md:gap-3 lg:gap-4"
+      style={{
+        gridTemplateColumns: `repeat(${String(seatLayout.cols)}, minmax(0, 1fr))`,
+        gridTemplateRows: `repeat(${String(seatLayout.rows)}, minmax(0, 1fr))`,
+      }}
+    >
       {/* Static seat background layer */}
       {Array.from({ length: maxPlayers }, (_, index) => {
         const seatNumber = index + 1;
@@ -106,45 +141,55 @@ export default function PlayerCircle({
         );
       })}
 
-      {/* Unified 2x2 center panel */}
-      <div className="center-panel rounded-2xl border flex flex-col-reverse overflow-hidden col-start-2 col-end-4 row-start-2 row-end-4">
-        {/* Host video */}
-        <div className="h-1/2 border-b border-white/10 flex items-center justify-center">
-          <div className="relative h-full aspect-[4/3] overflow-hidden rounded-xl">
-            {hostPlayer ? (
-              <ParticipantComponent
-                player={hostPlayer}
-                gameId={gameId}
-                hostProfileId={hostUserId}
-                currentProfileId={userId}
-                trackRef={hostTrack}
-                playerIndex={hostSlotKey}
-              />
-            ) : (
-              <EmptySeat seatIndex={hostSlotKey} />
-            )}
+      {isSplitCenter ? (
+        <>
+          {/* Split center — host video cell */}
+          <div
+            className="center-panel rounded-2xl border overflow-hidden flex items-center justify-center"
+            style={spanStyle(hostPanel)}
+          >
+            {hostVideo}
+          </div>
+
+          {/* Split center — host controls / voting cell */}
+          <div
+            className="center-panel rounded-2xl border overflow-hidden flex flex-col items-center justify-center gap-2 p-3"
+            style={spanStyle(controlsPanel)}
+          >
+            {controls}
+          </div>
+        </>
+      ) : (
+        /* Merged center panel (host video + host controls stacked) */
+        <div
+          className="center-panel rounded-2xl border flex flex-col-reverse overflow-hidden"
+          style={spanStyle(seatLayout.center)}
+        >
+          {/* Host video */}
+          <div className="h-1/2 border-b border-white/10 flex items-center justify-center">
+            {hostVideo}
+          </div>
+
+          {/* Controls */}
+          <div className="h-1/2 flex flex-col items-center justify-center gap-2 p-3 overflow-y-auto">
+            {controls}
           </div>
         </div>
-
-        {/* Controls */}
-        <div className="h-1/2 flex flex-col items-center justify-center gap-2 p-3 overflow-y-auto">
-          {isHost ? (
-            <GamePhaseControls />
-          ) : gameSessionState?.isFinished ? (
-            <WinnerBanner
-              gameId={gameId}
-              winner={gameSessionState.winner ?? null}
-            />
-          ) : (
-            <>
-              {gameSessionState && (
-                <PhaseTitle gameSessionState={gameSessionState} />
-              )}
-              {gameSessionState?.gamePhase === "voting" && <VotingDisplay />}
-            </>
-          )}
-        </div>
-      </div>
+      )}
     </div>
   );
+}
+
+function spanStyle(span: {
+  colStart: number;
+  colEnd: number;
+  rowStart: number;
+  rowEnd: number;
+}) {
+  return {
+    gridColumnStart: span.colStart,
+    gridColumnEnd: span.colEnd,
+    gridRowStart: span.rowStart,
+    gridRowEnd: span.rowEnd,
+  };
 }

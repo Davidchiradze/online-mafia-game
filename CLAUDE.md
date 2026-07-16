@@ -7,8 +7,10 @@
 - **`/docs/README.md`** — Entry point (start here)
 - **`/docs/architecture.md`** — Stack, boundaries, data flow
 - **`/docs/realtime.md`** — Convex reactive queries (real-time)
-- **`/docs/game-design.md`** — Mafia rules, phases, role visibility
+- **`/docs/game-design.md`** — Mafia rules, phases, role visibility (Japanese variant)
 - **`/docs/game-end-conditions.md`** — Auto win-detection rules
+- **`/docs/game-types.md`** — Multi-variant architecture (`GameDefinition` registry, shared-core vs per-variant split, refactor plan)
+- **`/docs/sports-mafia.md`** — Sports Mafia ruleset spec (10 players, 2 factions) as a diff from Japanese
 - **`/docs/frontend.md`** — React / UI conventions
 - **`/docs/backend.md`** — Server patterns
 - **`/docs/authorization.md`** — Access roles (admin/moderator), permissions, `/admin` gating
@@ -16,7 +18,9 @@
 - **`/docs/community-chat.md`** — Global community chat channel + online sidebar (subscription-gated, soft-delete moderation, daily prune)
 - **`/docs/game-broadcasts.md`** — Per-game notification channel (staff broadcasts + reusable system pushes) as one-time toasts to players + spectators
 - **`/docs/admin-dashboard.md`** — Admin panel routes + analytics dashboard (KPIs, leaderboards, charts, presence)
+- **`/docs/ranking-system.md`** — Player ELO rating + FACEIT-style Levels 1–10 (faction-calibrated payouts, level badges, leaderboards, backfill)
 - **`/docs/server-time.md`** — Server-corrected client clock for timers
+- **`/docs/testing.md`** — Vitest setup, pure-logic unit tests, CI, refactor regression oracle
 - **`/docs/decisions.md`** — Architectural decisions (ADR)
 - **`/docs/livekit-server.md`** — Self-hosted LiveKit VPS setup
 
@@ -66,9 +70,28 @@
 - Redux / Zustand (Convex reactive queries are the state)
 - Socket.IO / Redis / custom WebRTC (use LiveKit)
 
+## Testing
+
+- **Vitest** (`npm test`, watch: `npm run test:watch`). Two tiers:
+  - **Unit** — pure logic (win conditions, visibility, speaking order,
+    role→faction, phases, role display, transition-graph spec) in `tests/`
+    (`node` env).
+  - **Integration** — DB-coupled engine (night authority, kill resolution, phase
+    transitions + win check, role deal, promotion) via `convex-test` in
+    `convex/tests/gameEngine.test.ts` (`edge-runtime` env; `*.test.ts` is ignored
+    by the Convex bundler). See `/docs/testing.md` for conventions.
+- These are **characterization tests**: they pin current behavior and act as the
+  **regression oracle** for the game-types refactor. When moving modules, change
+  only import paths — never the assertions (a forced change = a real regression).
+- **CI** (`.github/workflows/tests.yml`) runs `npm run typecheck` + `npm test`
+  on every push and PR. A local **pre-push** hook (`.githooks/pre-push`, wired by
+  the `prepare` script) runs the same gate before a push; bypass with
+  `git push --no-verify`.
+
 ## Before Implementing
 
 1. Read the relevant `/docs` file
 2. Check existing patterns in similar features
 3. Use `Doc<"tableName">` types — don't invent new ones
 4. Run `npx tsc` after changes to catch type errors
+5. Run `npm test`; add/adjust unit tests when changing pure game logic

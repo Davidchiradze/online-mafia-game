@@ -9,11 +9,8 @@ import type { Doc, Id } from "../_generated/dataModel";
 import { getAuthenticatedUser } from "../lib/auth";
 import { assertIsHost, getPlayersByGameId } from "../lib/games";
 import { cardPicking as cardPickingRefs } from "../refs/game";
-import {
-  CARD_PICK,
-  GAME_PHASES,
-  JAPANESE_MAFIA_ROLE_DISTRIBUTION,
-} from "../lib/constants";
+import { getGameDefinition } from "../games/registry";
+import { CARD_PICK, GAME_PHASES } from "../lib/constants";
 
 // ============================================================================
 // HELPERS
@@ -134,8 +131,9 @@ async function applyCardClaim(
  *      and is filtered out by the seat range check. Players without seats
  *      (joined after start) are also filtered out.
  *   2. Build a shuffled deck of N cards (N = pickOrder.length) drawn from
- *      JAPANESE_MAFIA_ROLE_DISTRIBUTION. For full lobbies (N == 12) every
- *      role is dealt; for smaller lobbies a random subset of size N is dealt
+ *      the variant's `roleDistribution` (resolved via `getGameDefinition`).
+ *      For a full lobby (N == the deck length: 12 Japanese, 10 Sports) every
+ *      role is dealt; for a smaller lobby a random subset of size N is dealt
  *      (matches the legacy `assignRandomRoles` semantics).
  *   3. Insert the cardPickingSessions row with `currentTurnStartedAt = now`.
  *   4. Set gameSessions.gamePhase = "picking_roles".
@@ -174,18 +172,18 @@ export const start = mutation({
     if (seatedPlayers.length === 0) {
       throw new ConvexError("No seated players to deal cards to");
     }
-    if (seatedPlayers.length > JAPANESE_MAFIA_ROLE_DISTRIBUTION.length) {
+    // Deal from THIS variant's deck (Japanese 12, Sports 10) — never hardcode
+    // the Japanese distribution, or a Sports game would deal SHOGUN/DOCTOR/etc.
+    const roleDistribution = getGameDefinition(game.gameType).roleDistribution;
+    if (seatedPlayers.length > roleDistribution.length) {
       throw new ConvexError(
-        `Too many seated players (${seatedPlayers.length}); deck only supports up to ${JAPANESE_MAFIA_ROLE_DISTRIBUTION.length}`,
+        `Too many seated players (${seatedPlayers.length}); deck only supports up to ${roleDistribution.length}`,
       );
     }
 
     const pickOrder = seatedPlayers.map((p) => p.seatNumber);
 
-    const shuffledRoles = shuffle(JAPANESE_MAFIA_ROLE_DISTRIBUTION).slice(
-      0,
-      pickOrder.length,
-    );
+    const shuffledRoles = shuffle(roleDistribution).slice(0, pickOrder.length);
     const deck = shuffledRoles.map((role, index) => ({
       cardId: `card_${index + 1}`,
       role,

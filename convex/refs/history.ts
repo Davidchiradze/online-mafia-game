@@ -4,7 +4,7 @@ import type { Id } from "../_generated/dataModel";
 
 type Faction = "mafia" | "yakuza" | "citizens";
 type Outcome = "win" | "loss" | "no_contest";
-type GameType = "traditional" | "city_mafia" | "japanese_mafia";
+type GameType = "sports_mafia" | "city_mafia" | "japanese_mafia";
 
 export type WinMethod = {
   faction: Faction;
@@ -35,6 +35,9 @@ export type GameLogRow = {
   gameName: string;
   winMethod?: WinMethod;
   winMethodLabel: string | null;
+  ratingDelta?: number;
+  ratingAfter?: number;
+  tableAvgRating?: number;
 };
 
 /** A player inside a full game-log roster. */
@@ -81,6 +84,8 @@ export type PlayerStats = {
   winRate: number;
   currentStreak: number;
   bestStreak: number;
+  rating: number;
+  peakRating: number;
   roleStats: RoleStat[];
 };
 

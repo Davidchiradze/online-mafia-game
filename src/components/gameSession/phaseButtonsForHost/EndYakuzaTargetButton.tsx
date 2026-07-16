@@ -5,7 +5,7 @@ import { useMutation } from "convex/react";
 import { gameSessions } from "@convex/refs/game";
 import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
-import { GAME_PHASES } from "@/lib/constants/game";
+import { advanceUpdates } from "@/game/japanese/phaseFlow";
 import PhaseButton from "@/components/ui/PhaseButton";
 import { useNightPhaseReadiness } from "@/hooks/game/useNightPhaseReadiness";
 
@@ -30,9 +30,7 @@ const EndYakuzaTargetButton = ({
     try {
       await updateSession({
         sessionId: gameSessionState._id,
-        updates: {
-          gamePhase: GAME_PHASES[13], // "detective_checks_for_mafia"
-        },
+        updates: advanceUpdates("yakuza_and_shogun_chooses_target"),
       });
     } finally {
       setIsLoading(false);

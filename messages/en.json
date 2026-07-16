@@ -86,6 +86,7 @@
           },
           "game": {
             "force_end": "force-ended a game",
+            "annul": "annulled a game",
             "refund": "issued a refund"
           }
         }
@@ -112,6 +113,8 @@
       "subActive": "Active",
       "subExpired": "Expired",
       "subNone": "None",
+      "subUntil": "Until {date}",
+      "subEndedOn": "Ended {date}",
       "filter": "Filter",
       "filterAll": "All users",
       "filterAdmins": "Admins only",
@@ -144,7 +147,7 @@
       "endedDone": "Game ended"
     },
     "gameType": {
-      "traditional": "Traditional",
+      "sports_mafia": "Sports Mafia",
       "city_mafia": "City Mafia",
       "japanese_mafia": "Japanese"
     },
@@ -166,6 +169,10 @@
       "dead": "Dead",
       "noWinner": "No winner",
       "filterAll": "All modes",
+      "actions": "Game actions",
+      "annul": "Annul game",
+      "annulConfirm": "Annul this game and mark it as No Contest? Every player's ELO from this game will be reversed and their stats recalculated. This cannot be undone.",
+      "annulDone": "Game annulled — ELO adjusted",
       "faction": {
         "mafia": "Mafia",
         "yakuza": "Yakuza",
@@ -261,6 +268,7 @@
     "matchHistory": "Match History",
     "leaderboard": "Leaderboard",
     "subscriptions": "Subscriptions",
+    "bookSpace": "Book a Space",
     "logout": "Logout"
   },
   "subscriptions": {
@@ -288,6 +296,7 @@
     },
     "yourPackage": "Your Package",
     "owned": "Purchased",
+    "hasActiveSubscription": "You have an active subscription",
     "footerNote": "Once your active subscription expires, you can purchase a new package. Online play —",
     "footerLink": "online.mafia.ge",
     "features": {
@@ -296,6 +305,11 @@
       "noAutoPayments": "No automatic payments"
     },
     "packages": {
+      "daily": {
+        "title": "1 Day",
+        "period": "/ 1 day",
+        "button": "Purchase"
+      },
       "basic": {
         "label": "Basic",
         "badge": "-100%",
@@ -308,14 +322,14 @@
         "badge": "Soon",
         "title": "Standard — 2 Weeks",
         "period": "/ 14 days",
-        "button": "Will be available soon"
+        "button": "Purchase"
       },
       "premium": {
         "label": "Premium",
         "badge": "Soon",
         "title": "Premium — 1 Month",
         "period": "/ 30 days",
-        "button": "Will be available soon"
+        "button": "Purchase"
       }
     }
   },
@@ -375,11 +389,33 @@
     "rosterUnavailable": "Roster unavailable.",
     "you": "(You)",
     "alive": "Alive",
-    "dead": "Dead"
+    "dead": "Dead",
+    "eloRating": "ELO Rating",
+    "levelTooltip": "{elo} ELO — Level {level}",
+    "toNextLevel": "{points} to Level {level}",
+    "tableAvgTooltip": "Table average: {avg}",
+    "tableAvgLabel": "Table avg"
+  },
+  "leaderboard": {
+    "pageTitle": "Leaderboard",
+    "pageSubtitle": "Top players ranked by ELO. Win against stronger tables to climb faster.",
+    "loading": "Loading leaderboard…",
+    "empty": "No ranked players yet. Finish a game to claim the first spot.",
+    "record": "{wins}W / {losses}L",
+    "level": "Level {level}",
+    "peak": "Peak {elo}",
+    "levelTooltip": "{elo} ELO — Level {level}",
+    "toNextLevel": "{points} to Level {level}",
+    "statWinRate": "Win Rate",
+    "statMatches": "Matches",
+    "statBestStreak": "Best Streak",
+    "onStreak": "{count} win streak",
+    "topRole": "Top Role",
+    "you": "You"
   },
   "game": {
     "gameTypes": {
-      "traditional": "Traditional",
+      "sports_mafia": "Sports Mafia",
       "city_mafia": "City mafia",
       "japanese_mafia": "Japanese"
     },
@@ -388,7 +424,8 @@
       "dayLabel": "D{night} — {label}",
       "speaking": "#{seat} speaking",
       "nextSpeaker": "Next speaker: #{seat}",
-      "nominated": "Nominated: {list}"
+      "nominated": "Nominated: {list}",
+      "nextPhase": "Next: {label}"
     },
     "ready": "Ready",
     "revealRole": "Reveal role",
@@ -414,6 +451,7 @@
       "introduction_phase": "Introduction",
       "night_phase": "Night Phase",
       "mafia_chooses_target": "Mafia Chooses Target",
+      "mafia_meets_first_night": "Mafia Meets & Plans",
       "don_checks_for_detective": "Don Checks for Detective",
       "right_hand_checks_for_yakuza": "Right Hand Checks for Yakuza",
       "yakuza_and_shogun_chooses_target": "Yakuza & Shogun Choose Target",
@@ -424,7 +462,8 @@
       "nominated_players_speak": "Self-Justification",
       "voting": "Voting",
       "repeat": "Next Round",
-      "end_game": "Game Over"
+      "end_game": "Game Over",
+      "phase_transition": "Everyone is asleep"
     },
     "killConfirmTitle": "Kill Player",
     "killConfirmBody": "Are you sure you want to kill Player {seatNumber}? This action cannot be undone.",
@@ -517,6 +556,8 @@
       "readyLabel": "ready",
       "noPlayersYet": "Room is empty",
       "startMafiaPhase": "Start Mafia Phase",
+      "openMafiaTargetWindow": "Open Kill Window (5s)",
+      "mafiaChoosing": "Mafia choosing…",
       "startNight": "Start Night",
       "playerEliminatedByFoulsTitle": "Player eliminated by fouls",
       "noVotingThisRound": "No voting will occur this round",
@@ -549,6 +590,7 @@
       "colMode": "Mode",
       "colPlayers": "Players",
       "colSpectators": "Spectators",
+      "colAvgElo": "Avg ELO",
       "colStatus": "Status",
       "colAction": "Action",
       "noRoomsFound": "No rooms found"
@@ -566,10 +608,12 @@
       "join": "Join",
       "joinGame": "Join Game",
       "spectatorsTooltipTitle": "Spectators ({count})",
-      "playersTooltipTitle": "Players ({count}/{max})"
+      "playersTooltipTitle": "Players ({count}/{max})",
+      "tableAvgEloTooltip": "Table average ELO: {avg}"
     },
     "header": {
       "spectating": "Spectating",
+      "tableAvgElo": "Table average ELO: {avg}",
       "viewSpectators": "View spectators",
       "manageJoinRequests": "Manage join requests",
       "joinRequests": "Join requests",

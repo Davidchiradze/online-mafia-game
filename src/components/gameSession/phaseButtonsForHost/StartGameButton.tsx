@@ -24,7 +24,7 @@ const LABEL_CLASS = "font-orbitron text-xs font-bold tracking-wider";
  */
 const StartGameButton = () => {
   const t = useTranslations("game.host");
-  const { gameId, players, hostUserId, maxPlayers } = useGameRoom();
+  const { gameId, players, hostUserId, maxPlayers, ruleset } = useGameRoom();
   const startGameMutation = useMutation(gameSessions.startGame);
 
   const [isLoading, setIsLoading] = useState(false);
@@ -67,17 +67,23 @@ const StartGameButton = () => {
           {t("allPlayersReady", { count: totalPlayers })}
         </span>
         <PhaseButton
-          onClick={() => setModalOpen(true)}
+          onClick={() =>
+            ruleset.hasSelfJustification
+              ? setModalOpen(true)
+              : handleConfirmStart(true)
+          }
           isLoading={isLoading}
           label={t("start")}
           variant="success"
         />
-        <StartGameModal
-          open={modalOpen}
-          onClose={() => setModalOpen(false)}
-          onConfirm={handleConfirmStart}
-          isLoading={isLoading}
-        />
+        {ruleset.hasSelfJustification && (
+          <StartGameModal
+            open={modalOpen}
+            onClose={() => setModalOpen(false)}
+            onConfirm={handleConfirmStart}
+            isLoading={isLoading}
+          />
+        )}
       </div>
     );
   }

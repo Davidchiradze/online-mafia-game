@@ -27,16 +27,15 @@ function NavItem({
   const Icon = item.icon;
   const t = useTranslations("nav");
 
-  return (
-    <Link
-      href={item.href}
-      className={cn(
-        "group relative mx-3 flex h-11 items-center rounded-lg px-[14px] transition-all duration-300 ease-in-out",
-        isActive
-          ? "bg-red-900/20 text-white shadow-[inset_0_0_20px_rgba(220,38,38,0.1)]"
-          : "text-gray-400 hover:bg-white/5 hover:text-white",
-      )}
-    >
+  const className = cn(
+    "group relative mx-3 flex h-11 items-center rounded-lg px-[14px] transition-all duration-300 ease-in-out",
+    isActive
+      ? "bg-red-900/20 text-white shadow-[inset_0_0_20px_rgba(220,38,38,0.1)]"
+      : "text-gray-400 hover:bg-white/5 hover:text-white",
+  );
+
+  const content = (
+    <>
       {isActive ? (
         <div className="absolute bottom-0 left-0 top-0 w-1 rounded-r-full bg-red-600 shadow-[0_0_10px_rgba(220,38,38,0.8)]" />
       ) : null}
@@ -58,6 +57,25 @@ function NavItem({
       >
         {t(item.labelKey)}
       </span>
+    </>
+  );
+
+  if (item.external) {
+    return (
+      <a
+        href={item.href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={className}
+      >
+        {content}
+      </a>
+    );
+  }
+
+  return (
+    <Link href={item.href} className={className}>
+      {content}
     </Link>
   );
 }

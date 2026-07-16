@@ -2,7 +2,7 @@ import { defineTable } from "convex/server";
 import { v } from "convex/values";
 
 export const gameType = v.union(
-  v.literal("traditional"),
+  v.literal("sports_mafia"),
   v.literal("city_mafia"),
   v.literal("japanese_mafia"),
 );

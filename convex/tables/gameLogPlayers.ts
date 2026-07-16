@@ -45,6 +45,12 @@ export const gameLogPlayers = defineTable({
   gameType,
   gameName: v.string(),
   winMethod: v.optional(winMethodValidator),
+
+  // ELO snapshot for this game (see /docs/ranking-system.md). Absent when the
+  // game type is unrated or the row predates the ratings backfill.
+  ratingDelta: v.optional(v.number()), // clipped delta actually applied
+  ratingAfter: v.optional(v.number()), // player's rating after this game
+  tableAvgRating: v.optional(v.number()), // rounded table average (T)
 })
   .index("by_playerId", ["playerId"])
   .index("by_playerId_outcome", ["playerId", "outcome"])

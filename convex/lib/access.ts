@@ -66,6 +66,8 @@ export const PERMISSIONS = {
   GAME_REVEAL_ROLES: "game.reveal_roles",
   /** Force-end / cancel a game. */
   GAME_FORCE_END: "game.force_end",
+  /** Annul a finished game: mark it no-contest and reverse every player's ELO. */
+  GAME_ANNUL: "game.annul",
   /** Broadcast a message to everyone in a live game room (players + spectators). */
   GAME_BROADCAST: "game.broadcast",
   /** Issue a balance refund (calls the PHP refund endpoint). */
@@ -93,6 +95,7 @@ export const ROLE_PERMISSIONS: Record<AccessRole, readonly Permission[]> = {
     PERMISSIONS.GAME_FORCE_END,
     PERMISSIONS.GAME_BROADCAST,
     PERMISSIONS.CHAT_MESSAGE_DELETE,
+    PERMISSIONS.GAME_ANNUL,
   ],
   admin: ALL_PERMISSIONS, // full access (incl. GAME_REVEAL_ROLES)
 };

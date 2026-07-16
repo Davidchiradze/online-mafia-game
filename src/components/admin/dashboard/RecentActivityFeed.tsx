@@ -15,6 +15,7 @@ const ACTION_KEYS = new Set([
   "user.ban",
   "user.unban",
   "game.force_end",
+  "game.annul",
   "game.refund",
 ]);
 

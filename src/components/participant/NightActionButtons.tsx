@@ -1,20 +1,23 @@
 "use client";
 
 import type { Id } from "@convex/_generated/dataModel";
-import MafiaKillButton from "@/components/game/MafiaKillButton";
 import YakuzaKillButton from "@/components/game/YakuzaKillButton";
 import DoctorHealButton from "@/components/game/DoctorHealButton";
 import PromoteToRightHandButton from "@/components/game/PromoteToRightHandButton";
-import MafiaTargetIndicator from "./MafiaTargetIndicator";
 import YakuzaTargetIndicator from "./YakuzaTargetIndicator";
 import DoctorHealIndicator from "./DoctorHealIndicator";
+import NightActionWrapper from "./NightActionWrapper";
+import MafiaKillControl from "./MafiaKillControl";
 
 interface NightActionButtonsProps {
   seatNumber: number | null;
   targetPlayerId: Id<"profiles"> | null;
-  canShowMafiaKillButton: boolean;
-  isMafiaTargetSelected: boolean;
-  shouldShowMafiaTargetIndicator: boolean;
+  // Mafia kill inputs — forwarded to the variant-dispatched MafiaKillControl.
+  isViewerHost: boolean;
+  isTargetHost: boolean;
+  isPlayerAlive: boolean;
+  hasMafiaKillAuthority: boolean;
+  isMafiaPhase: boolean;
   canShowYakuzaKillButton: boolean;
   isYakuzaTargetSelected: boolean;
   shouldShowYakuzaTargetIndicator: boolean;
@@ -24,12 +27,20 @@ interface NightActionButtonsProps {
   canShowPromoteRightHandButton: boolean;
 }
 
+/**
+ * Yakuza kill, Doctor heal, and Don's-right-hand promotion controls for a tile.
+ * The MAFIA kill is handled separately by `MafiaKillControl` (variant-dispatched
+ * via the ruleset); yakuza/doctor/right-hand are Japanese-only, so they stay
+ * here as plain flag-driven buttons.
+ */
 export default function NightActionButtons({
   seatNumber,
   targetPlayerId,
-  canShowMafiaKillButton,
-  isMafiaTargetSelected,
-  shouldShowMafiaTargetIndicator,
+  isViewerHost,
+  isTargetHost,
+  isPlayerAlive,
+  hasMafiaKillAuthority,
+  isMafiaPhase,
   canShowYakuzaKillButton,
   isYakuzaTargetSelected,
   shouldShowYakuzaTargetIndicator,
@@ -42,18 +53,14 @@ export default function NightActionButtons({
 
   return (
     <>
-      {canShowMafiaKillButton && (
-        <NightActionWrapper isSelected={isMafiaTargetSelected}>
-          <MafiaKillButton
-            seatNumber={seatNumber}
-            isSelected={isMafiaTargetSelected}
-          />
-        </NightActionWrapper>
-      )}
-
-      {shouldShowMafiaTargetIndicator && !canShowMafiaKillButton && (
-        <MafiaTargetIndicator />
-      )}
+      <MafiaKillControl
+        seatNumber={seatNumber}
+        isViewerHost={isViewerHost}
+        isTargetHost={isTargetHost}
+        isPlayerAlive={isPlayerAlive}
+        hasMafiaKillAuthority={hasMafiaKillAuthority}
+        isMafiaPhase={isMafiaPhase}
+      />
 
       {canShowYakuzaKillButton && (
         <NightActionWrapper isSelected={isYakuzaTargetSelected}>
@@ -87,30 +94,5 @@ export default function NightActionButtons({
         </NightActionWrapper>
       )}
     </>
-  );
-}
-
-/**
- * Positions the action button at bottom-center of the tile.
- * Uses display:none by default, display:flex on group hover/focus.
- * When `isSelected` is true, stays visible permanently.
- */
-function NightActionWrapper({
-  children,
-  isSelected,
-}: {
-  children: React.ReactNode;
-  isSelected: boolean;
-}) {
-  return (
-    <div
-      className={`absolute bottom-0 left-0 right-0 z-30 justify-center ${
-        isSelected
-          ? "flex"
-          : "hidden group-hover:flex group-focus-within:flex"
-      }`}
-    >
-      {children}
-    </div>
   );
 }

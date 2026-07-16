@@ -11,6 +11,7 @@ import {
   assertIsHost,
   deleteGameAndRelations,
 } from "../lib/games";
+import { getLiveTableAvgRating } from "../lib/playerRatings";
 import { gameType } from "../tables/games";
 import type { QueryCtx } from "../_generated/server";
 import type { Doc } from "../_generated/dataModel";
@@ -46,7 +47,7 @@ async function withRosterAvatars(
 }
 
 const GAME_TYPE_MAX_PLAYERS: Record<string, number> = {
-  traditional: 10,
+  sports_mafia: 10,
   city_mafia: 12,
   japanese_mafia: 12,
 };
@@ -65,7 +66,11 @@ export const list = query({
       games.map(async (game) => {
         const players = await getPlayersByGameId(ctx.db, game._id);
         const spectators = await getSpectatorsByGameId(ctx.db, game._id);
-        return await withRosterAvatars(ctx, game, players, spectators);
+        const enriched = await withRosterAvatars(ctx, game, players, spectators);
+        return {
+          ...enriched,
+          tableAvgRating: await getLiveTableAvgRating(ctx.db, game, players),
+        };
       }),
     );
   },
@@ -78,7 +83,11 @@ export const getById = query({
     if (!game) return null;
     const players = await getPlayersByGameId(ctx.db, game._id);
     const spectators = await getSpectatorsByGameId(ctx.db, game._id);
-    return await withRosterAvatars(ctx, game, players, spectators);
+    const enriched = await withRosterAvatars(ctx, game, players, spectators);
+    return {
+      ...enriched,
+      tableAvgRating: await getLiveTableAvgRating(ctx.db, game, players),
+    };
   },
 });
 

@@ -126,11 +126,31 @@ actually eliminates the player, i.e. the 4th foul).
 
 ## 5. Global rules (apply at any `N`)
 
-1. **Citizens sweep (highest priority).** If **all** Mafia **and** Yakuza **and**
-   Shogun are dead (`m = 0` and `!YA` and `!SH`), **Citizens win** — at _any_ player
-   count, even above 6.
-2. **No Mafia/Yakuza win above 6 players.** Apart from the Citizens-sweep above, the
-   game can only be decided when **`N ≤ 6`**.
+0. **No contest — total mutual elimination (`N = 0`).** If **no** player is left alive,
+   the game is a **no contest**: nobody met a win condition. Reachable when the last
+   survivors all leave at once — e.g. the final 3 tie twice, trigger a **"both leave"**
+   vote, and all vote to leave, so all 3 are eliminated in one farewell round. This is
+   checked **first**, because the Citizens-sweep condition below (`m = 0` and `!YA` and
+   `!SH`) is *vacuously true* when nobody is alive and would otherwise mis-declare a
+   Citizens win. A no contest **pauses on the winner banner** like a faction win (host
+   confirms via **Finish Game**), and is recorded as `winner: "no_contest"` on the session
+   and logged as **no contest** (`gameLogs.winner = null`, no `winMethod`, **no ELO
+   change** for anyone) — the same terminal outcome as an admin force-end. There is no
+   separate "draw" state: total mutual elimination reuses the existing no-contest concept.
+
+1. **Single-faction sweep (highest priority).** If **every** alive player belongs to
+   a single faction, that faction wins — at _any_ player count, even above 6:
+   - all **Town** (`m = 0` and `!YA` and `!SH`) → **Citizens win**
+   - all **Mafia** (`m = N`) → **Mafia win**
+   - all **Yakuza clan** (`m = 0` and every survivor is `YAKUZA`/`SHOGUN`) → **Yakuza win**
+
+   The Mafia/Yakuza sweeps matter because **two players can die in one night**,
+   dropping the count straight past the `N = 2` boundary the per-`N` tables stop at —
+   e.g. `N = 3` `CIT,YA,M`, mafia kills the citizen and yakuza kills the mafia → a lone
+   `YAKUZA` (`N = 1`). Only the sweep can end the game in that case. (Mafia caps at 3
+   and the Yakuza clan at 3, so a non-Town sweep never exceeds `N ≤ 6`.)
+2. **No Mafia/Yakuza win above 6 players.** Apart from the single-faction sweeps above,
+   the game can only be decided when **`N ≤ 6`**.
 
 ## 6. Decision tables (with examples)
 
@@ -203,6 +223,19 @@ Priority: Citizens-sweep → Yakuza-pair win → Mafia win → continue.
 | `SH, CIT,CIT` | **continue**     | lone Shogun, `m = 0`, not a sweep    |
 | `DOC,DET,CIT` | **CITIZENS win** | sweep                                |
 
+### N = 1
+
+Reachable only when two players die in one night (see §5 rule 1). The lone survivor
+is always the last faction standing — decided by the single-faction sweep, so context
+is irrelevant.
+
+| Alive  | Result           | Why                         |
+| ------ | ---------------- | --------------------------- |
+| `YA`   | **YAKUZA win**   | only Yakuza clan remains    |
+| `SH`   | **YAKUZA win**   | only Yakuza clan remains    |
+| `M`    | **MAFIA win**    | only Mafia remains          |
+| `CIT`  | **CITIZENS win** | Town sweep                  |
+
 ### N = 2
 
 | Alive      | Result           | Why                                     |
@@ -223,7 +256,12 @@ Priority: Citizens-sweep → Yakuza-pair win → Mafia win → continue.
 
 ```
 function decideWinner(alive, context):           // context ∈ {beforeNight, beforeDay}
-  if m == 0 and !YA and !SH:        return CITIZENS      // global sweep (any N)
+  if N == 0:                        return NO_CONTEST    // mutual elimination — nobody left alive
+  // Single-faction sweeps — last faction standing wins at any N (incl. N = 1).
+  if m == 0 and !YA and !SH:        return CITIZENS      // only Town remain
+  if N >= 1 and m == N:             return MAFIA         // only Mafia remain
+  if N >= 1 and m == 0 and allYakuzaClan(alive):
+                                    return YAKUZA        // only Yakuza clan remain
   if N > 6:                         return CONTINUE      // nothing else above 6
 
   switch N:
@@ -277,20 +315,39 @@ These were confirmed and are baked into the rules above:
 - **`N ≥ 7`:** only the Citizens-sweep can end the game; no Mafia/Yakuza win.
 - **Foul elimination triggers an immediate full check** (`beforeNight` context) — see
   §4. Only `giveFoul` triggers it; manual `kill` and `markDeadAndAdvance` do not.
+- **Two deaths in one night can skip the `N = 2` boundary.** When both the Mafia and
+  the Yakuza kill on the same night, the count can drop by 2 (e.g. `N = 3` → `N = 1`),
+  so a game can reach a lone non-Town survivor without ever passing through an `N = 2`
+  check. The **single-faction sweeps** (§5 rule 1: all-Mafia → Mafia, all-Yakuza-clan →
+  Yakuza) resolve this — without them a lone Yakuza/Shogun/Mafia would loop back into
+  `day_phase` forever. (A lone Town survivor was already covered by the Citizens sweep.)
+- **All survivors leaving at once is a no contest (`N = 0`).** A repeated tie among the
+  last players triggers a **"both leave"** vote; if it passes for every remaining player
+  they are all eliminated in one farewell round, leaving nobody alive. This is a **no
+  contest** (§5 rule 0), not a Citizens win — recorded as `winner: "no_contest"` (host
+  confirms on the banner) and logged as no contest (`winner: null`, no ELO), reusing the
+  same terminal outcome as an admin force-end (no separate "draw" state). Returning
+  `CONTINUE` here instead would transition into a phase with 0 players and loop forever,
+  so `N = 0` must resolve to an explicit outcome.
 
 ## 9. Implementation (built)
 
-1. **Schema:** ✅ optional `winner` (`mafia | yakuza | citizens`) on
-   `convex/tables/gameSessions.ts`.
+1. **Schema:** ✅ optional `winner` (`mafia | yakuza | citizens | no_contest`) on
+   `convex/tables/gameSessions.ts`. `"no_contest"` is the total-mutual-elimination outcome
+   (§5 rule 0); it pauses on the banner like a win but logs as no contest.
 2. **Pure helper:** ✅ `decideWinner(aliveRoles, context)` in
-   `convex/lib/winConditions.ts` — returns `"mafia" | "yakuza" | "citizens" | null`,
-   implementing §6/§7. No DB access.
+   `convex/lib/winConditions.ts` — returns `"mafia" | "yakuza" | "citizens" |
+   "no_contest" | null`, implementing §6/§7. No DB access. (`describeWin` returns the
+   same, with a full `WinMethod` snapshot for faction wins and the bare `"no_contest"`
+   sentinel for `N = 0`.)
 3. **Record helper:** ✅ `recordWinnerIfDecided(ctx, gameId, context)` in
    `convex/lib/games.ts` — loads the roles of alive role-holders (excludes the host),
-   calls `decideWinner`; if non-null, patches only `winner` on the session and returns
-   it. It does **not** set `isFinished`/`gameStatus` or schedule cleanup — that is the
-   host's `finishGame` step. Idempotent (re-returns an already-recorded winner); no-ops
-   once the session is finished.
+   calls `describeWin`; if non-null, patches `winner` (+ `winMethod` for faction wins;
+   `"no_contest"` carries no `winMethod`) on the session and returns the outcome. It does
+   **not** set `isFinished`/`gameStatus` or schedule cleanup — that is the host's
+   `finishGame` step. `archiveGameLog` maps a `"no_contest"` session winner to
+   `winner: null` (no contest, no ELO), the same as an admin force-end. Idempotent
+   (re-returns an already-recorded outcome); no-ops once the session is finished.
 4. **`enterNightPhase`** (`beforeNight`) and **`enterDayPhase`** (`beforeDay`): ✅ both
    take `ctx` and call `recordWinnerIfDecided` _before_ the phase patch; if a winner is
    returned they skip the transition (pausing the game) and return the winner. Single
