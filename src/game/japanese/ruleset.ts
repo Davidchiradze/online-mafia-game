@@ -21,4 +21,5 @@ export const JAPANESE_UI_RULESET: UiRuleset = {
   nightAuthority: japaneseNightAuthority,
   seatLayout: JAPANESE_SEAT_LAYOUT,
   mafiaNightModel: "single-authority",
+  hasSelfJustification: true,
 };

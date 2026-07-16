@@ -169,6 +169,13 @@ export interface UiRuleset {
   /** Participant-circle ring geometry (12-ring Japanese, 10-ring Sports). */
   seatLayout: SeatLayout;
   /**
+   * Whether nominated players get a self-justification phase before voting, and
+   * therefore whether the host is asked at game start (Japanese: true, prompted
+   * via `StartGameModal`; Sports §: false — no self-justification ever, so the
+   * host starts directly with `withoutSelfJustification: true` and no modal).
+   */
+  hasSelfJustification: boolean;
+  /**
    * How the mafia pick their night kill (mirrors the backend `night.kind`):
    * - `single-authority` (Japanese): one authority picks a SHARED target the
    *   whole team sees.

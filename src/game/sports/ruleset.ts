@@ -23,4 +23,5 @@ export const SPORTS_UI_RULESET: UiRuleset = {
   nightAuthority: sportsNightAuthority,
   seatLayout: SPORTS_SEAT_LAYOUT,
   mafiaNightModel: "unanimous-vote",
+  hasSelfJustification: false,
 };
