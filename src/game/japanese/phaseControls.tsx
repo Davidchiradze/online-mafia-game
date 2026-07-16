@@ -12,18 +12,11 @@ import { SPEAKING_STATE } from "@/lib/constants/game";
 import type { PhaseControlsMap } from "../core/types";
 import StartPickingRolesButton from "@/components/gameSession/phaseButtonsForHost/StartPickingRolesButton";
 import ConfirmRolesButton from "@/components/gameSession/phaseButtonsForHost/ConfirmRolesButton";
-import EndMafiaMeetButton from "@/components/gameSession/phaseButtonsForHost/EndMafiaMeetButton";
 import EndDonChooseRightHandButton from "@/components/gameSession/phaseButtonsForHost/EndDonChooseRightHandButton";
-import EndYakuzaShogunMeetButton from "@/components/gameSession/phaseButtonsForHost/EndYakuzaShogunMeetButton";
-import EndDetectiveMeetButton from "@/components/gameSession/phaseButtonsForHost/EndDetectiveMeetButton";
-import EndDoctorMeetButton from "@/components/gameSession/phaseButtonsForHost/EndDoctorMeetButton";
+import PhaseAdvanceButton from "@/components/gameSession/phaseButtonsForHost/PhaseAdvanceButton";
 import StartNightPhaseButton from "@/components/gameSession/phaseButtonsForHost/StartNightPhaseButton";
-import StartMafiaTargetButton from "@/components/gameSession/phaseButtonsForHost/StartMafiaTargetButton";
 import EndMafiaTargetButton from "@/components/gameSession/phaseButtonsForHost/EndMafiaTargetButton";
-import EndDonCheckButton from "@/components/gameSession/phaseButtonsForHost/EndDonCheckButton";
-import EndRightHandCheckButton from "@/components/gameSession/phaseButtonsForHost/EndRightHandCheckButton";
 import EndYakuzaTargetButton from "@/components/gameSession/phaseButtonsForHost/EndYakuzaTargetButton";
-import EndDetectiveCheckButton from "@/components/gameSession/phaseButtonsForHost/EndDetectiveCheckButton";
 import EndDoctorHealButton from "@/components/gameSession/phaseButtonsForHost/EndDoctorHealButton";
 import FarewellSpeechControls from "@/components/gameSession/phaseButtonsForHost/FarewellSpeechControls";
 import VotingPhaseControls from "@/components/gameSession/vote/VotingPhaseControls";
@@ -49,19 +42,35 @@ export const JAPANESE_PHASE_CONTROLS: PhaseControlsMap = {
     <ConfirmRolesButton gameSessionState={gameSessionState} />
   ),
   mafia_meet: ({ gameSessionState }) => (
-    <EndMafiaMeetButton gameSessionState={gameSessionState} />
+    <PhaseAdvanceButton
+      gameSessionState={gameSessionState}
+      sourcePhase="mafia_meet"
+      labelKey="endMeeting"
+    />
   ),
   don_chooses_right_hand: ({ gameSessionState }) => (
     <EndDonChooseRightHandButton gameSessionState={gameSessionState} />
   ),
   yakuda_shogun_meet: ({ gameSessionState }) => (
-    <EndYakuzaShogunMeetButton gameSessionState={gameSessionState} />
+    <PhaseAdvanceButton
+      gameSessionState={gameSessionState}
+      sourcePhase="yakuda_shogun_meet"
+      labelKey="endMeeting"
+    />
   ),
   detective_meet: ({ gameSessionState }) => (
-    <EndDetectiveMeetButton gameSessionState={gameSessionState} />
+    <PhaseAdvanceButton
+      gameSessionState={gameSessionState}
+      sourcePhase="detective_meet"
+      labelKey="endMeeting"
+    />
   ),
   doctor_meet: ({ gameSessionState }) => (
-    <EndDoctorMeetButton gameSessionState={gameSessionState} />
+    <PhaseAdvanceButton
+      gameSessionState={gameSessionState}
+      sourcePhase="doctor_meet"
+      labelKey="endMeeting"
+    />
   ),
   introduction_phase: ({ gameId, gameSessionState }) =>
     isSpeakingComplete(gameSessionState.currentSpeakerIndex) ? (
@@ -73,22 +82,41 @@ export const JAPANESE_PHASE_CONTROLS: PhaseControlsMap = {
       />
     ),
   night_phase: ({ gameSessionState }) => (
-    <StartMafiaTargetButton gameSessionState={gameSessionState} />
+    <PhaseAdvanceButton
+      gameSessionState={gameSessionState}
+      sourcePhase="night_phase"
+      labelKey="startMafiaPhase"
+    />
   ),
   mafia_chooses_target: ({ gameSessionState }) => (
     <EndMafiaTargetButton gameSessionState={gameSessionState} />
   ),
   don_checks_for_detective: ({ gameSessionState }) => (
-    <EndDonCheckButton gameSessionState={gameSessionState} />
+    <PhaseAdvanceButton
+      gameSessionState={gameSessionState}
+      sourcePhase="don_checks_for_detective"
+      labelKey="endDonCheck"
+      variant="primary"
+    />
   ),
   right_hand_checks_for_yakuza: ({ gameSessionState }) => (
-    <EndRightHandCheckButton gameSessionState={gameSessionState} />
+    <PhaseAdvanceButton
+      gameSessionState={gameSessionState}
+      sourcePhase="right_hand_checks_for_yakuza"
+      labelKey="endCheck"
+      variant="primary"
+    />
   ),
   yakuza_and_shogun_chooses_target: ({ gameSessionState }) => (
     <EndYakuzaTargetButton gameSessionState={gameSessionState} />
   ),
   detective_checks_for_mafia: ({ gameSessionState }) => (
-    <EndDetectiveCheckButton gameSessionState={gameSessionState} />
+    <PhaseAdvanceButton
+      gameSessionState={gameSessionState}
+      sourcePhase="detective_checks_for_mafia"
+      labelKey="endDetectiveCheck"
+      variant="primary"
+    />
   ),
   doctor_heals_player: () => <EndDoctorHealButton />,
   farewell_speech: ({ gameSessionState }) => (

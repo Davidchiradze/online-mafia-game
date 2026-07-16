@@ -437,9 +437,6 @@ export const dayPhase = {
   finishCurrentSpeaker: makeFunctionReference<"mutation", { gameId: Id<"games"> }, null>(
     "game/dayPhase:finishCurrentSpeaker",
   ),
-  resetSpeakingState: makeFunctionReference<"mutation", { gameId: Id<"games"> }, null>(
-    "game/dayPhase:resetSpeakingState",
-  ),
   nominatePlayer: makeFunctionReference<
     "mutation",
     { gameId: Id<"games">; seatNumber: number },

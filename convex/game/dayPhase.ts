@@ -160,24 +160,6 @@ export const finishCurrentSpeaker = mutation({
 });
 
 /**
- * Resets speaking state (clears order + speaker). Keeps dayRoundOpenerIndex.
- */
-export const resetSpeakingState = mutation({
-  args: { gameId: v.id("games") },
-  handler: async (ctx, { gameId }) => {
-    const userId = await getAuthenticatedUser(ctx);
-    await assertIsHost(ctx.db, gameId, userId);
-    const session = await getGameSession(ctx.db, gameId);
-
-    await ctx.db.patch(session._id, {
-      currentSpeakerIndex: undefined,
-      speakerStartedAt: undefined,
-      speakingOrder: [],
-    });
-  },
-});
-
-/**
  * Toggles a player's nomination during day_phase.
  * Blocked if a foul elimination occurred this round.
  */
