@@ -169,11 +169,18 @@ export const selectMafiaTarget = mutation({
     if (!target) throw new ConvexError("Target player not found");
     if (!target.isAlive) throw new ConvexError("Cannot target a dead player");
 
-    // Last-write-wins: replace this mafia's prior pick (if any).
+    // One-shot lock (§5.3): a mafia's pick is FINAL. Reject any second call —
+    // no changing the target, no clearing it. Abstaining is simply never
+    // calling this. (The client also hides all kill buttons once a pick lands.)
     const existing = nightSession.mafiaTargetSelections ?? [];
-    const filtered = existing.filter((s) => s.mafiaSeat !== player.seatNumber);
-    filtered.push({ mafiaSeat: player.seatNumber, targetSeat: targetSeatNumber });
-    await ctx.db.patch(nightSession._id, { mafiaTargetSelections: filtered });
+    if (existing.some((s) => s.mafiaSeat === player.seatNumber)) {
+      throw new ConvexError("You have already chosen a target");
+    }
+    const updated = [
+      ...existing,
+      { mafiaSeat: player.seatNumber, targetSeat: targetSeatNumber },
+    ];
+    await ctx.db.patch(nightSession._id, { mafiaTargetSelections: updated });
   },
 });
 

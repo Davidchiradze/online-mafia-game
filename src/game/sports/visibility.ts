@@ -139,7 +139,7 @@ function visibilityStateOverride(
   _isTargetHost: boolean,
 ): VisibilityState | null {
   if (isViewerHost && gamePhase === "mafia_chooses_target") {
-    return VisibilityState.VISIBLE;
+    return VisibilityState.DIMMED;
   }
   return null;
 }
@@ -163,4 +163,9 @@ export const SPORTS_VISIBILITY: VisibilityRuleset = {
 };
 
 // Re-export for direct unit testing of the covered-tile behavior.
-export { canSeeParticipant, getAwakeRoles, isNightActivityPhase, VisibilityState };
+export {
+  canSeeParticipant,
+  getAwakeRoles,
+  isNightActivityPhase,
+  VisibilityState,
+};

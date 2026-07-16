@@ -221,9 +221,12 @@ window** (disables buttons) — it does **not** advance the phase:
   `voting.ts → startVoteWindow` / `endVoteWindowInternal`, which likewise flips a
   boolean without advancing.)
 - Each mafia pick is a mutation validated to be (a) inside the open window,
-  (b) a living-mafia caller, (c) targeting a living non-host player. A caller may
-  overwrite their own prior pick within the window (last write wins), or that can
-  be locked to one-shot — **implementer's choice; default to last-write-wins**.
+  (b) a living-mafia caller, (c) targeting a living non-host player, (d) the
+  caller has **not already picked**. A pick is **one-shot / final**: once a mafia
+  selects a target it is locked for the rest of the window — no changing it and
+  no clearing it. Abstaining is simply never calling the mutation. (The server
+  rejects a second call; the client hides all kill buttons the instant a pick
+  lands, leaving only the private target indicator on the chosen tile.)
 - **Host advance is manual**: the `EndMafiaTargetButton` equivalent ("Finish
   Mafia Phase") is always enabled and transitions to `don_checks_for_detective`.
 - The window countdown is shown to the acting mafia (and host) via the existing

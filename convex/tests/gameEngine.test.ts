@@ -1588,7 +1588,7 @@ describe("sports night — kill-selection window & selections", () => {
     await expect(openWindow(t, s)).rejects.toThrow();
   });
 
-  it("records a living mafia's pick with last-write-wins", async () => {
+  it("records a living mafia's pick and locks it one-shot (no change)", async () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
       gameType: "sports_mafia",
@@ -1601,9 +1601,10 @@ describe("sports night — kill-selection window & selections", () => {
     let night = await getNightRow(t, s.gameId);
     expect(night?.mafiaTargetSelections).toEqual([{ mafiaSeat: 1, targetSeat: 5 }]);
 
-    await select(t, s, 1, 6); // same mafia changes their mind
+    // The pick is final (§5.3): a second call is rejected and the original stands.
+    await expect(select(t, s, 1, 6)).rejects.toThrow();
     night = await getNightRow(t, s.gameId);
-    expect(night?.mafiaTargetSelections).toEqual([{ mafiaSeat: 1, targetSeat: 6 }]);
+    expect(night?.mafiaTargetSelections).toEqual([{ mafiaSeat: 1, targetSeat: 5 }]);
   });
 
   it("rejects a non-mafia caller", async () => {

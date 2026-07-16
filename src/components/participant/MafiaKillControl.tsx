@@ -22,7 +22,8 @@ import NightActionWrapper from "./NightActionWrapper";
  * - `single-authority` (Japanese): one authority sets a SHARED target the mafia
  *   team + host see; locked once chosen, no kill on night 1.
  * - `unanimous-vote` (Sports §5): every living mafia picks PRIVATELY inside the
- *   5s window (re-pickable, last-write-wins); each sees only their own pick.
+ *   5s window; the pick is one-shot/final (no change, no clear) and each sees
+ *   only their own pick.
  */
 
 type MafiaKillProps = {
@@ -138,22 +139,27 @@ function useUnanimousMafiaKill({
 
   const isSelected = isMafiaPhase && myPick === seatNumber;
   const windowActive = nightPhaseSession?.mafiaTargetWindowActive === true;
+  // One-shot lock (§5.3): the pick is final once made. `myPick` is undefined
+  // while the private query loads and null once resolved-with-no-pick, so treat
+  // only a concrete seat number as "has picked".
+  const hasPicked = typeof myPick === "number";
 
-  // Buttons appear on EVERY alive tile for the whole phase — the tiles are
-  // covered (Sports visibility), so there is nothing to hover-reveal over, and
-  // removing them on window-close would just make the screen go blank. Instead
-  // they stay visible and DISABLE once the 5s window closes (§5.1).
+  // Buttons appear on EVERY alive tile while the window is open AND the caller
+  // has not yet picked. The instant a target is chosen every button vanishes
+  // (one-shot lock), leaving only the indicator on the chosen tile — so there
+  // is no way to change the pick and no wait for the 5s window to close.
   const canShowButton =
     isMafiaPhase &&
     hasMafiaKillAuthority &&
     !isTargetHost &&
     isPlayerAlive &&
-    windowActive;
+    windowActive &&
+    !hasPicked;
 
   const onSelect = useCallback(async () => {
-    // Re-pickable within the window (last-write-wins) — not locked by isSelected.
-    // No-op once the window has closed (the server also rejects late picks).
-    if (seatNumber === null || isLoading || !windowActive) return;
+    // Final once picked: no re-selection. No-op after the window closes or once
+    // a pick exists (the server also rejects both cases defensively).
+    if (seatNumber === null || isLoading || !windowActive || hasPicked) return;
     setIsLoading(true);
     try {
       await selectTarget({
@@ -165,15 +171,13 @@ function useUnanimousMafiaKill({
     } finally {
       setIsLoading(false);
     }
-  }, [gameId, seatNumber, isLoading, windowActive, selectTarget]);
+  }, [gameId, seatNumber, isLoading, windowActive, hasPicked, selectTarget]);
 
   return {
     canShowButton,
     isSelected,
     showIndicator: isSelected, // private: only the picker sees their own mark
-    // Selecting is only possible during the open window; after +5s the buttons
-    // stay on-screen but locked.
-    disabled: isLoading || !windowActive,
+    disabled: isLoading || !windowActive || hasPicked,
     isLoading,
     alwaysVisible: true, // Sports: persistent on covered tiles, not hover-gated.
     onSelect,
