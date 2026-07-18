@@ -448,6 +448,28 @@ describe("phase transitions + win check", () => {
 
     const session = await getSession(t, s.gameId);
     expect(session?.gamePhase).toBe("day_phase");
+    // Order is precomputed at day entry (the "plan"), opener set, but NOT yet
+    // ignited — currentSpeakerIndex stays undefined until the host clicks Start.
+    expect(session?.speakingOrder).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
+    expect(session?.dayRoundOpenerIndex).toBe(1);
+    expect(session?.currentSpeakerIndex).toBeUndefined();
+  });
+
+  it("startDaySpeaking ignites the order precomputed by enterDayPhase", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      phase: "farewell_speech",
+      players: WIN_SAFE_ROSTER,
+    });
+
+    await t.run((ctx) => enterDayPhase(ctx, s.gameId));
+    await startDaySpeaking(t, s);
+
+    const session = await getSession(t, s.gameId);
+    // Same order, now ignited at the opener with a start timestamp.
+    expect(session?.speakingOrder).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
+    expect(session?.currentSpeakerIndex).toBe(1);
+    expect(session?.speakerStartedAt).toBeDefined();
   });
 
   it("enterDayPhase pauses on a decided win", async () => {
@@ -2081,7 +2103,7 @@ describe("sports 3rd-foul speaking ban", () => {
     expect(p?.foulSpeakingBanRound).toBeUndefined();
   });
 
-  it("startDaySpeaking drops a muted player from the order (>4 alive)", async () => {
+  it("keeps a muted player in the order as a visible stop (>4 alive)", async () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
       gameType: "sports_mafia",
@@ -2093,9 +2115,11 @@ describe("sports 3rd-foul speaking ban", () => {
 
     await startDaySpeaking(t, s);
 
+    // The ban is a UI concern now: seat 5 stays in the order (rendered
+    // muted client-side); the host clicks Next past them.
     const session = await getSession(t, s.gameId);
-    expect(session?.speakingOrder).not.toContain(5);
-    expect(session?.speakingOrder).toEqual([1, 2, 3, 4, 6, 7]);
+    expect(session?.speakingOrder).toContain(5);
+    expect(session?.speakingOrder).toEqual([1, 2, 3, 4, 5, 6, 7]);
   });
 
   it("a ban for another round does not affect the order", async () => {

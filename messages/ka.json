@@ -424,6 +424,7 @@
       "dayLabel": "დღე{night} — {label}",
       "speaking": "#{seat} საუბრობს",
       "nextSpeaker": "შემდეგი მოსაუბრე: #{seat}",
+      "opensNext": "წრეს გახსნის: #{seat}",
       "nominated": "დასახელებული: {list}",
       "nextPhase": "შემდეგი: {label}"
     },

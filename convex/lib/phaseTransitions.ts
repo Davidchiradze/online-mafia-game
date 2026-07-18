@@ -1,7 +1,12 @@
 import { ConvexError } from "convex/values";
 import type { DatabaseWriter, MutationCtx } from "../_generated/server";
 import type { Id } from "../_generated/dataModel";
-import { recordWinnerIfDecided } from "./games";
+import {
+  getGameById,
+  getPlayersByGameId,
+  recordWinnerIfDecided,
+} from "./games";
+import { computeSpeakingOrder } from "./speakingOrder";
 
 /**
  * Shared phase-transition helpers.
@@ -150,7 +155,14 @@ export async function enterVotingPhase(
 /**
  * Enter `day_phase` (single source of truth).
  *
- * Resets speaking state. Called after night kills (or the no-kill skip).
+ * Precomputes the day speaking order (and opener) so host controls can preview
+ * who opens before the host clicks Start. `currentSpeakerIndex` is left
+ * `undefined` — the order is the *plan*, and `startDaySpeaking` *ignites* it.
+ * Called after night kills (or the no-kill skip).
+ *
+ * Note: the Japanese `introduction_phase` does NOT flow through here (it enters
+ * via `game/sessions:update`), so `startDaySpeaking` still computes the order
+ * on the spot when none is precomputed — see its ignite-or-compute branch.
  *
  * Before transitioning, runs the `beforeDay` win check. If a faction has won,
  * the pending winner is recorded and the transition is skipped (the game pauses
@@ -165,10 +177,26 @@ export async function enterDayPhase(ctx: MutationCtx, gameId: Id<"games">) {
 
   const db = ctx.db;
   const session = await getGameSessionOrThrow(db, gameId);
+  const game = await getGameById(db, gameId);
+  const players = await getPlayersByGameId(db, gameId);
+
+  // Seated, in-range players. No 3rd-foul ban filter: muted players stay in the
+  // order as visible-but-inactive stops (the ban is a UI concern). All-dead is
+  // already caught by the `beforeDay` win check, so an empty order is fine here
+  // — `startDaySpeaking` recomputes/validates on ignite.
+  const eligible = players.filter(
+    (p) => p.seatNumber !== undefined && p.seatNumber <= game.maxPlayers,
+  );
+  const { speakingOrder, openerIndex } = computeSpeakingOrder(
+    eligible,
+    session.dayRoundOpenerIndex ?? null,
+    game.maxPlayers,
+  );
 
   await db.patch(session._id, {
     gamePhase: "day_phase",
-    speakingOrder: [],
+    speakingOrder,
+    dayRoundOpenerIndex: openerIndex,
     currentSpeakerIndex: undefined,
     speakerStartedAt: undefined,
   });

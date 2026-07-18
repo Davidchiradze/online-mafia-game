@@ -8,6 +8,7 @@ import { FOULS } from "@/lib/constants/game";
 
 // Context
 import { useGameRoom } from "@/lib/context/gameRoomContext";
+import { isSeatMutedThisRound } from "@/lib/game/speakingBan";
 
 // Hooks
 import {
@@ -55,7 +56,7 @@ export default function ParticipantComponent({
   playerIndex: number;
   player: NonNullable<ReturnType<typeof useGameRoom>["players"]>[number];
 }) {
-  const { gameSessionState, room } = useGameRoom();
+  const { gameSessionState, room, players } = useGameRoom();
   const tg = useTranslations("game");
   const tc = useTranslations("common");
 
@@ -117,8 +118,20 @@ export default function ParticipantComponent({
     return (FOULS.ALLOWED_PHASES as readonly string[]).includes(currentPhase);
   }, [gameSessionState?.gamePhase]);
 
+  // 3rd-foul speaking ban (Sports): is this player muted this round? Muted
+  // players stay in the speaking order but cannot legitimately speak.
+  const isSpeakingBanned = useMemo(() => {
+    if (!gameSessionState) return false;
+    const aliveCount = players.filter((p) => p.isAlive).length;
+    return isSeatMutedThisRound(
+      player,
+      gameSessionState.currentNightNumber,
+      aliveCount,
+    );
+  }, [gameSessionState, players, player]);
+
   // Speaking state
-  const { isSpeaking, isParticipantFoulSpeaking, speakerBorderClass } =
+  const { isSpeaking, isMutedTurn, isParticipantFoulSpeaking, speakerBorderClass } =
     useParticipantSpeaking(
       gameSessionState,
       player.seatNumber ?? null,
@@ -126,11 +139,13 @@ export default function ParticipantComponent({
       isFoulAllowedPhase,
       isTargetHost,
       isTargetDead,
+      isSpeakingBanned,
     );
-  // Speaking progress (uses different durations based on phase)
+  // Speaking progress (uses different durations based on phase). A muted turn
+  // runs no countdown — the host simply clicks Next past them.
   const speakingProgress = useSpeakingProgress(
     gameSessionState?.speakerStartedAt,
-    isSpeaking,
+    isSpeaking && !isMutedTurn,
     gameSessionState?.gamePhase,
   );
 
@@ -149,6 +164,7 @@ export default function ParticipantComponent({
     isLocal,
     isFoulAllowedPhase,
     isSpeaking,
+    isMutedTurn,
     isTargetHost,
     isViewerHost,
   });

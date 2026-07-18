@@ -15,6 +15,7 @@ type GamePlayer = {
   isAlive: boolean;
   fouls: number;
   foulSpeakStartedAt?: number;
+  foulSpeakingBanRound?: number;
   state?: string;
   isReady?: boolean;
 };

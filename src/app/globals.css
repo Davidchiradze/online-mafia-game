@@ -245,6 +245,16 @@
     inset 0 0 12px -4px rgba(239, 68, 68, 0.6);
 }
 
+/* Muted turn (3rd-foul ban) — their turn, but speech is blocked: red/purple dashed */
+.speaker-muted {
+  border-width: 2px;
+  border-style: dashed;
+  border-color: rgba(192, 38, 211, 0.9);
+  box-shadow:
+    0 0 18px 1px rgba(192, 38, 211, 0.55),
+    inset 0 0 12px -4px rgba(192, 38, 211, 0.45);
+}
+
 
 .font-size-xs {
   font-size: 0.625rem;

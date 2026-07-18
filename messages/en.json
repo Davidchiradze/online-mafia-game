@@ -424,6 +424,7 @@
       "dayLabel": "D{night} — {label}",
       "speaking": "#{seat} speaking",
       "nextSpeaker": "Next speaker: #{seat}",
+      "opensNext": "Opens: #{seat}",
       "nominated": "Nominated: {list}",
       "nextPhase": "Next: {label}"
     },

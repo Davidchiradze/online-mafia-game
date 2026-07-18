@@ -11,11 +11,10 @@ import { enterNightPhase, enterVotingPhase } from "../lib/phaseTransitions";
 import { SPEAKING_STATE, FOULS } from "../lib/constants";
 import { computeSpeakingOrder, getNextSpeaker } from "../lib/speakingOrder";
 import { getGameDefinition } from "../games/registry";
-import { dayRoundFromNightNumber, isFirstDayRound } from "../games/core/dayRound";
+import { isFirstDayRound } from "../games/core/dayRound";
 import {
   THIRD_FOUL_BAN_COUNT,
   foulSpeakingBanRound,
-  isSpeakingBanned,
 } from "../games/core/fouls";
 import type { Id } from "../_generated/dataModel";
 import type { DatabaseReader } from "../_generated/server";
@@ -48,36 +47,35 @@ export const startDaySpeaking = mutation({
     const game = await assertIsHost(ctx.db, gameId, userId);
     const session = await getGameSession(ctx.db, gameId);
 
-    const players = await getPlayersByGameId(ctx.db, gameId);
-    const maxSeats = game.maxPlayers;
+    // Ignite-or-compute. `enterDayPhase` precomputes the order and leaves
+    // `currentSpeakerIndex` undefined, so a populated order with a null index is
+    // the fresh, not-yet-started day-phase state — just ignite it. Otherwise
+    // (Japanese `introduction_phase`, which never runs `enterDayPhase`, or a
+    // re-start after the round COMPLETED) compute the order now. Banned players
+    // are NOT filtered out — muted players stay in the order as visible stops
+    // (the 3rd-foul ban is handled in the UI).
+    const precomputed = session.speakingOrder ?? [];
+    const isFreshPrecomputed =
+      precomputed.length > 0 && session.currentSpeakerIndex == null;
 
-    const gamePlayers = players.filter(
-      (p) => p.seatNumber !== undefined && p.seatNumber <= maxSeats,
-    );
-
-    // 3rd-foul speaking ban (Sports §4.2): players muted this round drop out of
-    // the day speaking order entirely — unless it is the final day phase
-    // (≤ 4 alive), where the ban is lifted. Japanese leaves the flag false, so
-    // its order is unchanged (and it never sets `foulSpeakingBanRound` anyway).
-    const definition = getGameDefinition(game.gameType);
-    let speakingPlayers = gamePlayers;
-    if (definition.flags.thirdFoulSpeakingBan) {
-      const aliveCount = gamePlayers.filter((p) => p.isAlive).length;
-      const currentDayRound = dayRoundFromNightNumber(session.currentNightNumber);
-      speakingPlayers = gamePlayers.filter(
-        (p) => !isSpeakingBanned(p, currentDayRound, aliveCount),
+    let speakingOrder: number[];
+    let openerIndex: number;
+    if (isFreshPrecomputed) {
+      speakingOrder = precomputed;
+      openerIndex = precomputed[0];
+    } else {
+      const players = await getPlayersByGameId(ctx.db, gameId);
+      const eligible = players.filter(
+        (p) => p.seatNumber !== undefined && p.seatNumber <= game.maxPlayers,
       );
-    }
-
-    const previousOpener = session.dayRoundOpenerIndex ?? null;
-    const { speakingOrder, openerIndex } = computeSpeakingOrder(
-      speakingPlayers,
-      previousOpener,
-      maxSeats,
-    );
-
-    if (speakingOrder.length === 0) {
-      throw new ConvexError("No alive players to speak");
+      ({ speakingOrder, openerIndex } = computeSpeakingOrder(
+        eligible,
+        session.dayRoundOpenerIndex ?? null,
+        game.maxPlayers,
+      ));
+      if (speakingOrder.length === 0) {
+        throw new ConvexError("No alive players to speak");
+      }
     }
 
     await ctx.db.patch(session._id, {

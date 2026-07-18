@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { ConnectionState, Room as LiveKitRoom } from "livekit-client";
 import { SPEAKING_STATE } from "@/lib/constants/game";
+import { isSeatMutedThisRound } from "@/lib/game/speakingBan";
 import { useConnectionState } from "@livekit/components-react";
 import type { useGameRoom } from "@/lib/context/gameRoomContext";
 
@@ -54,7 +55,16 @@ export function useSpeakingAutoMute(
     let shouldMute: boolean;
 
     if (isSpeakingRoundActive) {
-      shouldMute = currentSpeakerIndex !== mySeatNumber;
+      // Muted this round (3rd-foul ban)? Stay locked even on your own turn —
+      // the tile shows the muted (or, if you break the lock, foul) border.
+      const bannedThisRound = myPlayer
+        ? isSeatMutedThisRound(
+            myPlayer,
+            gameSessionState.currentNightNumber,
+            players.filter((p) => p.isAlive).length,
+          )
+        : false;
+      shouldMute = currentSpeakerIndex !== mySeatNumber || bannedThisRound;
     } else if (isPaused) {
       shouldMute = true;
     } else {
