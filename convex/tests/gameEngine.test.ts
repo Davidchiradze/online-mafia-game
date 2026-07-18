@@ -472,6 +472,32 @@ describe("phase transitions + win check", () => {
     expect(session?.speakerStartedAt).toBeDefined();
   });
 
+  it("enterIntroductionPhase precomputes the order symmetrically with day", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      phase: "phase_transition", // host advances into introduction from the buffer
+      currentNightNumber: 0,
+      players: WIN_SAFE_ROSTER,
+    });
+
+    await t
+      .withIdentity({ subject: s.hostAccountId })
+      .mutation(api.game.dayPhase.enterIntroductionPhase, { gameId: s.gameId });
+
+    const session = await getSession(t, s.gameId);
+    expect(session?.gamePhase).toBe("introduction_phase");
+    // Order is precomputed (the "plan"); not yet ignited.
+    expect(session?.speakingOrder).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
+    expect(session?.dayRoundOpenerIndex).toBe(1);
+    expect(session?.currentSpeakerIndex).toBeUndefined();
+
+    // startDaySpeaking then ignites it — the same pure-ignite path as day.
+    await startDaySpeaking(t, s);
+    const ignited = await getSession(t, s.gameId);
+    expect(ignited?.currentSpeakerIndex).toBe(1);
+    expect(ignited?.speakerStartedAt).toBeDefined();
+  });
+
   it("enterDayPhase pauses on a decided win", async () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
@@ -2103,60 +2129,26 @@ describe("sports 3rd-foul speaking ban", () => {
     expect(p?.foulSpeakingBanRound).toBeUndefined();
   });
 
-  it("keeps a muted player in the order as a visible stop (>4 alive)", async () => {
+  it("day entry keeps a 3rd-foul-muted player in the order (no server filter)", async () => {
+    // The 3rd-foul ban is a UI concern now: the server never removes a muted
+    // player from the order — they stay as a visible stop (rendered muted
+    // client-side), and the host clicks Next past them. The ≤4-alive final-day
+    // carve-out likewise lives in the client `isSpeakingBanned` (pinned by
+    // tests/game/dayRoundFouls.test.ts), not the order builder.
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
       gameType: "sports_mafia",
-      phase: "day_phase",
+      phase: "farewell_speech", // enter day cleanly via the transition
       currentNightNumber: 1, // day round 2
-      players: SPORTS_NIGHT_ROSTER, // 7 alive
+      players: SPORTS_NIGHT_ROSTER, // 7 alive, win-safe
     });
-    await setBanRound(t, s.gameId, 5, 2); // banned for the current round
+    await setBanRound(t, s.gameId, 5, 2); // banned for the round now starting
 
-    await startDaySpeaking(t, s);
+    const winner = await t.run((ctx) => enterDayPhase(ctx, s.gameId));
+    expect(winner).toBeNull();
 
-    // The ban is a UI concern now: seat 5 stays in the order (rendered
-    // muted client-side); the host clicks Next past them.
     const session = await getSession(t, s.gameId);
     expect(session?.speakingOrder).toContain(5);
     expect(session?.speakingOrder).toEqual([1, 2, 3, 4, 5, 6, 7]);
-  });
-
-  it("a ban for another round does not affect the order", async () => {
-    const t = convexTest(schema, modules);
-    const s = await seedGame(t, {
-      gameType: "sports_mafia",
-      phase: "day_phase",
-      currentNightNumber: 1, // day round 2
-      players: SPORTS_NIGHT_ROSTER,
-    });
-    await setBanRound(t, s.gameId, 5, 3); // banned for a LATER round
-
-    await startDaySpeaking(t, s);
-
-    const session = await getSession(t, s.gameId);
-    expect(session?.speakingOrder).toContain(5);
-  });
-
-  it("lifts the ban on the final day phase (≤ 4 alive → still speaks)", async () => {
-    const t = convexTest(schema, modules);
-    const s = await seedGame(t, {
-      gameType: "sports_mafia",
-      phase: "day_phase",
-      currentNightNumber: 1, // day round 2
-      players: [
-        { seat: 1, role: "DON" },
-        { seat: 2, role: "MAFIA" },
-        { seat: 3, role: "CITIZEN" },
-        { seat: 4, role: "CITIZEN" },
-      ], // 4 alive → final day phase
-    });
-    await setBanRound(t, s.gameId, 3, 2); // banned for the current round
-
-    await startDaySpeaking(t, s);
-
-    const session = await getSession(t, s.gameId);
-    expect(session?.speakingOrder).toContain(3);
-    expect(session?.speakingOrder).toHaveLength(4);
   });
 });

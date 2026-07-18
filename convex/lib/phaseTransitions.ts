@@ -30,6 +30,32 @@ async function getGameSessionOrThrow(db: DatabaseWriter, gameId: Id<"games">) {
   return session;
 }
 
+type SessionForOrder = { dayRoundOpenerIndex?: number };
+
+/**
+ * Compute the day/introduction speaking order + opener for the current
+ * alive+seated roster. Shared by the two speaking-entry points (`enterDayPhase`
+ * and `dayPhase:enterIntroductionPhase`) so the ordering rule has exactly one
+ * home. No 3rd-foul ban filter — muted players stay in the order as
+ * visible-but-inactive stops (the ban is a UI concern).
+ */
+export async function computeDaySpeakingOrder(
+  db: DatabaseWriter,
+  gameId: Id<"games">,
+  session: SessionForOrder,
+) {
+  const game = await getGameById(db, gameId);
+  const players = await getPlayersByGameId(db, gameId);
+  const eligible = players.filter(
+    (p) => p.seatNumber !== undefined && p.seatNumber <= game.maxPlayers,
+  );
+  return computeSpeakingOrder(
+    eligible,
+    session.dayRoundOpenerIndex ?? null,
+    game.maxPlayers,
+  );
+}
+
 /**
  * Delete the current voting session and its votes, if any.
  * Safe no-op when no voting session exists (e.g. entering night from the
@@ -160,9 +186,10 @@ export async function enterVotingPhase(
  * `undefined` — the order is the *plan*, and `startDaySpeaking` *ignites* it.
  * Called after night kills (or the no-kill skip).
  *
- * Note: the Japanese `introduction_phase` does NOT flow through here (it enters
- * via `game/sessions:update`), so `startDaySpeaking` still computes the order
- * on the spot when none is precomputed — see its ignite-or-compute branch.
+ * The Japanese `introduction_phase` is the same speaking round minus
+ * nominations; it precomputes symmetrically via `dayPhase:enterIntroductionPhase`
+ * (both share `computeDaySpeakingOrder`). `startDaySpeaking` is then a pure
+ * igniter for either entry.
  *
  * Before transitioning, runs the `beforeDay` win check. If a faction has won,
  * the pending winner is recorded and the transition is skipped (the game pauses
@@ -177,20 +204,13 @@ export async function enterDayPhase(ctx: MutationCtx, gameId: Id<"games">) {
 
   const db = ctx.db;
   const session = await getGameSessionOrThrow(db, gameId);
-  const game = await getGameById(db, gameId);
-  const players = await getPlayersByGameId(db, gameId);
 
-  // Seated, in-range players. No 3rd-foul ban filter: muted players stay in the
-  // order as visible-but-inactive stops (the ban is a UI concern). All-dead is
-  // already caught by the `beforeDay` win check, so an empty order is fine here
-  // — `startDaySpeaking` recomputes/validates on ignite.
-  const eligible = players.filter(
-    (p) => p.seatNumber !== undefined && p.seatNumber <= game.maxPlayers,
-  );
-  const { speakingOrder, openerIndex } = computeSpeakingOrder(
-    eligible,
-    session.dayRoundOpenerIndex ?? null,
-    game.maxPlayers,
+  // All-dead is already caught by the `beforeDay` win check, so an empty order
+  // is fine here — `startDaySpeaking` validates it on ignite.
+  const { speakingOrder, openerIndex } = await computeDaySpeakingOrder(
+    db,
+    gameId,
+    session,
   );
 
   await db.patch(session._id, {

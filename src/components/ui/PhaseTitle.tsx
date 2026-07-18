@@ -99,10 +99,13 @@ function getSpeakerInfo(
 ): { text: string; isActive: boolean } | null {
   if (speakingOrder.length === 0) return null;
 
-  // Day-opener preview: `enterDayPhase` precomputes the order but leaves
+  // Opener preview: the day/introduction entry precomputes the order but leaves
   // `currentSpeakerIndex` unset until the host clicks Start. Show who opens.
   if (currentSpeaker == null) {
-    if (gamePhase === GAME_PHASES[16] /* day_phase */) {
+    const isSpeakingEntry =
+      gamePhase === GAME_PHASES[16] /* day_phase */ ||
+      gamePhase === GAME_PHASES[7] /* introduction_phase */;
+    if (isSpeakingEntry) {
       return {
         text: t("phaseTitle.opensNext", { seat: speakingOrder[0] }),
         isActive: false,

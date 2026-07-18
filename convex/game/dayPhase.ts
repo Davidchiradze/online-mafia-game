@@ -7,9 +7,13 @@ import {
   getPlayersByGameId,
   recordWinnerIfDecided,
 } from "../lib/games";
-import { enterNightPhase, enterVotingPhase } from "../lib/phaseTransitions";
+import {
+  computeDaySpeakingOrder,
+  enterNightPhase,
+  enterVotingPhase,
+} from "../lib/phaseTransitions";
 import { SPEAKING_STATE, FOULS } from "../lib/constants";
-import { computeSpeakingOrder, getNextSpeaker } from "../lib/speakingOrder";
+import { getNextSpeaker } from "../lib/speakingOrder";
 import { getGameDefinition } from "../games/registry";
 import { isFirstDayRound } from "../games/core/dayRound";
 import {
@@ -37,52 +41,60 @@ async function getGameSession(db: DatabaseReader, gameId: Id<"games">) {
 // ---------------------------------------------------------------------------
 
 /**
- * Starts the day speaking round.
- * Computes circular speaking order based on alive players and previous opener.
+ * Enter the Japanese `introduction_phase` — the same speaking round as
+ * `day_phase` minus nominations. Precomputes the speaking order + opener (via
+ * the shared `computeDaySpeakingOrder`) so it is symmetric with `enterDayPhase`;
+ * `currentSpeakerIndex` is left unset until the host clicks Start.
+ *
+ * Unlike day/night this is client-callable (the host advances into it from the
+ * neutral buffer — see `StartNextPhaseButton`), so it lives here as a mutation
+ * rather than a `phaseTransitions` helper. No win check: it is the first
+ * speaking phase, before any death is possible.
+ */
+export const enterIntroductionPhase = mutation({
+  args: { gameId: v.id("games") },
+  handler: async (ctx, { gameId }) => {
+    const userId = await getAuthenticatedUser(ctx);
+    await assertIsHost(ctx.db, gameId, userId);
+    const session = await getGameSession(ctx.db, gameId);
+
+    const { speakingOrder, openerIndex } = await computeDaySpeakingOrder(
+      ctx.db,
+      gameId,
+      session,
+    );
+
+    await ctx.db.patch(session._id, {
+      gamePhase: "introduction_phase",
+      speakingOrder,
+      dayRoundOpenerIndex: openerIndex,
+      currentSpeakerIndex: undefined,
+      speakerStartedAt: undefined,
+      phaseStartedAt: Date.now(),
+    });
+  },
+});
+
+/**
+ * Ignites the day/introduction speaking round: the order + opener are already
+ * precomputed by `enterDayPhase` / `enterIntroductionPhase`, so this just marks
+ * the opener as the active speaker and stamps the start time.
  */
 export const startDaySpeaking = mutation({
   args: { gameId: v.id("games") },
   handler: async (ctx, { gameId }) => {
     const userId = await getAuthenticatedUser(ctx);
-    const game = await assertIsHost(ctx.db, gameId, userId);
+    await assertIsHost(ctx.db, gameId, userId);
     const session = await getGameSession(ctx.db, gameId);
 
-    // Ignite-or-compute. `enterDayPhase` precomputes the order and leaves
-    // `currentSpeakerIndex` undefined, so a populated order with a null index is
-    // the fresh, not-yet-started day-phase state — just ignite it. Otherwise
-    // (Japanese `introduction_phase`, which never runs `enterDayPhase`, or a
-    // re-start after the round COMPLETED) compute the order now. Banned players
-    // are NOT filtered out — muted players stay in the order as visible stops
-    // (the 3rd-foul ban is handled in the UI).
-    const precomputed = session.speakingOrder ?? [];
-    const isFreshPrecomputed =
-      precomputed.length > 0 && session.currentSpeakerIndex == null;
-
-    let speakingOrder: number[];
-    let openerIndex: number;
-    if (isFreshPrecomputed) {
-      speakingOrder = precomputed;
-      openerIndex = precomputed[0];
-    } else {
-      const players = await getPlayersByGameId(ctx.db, gameId);
-      const eligible = players.filter(
-        (p) => p.seatNumber !== undefined && p.seatNumber <= game.maxPlayers,
-      );
-      ({ speakingOrder, openerIndex } = computeSpeakingOrder(
-        eligible,
-        session.dayRoundOpenerIndex ?? null,
-        game.maxPlayers,
-      ));
-      if (speakingOrder.length === 0) {
-        throw new ConvexError("No alive players to speak");
-      }
+    const opener = (session.speakingOrder ?? [])[0];
+    if (opener === undefined) {
+      throw new ConvexError("No speaking order to start");
     }
 
     await ctx.db.patch(session._id, {
-      dayRoundOpenerIndex: openerIndex,
-      currentSpeakerIndex: openerIndex,
+      currentSpeakerIndex: opener,
       speakerStartedAt: new Date().toISOString(),
-      speakingOrder,
     });
   },
 });

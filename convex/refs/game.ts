@@ -429,6 +429,9 @@ export const voting = {
 // ============================================================================
 
 export const dayPhase = {
+  enterIntroductionPhase: makeFunctionReference<"mutation", { gameId: Id<"games"> }, null>(
+    "game/dayPhase:enterIntroductionPhase",
+  ),
   startDaySpeaking: makeFunctionReference<"mutation", { gameId: Id<"games"> }, null>(
     "game/dayPhase:startDaySpeaking",
   ),
