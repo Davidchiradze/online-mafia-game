@@ -63,6 +63,7 @@ and `detective_checks_for_mafia` — **identical to Japanese**. The phase list:
 game_session_started
 picking_roles
 mafia_meet                 # DON + 2 MAFIA introduce to each other (same as Japanese, NO right-hand pick)
+don_meet                   # DON wakes alone — host and Don see each other (no right-hand pick)
 detective_meet             # same as Japanese
 day_phase                  # DAY 1 — a full day: nominations + voting available (no introduction phase)
 nominated_players_speak

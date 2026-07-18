@@ -81,6 +81,7 @@ describe("phaseControls maps", () => {
       "game_session_started",
       "picking_roles",
       "mafia_meet",
+      "don_meet",
       "detective_meet",
       "day_phase",
       "nominated_players_speak",
@@ -164,8 +165,15 @@ describe("SPORTS_UI_RULESET", () => {
     });
   });
 
-  it("advances the mafia-meet to the detective-meet (not the Japanese target)", () => {
+  it("advances the mafia-meet to the Don's solo meet (not the Japanese target)", () => {
     expect(sportsAdvanceUpdates("mafia_meet")).toEqual({
+      gamePhase: "phase_transition",
+      nextPhase: "don_meet",
+    });
+  });
+
+  it("advances the don-meet to the detective-meet", () => {
+    expect(sportsAdvanceUpdates("don_meet")).toEqual({
       gamePhase: "phase_transition",
       nextPhase: "detective_meet",
     });

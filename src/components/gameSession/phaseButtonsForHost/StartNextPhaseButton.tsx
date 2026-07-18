@@ -22,9 +22,10 @@ type StartNextPhaseButtonProps = {
  * - `nextPhase === "farewell_speech"` is a resolve-marker for the Doctor→wake
  *   exit: run the existing `startFarewellSpeech`, which resolves night kills and
  *   lands on `farewell_speech` (someone died) or `day_phase` (no kill).
- * - `nextPhase === "introduction_phase"` runs `enterIntroductionPhase`, which
- *   precomputes the speaking order (symmetric with `enterDayPhase`) so the host
- *   sees the opener before Start.
+ * - `nextPhase === "introduction_phase"` runs `enterIntroductionPhase`, and
+ *   `nextPhase === "day_phase"` (Sports' deterministic `detective_meet → day`
+ *   edge) runs `enterDayPhase` — both precompute the speaking order (and run the
+ *   win check) so the host sees the opener before Start.
  * - Otherwise just advance `gamePhase` to `nextPhase` and clear the pointer.
  */
 const StartNextPhaseButton = ({
@@ -36,6 +37,7 @@ const StartNextPhaseButton = ({
   const updateSession = useMutation(gameSessions.update);
   const startFarewellSpeech = useMutation(farewellSpeech.startFarewellSpeech);
   const enterIntroductionPhase = useMutation(dayPhase.enterIntroductionPhase);
+  const enterDayPhase = useMutation(dayPhase.enterDayPhase);
 
   const nextPhase = gameSessionState.nextPhase;
 
@@ -47,6 +49,8 @@ const StartNextPhaseButton = ({
         await startFarewellSpeech({ gameId: gameId as Id<"games"> });
       } else if (nextPhase === "introduction_phase") {
         await enterIntroductionPhase({ gameId: gameId as Id<"games"> });
+      } else if (nextPhase === "day_phase") {
+        await enterDayPhase({ gameId: gameId as Id<"games"> });
       } else {
         await updateSession({
           sessionId: gameSessionState._id,

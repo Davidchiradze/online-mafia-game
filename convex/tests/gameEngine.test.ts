@@ -498,6 +498,34 @@ describe("phase transitions + win check", () => {
     expect(ignited?.speakerStartedAt).toBeDefined();
   });
 
+  it("enterDayPhase mutation precomputes the order (Sports first-day entry)", async () => {
+    // Sports reaches its first day via the deterministic detective_meet →
+    // day_phase edge (through the neutral buffer / StartNextPhaseButton), not
+    // via startFarewellSpeech. The host mutation must precompute so pure-ignite
+    // startDaySpeaking has an order — the regression this guards against.
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      gameType: "sports_mafia",
+      phase: "phase_transition",
+      currentNightNumber: 0, // first day
+      players: SPORTS_NIGHT_ROSTER, // 7 alive, win-safe
+    });
+
+    await t
+      .withIdentity({ subject: s.hostAccountId })
+      .mutation(api.game.dayPhase.enterDayPhase, { gameId: s.gameId });
+
+    const session = await getSession(t, s.gameId);
+    expect(session?.gamePhase).toBe("day_phase");
+    expect(session?.speakingOrder).toEqual([1, 2, 3, 4, 5, 6, 7]);
+    expect(session?.currentSpeakerIndex).toBeUndefined();
+
+    // Pure-ignite now succeeds (previously threw "No speaking order to start").
+    await startDaySpeaking(t, s);
+    const ignited = await getSession(t, s.gameId);
+    expect(ignited?.currentSpeakerIndex).toBe(1);
+  });
+
   it("enterDayPhase pauses on a decided win", async () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {

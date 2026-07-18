@@ -64,6 +64,11 @@ function canSeeParticipant(
     case "mafia_meet":
       return isViewerHost || SPORTS_MAFIA_ROLES.includes(viewerRole);
 
+    // Don meet: only the Don (and host) — the Don wakes alone so host and Don
+    // see each other. Others see no one.
+    case "don_meet":
+      return isViewerHost || viewerRole === "DON";
+
     // Mafia choose target: PRIVATE. Only the host monitors — the acting mafia
     // see no video at all (all tiles covered), just the kill buttons on top.
     case "mafia_chooses_target":
@@ -97,6 +102,7 @@ function getAwakeRoles(gamePhase: GamePhase): Role[] {
     case "mafia_meet":
     case "mafia_chooses_target":
       return ["DON", "MAFIA"];
+    case "don_meet":
     case "don_checks_for_detective":
       return ["DON"];
     case "detective_meet":
@@ -114,6 +120,7 @@ function isNightActivityPhase(gamePhase: GamePhase): boolean {
     "night_phase",
     "phase_transition",
     "mafia_meet",
+    "don_meet",
     "detective_meet",
     "mafia_chooses_target",
     "don_checks_for_detective",

@@ -91,6 +91,10 @@ export const GAME_PHASES = [
   // role changes across teams (and on Doctor→wake exits). Appended last so the
   // numeric GAME_PHASES[0..20] indices used across the app stay stable.
   "phase_transition",
+  // Sports-only: the Don's solo meet (host + Don see each other) that Sports
+  // inserts after `mafia_meet`. Appended after the shared indices so the
+  // GAME_PHASES[0..20] literals used across the app stay stable.
+  "don_meet",
 ] as const;
 
 /** Human-readable labels for each game phase */
@@ -117,6 +121,7 @@ export const GAME_PHASE_LABELS: Record<(typeof GAME_PHASES)[number], string> = {
   repeat: "Next Round",
   end_game: "Game Over",
   phase_transition: "Everyone Asleep",
+  don_meet: "Don Meeting",
 };
 
 // Day Phase Speaking Constants
@@ -215,7 +220,7 @@ export const VOTING = {
 export const PHASE_TIMERS: Partial<
   Record<(typeof GAME_PHASES)[number], number>
 > = {
-  mafia_meet: 40 * 1000,
+  mafia_meet: 60 * 1000,
   don_chooses_right_hand: 20 * 1000,
   yakuda_shogun_meet: 40 * 1000,
   detective_meet: 15 * 1000,

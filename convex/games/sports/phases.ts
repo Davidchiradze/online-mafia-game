@@ -6,6 +6,11 @@
  * `doctor_heals_player`. The two info checks (`don_checks_for_detective`,
  * `detective_checks_for_mafia`) are kept, identical to Japanese.
  *
+ * Sports adds a `don_meet` phase right after `mafia_meet`: the Don wakes alone so
+ * the host and Don see each other (no right-hand pick — this is just the Don's
+ * solo acknowledgement). Structurally it mirrors `don_checks_for_detective`
+ * (awake role = DON, host + Don visible) but sits in the pre-day meet sequence.
+ *
  * Phase-2 note: this is authored as DATA/spec (unit-tested), not yet wired to
  * any UI — the Sports phase buttons + `advanceUpdates` land in Phase 4.
  */
@@ -16,6 +21,7 @@ export const SPORTS_PHASES: readonly Phase[] = [
   "game_session_started",
   "picking_roles",
   "mafia_meet",
+  "don_meet",
   "detective_meet",
   "day_phase",
   "nominated_players_speak",
@@ -37,7 +43,8 @@ export const SPORTS_PHASES: readonly Phase[] = [
 // replacing Japanese's `doctor_heals_player → farewell_speech`.
 const HOST_ADVANCE: Record<string, Phase> = {
   picking_roles: "mafia_meet",
-  mafia_meet: "detective_meet",
+  mafia_meet: "don_meet",
+  don_meet: "detective_meet",
   detective_meet: "day_phase",
   night_phase: "mafia_chooses_target",
   mafia_chooses_target: "don_checks_for_detective",

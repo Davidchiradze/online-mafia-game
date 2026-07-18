@@ -9,6 +9,7 @@ import {
 } from "../lib/games";
 import {
   computeDaySpeakingOrder,
+  enterDayPhase as enterDayPhaseTransition,
   enterNightPhase,
   enterVotingPhase,
 } from "../lib/phaseTransitions";
@@ -39,6 +40,23 @@ async function getGameSession(db: DatabaseReader, gameId: Id<"games">) {
 // ---------------------------------------------------------------------------
 // Mutations
 // ---------------------------------------------------------------------------
+
+/**
+ * Enter `day_phase` from the host's neutral-buffer advance (Sports reaches its
+ * first day via the deterministic `detective_meet → day_phase` edge, unlike
+ * Japanese which always arrives through `startFarewellSpeech`). Delegates to the
+ * `enterDayPhase` transition helper so the order is precomputed and the win
+ * check runs — the single source of truth for entering day. `startDaySpeaking`
+ * then ignites the precomputed order.
+ */
+export const enterDayPhase = mutation({
+  args: { gameId: v.id("games") },
+  handler: async (ctx, { gameId }) => {
+    const userId = await getAuthenticatedUser(ctx);
+    await assertIsHost(ctx.db, gameId, userId);
+    await enterDayPhaseTransition(ctx, gameId);
+  },
+});
 
 /**
  * Enter the Japanese `introduction_phase` — the same speaking round as

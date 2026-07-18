@@ -17,7 +17,8 @@ import type { PhaseAdvanceUpdates } from "@/game/japanese/phaseFlow";
 
 /** Sources whose host-advance sleeps through the neutral buffer first. */
 const BUFFER_MEDIATED: ReadonlySet<string> = new Set([
-  "mafia_meet", // mafia sleep → detective wakes
+  "mafia_meet", // mafia sleep → don wakes alone
+  "don_meet", // don sleeps → detective wakes
   "detective_meet", // night ends → everyone wakes for day 1
   "don_checks_for_detective", // don sleeps → detective wakes
   "detective_checks_for_mafia", // detective sleeps → dawn resolution (farewell)

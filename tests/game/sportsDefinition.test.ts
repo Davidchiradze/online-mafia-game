@@ -88,9 +88,17 @@ describe("SPORTS_DEFINITION — phase graph (§3)", () => {
     expect(def.phases).toContain("detective_checks_for_mafia");
   });
 
+  it("adds a don_meet phase after mafia_meet", () => {
+    expect(def.phases).toContain("don_meet");
+    expect(def.phases.indexOf("don_meet")).toBe(
+      def.phases.indexOf("mafia_meet") + 1,
+    );
+  });
+
   const edges: Array<[string, string]> = [
     ["picking_roles", "mafia_meet"],
-    ["mafia_meet", "detective_meet"], // skips don_chooses_right_hand
+    ["mafia_meet", "don_meet"], // Sports adds the Don's solo meet after mafia_meet
+    ["don_meet", "detective_meet"], // skips don_chooses_right_hand
     ["detective_meet", "day_phase"], // no introduction_phase
     ["night_phase", "mafia_chooses_target"],
     ["mafia_chooses_target", "don_checks_for_detective"],

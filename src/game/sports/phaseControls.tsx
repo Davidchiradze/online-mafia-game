@@ -49,6 +49,13 @@ export const SPORTS_PHASE_CONTROLS: PhaseControlsMap = {
       labelKey="endMeeting"
     />
   ),
+  don_meet: ({ gameSessionState }) => (
+    <PhaseAdvanceButton
+      gameSessionState={gameSessionState}
+      sourcePhase="don_meet"
+      labelKey="endMeeting"
+    />
+  ),
   detective_meet: ({ gameSessionState }) => (
     <PhaseAdvanceButton
       gameSessionState={gameSessionState}
