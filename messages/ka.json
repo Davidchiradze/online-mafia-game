@@ -608,6 +608,8 @@
       "private": "დახურული",
       "spectate": "ყურება",
       "join": "შესვლა",
+      "full": "სავსეა",
+      "openSeat": "თავისუფალი",
       "joinGame": "თამაშში შესვლა",
       "spectatorsTooltipTitle": "მაყურებლები ({count})",
       "playersTooltipTitle": "მოთამაშეები ({count}/{max})",

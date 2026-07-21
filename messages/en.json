@@ -608,6 +608,8 @@
       "private": "Private",
       "spectate": "Spectate",
       "join": "Join",
+      "full": "Full",
+      "openSeat": "open",
       "joinGame": "Join Game",
       "spectatorsTooltipTitle": "Spectators ({count})",
       "playersTooltipTitle": "Players ({count}/{max})",

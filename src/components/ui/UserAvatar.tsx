@@ -5,8 +5,12 @@ import { useTranslations } from "next-intl";
 type Props = {
   src?: string | null;
   name?: string | null;
-  /** Pixel size of the (square) avatar. Defaults to 28. */
-  size?: number;
+  /**
+   * Size of the (square) avatar. A number is treated as pixels; a string is used
+   * as-is (any CSS length, e.g. a container-query unit like `"var(--av)"`).
+   * Defaults to 28.
+   */
+  size?: number | string;
   /** When set, renders a presence dot in the corner (green online / gray off). */
   online?: boolean;
   className?: string;
@@ -29,7 +33,9 @@ export default function UserAvatar({
 }: Props) {
   const t = useTranslations("common");
   const initial = name?.trim()?.[0]?.toUpperCase() ?? "?";
-  const dotSize = Math.max(8, Math.round(size * 0.3));
+  const isNumeric = typeof size === "number";
+  const dotSize = isNumeric ? Math.max(8, Math.round(size * 0.3)) : 12;
+  const initialFontSize = isNumeric ? size * 0.45 : `calc(${size} * 0.45)`;
 
   return (
     <div
@@ -47,7 +53,7 @@ export default function UserAvatar({
         ) : (
           <span
             className="font-sans font-semibold text-white/90 leading-none"
-            style={{ fontSize: size * 0.45 }}
+            style={{ fontSize: initialFontSize }}
           >
             {initial}
           </span>
