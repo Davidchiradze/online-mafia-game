@@ -8,9 +8,10 @@ import { gameLogs as historyRefs } from "@convex/refs/history";
 import { Doc } from "@convex/_generated/dataModel";
 import RoomCard from "@/components/lobby/roomCard/RoomCard";
 import CreateGameModal from "@/components/modals/CreateGameModal";
-import { Plus } from "lucide-react";
+import { Plus, Search, SearchX } from "lucide-react";
 // import LobbyStats from "./LobbyStats";
 import StreakFlame from "./StreakFlame";
+import FeatureBanner from "./FeatureBanner";
 import PromoBanner from "./PromoBanner";
 import { LobbySubscriptionModal } from "./LobbySubscriptionModal";
 import {
@@ -62,43 +63,67 @@ export default function LobbyContent({ games }: Props) {
 
   return (
     <div className="relative z-10 px-4 pb-16 pt-8 text-white sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl">
-        <div className="mb-8 flex items-center justify-between gap-4">
-          <div>
+      <div className="mx-auto flex max-w-7xl flex-col gap-[26px]">
+        {/* Header: title left · streak + rating top-right */}
+        <div className="flex flex-wrap items-end justify-between gap-7">
+          <div className="min-w-[260px]">
             <h1
-              className="mb-1.5 bg-gradient-to-r from-white via-red-100 to-white bg-clip-text font-orbitron text-transparent"
+              className="mb-2 bg-gradient-to-r from-white via-red-100 to-white bg-clip-text font-orbitron text-transparent"
               style={{
-                fontSize: "clamp(1.6rem, 3vw, 2.2rem)",
+                fontSize: "clamp(1.8rem, 3vw, 2.4rem)",
                 fontWeight: 700,
               }}
             >
               {t("gameLobbyTitle")}
             </h1>
-            <p className="font-sans text-sm text-gray-500">
+            <p className="max-w-[46ch] font-sans text-[0.94rem] text-gray-500 text-pretty">
               {t("gameLobbySubtitle")}
             </p>
           </div>
-          <RatingCard stats={myStats} />
 
-          <StreakFlame streak={myStats?.currentStreak ?? 0} />
+          <div className="flex flex-wrap items-center gap-3.5">
+            <StreakFlame streak={myStats?.currentStreak ?? 0} />
+            <RatingCard stats={myStats} />
+          </div>
         </div>
+
+        {/* Featured YouTube banner */}
+        <FeatureBanner
+          videoId="y7t8PA8nh38"
+          badge={t("featureBadge")}
+          source={t("featureSource")}
+          title={t("featureTitle")}
+          blurb={t("featureBlurb")}
+          ctaLabel={t("featureCta")}
+        />
 
         {/* <LobbyStats stats={myStats} /> */}
 
-        {/* <div className="mb-8">
-          <PromoBanner
-            href="https://www.mafia.ge/ka/tournament/details/15"
-            bannerImageUrl="https://www.mafia.ge/templates/newassets/img/tournament-banner.png"
-            bannerImageMobileUrl="https://www.mafia.ge/templates/newassets/img/tournament-bannermob.png"
-            cupImageUrl="https://www.mafia.ge/templates/newassets/img/cupImage.png"
-            eyebrow={t("promoEyebrow")}
-            title={t("promoTitle")}
-            highlight={t("promoHighlight")}
-            status={t("promoStatus")}
-          />
-        </div> */}
+        {/* Legacy tournament artwork banner — kept for reuse if we swap the YouTube feature out */}
+        {/* <PromoBanner
+          href="https://www.mafia.ge/ka/tournament/details/15"
+          bannerImageUrl="https://www.mafia.ge/templates/newassets/img/tournament-banner.png"
+          bannerImageMobileUrl="https://www.mafia.ge/templates/newassets/img/tournament-bannermob.png"
+          cupImageUrl="https://www.mafia.ge/templates/newassets/img/cupImage.png"
+          eyebrow={t("promoEyebrow")}
+          title={t("promoTitle")}
+          highlight={t("promoHighlight")}
+          status={t("promoStatus")}
+        /> */}
 
-        <div className="mb-6 flex flex-col gap-3 sm:flex-row">
+        {/* Rooms section head + the single primary action */}
+        <div className="flex flex-wrap items-center justify-between gap-5 border-t border-white/[0.08] pt-4">
+          <div className="flex items-baseline gap-3">
+            <h2 className="font-orbitron text-sm font-bold uppercase tracking-[0.16em] text-gray-200">
+              {t("roomsHeading")}
+            </h2>
+            <span className="font-orbitron text-[0.8rem] font-bold text-gray-500">
+              {filtered.length}
+            </span>
+          </div>
+
+          {/* Search + status filter — the `filtered` list already honours these.
+              Uncomment to expose the controls in the rooms toolbar. */}
           {/* <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-600" />
             <input
@@ -137,27 +162,34 @@ export default function LobbyContent({ games }: Props) {
           >
             <button
               onClick={() => setIsCreateOpen(true)}
-              className="flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-red-700 px-5 py-2.5 font-sans text-sm font-semibold text-white shadow-[0_0_20px_rgba(220,38,38,0.3)] transition hover:from-red-500 hover:to-red-600 hover:shadow-[0_0_30px_rgba(220,38,38,0.5)]"
+              className="flex shrink-0 cursor-pointer items-center justify-center gap-2.5 rounded-[11px] bg-gradient-to-r from-red-500 to-red-700 px-6 py-3 font-orbitron text-[0.82rem] font-bold tracking-[0.04em] text-white shadow-[0_0_22px_rgba(220,38,38,0.38),inset_0_1px_0_rgba(255,255,255,0.2)] transition hover:-translate-y-px hover:shadow-[0_0_38px_rgba(220,38,38,0.66),inset_0_1px_0_rgba(255,255,255,0.24)] active:translate-y-0"
             >
-              <Plus className="h-4 w-4" />
+              <Plus className="h-4 w-4" strokeWidth={2.6} />
               {t("createRoom")}
             </button>
           </SubscriptionGuard>
         </div>
 
         {filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-white/10 bg-white/[0.02] py-16">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03]">
-              <span className="font-orbitron text-lg font-bold text-gray-600">
-                ?
-              </span>
+          <div
+            className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-white/[0.14] px-7 py-14 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+            style={{
+              background:
+                "linear-gradient(150deg,rgba(255,120,120,0.035) 0%,rgba(255,255,255,0.02) 50%,rgba(255,255,255,0.01) 100%)",
+            }}
+          >
+            <div className="flex h-[54px] w-[54px] items-center justify-center rounded-full border border-white/10 bg-black/35 shadow-[inset_0_0_18px_rgba(220,38,38,0.12)]">
+              <SearchX className="h-6 w-6 text-gray-500" strokeWidth={1.7} />
             </div>
-            <p className="font-sans text-sm text-gray-600">
+            <div className="font-orbitron text-base font-bold tracking-wide text-gray-200">
               {tg("table.noRoomsFound")}
-            </p>
+            </div>
+            {/* <p className="max-w-[340px] font-sans text-sm leading-relaxed text-gray-500 text-pretty">
+              {t("emptyMessage")}
+            </p> */}
           </div>
         ) : (
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(min(320px,100%),1fr))] gap-5">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(min(320px,100%),360px))] justify-start gap-5">
             {filtered.map((room) => (
               <RoomCard
                 key={room._id}

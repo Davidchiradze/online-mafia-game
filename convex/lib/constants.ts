@@ -53,7 +53,7 @@ export const VOTING = {
 } as const;
 
 export const SPECTATOR = {
-  MAX_SPECTATORS_PER_GAME: 10,
+  MAX_SPECTATORS_PER_GAME: 0,
 } as const;
 
 export const SPEAKING_STATE = {
@@ -152,7 +152,10 @@ export type RatingConfig = {
    * Wins still pay ~2× losses because the average player wins only ~33.5% of
    * games, and the average per-role EV stays ~zero.
    */
-  deltas: Record<"mafia" | "citizens" | "yakuza", { win: number; loss: number }>;
+  deltas: Record<
+    "mafia" | "citizens" | "yakuza",
+    { win: number; loss: number }
+  >;
   /**
    * Symmetric table-strength term b = clamp(round((T − R) / divisor), ±cap).
    * divisor 20 is kept deliberately loose (a weaker spring than the K-linear
