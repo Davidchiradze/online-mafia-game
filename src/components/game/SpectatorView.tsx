@@ -13,6 +13,7 @@ import GameRoomHeader from "@/components/game/GameRoomHeader";
 import StaffToolsButton from "@/components/game/staff-tools";
 import { useRef } from "react";
 import { useGameBroadcasts } from "@/hooks/game/useGameBroadcasts";
+import { useGameRoom } from "@/lib/context/gameRoomContext";
 import type { Id } from "@convex/_generated/dataModel";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import AudioPlaybackModal from "@/components/liveKit/AudioPlaybackModal";
@@ -70,6 +71,7 @@ function SpectatorVideoConference({
   userId: string;
 }) {
   const t = useTranslations("game.session");
+  const { maxPlayers } = useGameRoom();
   const tracks = useTracks(
     [{ source: Track.Source.Camera, withPlaceholder: true }],
     { onlySubscribed: false },
@@ -87,6 +89,7 @@ function SpectatorVideoConference({
             tracks={tracks}
             hostUserId={hostUserId}
             userId={userId}
+            maxPlayers={maxPlayers ?? 12}
           />
         </div>
       )}

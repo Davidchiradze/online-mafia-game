@@ -5,7 +5,7 @@ import { useMutation } from "convex/react";
 import { gameSessions } from "@convex/refs/game";
 import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
-import { GAME_PHASES } from "@/lib/constants/game";
+import { advanceUpdates } from "@/game/japanese/phaseFlow";
 import PhaseButton from "@/components/ui/PhaseButton";
 import { useNightPhaseReadiness } from "@/hooks/game/useNightPhaseReadiness";
 
@@ -31,10 +31,7 @@ const EndDoctorHealButton = () => {
     try {
       await updateSession({
         sessionId: gameSessionState._id,
-        updates: {
-          gamePhase: GAME_PHASES[21], // "phase_transition" (neutral sleep buffer)
-          nextPhase: "farewell_speech", // resolve-marker: Start runs startFarewellSpeech
-        },
+        updates: advanceUpdates("doctor_heals_player"),
       });
     } catch (e) {
       console.error("Failed to end doctor heal:", e);

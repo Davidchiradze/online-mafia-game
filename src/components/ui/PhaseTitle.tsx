@@ -93,10 +93,26 @@ function getPhaseTitle(
 
 function getSpeakerInfo(
   t: Translator,
+  gamePhase: string,
   speakingOrder: number[],
   currentSpeaker: number | null | undefined,
 ): { text: string; isActive: boolean } | null {
-  if (!currentSpeaker || speakingOrder.length === 0) return null;
+  if (speakingOrder.length === 0) return null;
+
+  // Opener preview: the day/introduction entry precomputes the order but leaves
+  // `currentSpeakerIndex` unset until the host clicks Start. Show who opens.
+  if (currentSpeaker == null) {
+    const isSpeakingEntry =
+      gamePhase === GAME_PHASES[16] /* day_phase */ ||
+      gamePhase === GAME_PHASES[7] /* introduction_phase */;
+    if (isSpeakingEntry) {
+      return {
+        text: t("phaseTitle.opensNext", { seat: speakingOrder[0] }),
+        isActive: false,
+      };
+    }
+    return null;
+  }
 
   const isPaused = SPEAKING_STATE.isPaused(currentSpeaker);
   const isActive = SPEAKING_STATE.isActive(currentSpeaker);
@@ -160,7 +176,12 @@ export default function PhaseTitle(props: PhaseTitleProps) {
     isHost,
     nextPhase,
   );
-  const speakerInfo = getSpeakerInfo(t, speakingOrder, currentSpeakerIndex);
+  const speakerInfo = getSpeakerInfo(
+    t,
+    gamePhase,
+    speakingOrder,
+    currentSpeakerIndex,
+  );
   const isPickingRolesPhase = gamePhase === GAME_PHASES[1];
 
   // Only show nominated players to host

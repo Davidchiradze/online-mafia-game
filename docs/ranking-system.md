@@ -180,7 +180,7 @@ Properties:
 - **Peak rating** is stored alongside current rating (same pattern as
   `bestStreak`).
 - **Scope**: ratings are per game type (§1). Only `japanese_mafia` has a
-  rating config today — `traditional` / `city_mafia` have different faction
+  rating config today — `sports_mafia` / `city_mafia` have different faction
   structures and no calibration data, so they stay unrated until they get
   their **own** config + E table (§9).
 

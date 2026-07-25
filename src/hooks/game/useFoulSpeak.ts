@@ -13,6 +13,12 @@ type UseFoulSpeakOptions = {
   isLocal: boolean;
   isFoulAllowedPhase: boolean;
   isSpeaking: boolean;
+  /**
+   * True when it's this player's turn but they're muted (3rd-foul ban). They
+   * can't take their normal speech, but they CAN still foul-speak (interject
+   * for 5s and take a foul) — so treat them like a non-speaker here.
+   */
+  isMutedTurn: boolean;
   isTargetHost: boolean;
   isViewerHost: boolean;
 };
@@ -36,6 +42,7 @@ export function useFoulSpeak({
   isLocal,
   isFoulAllowedPhase,
   isSpeaking,
+  isMutedTurn,
   isTargetHost,
   isViewerHost,
 }: UseFoulSpeakOptions): UseFoulSpeakReturn {
@@ -49,9 +56,14 @@ export function useFoulSpeak({
     player.seatNumber != null;
 
   // Foul speak - for non-speakers to speak for 5 seconds during foul-allowed phases
-  // Only enabled for local player who is NOT the current speaker and NOT the host
+  // Only enabled for local player who is NOT the current speaker and NOT the host.
+  // A muted-turn player (3rd-foul ban) counts as a non-speaker: their normal
+  // speech is blocked, but they can still interject via foul-speak.
   const canUseFoulSpeak =
-    isLocal && isFoulAllowedPhase && !isSpeaking && !isTargetHost;
+    isLocal &&
+    isFoulAllowedPhase &&
+    (!isSpeaking || isMutedTurn) &&
+    !isTargetHost;
   const [isFoulSpeaking, setIsFoulSpeaking] = useState(false);
   const [foulSpeakTimeLeft, setFoulSpeakTimeLeft] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);

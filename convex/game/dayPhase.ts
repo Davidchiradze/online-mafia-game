@@ -7,9 +7,20 @@ import {
   getPlayersByGameId,
   recordWinnerIfDecided,
 } from "../lib/games";
-import { enterNightPhase, enterVotingPhase } from "../lib/phaseTransitions";
+import {
+  computeDaySpeakingOrder,
+  enterDayPhase as enterDayPhaseTransition,
+  enterNightPhase,
+  enterVotingPhase,
+} from "../lib/phaseTransitions";
 import { SPEAKING_STATE, FOULS } from "../lib/constants";
-import { computeSpeakingOrder, getNextSpeaker } from "../lib/speakingOrder";
+import { getNextSpeaker } from "../lib/speakingOrder";
+import { getGameDefinition } from "../games/registry";
+import { isFirstDayRound } from "../games/core/dayRound";
+import {
+  THIRD_FOUL_BAN_COUNT,
+  foulSpeakingBanRound,
+} from "../games/core/fouls";
 import type { Id } from "../_generated/dataModel";
 import type { DatabaseReader } from "../_generated/server";
 
@@ -31,39 +42,77 @@ async function getGameSession(db: DatabaseReader, gameId: Id<"games">) {
 // ---------------------------------------------------------------------------
 
 /**
- * Starts the day speaking round.
- * Computes circular speaking order based on alive players and previous opener.
+ * Enter `day_phase` from the host's neutral-buffer advance (Sports reaches its
+ * first day via the deterministic `detective_meet → day_phase` edge, unlike
+ * Japanese which always arrives through `startFarewellSpeech`). Delegates to the
+ * `enterDayPhase` transition helper so the order is precomputed and the win
+ * check runs — the single source of truth for entering day. `startDaySpeaking`
+ * then ignites the precomputed order.
+ */
+export const enterDayPhase = mutation({
+  args: { gameId: v.id("games") },
+  handler: async (ctx, { gameId }) => {
+    const userId = await getAuthenticatedUser(ctx);
+    await assertIsHost(ctx.db, gameId, userId);
+    await enterDayPhaseTransition(ctx, gameId);
+  },
+});
+
+/**
+ * Enter the Japanese `introduction_phase` — the same speaking round as
+ * `day_phase` minus nominations. Precomputes the speaking order + opener (via
+ * the shared `computeDaySpeakingOrder`) so it is symmetric with `enterDayPhase`;
+ * `currentSpeakerIndex` is left unset until the host clicks Start.
+ *
+ * Unlike day/night this is client-callable (the host advances into it from the
+ * neutral buffer — see `StartNextPhaseButton`), so it lives here as a mutation
+ * rather than a `phaseTransitions` helper. No win check: it is the first
+ * speaking phase, before any death is possible.
+ */
+export const enterIntroductionPhase = mutation({
+  args: { gameId: v.id("games") },
+  handler: async (ctx, { gameId }) => {
+    const userId = await getAuthenticatedUser(ctx);
+    await assertIsHost(ctx.db, gameId, userId);
+    const session = await getGameSession(ctx.db, gameId);
+
+    const { speakingOrder, openerIndex } = await computeDaySpeakingOrder(
+      ctx.db,
+      gameId,
+      session,
+    );
+
+    await ctx.db.patch(session._id, {
+      gamePhase: "introduction_phase",
+      speakingOrder,
+      dayRoundOpenerIndex: openerIndex,
+      currentSpeakerIndex: undefined,
+      speakerStartedAt: undefined,
+      phaseStartedAt: Date.now(),
+    });
+  },
+});
+
+/**
+ * Ignites the day/introduction speaking round: the order + opener are already
+ * precomputed by `enterDayPhase` / `enterIntroductionPhase`, so this just marks
+ * the opener as the active speaker and stamps the start time.
  */
 export const startDaySpeaking = mutation({
   args: { gameId: v.id("games") },
   handler: async (ctx, { gameId }) => {
     const userId = await getAuthenticatedUser(ctx);
-    const game = await assertIsHost(ctx.db, gameId, userId);
+    await assertIsHost(ctx.db, gameId, userId);
     const session = await getGameSession(ctx.db, gameId);
 
-    const players = await getPlayersByGameId(ctx.db, gameId);
-    const maxSeats = game.maxPlayers;
-
-    const gamePlayers = players.filter(
-      (p) => p.seatNumber !== undefined && p.seatNumber <= maxSeats,
-    );
-
-    const previousOpener = session.dayRoundOpenerIndex ?? null;
-    const { speakingOrder, openerIndex } = computeSpeakingOrder(
-      gamePlayers,
-      previousOpener,
-      maxSeats,
-    );
-
-    if (speakingOrder.length === 0) {
-      throw new ConvexError("No alive players to speak");
+    const opener = (session.speakingOrder ?? [])[0];
+    if (opener === undefined) {
+      throw new ConvexError("No speaking order to start");
     }
 
     await ctx.db.patch(session._id, {
-      dayRoundOpenerIndex: openerIndex,
-      currentSpeakerIndex: openerIndex,
+      currentSpeakerIndex: opener,
       speakerStartedAt: new Date().toISOString(),
-      speakingOrder,
     });
   },
 });
@@ -139,24 +188,6 @@ export const finishCurrentSpeaker = mutation({
 });
 
 /**
- * Resets speaking state (clears order + speaker). Keeps dayRoundOpenerIndex.
- */
-export const resetSpeakingState = mutation({
-  args: { gameId: v.id("games") },
-  handler: async (ctx, { gameId }) => {
-    const userId = await getAuthenticatedUser(ctx);
-    await assertIsHost(ctx.db, gameId, userId);
-    const session = await getGameSession(ctx.db, gameId);
-
-    await ctx.db.patch(session._id, {
-      currentSpeakerIndex: undefined,
-      speakerStartedAt: undefined,
-      speakingOrder: [],
-    });
-  },
-});
-
-/**
  * Toggles a player's nomination during day_phase.
  * Blocked if a foul elimination occurred this round.
  */
@@ -211,7 +242,7 @@ export const startNominatedPlayersSpeaking = mutation({
   args: { gameId: v.id("games") },
   handler: async (ctx, { gameId }) => {
     const userId = await getAuthenticatedUser(ctx);
-    await assertIsHost(ctx.db, gameId, userId);
+    const game = await assertIsHost(ctx.db, gameId, userId);
     const session = await getGameSession(ctx.db, gameId);
 
     if (session.gamePhase !== "day_phase") {
@@ -223,6 +254,30 @@ export const startNominatedPlayersSpeaking = mutation({
     const nominatedPlayers = session.nominatedPlayers ?? [];
     if (nominatedPlayers.length === 0) {
       throw new ConvexError("No players nominated");
+    }
+
+    // Variant single-nominee rule (Sports §4.1), gated on the definition flag.
+    // Day 1: a lone nominee is NOT eliminated → skip voting straight to night.
+    // Day 2+: a lone nominee is eliminated without a vote → farewell speech,
+    // then night (advanceFromFarewell routes to night while nominatedPlayers is
+    // non-empty). Japanese leaves the flag false → falls through to the shared
+    // behavior below (a single nominee still goes to voting).
+    const definition = getGameDefinition(game.gameType);
+    if (
+      definition.flags.firstDaySingleNomineeSkipsToNight &&
+      nominatedPlayers.length === 1
+    ) {
+      if (isFirstDayRound(session.currentNightNumber)) {
+        await enterNightPhase(ctx, gameId);
+      } else {
+        await ctx.db.patch(session._id, {
+          gamePhase: "farewell_speech",
+          speakingOrder: [nominatedPlayers[0]],
+          currentSpeakerIndex: undefined,
+          speakerStartedAt: undefined,
+        });
+      }
+      return;
     }
 
     // Skip self-justification when the host disabled it, or when there is a
@@ -334,7 +389,7 @@ export const giveFoul = mutation({
   },
   handler: async (ctx, { gameId, seatNumber }) => {
     const userId = await getAuthenticatedUser(ctx);
-    await assertIsHost(ctx.db, gameId, userId);
+    const game = await assertIsHost(ctx.db, gameId, userId);
     const session = await getGameSession(ctx.db, gameId);
 
     const allowedPhases = FOULS.ALLOWED_PHASES as readonly string[];
@@ -354,6 +409,19 @@ export const giveFoul = mutation({
 
     const newFoulCount = currentFouls + 1;
     await ctx.db.patch(player._id, { fouls: newFoulCount });
+
+    // 3rd-foul speaking ban (Sports §4.2): mute the player from their day speech
+    // on the NEXT day phase. Gated on the definition flag; Japanese never sets
+    // this. The 4th-foul elimination below is retained across all variants.
+    const definition = getGameDefinition(game.gameType);
+    if (
+      definition.flags.thirdFoulSpeakingBan &&
+      newFoulCount === THIRD_FOUL_BAN_COUNT
+    ) {
+      await ctx.db.patch(player._id, {
+        foulSpeakingBanRound: foulSpeakingBanRound(session.currentNightNumber),
+      });
+    }
 
     if (newFoulCount === FOULS.ELIMINATION_THRESHOLD) {
       await ctx.db.patch(player._id, { isAlive: false });

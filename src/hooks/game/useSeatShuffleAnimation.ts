@@ -3,13 +3,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { TrackReferenceOrPlaceholder } from "@livekit/components-react";
 import type { useGameRoom } from "@/lib/context/gameRoomContext";
+import type { GridPosition } from "@/game/core/types";
 
 type GamePlayer = ReturnType<typeof useGameRoom>["players"][number];
 
-type GridPosition = {
-  gridRow: number;
-  gridColumn: number;
-};
+export type { GridPosition };
 
 export type SeatShuffleResult = {
   seatedPlayers: GamePlayer[];
@@ -17,43 +15,9 @@ export type SeatShuffleResult = {
   trackByPlayerId: Map<string, TrackReferenceOrPlaceholder>;
   hostTrack: TrackReferenceOrPlaceholder | undefined;
   arcLiftByPlayer: Record<string, number>;
-  gridPositionForSeat: (seatNumber: number) => GridPosition;
 };
 
 const ARC_CLEAR_DELAY_MS = 1800;
-
-function gridPositionForSeat(seatNumber: number): GridPosition {
-  switch (seatNumber) {
-    case 1:
-      return { gridRow: 1, gridColumn: 3 };
-    case 2:
-      return { gridRow: 1, gridColumn: 4 };
-    case 3:
-      return { gridRow: 2, gridColumn: 4 };
-    case 4:
-      return { gridRow: 3, gridColumn: 4 };
-    case 5:
-      return { gridRow: 4, gridColumn: 4 };
-    case 6:
-      return { gridRow: 4, gridColumn: 3 };
-    case 7:
-      return { gridRow: 4, gridColumn: 2 };
-    case 8:
-      return { gridRow: 4, gridColumn: 1 };
-    case 9:
-      return { gridRow: 3, gridColumn: 1 };
-    case 10:
-      return { gridRow: 2, gridColumn: 1 };
-    case 11:
-      return { gridRow: 1, gridColumn: 1 };
-    case 12:
-      return { gridRow: 1, gridColumn: 2 };
-    case 13:
-      return { gridRow: 2, gridColumn: 2 };
-    default:
-      return { gridRow: 4, gridColumn: 4 };
-  }
-}
 
 /**
  * Manages identity-keyed seat data and Start Game shuffle arc animation.
@@ -69,12 +33,15 @@ export function useSeatShuffleAnimation({
   hostUserId,
   maxPlayers,
   gameSessionId,
+  gridPositionForSeat,
 }: {
   players: GamePlayer[];
   tracks: TrackReferenceOrPlaceholder[];
   hostUserId: string | null;
   maxPlayers: number;
   gameSessionId: string | null;
+  /** Ring geometry from the resolved variant's `seatLayout` (arc-distance math). */
+  gridPositionForSeat: (seatNumber: number) => GridPosition;
 }): SeatShuffleResult {
   const seatedPlayers = useMemo(
     () =>
@@ -158,7 +125,7 @@ export function useSeatShuffleAnimation({
 
     previousSeatsRef.current = currentSeatMap;
     previousSessionRef.current = gameSessionId;
-  }, [gameSessionId, seatedPlayers]);
+  }, [gameSessionId, seatedPlayers, gridPositionForSeat]);
 
   useEffect(() => {
     return () => {
@@ -175,6 +142,5 @@ export function useSeatShuffleAnimation({
     trackByPlayerId,
     hostTrack,
     arcLiftByPlayer,
-    gridPositionForSeat,
   };
 }

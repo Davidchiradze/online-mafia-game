@@ -78,6 +78,17 @@ export const CARD_PICK = {
   TIMEOUT_SECONDS: 15,
 } as const;
 
+export const SPORTS = {
+  /**
+   * Sports mafia kill-selection window (docs/sports-mafia.md §5.3): buttons
+   * enable on phase entry and disable after 5s. The scheduler only CLOSES the
+   * window (flips a boolean) — it does NOT advance the phase; the host advances
+   * manually. Mirrors the voting-window shape.
+   */
+  MAFIA_TARGET_WINDOW_MS: 5 * 1000,
+  MAFIA_TARGET_WINDOW_SECONDS: 5,
+} as const;
+
 export const PRESENCE = {
   /**
    * Single site-wide presence room. "Online" means a user is on the site
@@ -159,7 +170,7 @@ export type RatingConfig = {
  * 269 decided games); recalibrate E-derived deltas every ~200 decided games.
  */
 export const RATING_CONFIG: Partial<
-  Record<"traditional" | "city_mafia" | "japanese_mafia", RatingConfig>
+  Record<"sports_mafia" | "city_mafia" | "japanese_mafia", RatingConfig>
 > = {
   japanese_mafia: {
     start: 1000,

@@ -15,6 +15,8 @@ import {
 } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import { getUiRuleset } from "@/game/registry";
+import type { UiRuleset } from "@/game/core/types";
 import { useGameRoomConnection, type JoinStatus } from "./useGameRoomConnection";
 
 // ---------------------------------------------------------------------------
@@ -31,6 +33,7 @@ type ConvexGamePlayer = {
   isAlive: boolean;
   fouls: number;
   foulSpeakStartedAt?: number;
+  foulSpeakingBanRound?: number;
   state?: string;
   isReady?: boolean;
 };
@@ -63,6 +66,10 @@ type ConvexNightPhaseSession = {
   mafiaTarget?: number;
   yakuzaTarget?: number;
   healedPlayer?: number;
+  // Sports unanimous-vote window (§5). Per-mafia selections are NOT surfaced
+  // here (privacy §5.4) — a mafia reads only their own pick via getMySelection.
+  mafiaTargetWindowActive?: boolean;
+  mafiaTargetWindowStartedAt?: string;
 };
 
 type ConvexVotingSession = {
@@ -115,6 +122,8 @@ type GameRoomContextValue = {
   isHost: boolean;
   isSpectator: boolean;
   gameData: GameData | null;
+  /** Variant UI ruleset (visibility, host-advance flow) resolved from gameType. */
+  ruleset: UiRuleset;
   spectators: GameSpectator[];
   room: LiveKitRoom;
   maxPlayers: number | null;
@@ -140,6 +149,11 @@ type GameRoomContextValue = {
   voteData: VoteData;
   healedPlayers: number[];
 };
+
+/** The live game session, non-null — the shape phase-control renderers receive. */
+export type GameSessionState = NonNullable<
+  GameRoomContextValue["gameSessionState"]
+>;
 
 const EMPTY_VOTE_DATA: VoteData = {
   votes: {},
@@ -306,6 +320,7 @@ export function GameRoomProvider({
             tableAvgRating: game.tableAvgRating,
           }
         : null,
+      ruleset: getUiRuleset(game?.gameType),
       spectators: (game?.spectators ?? []) as GameSpectator[],
       room,
       maxPlayers: game?.maxPlayers ?? null,

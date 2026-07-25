@@ -82,6 +82,7 @@ function MyVideoConference({
   userId: string;
 }) {
   const tLivekit = useTranslations("game.livekit");
+  const { maxPlayers } = useGameRoom();
   const tracks = useTracks(
     [{ source: Track.Source.Camera, withPlaceholder: true }],
     { onlySubscribed: false },
@@ -97,6 +98,7 @@ function MyVideoConference({
             tracks={tracks}
             hostUserId={hostUserId}
             userId={userId}
+            maxPlayers={maxPlayers ?? 12}
           />
         </div>
       )}

@@ -1,7 +1,7 @@
 import { makeFunctionReference } from "convex/server";
 import type { Id } from "../_generated/dataModel";
 
-type GameType = "traditional" | "city_mafia" | "japanese_mafia";
+type GameType = "sports_mafia" | "city_mafia" | "japanese_mafia";
 
 /** One leaderboard entry, pre-sorted by rating desc (see game/leaderboard.ts). */
 export type LeaderboardRow = {

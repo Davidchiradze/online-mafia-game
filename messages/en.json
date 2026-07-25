@@ -147,7 +147,7 @@
       "endedDone": "Game ended"
     },
     "gameType": {
-      "traditional": "Traditional",
+      "sports_mafia": "Sports Mafia",
       "city_mafia": "City Mafia",
       "japanese_mafia": "Japanese"
     },
@@ -415,7 +415,7 @@
   },
   "game": {
     "gameTypes": {
-      "traditional": "Traditional",
+      "sports_mafia": "Sports Mafia",
       "city_mafia": "City mafia",
       "japanese_mafia": "Japanese"
     },
@@ -424,6 +424,7 @@
       "dayLabel": "D{night} — {label}",
       "speaking": "#{seat} speaking",
       "nextSpeaker": "Next speaker: #{seat}",
+      "opensNext": "Opens: #{seat}",
       "nominated": "Nominated: {list}",
       "nextPhase": "Next: {label}"
     },
@@ -444,6 +445,7 @@
       "game_session_started": "Game Started",
       "picking_roles": "Picking Roles",
       "mafia_meet": "Mafia Meeting",
+      "don_meet": "Don Meeting",
       "don_chooses_right_hand": "Don Chooses Right Hand",
       "yakuda_shogun_meet": "Yakuza & Shogun Meeting",
       "detective_meet": "Detective Meeting",
@@ -556,6 +558,8 @@
       "readyLabel": "ready",
       "noPlayersYet": "Room is empty",
       "startMafiaPhase": "Start Mafia Phase",
+      "openMafiaTargetWindow": "Open Kill Window (5s)",
+      "mafiaChoosing": "Mafia choosing…",
       "startNight": "Start Night",
       "playerEliminatedByFoulsTitle": "Player eliminated by fouls",
       "noVotingThisRound": "No voting will occur this round",
@@ -604,6 +608,8 @@
       "private": "Private",
       "spectate": "Spectate",
       "join": "Join",
+      "full": "Full",
+      "openSeat": "open",
       "joinGame": "Join Game",
       "spectatorsTooltipTitle": "Spectators ({count})",
       "playersTooltipTitle": "Players ({count}/{max})",

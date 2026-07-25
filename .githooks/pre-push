@@ -1,0 +1,19 @@
+#!/bin/sh
+#
+# Pre-push hook — runs the same checks as CI (typecheck + unit tests) so broken
+# code never leaves your machine.
+#
+# Wired via `core.hooksPath=.githooks`, set automatically by the `prepare` npm
+# script on `npm install`. To activate manually: git config core.hooksPath .githooks
+#
+# Bypass in an emergency with:  git push --no-verify
+#
+set -e
+
+echo "pre-push ▸ typecheck (tsc --noEmit)…"
+npm run --silent typecheck
+
+echo "pre-push ▸ unit tests (vitest)…"
+npm test
+
+echo "pre-push ▸ all checks passed ✔"

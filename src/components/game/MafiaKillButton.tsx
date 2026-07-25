@@ -1,48 +1,36 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
-import { nightPhase } from "@convex/refs/game";
-import type { Id } from "@convex/_generated/dataModel";
-import { useGameRoom } from "@/lib/context/gameRoomContext";
 import Skull from "@/assets/icons/Skull";
 
 interface MafiaKillButtonProps {
-  seatNumber: number;
+  /** Highlighted as the viewer's current target. */
   isSelected: boolean;
+  /** In-flight selection (shows a spinner, blocks clicks). */
+  isLoading: boolean;
+  /** Whether the button is non-interactive (e.g. a locked single-authority pick). */
+  disabled: boolean;
+  onClick: () => void;
 }
 
+/**
+ * Presentational mafia kill button. It owns no game logic — the caller
+ * (`MafiaKillControl`) injects `onClick` (already bound to the right variant
+ * mutation + seat) and the display flags, so this component is variant-agnostic.
+ */
 export default function MafiaKillButton({
-  seatNumber,
   isSelected,
+  isLoading,
+  disabled,
+  onClick,
 }: MafiaKillButtonProps) {
   const t = useTranslations("game.actions");
-  const { gameId } = useGameRoom();
-  const [isLoading, setIsLoading] = useState(false);
-  const selectTarget = useMutation(nightPhase.selectMafiaTarget);
-
-  const handleSelectTarget = useCallback(async () => {
-    if (isLoading || isSelected) return;
-
-    setIsLoading(true);
-    try {
-      await selectTarget({
-        gameId: gameId as Id<"games">,
-        targetSeatNumber: seatNumber,
-      });
-    } catch (error) {
-      console.error("Error selecting target:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [gameId, seatNumber, isLoading, isSelected, selectTarget]);
 
   return (
     <button
       type="button"
-      onClick={handleSelectTarget}
-      disabled={isLoading || isSelected}
+      onClick={onClick}
+      disabled={disabled}
       className={`
         relative overflow-hidden
         flex items-center justify-center gap-1.5

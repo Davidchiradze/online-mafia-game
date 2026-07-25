@@ -1,5 +1,5 @@
 export const GAME_TYPES = [
-  "traditional",
+  "sports_mafia",
   "city_mafia",
   "japanese_mafia",
 ] as const;
@@ -13,7 +13,7 @@ export enum JOIN_REQUEST_STATUSES {
 }
 
 export const GAME_TYPE_LABEL: Record<(typeof GAME_TYPES)[number], string> = {
-  traditional: "Traditional",
+  sports_mafia: "Sports Mafia",
   city_mafia: "City mafia",
   japanese_mafia: "Japanese",
 };
@@ -29,7 +29,7 @@ export const GAME_TYPE_MAX_PLAYER_NUMBER: Record<
   (typeof GAME_TYPES)[number],
   number
 > = {
-  traditional: 10,
+  sports_mafia: 10,
   city_mafia: 12,
   japanese_mafia: 12,
 };
@@ -91,6 +91,10 @@ export const GAME_PHASES = [
   // role changes across teams (and on Doctor→wake exits). Appended last so the
   // numeric GAME_PHASES[0..20] indices used across the app stay stable.
   "phase_transition",
+  // Sports-only: the Don's solo meet (host + Don see each other) that Sports
+  // inserts after `mafia_meet`. Appended after the shared indices so the
+  // GAME_PHASES[0..20] literals used across the app stay stable.
+  "don_meet",
 ] as const;
 
 /** Human-readable labels for each game phase */
@@ -117,6 +121,7 @@ export const GAME_PHASE_LABELS: Record<(typeof GAME_PHASES)[number], string> = {
   repeat: "Next Round",
   end_game: "Game Over",
   phase_transition: "Everyone Asleep",
+  don_meet: "Don Meeting",
 };
 
 // Day Phase Speaking Constants
@@ -215,7 +220,7 @@ export const VOTING = {
 export const PHASE_TIMERS: Partial<
   Record<(typeof GAME_PHASES)[number], number>
 > = {
-  mafia_meet: 40 * 1000,
+  mafia_meet: 60 * 1000,
   don_chooses_right_hand: 20 * 1000,
   yakuda_shogun_meet: 40 * 1000,
   detective_meet: 15 * 1000,
@@ -226,6 +231,14 @@ export const PHASE_TIMERS: Partial<
   yakuza_and_shogun_chooses_target: 20 * 1000,
   detective_checks_for_mafia: 15 * 1000,
   doctor_heals_player: 15 * 1000,
+} as const;
+
+// Sports Mafia night constants (mirrors convex/lib/constants.ts SPORTS).
+export const SPORTS = {
+  /** Duration of the host-opened mafia kill-selection window (§5.3). */
+  MAFIA_TARGET_WINDOW_MS: 5 * 1000,
+  /** Same, in whole seconds. */
+  MAFIA_TARGET_WINDOW_SECONDS: 5,
 } as const;
 
 // Card-picking phase constants

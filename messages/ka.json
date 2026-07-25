@@ -147,9 +147,9 @@
       "endedDone": "თამაში დასრულდა"
     },
     "gameType": {
-      "traditional": "ტრადიციული",
+      "sports_mafia": "სპორტული მაფია",
       "city_mafia": "ქალაქის მაფია",
-      "japanese_mafia": "იაპონური"
+      "japanese_mafia": "იაკუძა"
     },
     "archive": {
       "title": "თამაშების არქივი",
@@ -415,15 +415,16 @@
   },
   "game": {
     "gameTypes": {
-      "traditional": "ტრადიციული",
-      "city_mafia": "ქალაქის მაფია",
-      "japanese_mafia": "იაპონური"
+      "sports_mafia": "სპორტული",
+      "city_mafia": "ქალაქური",
+      "japanese_mafia": "იაკუძა"
     },
     "phaseTitle": {
       "nightLabel": "ღამე {night} — {label}",
       "dayLabel": "დღე{night} — {label}",
       "speaking": "#{seat} საუბრობს",
       "nextSpeaker": "შემდეგი მოსაუბრე: #{seat}",
+      "opensNext": "წრეს გახსნის: #{seat}",
       "nominated": "დასახელებული: {list}",
       "nextPhase": "შემდეგი: {label}"
     },
@@ -444,6 +445,7 @@
       "game_session_started": "თამაში დაიწყო",
       "picking_roles": "როლების გადანაწილება",
       "mafia_meet": "მაფიის შეხვედრა",
+      "don_meet": "დონის შეხვედრა",
       "don_chooses_right_hand": "დონი ირჩევს მარჯვენა ხელს",
       "yakuda_shogun_meet": "იაკუძა და შოგუნის შეხვედრა",
       "detective_meet": "დეტექტივის შეხვედრა",
@@ -556,6 +558,8 @@
       "readyLabel": "მზადაა",
       "noPlayersYet": "მაგიდა ცარიელია",
       "startMafiaPhase": "მაფიის შეხვედრა",
+      "openMafiaTargetWindow": "მკვლელობის ფანჯრის გახსნა (5წმ)",
+      "mafiaChoosing": "მაფია ირჩევს…",
       "startNight": "ღამის დაწყება",
       "playerEliminatedByFoulsTitle": "მოთამაშე ფოლებით გარიცხულია",
       "noVotingThisRound": "ამ რაუნდში კენჭისყრა არ ჩატარდება",
@@ -604,6 +608,8 @@
       "private": "დახურული",
       "spectate": "ყურება",
       "join": "შესვლა",
+      "full": "სავსეა",
+      "openSeat": "თავისუფალი",
       "joinGame": "თამაშში შესვლა",
       "spectatorsTooltipTitle": "მაყურებლები ({count})",
       "playersTooltipTitle": "მოთამაშეები ({count}/{max})",

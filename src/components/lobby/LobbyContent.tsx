@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { useQuery } from "convex/react";
 import { gameLogs as historyRefs } from "@convex/refs/history";
 import { Doc } from "@convex/_generated/dataModel";
-import GameTable from "@/components/game/GameTable";
+import RoomCard from "@/components/lobby/roomCard/RoomCard";
 import CreateGameModal from "@/components/modals/CreateGameModal";
 import { Plus } from "lucide-react";
 // import LobbyStats from "./LobbyStats";
@@ -37,9 +37,14 @@ export default function LobbyContent({ games }: Props) {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const router = useRouter();
   const t = useTranslations("lobby");
+  const tg = useTranslations("game");
 
   const handleCreated = (gameId: string) => {
     router.push(`/game/${gameId}`);
+  };
+
+  const navigateToRoom = (roomId: string) => {
+    router.push(`/game/${roomId}`);
   };
 
   const myStats = useQuery(historyRefs.myStats);
@@ -80,7 +85,7 @@ export default function LobbyContent({ games }: Props) {
 
         {/* <LobbyStats stats={myStats} /> */}
 
-        <div className="mb-8">
+        {/* <div className="mb-8">
           <PromoBanner
             href="https://www.mafia.ge/ka/tournament/details/15"
             bannerImageUrl="https://www.mafia.ge/templates/newassets/img/tournament-banner.png"
@@ -91,7 +96,7 @@ export default function LobbyContent({ games }: Props) {
             highlight={t("promoHighlight")}
             status={t("promoStatus")}
           />
-        </div>
+        </div> */}
 
         <div className="mb-6 flex flex-col gap-3 sm:flex-row">
           {/* <div className="relative flex-1">
@@ -140,7 +145,28 @@ export default function LobbyContent({ games }: Props) {
           </SubscriptionGuard>
         </div>
 
-        <GameTable rooms={filtered} />
+        {filtered.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-white/10 bg-white/[0.02] py-16">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03]">
+              <span className="font-orbitron text-lg font-bold text-gray-600">
+                ?
+              </span>
+            </div>
+            <p className="font-sans text-sm text-gray-600">
+              {tg("table.noRoomsFound")}
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(min(320px,100%),1fr))] gap-5">
+            {filtered.map((room) => (
+              <RoomCard
+                key={room._id}
+                room={room}
+                onNavigate={navigateToRoom}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       <CreateGameModal
