@@ -149,7 +149,7 @@
     "gameType": {
       "sports_mafia": "სპორტული მაფია",
       "city_mafia": "ქალაქის მაფია",
-      "japanese_mafia": "იაპონური"
+      "japanese_mafia": "იაკუძა"
     },
     "archive": {
       "title": "თამაშების არქივი",
@@ -417,7 +417,7 @@
     "gameTypes": {
       "sports_mafia": "სპორტული",
       "city_mafia": "ქალაქური",
-      "japanese_mafia": "იაპონური"
+      "japanese_mafia": "იაკუძა"
     },
     "phaseTitle": {
       "nightLabel": "ღამე {night} — {label}",
