@@ -157,7 +157,7 @@ export default function LobbyContent({ games }: Props) {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(min(320px,100%),1fr))] gap-5">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(min(320px,100%),1fr))] gap-5">
             {filtered.map((room) => (
               <RoomCard
                 key={room._id}

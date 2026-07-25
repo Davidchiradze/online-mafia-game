@@ -60,10 +60,10 @@ export const MODE_TINT_FALLBACK = {
 // Foreshortened ellipse radii (percent of the square stage) that give the table
 // its 3D perspective. Avatars/pads sit on the felt rim; chairs peek out past the
 // rail on a wider ring.
-const AV_RX = 31;
-const AV_RY = 27;
-const CH_RX = 41;
-const CH_RY = 38;
+const AV_RX = 33;
+const AV_RY = 31;
+const CH_RX = 40;
+const CH_RY = 37;
 // Rotate the first seat slightly right of top-center so no avatar sits dead-center
 // behind the host crown.
 const OFFSET_DEG = 15;

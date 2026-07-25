@@ -22,7 +22,7 @@ export default function TableStage({ hostName, hostAvatar, seats }: Props) {
 
   // Container-query-scaled sizes: avatar, name font, host avatar, host name box.
   const stageVars = {
-    "--av": "clamp(28px,7.2cqw,50px)",
+    "--av": "clamp(36px,9.6cqw,66px)",
     "--nf": "clamp(10px,1.9cqw,13px)",
     "--hostav": "clamp(36px,8.2cqw,58px)",
     "--hostname": "clamp(78px,15cqw,160px)",
