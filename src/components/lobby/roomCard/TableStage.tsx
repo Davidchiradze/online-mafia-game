@@ -233,7 +233,10 @@ export default function TableStage({ hostName, hostAvatar, seats }: Props) {
       {seats.map((s) => (
         <div
           key={s.key}
-          className="group absolute z-[5] hover:z-[9]"
+          // tabIndex -1: tap/click focuses the seat (drives the reveal) without
+          // adding 12 seats per card to the keyboard tab order.
+          tabIndex={-1}
+          className="group absolute z-[5] cursor-pointer outline-none hover:z-[9] focus-within:z-[9]"
           style={{ left: `${s.x}%`, top: `${s.y}%` }}
         >
           {/* leather seat pad, angled radially toward the center */}
@@ -314,7 +317,7 @@ export default function TableStage({ hostName, hostAvatar, seats }: Props) {
                   )}
                 </div>
                 <div
-                  className={`pointer-events-none absolute left-1/2 top-[calc(100%+5px)] max-w-[130px] -translate-x-1/2 overflow-hidden text-ellipsis whitespace-nowrap rounded-md border border-white/[0.08] bg-[rgba(8,6,12,0.94)] px-2 py-0.5 text-center text-[0.72rem] font-medium opacity-0 shadow-[0_4px_12px_rgba(0,0,0,0.55)] transition-opacity group-hover:opacity-100 ${
+                  className={`pointer-events-none absolute left-1/2 top-[calc(100%+5px)] max-w-[130px] -translate-x-1/2 overflow-hidden text-ellipsis whitespace-nowrap rounded-md border border-white/[0.08] bg-[rgba(8,6,12,0.94)] px-2 py-0.5 text-center text-[0.72rem] font-medium opacity-0 shadow-[0_4px_12px_rgba(0,0,0,0.55)] transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 ${
                     s.dead
                       ? "text-red-400 line-through decoration-red-400/70"
                       : "text-gray-100"
@@ -335,7 +338,7 @@ export default function TableStage({ hostName, hostAvatar, seats }: Props) {
                 >
                   {s.seatNumber}
                 </div>
-                <div className="pointer-events-none absolute left-1/2 top-[calc(100%+5px)] -translate-x-1/2 whitespace-nowrap rounded-md border border-white/[0.08] bg-[rgba(8,6,12,0.94)] px-2 py-0.5 text-center text-[0.72rem] text-white/40 opacity-0 transition-opacity group-hover:opacity-100">
+                <div className="pointer-events-none absolute left-1/2 top-[calc(100%+5px)] -translate-x-1/2 whitespace-nowrap rounded-md border border-white/[0.08] bg-[rgba(8,6,12,0.94)] px-2 py-0.5 text-center text-[0.72rem] text-white/40 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
                   {t("row.openSeat")}
                 </div>
               </>
