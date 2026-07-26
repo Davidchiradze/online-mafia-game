@@ -64,6 +64,7 @@ export default function ParticipantComponent({
   const {
     isLocal,
     isMicEnabled,
+    isCameraEnabled,
     displayName,
     participantId,
     isViewerHost,
@@ -249,6 +250,15 @@ export default function ParticipantComponent({
     void room.localParticipant.setMicrophoneEnabled(!isMicEnabled);
   }, [room, isMicEnabled]);
 
+  const handleToggleCamera = useCallback(() => {
+    if (!room) return;
+    void room.localParticipant.setCameraEnabled(!isCameraEnabled);
+  }, [room, isCameraEnabled]);
+
+  // Players can toggle their own camera anytime (lobby + started game),
+  // unlike the mic which is gated by speaking order. Hidden only when dead.
+  const showCameraToggle = isLocal && !isTargetDead;
+
   return (
     <div
       tabIndex={0}
@@ -260,6 +270,8 @@ export default function ParticipantComponent({
       <ParticipantOverlay
         visibilityState={visibilityState}
         trackRef={trackRef}
+        avatar={player.avatar}
+        displayName={displayName}
       />
 
       {/* Vote indicator (thumbs up during voting phase) */}
@@ -271,6 +283,8 @@ export default function ParticipantComponent({
         isLocal={isLocal}
         isTargetHost={isTargetHost}
         isMicEnabled={isMicEnabled}
+        isCameraEnabled={isCameraEnabled}
+        showCameraToggle={showCameraToggle}
         isSpeaking={isSpeaking}
         isFoulSpeaking={isParticipantFoulSpeaking}
         playerIndex={playerIndex}
@@ -278,6 +292,7 @@ export default function ParticipantComponent({
         showNominationEffect={showNominationEffect}
         playerId={(player.playerId as string) || ""}
         onToggleMic={handleToggleMic}
+        onToggleCamera={handleToggleCamera}
         speakingProgress={isSpeaking && !isTargetDead ? speakingProgress : 0}
       />
 

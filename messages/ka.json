@@ -423,7 +423,7 @@
   "game": {
     "gameTypes": {
       "sports_mafia": "სპორტული",
-      "city_mafia": "ქალაქური",
+      "city_mafia": "სერიული",
       "japanese_mafia": "იაკუძა"
     },
     "phaseTitle": {
@@ -764,7 +764,8 @@
       "micBlockedBody": "თქვენი ბრაუზერი ბლოკავს მიკროფონს ამ საიტისთვის. სანამ არ განბლოკავთ, ვერ ისაუბრებთ:",
       "micBlockedStep1": "დააჭირეთ საკეტის ხატულას ბრაუზერის მისამართის ველში.",
       "micBlockedStep2": "დააყენეთ მიკროფონი „დაშვებაზე“.",
-      "loadingVideo": "იტვირთება…"
+      "loadingVideo": "იტვირთება…",
+      "toggleCamera": "კამერის ჩართვა/გამორთვა"
     },
     "staffTools": {
       "title": "ადმინ ხელსაწყოები",

@@ -82,7 +82,11 @@ function MyVideoConference({
   userId: string;
 }) {
   const tLivekit = useTranslations("game.livekit");
-  const { maxPlayers } = useGameRoom();
+  const { maxPlayers, ruleset } = useGameRoom();
+  // A "wide" ring (more columns than rows, e.g. Sports' 4×3) is capped to a
+  // shorter block in portrait so its cells don't get too tall (see game.css).
+  const { cols, rows } = ruleset.seatLayout;
+  const isWideGrid = cols > rows;
   const tracks = useTracks(
     [{ source: Track.Source.Camera, withPlaceholder: true }],
     { onlySubscribed: false },
@@ -92,7 +96,11 @@ function MyVideoConference({
     <div className="w-full h-full flex items-center justify-center">
       {!track && <LoadingSpinner message={tLivekit("loadingVideo")} />}
       {track && (
-        <div className="game-grid-container w-full h-full">
+        <div
+          className={`game-grid-container w-full h-full${
+            isWideGrid ? " game-grid-container--wide" : ""
+          }`}
+        >
           <PlayerCircle
             gameId={gameId}
             tracks={tracks}

@@ -10,5 +10,7 @@ export { default as MicOffIcon } from "./MicOff";
 export { default as MoreVerticalIcon } from "./MoreVertical";
 export { default as SkullIcon } from "./Skull";
 export { default as UsersIcon } from "./Users";
+export { default as VideoOnIcon } from "./VideoOn";
+export { default as VideoOffIcon } from "./VideoOff";
 export { default as VoteIndicatorIcon } from "./VoteIndicator";
 export { default as WifiOffIcon } from "./WifiOff";

@@ -83,7 +83,28 @@ export async function removeParticipantFromRoom(
     process.env.LIVEKIT_API_KEY!,
     process.env.LIVEKIT_API_SECRET!,
   );
-  await roomService.removeParticipant(roomId, participantId);
+  try {
+    await roomService.removeParticipant(roomId, participantId);
+  } catch (error) {
+    // Removing a participant who is already absent (e.g. they disconnected
+    // before the host kicked them — the "participant left" webhook never fired,
+    // leaving a ghost row) is a no-op, not a failure. LiveKit surfaces this as a
+    // Twirp `not_found` error — swallow only that; re-throw anything else.
+    if (isParticipantNotFoundError(error)) return;
+    throw error;
+  }
+}
+
+/** True when a LiveKit RoomService call failed because the target is absent. */
+function isParticipantNotFoundError(error: unknown): boolean {
+  if (typeof error !== "object" || error === null) return false;
+  if ((error as { code?: unknown }).code === "not_found") return true;
+  if ((error as { status?: unknown }).status === 404) return true;
+  const message = (error as { message?: unknown }).message;
+  return (
+    typeof message === "string" &&
+    /not\s*found|does not exist/i.test(message)
+  );
 }
 
 export async function listParticipantsForRooms(roomIds: string[]) {
