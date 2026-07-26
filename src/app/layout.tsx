@@ -43,7 +43,7 @@ const ninoGeorgian = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Mafia Online",
+  title: "Online Mafia",
   description:
     "The ultimate social deduction game. Outsmart your friends with live voice chat, hidden roles, and ruthless strategy.",
 };

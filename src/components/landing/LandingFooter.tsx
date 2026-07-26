@@ -22,7 +22,7 @@ export function LandingFooter() {
           </div>
 
           <p className="text-gray-700 font-sans text-[0.75rem]">
-            &copy; 2026 Mafia Online. All rights reserved.
+            &copy; 2026 Online Mafia. All rights reserved.
           </p>
         </div>
       </div>

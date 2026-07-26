@@ -423,7 +423,7 @@
   "game": {
     "gameTypes": {
       "sports_mafia": "სპორტული",
-      "city_mafia": "ქალაქური",
+      "city_mafia": "სერიული",
       "japanese_mafia": "იაკუძა"
     },
     "phaseTitle": {
