@@ -23,17 +23,17 @@ export function useParticipantState(
   trackRef: TrackReferenceOrPlaceholder | undefined,
   player: Player,
   currentUserId: string,
-  hostUserId: string | null
+  hostUserId: string | null,
 ): ParticipantStateResult {
   const participant = trackRef?.participant;
   const isLocal = Boolean(participant?.isLocal);
   const isMicEnabled = Boolean(participant?.isMicrophoneEnabled);
   const isCameraEnabled = Boolean(participant?.isCameraEnabled);
   const displayName = player.nickname || participant?.identity;
-  const participantId = participant?.identity;
+  const participantId =
+    (player.playerId as string | undefined) ?? participant?.identity;
   const isViewerHost = currentUserId === hostUserId;
   const isTargetHost = participantId === hostUserId;
-
 
   return {
     participant,
