@@ -1,9 +1,14 @@
 "use client";
 
-import { MicOffIcon, MicOnIcon } from "@/assets/icons";
+import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import ParticipantRoleBadge from "./ParticipantRoleBadge";
 import SeatIndicator from "./SeatIndicator";
+import {
+  MicToggleButton,
+  MicIndicator,
+  CameraToggleButton,
+} from "./mediaControls";
 
 type GameSessionState = NonNullable<
   ReturnType<typeof useGameRoom>["gameSessionState"]
@@ -14,6 +19,9 @@ interface ParticipantBadgesProps {
   isLocal: boolean;
   isTargetHost: boolean;
   isMicEnabled: boolean;
+  isCameraEnabled: boolean;
+  /** Whether to render the local player's camera toggle (hidden when dead). */
+  showCameraToggle: boolean;
   isSpeaking: boolean;
   isFoulSpeaking: boolean;
   playerIndex: number;
@@ -21,6 +29,7 @@ interface ParticipantBadgesProps {
   showNominationEffect: boolean;
   playerId: string;
   onToggleMic?: () => void;
+  onToggleCamera?: () => void;
   /** Active speaker timer progress (0 → 100). 0 when not the speaker. */
   speakingProgress?: number;
 }
@@ -34,6 +43,8 @@ export default function ParticipantBadges({
   isLocal,
   isTargetHost,
   isMicEnabled,
+  isCameraEnabled,
+  showCameraToggle,
   isSpeaking,
   isFoulSpeaking,
   playerIndex,
@@ -41,9 +52,11 @@ export default function ParticipantBadges({
   showNominationEffect,
   playerId,
   onToggleMic,
+  onToggleCamera,
   speakingProgress = 0,
 }: ParticipantBadgesProps) {
   const { getRoleForUser, playerRolesMap, maxPlayers } = useGameRoom();
+  const tg = useTranslations("game");
 
   const playerRole = playerRolesMap.size > 0 ? getRoleForUser(playerId) : null;
   const gameFinished = !!gameSessionState?.isFinished;
@@ -64,6 +77,12 @@ export default function ParticipantBadges({
       ? "text-red-400"
       : "text-white/60";
 
+  const cameraOff = !isCameraEnabled;
+  const cameraContainerClass = cameraOff
+    ? "bg-red-950/60 border border-red-500/30"
+    : "bg-black/60 border border-white/10";
+  const cameraIconClass = cameraOff ? "text-red-400" : "text-white/60";
+
   const showMic =
     !gameSessionState ||
     gameSessionState?.isFinished ||
@@ -73,42 +92,35 @@ export default function ParticipantBadges({
 
   return (
     <>
-      {/* Microphone indicator */}
-      {showMic && (
-        <div className="absolute left-1 top-1 tlg:left-3 tlg:top-3 z-20">
-          {isLocal ? (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleMic?.();
-              }}
-              className={`px-1.5 py-1 tsm:px-2 tsm:py-1.5 tlg:px-2.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer ring-1 ring-white/20 hover:ring-white/40 hover:brightness-125 active:scale-95 ${micContainerClass}`}
-            >
-              {isMuted ? (
-                <MicOffIcon
-                  className={`w-3 h-3 tsm:w-3.5 tsm:h-3.5 tlg:w-4 tlg:h-4 ${micIconClass}`}
-                />
-              ) : (
-                <MicOnIcon
-                  className={`w-3 h-3 tsm:w-3.5 tsm:h-3.5 tlg:w-4 tlg:h-4 ${micIconClass}`}
-                />
-              )}
-            </button>
-          ) : (
-            <div
-              className={`px-1 py-0.5 tsm:px-1.5 tsm:py-1 rounded-md flex items-center gap-1.5 transition ${micContainerClass}`}
-            >
-              {isMuted ? (
-                <MicOffIcon
-                  className={`w-2 h-2 tsm:w-2.5 tsm:h-2.5 tlg:w-3 tlg:h-3 ${micIconClass}`}
-                />
-              ) : (
-                <MicOnIcon
-                  className={`w-2 h-2 tsm:w-2.5 tsm:h-2.5 tlg:w-3 tlg:h-3 ${micIconClass}`}
-                />
-              )}
-            </div>
+      {/* Microphone + camera controls — stacked vertically at the top-left.
+          The camera toggle sits below the mic; when the mic is hidden during an
+          active game it rises into the top-left slot on its own. */}
+      {(showMic || showCameraToggle) && (
+        <div className="absolute left-1 top-1 tlg:left-3 tlg:top-3 z-20 flex flex-col gap-1 tsm:gap-1.5">
+          {showMic &&
+            (isLocal ? (
+              <MicToggleButton
+                isMuted={isMuted}
+                containerClass={micContainerClass}
+                iconClass={micIconClass}
+                onToggle={onToggleMic}
+              />
+            ) : (
+              <MicIndicator
+                isMuted={isMuted}
+                containerClass={micContainerClass}
+                iconClass={micIconClass}
+              />
+            ))}
+
+          {showCameraToggle && (
+            <CameraToggleButton
+              cameraOff={cameraOff}
+              containerClass={cameraContainerClass}
+              iconClass={cameraIconClass}
+              label={tg("livekit.toggleCamera")}
+              onToggle={onToggleCamera}
+            />
           )}
         </div>
       )}

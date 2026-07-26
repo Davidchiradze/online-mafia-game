@@ -17,7 +17,10 @@ import type { Id } from "@convex/_generated/dataModel";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { getUiRuleset } from "@/game/registry";
 import type { UiRuleset } from "@/game/core/types";
-import { useGameRoomConnection, type JoinStatus } from "./useGameRoomConnection";
+import {
+  useGameRoomConnection,
+  type JoinStatus,
+} from "./useGameRoomConnection";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -36,6 +39,7 @@ type ConvexGamePlayer = {
   foulSpeakingBanRound?: number;
   state?: string;
   isReady?: boolean;
+  avatar?: string;
 };
 
 type ConvexGameSession = {

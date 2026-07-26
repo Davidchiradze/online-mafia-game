@@ -16,7 +16,16 @@ export const listByGame = query({
       .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
       .collect();
 
-    return players.sort(
+    // Enrich each player with their profile avatar so the client can render a
+    // profile picture in the tile when their camera is off.
+    const withAvatar = await Promise.all(
+      players.map(async (player) => {
+        const profile = await ctx.db.get(player.playerId);
+        return { ...player, avatar: profile?.avatar };
+      }),
+    );
+
+    return withAvatar.sort(
       (a, b) => (a.seatNumber ?? 0) - (b.seatNumber ?? 0),
     );
   },

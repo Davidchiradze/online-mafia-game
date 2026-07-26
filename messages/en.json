@@ -764,7 +764,8 @@
       "micBlockedBody": "Your browser is blocking the microphone for this site. You won't be able to speak until you unblock it:",
       "micBlockedStep1": "Click the lock icon in your browser's address bar.",
       "micBlockedStep2": "Set Microphone to “Allow”.",
-      "loadingVideo": "Loading…"
+      "loadingVideo": "Loading…",
+      "toggleCamera": "Turn camera on/off"
     },
     "staffTools": {
       "title": "Staff Tools",

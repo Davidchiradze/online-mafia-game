@@ -9,6 +9,7 @@ export interface ParticipantStateResult {
   participant: TrackReferenceOrPlaceholder["participant"] | undefined;
   isLocal: boolean;
   isMicEnabled: boolean;
+  isCameraEnabled: boolean;
   displayName: string | undefined;
   participantId: string | undefined;
   isViewerHost: boolean;
@@ -27,6 +28,7 @@ export function useParticipantState(
   const participant = trackRef?.participant;
   const isLocal = Boolean(participant?.isLocal);
   const isMicEnabled = Boolean(participant?.isMicrophoneEnabled);
+  const isCameraEnabled = Boolean(participant?.isCameraEnabled);
   const displayName = player.nickname || participant?.identity;
   const participantId = participant?.identity;
   const isViewerHost = currentUserId === hostUserId;
@@ -37,6 +39,7 @@ export function useParticipantState(
     participant,
     isLocal,
     isMicEnabled,
+    isCameraEnabled,
     displayName,
     participantId,
     isViewerHost,
