@@ -230,6 +230,16 @@
   }
 }
 
+/* Portrait only: a "wide" ring (more columns than rows, e.g. Sports' 4×3)
+   doesn't need the full height, so cap it to ~65% and let the flex parent center
+   it as a compact block. A square ring (Japanese 4×4) is unaffected. The doubled
+   class beats Tailwind's `.h-full` on the same element. */
+@media (orientation: portrait) {
+  .game-grid-container.game-grid-container--wide {
+    height: 65%;
+  }
+}
+
 @media (orientation: landscape) and (max-height: 500px) {
   .game-grid-container {
     max-width: calc(100dvh * 1.6);
