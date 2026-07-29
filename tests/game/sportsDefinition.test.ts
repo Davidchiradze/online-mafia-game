@@ -63,6 +63,7 @@ describe("SPORTS_DEFINITION — roles, deck, factions (§2)", () => {
       hasRightHandPromotion: false,
       firstDaySingleNomineeSkipsToNight: true,
       thirdFoulSpeakingBan: true,
+      hasBestMove: true,
     });
   });
 });

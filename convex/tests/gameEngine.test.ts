@@ -55,6 +55,8 @@ async function seedGame(
     phase?: string;
     currentNightNumber?: number;
     gameType?: "japanese_mafia" | "sports_mafia" | "city_mafia";
+    /** Pre-staged farewell speaking order (best_move enters with it already set). */
+    speakingOrder?: number[];
     players: SeatSpec[];
     night?: {
       mafiaTarget?: number;
@@ -63,6 +65,8 @@ async function seedGame(
       mafiaTargetSelections?: { mafiaSeat: number; targetSeat: number }[];
       mafiaTargetWindowActive?: boolean;
       mafiaTargetWindowStartedAt?: string;
+      bestMoveSeat?: number;
+      bestMoveSuspects?: number[];
     };
   },
 ): Promise<Seeded> {
@@ -90,7 +94,7 @@ async function seedGame(
       isFinished: false,
       currentNightNumber: opts.currentNightNumber ?? 1,
       nominatedPlayers: [],
-      speakingOrder: [],
+      speakingOrder: opts.speakingOrder ?? [],
     });
 
     const byRole: Seeded["byRole"] = {};
@@ -1801,6 +1805,9 @@ describe("sports night — dawn resolution via startFarewellSpeech", () => {
     const s = await seedGame(t, {
       gameType: "sports_mafia",
       phase: "detective_checks_for_mafia",
+      // Night 2 so this stays a pure KILL-RESOLUTION test: a night-1 kill now
+      // routes to `best_move` first (§6), which the best-move block below covers.
+      currentNightNumber: 2,
       players: SPORTS_NIGHT_ROSTER,
       night: {
         mafiaTargetSelections: [
@@ -1864,6 +1871,8 @@ describe("sports night — dawn resolution via startFarewellSpeech", () => {
     const s = await seedGame(t, {
       gameType: "sports_mafia",
       phase: "detective_checks_for_mafia",
+      // Night 2 — see the note above; night 1 routes through `best_move`.
+      currentNightNumber: 2,
       players: [
         { seat: 1, role: "DON" },
         { seat: 2, role: "CITIZEN" },
@@ -1879,6 +1888,319 @@ describe("sports night — dawn resolution via startFarewellSpeech", () => {
     const session = await getSession(t, s.gameId);
     expect(session?.gamePhase).toBe("farewell_speech");
     expect(session?.speakingOrder).toEqual([5]);
+  });
+});
+
+// ===========================================================================
+// Best move (docs/sports-mafia.md §6) — dawn ROUTING + the victim's picks.
+//
+// Two halves:
+//  - routing: which of the three dawn destinations the night-1 resolution picks
+//    (day_phase / best_move / farewell_speech), per the §6.1 eligibility rules;
+//  - picks: `toggleSuspect` authority, toggling, the 3-pick lock, and the host's
+//    always-available skip (the §6.3 deadlock guard).
+// ===========================================================================
+
+describe("best move — dawn routing (§6.1)", () => {
+  const startFarewell = (t: TestConvex<typeof schema>, s: Seeded) =>
+    t
+      .withIdentity({ subject: s.hostAccountId })
+      .mutation(api.game.farewellSpeech.startFarewellSpeech, {
+        gameId: s.gameId,
+      });
+
+  const UNANIMOUS_ON_5 = [
+    { mafiaSeat: 1, targetSeat: 5 },
+    { mafiaSeat: 2, targetSeat: 5 },
+    { mafiaSeat: 3, targetSeat: 5 },
+  ];
+
+  it("GRANTS the best move when nobody was eliminated on day 1", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      gameType: "sports_mafia",
+      phase: "detective_checks_for_mafia",
+      players: SPORTS_NIGHT_ROSTER, // all alive → 0 day-1 eliminations
+      night: { mafiaTargetSelections: UNANIMOUS_ON_5 },
+    });
+
+    const res = await startFarewell(t, s);
+    expect(res).toEqual({ skipToDay: false, bestMove: true });
+
+    const session = await getSession(t, s.gameId);
+    expect(session?.gamePhase).toBe("best_move");
+    // The farewell speaker is already staged, so advancing later is a bare
+    // gamePhase patch and the farewell flow needs no rework.
+    expect(session?.speakingOrder).toEqual([5]);
+    // Stamped explicitly — the 30s countdown reads it (this mutation patches the
+    // session directly rather than through sessions:update).
+    expect(session?.phaseStartedAt).toBeTypeOf("number");
+
+    const night = await getNightRow(t, s.gameId);
+    expect(night?.bestMoveSeat).toBe(5);
+    expect(night?.bestMoveSuspects).toEqual([]);
+  });
+
+  it("GRANTS the best move when exactly one player left on day 1", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      gameType: "sports_mafia",
+      phase: "detective_checks_for_mafia",
+      players: [
+        ...SPORTS_NIGHT_ROSTER.filter((p) => p.seat !== 7),
+        { seat: 7, role: "CITIZEN", alive: false }, // voted out on day 1
+      ],
+      night: { mafiaTargetSelections: UNANIMOUS_ON_5 },
+    });
+
+    const res = await startFarewell(t, s);
+    expect(res).toEqual({ skipToDay: false, bestMove: true });
+    expect((await getSession(t, s.gameId))?.gamePhase).toBe("best_move");
+    expect((await getNightRow(t, s.gameId))?.bestMoveSeat).toBe(5);
+  });
+
+  it("VOIDS the best move when two players left on day 1", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      gameType: "sports_mafia",
+      phase: "detective_checks_for_mafia",
+      players: [
+        ...SPORTS_NIGHT_ROSTER.filter((p) => p.seat !== 6 && p.seat !== 7),
+        { seat: 6, role: "CITIZEN", alive: false }, // both-leave tie-break, or
+        { seat: 7, role: "CITIZEN", alive: false }, // a vote-out + foul elimination
+      ],
+      night: { mafiaTargetSelections: UNANIMOUS_ON_5 },
+    });
+
+    const res = await startFarewell(t, s);
+    expect(res).toEqual({ skipToDay: false });
+
+    const session = await getSession(t, s.gameId);
+    expect(session?.gamePhase).toBe("farewell_speech");
+    expect(session?.speakingOrder).toEqual([5]);
+    expect((await getNightRow(t, s.gameId))?.bestMoveSeat).toBeUndefined();
+  });
+
+  it("grants NO best move on night 2 — first night only", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      gameType: "sports_mafia",
+      phase: "detective_checks_for_mafia",
+      currentNightNumber: 2,
+      players: SPORTS_NIGHT_ROSTER,
+      night: { mafiaTargetSelections: UNANIMOUS_ON_5 },
+    });
+
+    const res = await startFarewell(t, s);
+    expect(res).toEqual({ skipToDay: false });
+    expect((await getSession(t, s.gameId))?.gamePhase).toBe("farewell_speech");
+    expect(
+      (await getNightRow(t, s.gameId, 2))?.bestMoveSeat,
+    ).toBeUndefined();
+  });
+
+  it("grants NO best move when the night produced no kill", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      gameType: "sports_mafia",
+      phase: "detective_checks_for_mafia",
+      players: SPORTS_NIGHT_ROSTER,
+      night: {
+        mafiaTargetSelections: [
+          { mafiaSeat: 1, targetSeat: 5 },
+          { mafiaSeat: 2, targetSeat: 5 },
+          { mafiaSeat: 3, targetSeat: 6 }, // disagreement → no kill
+        ],
+      },
+    });
+
+    const res = await startFarewell(t, s);
+    expect(res).toEqual({ skipToDay: true });
+    expect((await getSession(t, s.gameId))?.gamePhase).toBe("day_phase");
+    expect((await getNightRow(t, s.gameId))?.bestMoveSeat).toBeUndefined();
+  });
+
+  it("never grants a best move in a Japanese game (flag is off)", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      phase: "doctor_heals_player",
+      players: WIN_SAFE_ROSTER,
+      night: { mafiaTarget: 8 },
+    });
+
+    const res = await startFarewell(t, s);
+    expect(res).toEqual({ skipToDay: false });
+    expect((await getSession(t, s.gameId))?.gamePhase).toBe("farewell_speech");
+    expect((await getNightRow(t, s.gameId))?.bestMoveSeat).toBeUndefined();
+  });
+});
+
+describe("best move — the victim's picks (§6.2)", () => {
+  /** A game parked in `best_move` with seat 5 granted the best move. */
+  const seedBestMove = (
+    t: TestConvex<typeof schema>,
+    suspects: number[] = [],
+  ) =>
+    seedGame(t, {
+      gameType: "sports_mafia",
+      phase: "best_move",
+      // Staged by the dawn resolution before it routed here, so the farewell can
+      // run straight after (or after a skip).
+      speakingOrder: [5],
+      players: [
+        ...SPORTS_NIGHT_ROSTER.filter((p) => p.seat !== 7),
+        { seat: 7, role: "CITIZEN", alive: false }, // day-1 vote-out
+      ],
+      night: { bestMoveSeat: 5, bestMoveSuspects: suspects },
+    });
+
+  const toggle = (
+    t: TestConvex<typeof schema>,
+    s: Seeded,
+    actorSeat: number,
+    seatNumber: number,
+  ) =>
+    t
+      .withIdentity({ subject: s.bySeat[actorSeat].accountId })
+      .mutation(api.game.bestMove.toggleSuspect, {
+        gameId: s.gameId,
+        seatNumber,
+      });
+
+  it("records picks in order and LOCKS at three", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedBestMove(t);
+
+    await toggle(t, s, 5, 1);
+    await toggle(t, s, 5, 4);
+    await toggle(t, s, 5, 6);
+    expect((await getNightRow(t, s.gameId))?.bestMoveSuspects).toEqual([
+      1, 4, 6,
+    ]);
+
+    // A 4th pick is rejected — three marked IS the confirmation.
+    await expect(toggle(t, s, 5, 2)).rejects.toThrow();
+    expect((await getNightRow(t, s.gameId))?.bestMoveSuspects).toEqual([
+      1, 4, 6,
+    ]);
+  });
+
+  it("un-marks a pick while below the cap (mis-tap recovery)", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedBestMove(t, [1, 4]);
+
+    await toggle(t, s, 5, 4);
+    expect((await getNightRow(t, s.gameId))?.bestMoveSuspects).toEqual([1]);
+
+    // ...and the freed slot can be re-used.
+    await toggle(t, s, 5, 6);
+    expect((await getNightRow(t, s.gameId))?.bestMoveSuspects).toEqual([1, 6]);
+  });
+
+  it("un-marks a pick even once the set is full", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedBestMove(t, [1, 4, 6]);
+
+    await toggle(t, s, 5, 4);
+    expect((await getNightRow(t, s.gameId))?.bestMoveSuspects).toEqual([1, 6]);
+  });
+
+  it("allows naming a player who died on day 1", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedBestMove(t);
+
+    // Seat 7 was voted out on day 1 — a legitimate suspect, they can be mafia.
+    await toggle(t, s, 5, 7);
+    expect((await getNightRow(t, s.gameId))?.bestMoveSuspects).toEqual([7]);
+  });
+
+  it("rejects a caller who is not the victim", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedBestMove(t);
+
+    await expect(toggle(t, s, 1, 4)).rejects.toThrow();
+    await expect(toggle(t, s, 6, 4)).rejects.toThrow();
+    expect((await getNightRow(t, s.gameId))?.bestMoveSuspects).toEqual([]);
+  });
+
+  it("rejects the host picking on the victim's behalf", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedBestMove(t);
+
+    await expect(
+      t
+        .withIdentity({ subject: s.hostAccountId })
+        .mutation(api.game.bestMove.toggleSuspect, {
+          gameId: s.gameId,
+          seatNumber: 4,
+        }),
+    ).rejects.toThrow();
+  });
+
+  it("rejects the victim naming themselves", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedBestMove(t);
+
+    await expect(toggle(t, s, 5, 5)).rejects.toThrow();
+  });
+
+  it("rejects picks outside the best_move phase", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      gameType: "sports_mafia",
+      phase: "farewell_speech",
+      players: SPORTS_NIGHT_ROSTER,
+      night: { bestMoveSeat: 5, bestMoveSuspects: [] },
+    });
+
+    await expect(toggle(t, s, 5, 4)).rejects.toThrow();
+  });
+
+  it("rejects picks when no best move was granted this night", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      gameType: "sports_mafia",
+      phase: "best_move",
+      players: SPORTS_NIGHT_ROSTER,
+      night: {}, // no bestMoveSeat
+    });
+
+    await expect(toggle(t, s, 5, 4)).rejects.toThrow();
+  });
+
+  // -------------------------------------------------------------------------
+  // The deadlock guard (§6.3): the host's advance is ALWAYS available, so an
+  // AFK or disconnected victim can never stall the game.
+  // -------------------------------------------------------------------------
+
+  it("lets the host skip a PARTIAL best move into a working farewell", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedBestMove(t);
+    await toggle(t, s, 5, 1); // ...then the victim disconnects at 1/3
+
+    // What PhaseAdvanceButton sends for `sportsAdvanceUpdates("best_move")`.
+    await t
+      .withIdentity({ subject: s.hostAccountId })
+      .mutation(api.game.sessions.update, {
+        sessionId: (await getSession(t, s.gameId))!._id,
+        updates: { gamePhase: "farewell_speech" },
+      });
+
+    const session = await getSession(t, s.gameId);
+    expect(session?.gamePhase).toBe("farewell_speech");
+    // The staged speaker survived the skip, so the farewell still runs.
+    expect(session?.speakingOrder).toEqual([5]);
+
+    // The partial set is kept as-is (it simply scores nothing).
+    expect((await getNightRow(t, s.gameId))?.bestMoveSuspects).toEqual([1]);
+
+    // And the farewell proceeds normally for the victim.
+    await t
+      .withIdentity({ subject: s.hostAccountId })
+      .mutation(api.game.farewellSpeech.grantFarewellTime, {
+        gameId: s.gameId,
+      });
+    expect((await getSession(t, s.gameId))?.currentSpeakerIndex).toBe(5);
   });
 });
 

@@ -103,6 +103,12 @@ export type GameFlags = {
   firstDaySingleNomineeSkipsToNight: boolean;
   /** Sports: the 3rd foul bans the player from speaking. */
   thirdFoulSpeakingBan: boolean;
+  /**
+   * Sports: the first-night victim names 3 suspects in a dedicated `best_move`
+   * phase before their farewell (docs/sports-mafia.md §6). Read by the shared
+   * dawn seam (`farewellSpeech:startFarewellSpeech`) so it never names a variant.
+   */
+  hasBestMove: boolean;
 };
 
 /**

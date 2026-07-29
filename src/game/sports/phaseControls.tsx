@@ -19,6 +19,7 @@ import StartPickingRolesButton from "@/components/gameSession/phaseButtonsForHos
 import ConfirmRolesButton from "@/components/gameSession/phaseButtonsForHost/ConfirmRolesButton";
 import PhaseAdvanceButton from "@/components/gameSession/phaseButtonsForHost/PhaseAdvanceButton";
 import SportsMafiaTargetControls from "@/components/gameSession/phaseButtonsForHost/SportsMafiaTargetControls";
+import BestMoveControls from "@/components/gameSession/phaseButtonsForHost/BestMoveControls";
 import FarewellSpeechControls from "@/components/gameSession/phaseButtonsForHost/FarewellSpeechControls";
 import VotingPhaseControls from "@/components/gameSession/vote/VotingPhaseControls";
 import ContinueNextRoundButton from "@/components/gameSession/phaseButtonsForHost/ContinueNextRoundButton";
@@ -109,6 +110,12 @@ export const SPORTS_PHASE_CONTROLS: PhaseControlsMap = {
       labelKey="endDetectiveCheck"
       variant="primary"
     />
+  ),
+  // Best move (§6): entered from the dawn resolution when the night-1 kill
+  // qualifies. The advance here is always enabled and doubles as "Skip Best
+  // Move", so an AFK/disconnected victim can never deadlock the game (§6.3).
+  best_move: ({ gameSessionState }) => (
+    <BestMoveControls gameSessionState={gameSessionState} />
   ),
   farewell_speech: ({ gameSessionState }) => (
     <FarewellSpeechControls gameSessionState={gameSessionState} />

@@ -87,6 +87,18 @@ export const SPORTS = {
    */
   MAFIA_TARGET_WINDOW_MS: 5 * 1000,
   MAFIA_TARGET_WINDOW_SECONDS: 5,
+  /**
+   * Sports "best move" (docs/sports-mafia.md §6): the first-night victim names
+   * exactly this many suspects. Reaching the cap LOCKS the set — that is the
+   * phase's completion signal (there is no confirm button).
+   */
+  BEST_MOVE_SUSPECT_COUNT: 3,
+  /**
+   * Visual-only countdown for the best move. Nothing auto-advances at 0 — the
+   * host still advances (and may skip early if the victim is AFK, §6.3).
+   */
+  BEST_MOVE_WINDOW_MS: 30 * 1000,
+  BEST_MOVE_WINDOW_SECONDS: 30,
 } as const;
 
 export const PRESENCE = {

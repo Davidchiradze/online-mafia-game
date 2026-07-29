@@ -74,6 +74,11 @@ type ConvexNightPhaseSession = {
   // here (privacy §5.4) — a mafia reads only their own pick via getMySelection.
   mafiaTargetWindowActive?: boolean;
   mafiaTargetWindowStartedAt?: string;
+  // Sports best move (§6). Surfaced here — unlike the mafia selections above —
+  // because the marks are PUBLIC and shown live to everyone (§6.6), so the
+  // already-reactive night session is the single source of truth for them.
+  bestMoveSeat?: number;
+  bestMoveSuspects?: number[];
 };
 
 type ConvexVotingSession = {

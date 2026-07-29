@@ -85,6 +85,7 @@ describe("JAPANESE_DEFINITION — data mirrors the legacy constants", () => {
       hasRightHandPromotion: true,
       firstDaySingleNomineeSkipsToNight: false,
       thirdFoulSpeakingBan: false,
+      hasBestMove: false,
     });
   });
 });

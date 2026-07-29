@@ -72,6 +72,7 @@ night_phase
 mafia_chooses_target       # 5s kill window; ALL living mafia pick PRIVATELY; unanimous → kill (see §5)
 don_checks_for_detective   # Don checks if a player is the Detective (same as Japanese)
 detective_checks_for_mafia # Detective checks if a player is Mafia (same as Japanese)
+best_move                  # NIGHT 1 ONLY, conditional — the killed player names 3 suspects (§6)
 farewell_speech
 repeat
 end_game
@@ -80,8 +81,8 @@ phase_transition           # shared "everyone asleep" buffer (reused where the a
 
 Cycle after the meets: `day_phase → nominated_players_speak → voting →
 (farewell_speech if someone leaves) → night_phase → mafia_chooses_target →
-don_checks_for_detective → detective_checks_for_mafia → (farewell_speech if a
-kill) → day_phase → …`
+don_checks_for_detective → detective_checks_for_mafia → (best_move if the night-1
+kill qualifies, §6) → (farewell_speech if a kill) → day_phase → …`
 
 ### Diff summary vs Japanese
 
@@ -97,6 +98,7 @@ kill) → day_phase → …`
 | `yakuza_and_shogun_chooses_target` | **removed** |
 | `detective_checks_for_mafia` | **kept — identical to Japanese** (Detective checks for Mafia) |
 | `doctor_heals_player` | **removed** — no doctor |
+| — | **`best_move` ADDED** — no Japanese equivalent; entered only at dawn of night 1 when the kill qualifies (§6) |
 
 The two kept check phases reuse the existing host buttons (`EndDonCheckButton`,
 `EndDetectiveCheckButton`) and Japanese visibility rules verbatim — low risk, no
@@ -257,7 +259,246 @@ must be gated: in Sports, a mafia sees only their **own** selection. The
 server-side selection read returns a caller's own pick only (never other mafia's)
 until the kill resolves at dawn.
 
-## 6. Win conditions
+## 6. Best Move (საუკეთესო სვლა) — first-night victim names 3 suspects
+
+The classic sports-mafia "best move": the player killed on the **first** night
+gets one public shot at naming the mafia before they say goodbye.
+
+### 6.1 When it is granted
+
+Evaluated once, at dawn of **night 1**. Granted only when **all three** hold:
+
+| # | Condition | Why |
+| --- | --- | --- |
+| 1 | `currentNightNumber === 1` | First night only — a game has exactly one best move, or none. |
+| 2 | The night resolved to **exactly one killed seat** — i.e. every living mafia submitted a selection and all chose the same target (§5.2) | No kill → no victim → nothing to grant. |
+| 3 | **At most one player was eliminated during day round 1** | With two or more day-1 departures the best move is void. |
+
+Condition 3 spelled out: day 1 ended with **nobody** eliminated (the day-1
+single-nominee rule §4.1, or a vote that removed no one) **or exactly one**
+eliminated (a normal vote-out, or a 4th-foul elimination). If **two or more**
+left on day 1 — the "both leave" tie-break outcome, or a vote-out plus a foul
+elimination — the first-night victim gets **no best move**, and dawn goes
+straight to `farewell_speech` exactly as it does today.
+
+> **Cheap, exact server test.** At the moment the night resolves, a dead player
+> **cannot be anything other than a day-1 elimination**: the night-1 victim is
+> still `isAlive: true` (they are only flipped in
+> `farewellSpeech:markDeadAndAdvance`, *during* the farewell). So
+> `deadCount = players.filter(p => !p.isAlive).length` **is** the day-1
+> elimination count — eligible iff `deadCount <= 1`. No new counter, and no
+> roster arithmetic against `seatCount` (which would also mis-read a game where
+> the host kicked someone in the lobby: `lobby/joinRequests:kick` **deletes** the
+> `gamePlayers` row rather than marking it dead).
+
+### 6.2 Behaviour
+
+- Each eligible tile carries **one round check button, centred on the tile**. The
+  victim checks three of them. Empty is a dashed hollow ring that fills on hover;
+  checked is a solid amber disc with a stroked checkmark (an inline SVG, never an
+  emoji). **No pick-order numbers** — a check reads instantly, and all three
+  marks are equal in weight.
+- The checked circle is **the same component in the same state for everyone** —
+  interactive for the victim, inert for every other viewer (§6.6) — so the
+  accusation looks identical to the person making it and the table reading it.
+- Checks **toggle freely while fewer than 3 are set** (mis-tap recovery), and
+  become **final the instant the 3rd lands**. There is no separate confirm
+  button — "3 checked" *is* the confirmation, matching "after choosing all 3, the
+  host enters farewell speech." Once locked, the remaining empty rings disappear
+  and only the three checks stay on screen.
+- Checkable tiles: every seated non-host player **except the victim's own**. You
+  cannot suspect yourself, so **no control is ever rendered on the caller's own
+  tile** (the server rejects it too).
+- **Dead players stay checkable** — a day-1 vote-out can absolutely be mafia, and
+  naming them is a legitimate best move.
+- Only the victim may submit. The host cannot pick on their behalf.
+- **No fouls during `best_move`** — the phase is deliberately absent from
+  `FOULS.ALLOWED_PHASES`, like every other non-speaking phase.
+
+### 6.3 Host control & the deadlock guard
+
+- The host gets **one always-enabled button whose label morphs** with progress:
+  **"Skip Best Move"** while fewer than 3 are marked → **"Start Farewell
+  Speech"** once the set is locked. Above it, the named seats are shown in pick
+  order (`? ? ?` → `3 7 ?` → `3 7 9`).
+- Reason: a disconnected or AFK victim must never be able to stall the game. The
+  host can move on **at any moment**; a skipped best move is stored **partial**
+  (0–2 picks) and simply scores nothing.
+- One button rather than a disabled-advance-plus-skip pair, so there is never a
+  greyed-out control the host is waiting on — the only affordance always works.
+- `PHASE_TIMERS.best_move = 30s` — the usual visual-only pressure badge. Because
+  nobody is awake by role during `best_move` (§6.6), it reaches the **host only**,
+  which is what it is for here: it tells the host when hitting Skip is reasonable.
+  Nothing auto-advances at 0, per the `PHASE_TIMERS` contract.
+
+### 6.4 Technical decision: a real `best_move` phase — DECIDED
+
+**Add a new phase, `best_move`, between the last night check and
+`farewell_speech`.** The rejected alternative was a sub-state *inside*
+`farewell_speech` (enter farewell, gate `grantFarewellTime` until 3 picks land).
+
+| | new `best_move` phase | sub-state of `farewell_speech` |
+| --- | --- | --- |
+| Host controls | one more entry in the variant's phase→controls map | conditional gating inside the farewell controls |
+| Visibility | `getAwakeRoles("best_move")` answers "who acts" like every other phase | farewell visibility grows a mode |
+| `farewell_speech` reuse | **untouched** — still shared by night kills *and* vote-out farewells | must branch on "which kind of farewell is this" |
+| Timer badge | one `PHASE_TIMERS` entry | no natural home |
+| Cost | resolving the night must be split from *entering* farewell | none |
+
+The one cost is real but small — and it is a **strict improvement** to the dawn
+seam. `startFarewellSpeech` already resolves the night (§5.2) and *then* decides
+where to go (`skipToDay` vs. farewell); best move just adds a third destination
+to a branch that already exists:
+
+```
+resolve the night (existing code, unchanged)
+├─ 0 killed seats                   → enterDayPhase()      (unchanged)
+├─ 1 killed seat + eligible (§6.1)  → best_move            (NEW)
+└─ 1 killed seat + not eligible     → farewell_speech      (unchanged)
+```
+
+`speakingOrder` is set to the randomized killed seats **when the night
+resolves**, before routing — so `best_move → farewell_speech` is a pure
+`gamePhase` patch and the whole farewell flow (`grantFarewellTime`,
+`markDeadAndAdvance`, `advanceFromFarewell`) stays **byte-for-byte unchanged**.
+
+The host-advance graph gains one **deterministic** edge:
+
+```ts
+// convex/games/sports/phases.ts
+const HOST_ADVANCE: Record<string, Phase> = {
+  …
+  detective_checks_for_mafia: "farewell_speech", // resolve-marker; server may route to best_move
+  best_move: "farewell_speech",                  // deterministic — best_move only exists when there IS a kill
+};
+```
+
+`detective_checks_for_mafia` stays the **resolve-marker** (the button still means
+"resolve the night"); the actual 3-way destination is owned by the server
+mutation, per the existing convention that state-dependent transitions live in
+mutations and `nextPhase` returns `null` for them.
+
+Definition surface: add `hasBestMove: boolean` to `GameFlags`
+(`convex/games/core/types.ts`) — `false` for Japanese, `true` for Sports — so the
+shared dawn seam reads a flag rather than a `gameType` literal (§8 guardrails in
+[game-types.md](./game-types.md)).
+
+> **Registration note.** `best_move` must be **appended last** to `GAME_PHASES`
+> in `src/lib/constants/game.ts` — the same treatment `phase_transition` and
+> `don_meet` got — so the positional `GAME_PHASES[0..20]` literals the Japanese
+> code still uses stay stable. (`convex/lib/constants.ts`'s `GAME_PHASES` is the
+> shorter Japanese-only list and needs no entry.) Labels go in
+> `GAME_PHASE_LABELS` plus `messages/en.json` / `messages/ka.json` under
+> `phases`: `"best_move": "Best Move"` / `"საუკეთესო სვლა"`.
+
+### 6.5 Data model
+
+Night-1-scoped data, so it belongs on the **night session** row — additive and
+optional, exactly like `mafiaTargetSelections` (§5.2), so existing rows validate
+unchanged:
+
+```ts
+// tables/nightPhaseSessions.ts  (additive, optional)
+bestMoveSeat: v.optional(v.number()),               // the victim granted the best move
+bestMoveSuspects: v.optional(v.array(v.number())),  // 0–3 named seats, in pick order
+```
+
+- **Completion is derived**: `bestMoveSuspects.length === 3`. No separate
+  lock/flag to keep in sync.
+- **Grant is derived**: `bestMoveSeat !== undefined` means the best move was
+  granted this game.
+- `bestMoveSeat` duplicates `speakingOrder[0]`, deliberately — it makes the row
+  self-describing for game logs and any later scoring pass.
+
+One new server function, in its own `convex/game/bestMove.ts` (best move is a
+*dawn* action, not a night action, so it stays out of `sportsNightPhase.ts`):
+
+| function | caller | behaviour |
+| --- | --- | --- |
+| `toggleSuspect` (mutation) | the victim only | Add/remove a seat. Rejects: a non-victim caller (including the host), a call outside `best_move`, a night with no best move granted, targeting the victim's own seat, an unseated/host target, and any *new* pick once 3 are in. |
+
+**There is no companion read function, deliberately.** `bestMoveSeat` /
+`bestMoveSuspects` ride along on the already-reactive `nightPhase.getCurrent`
+document that `gameRoomContext` exposes as `nightPhaseSession` — the same channel
+the UI reads `mafiaTargetWindowActive` from. The host controls and the tile checks
+both read it there, so the feature adds **zero** extra queries.
+
+Reaching every client is exactly what is wanted here: the checks are public
+(§6.6), so there is nothing to withhold. Only *interactivity* is restricted — the
+`toggleSuspect` mutation rejects any caller who is not the victim.
+
+### 6.6 Visibility — everyone sleeps; only the host sees
+
+`best_move` is **not** a public dawn phase. It reuses the **exact same visibility
+shape as `mafia_chooses_target`** (§5.4) — no new machinery of any kind:
+
+| Viewer | Sees |
+| --- | --- |
+| Every player, **including the killed player who is picking** | **No video** — every tile covered (Zzz), as on any night phase. Controls and marks render *above* the covers, exactly as the mafia's kill buttons do. |
+| The host | Every player, dimmed. |
+| Spectators | No video (unless a staff spectator has host-POV reveal on). |
+
+**The check marks themselves are public.** They render for *everyone* — the
+victim, the host, the other players, and spectators — above the covered tiles. So
+a sleeping player sees **who was accused but no video**, which is the online
+stand-in for hearing the victim call out their three seats at a real table. Only
+the victim's circles are clickable; everybody else's are inert, and unchecked
+tiles show nothing at all.
+
+Three lines of rules, all in `src/game/sports/visibility.ts`:
+
+- `canSeeParticipant("best_move")` → `isViewerHost` — sharing a `case` with
+  `mafia_chooses_target`, since the rule is identical;
+- `isNightActivityPhase("best_move")` → **true** (everyone is asleep);
+- `getAwakeRoles("best_move")` → **`[]`** — deliberately absent, because nobody is
+  awake.
+
+> **Why not model "the victim is awake"?** Because the best-move actor is a
+> specific **player**, not a role, and `getAwakeRoles` is role-based. Expressing it
+> would mean threading player-level facts through `canSeeParticipant`,
+> `getVisibilityState`, `getVisibilityStateWithDeath` and the variant override —
+> which over-complicates participant visibility for one phase's benefit. Keeping
+> everyone asleep needs none of that, and the victim does not need to *see* anyone
+> to click a check button on their tile.
+
+One consequence, accepted: `PhaseCountdown` gates on `getAwakeRoles`, so with the
+list empty **only the host sees the 30s badge**. The victim gets the check buttons
+but no visible clock; the host watches the timer and skips when it makes sense
+(§6.3). No shared-UI change was needed to achieve that.
+
+Checks are **not** shown once `farewell_speech` starts: the phase is over, the
+table is awake, and the tiles go back to normal.
+
+### 6.7 Scoring — out of scope for launch
+
+Real sports mafia awards extra points for 2 or 3 correct guesses. **Sports
+launches unrated (§9.7), so nothing is scored** and the correct-count is not
+displayed anywhere.
+
+> **The picks are NOT durable.** `bestMoveSuspects` lives on the night session,
+> and `deleteGameAndRelations` (`convex/lib/games.ts`) wipes `nightPhaseSessions`
+> when the room is cleaned up — so the data survives only as long as the room. A
+> retroactive scoring pass over past games is therefore **not** possible today.
+> Making it possible means archiving `bestMoveSeat` / `bestMoveSuspects` into
+> `gameLogs` at `archiveGameLog` time, alongside the roles needed to grade them.
+> That is a deliberate follow-up, not part of this change.
+
+### 6.8 Edge cases
+
+| Situation | Result |
+| --- | --- |
+| No kill on night 1 (selections disagreed, or a mafia abstained) | No best move — dawn skips to `day_phase`, as today |
+| **2+ players eliminated on day 1** (both-leave, or vote-out + foul elimination) | **No best move** — dawn goes straight to `farewell_speech` (§6.1 cond. 3) |
+| Exactly 1 eliminated on day 1 | Best move **granted** |
+| 0 eliminated on day 1 (day-1 single-nominee rule, §4.1) | Best move **granted** |
+| Kill on night 2 or later | No best move — first night only |
+| Victim disconnects / never picks | Host advances anyway; 0–2 picks stored, scores nothing (§6.3) |
+| Victim names a player who died on day 1 | **Allowed** — a day-1 vote-out can be mafia |
+| Victim tries to name themselves | Rejected server-side |
+| A best move is already stored for that night | Routing only stamps `bestMoveSeat` when unset, so re-entry is idempotent |
+| Win condition triggered by the night-1 kill | **Unreachable.** Worst case at night-1 dawn is 1 day-1 elimination + 1 kill; even if both were citizens that is 3 mafia vs. 5 citizens → continue (§7). So `best_move` can never collide with a win check, and the `beforeDay` / `beforeNight` seams are untouched. |
+
+## 7. Win conditions
 
 Two factions only → far simpler than Japanese (no Yakuza clan, no N=5 Doctor
 context exception, no context sensitivity).
@@ -305,7 +546,7 @@ The check plugs into the **same two seams** as Japanese —
 `definition.decideWinner`. The host still confirms via the Finish Game banner
 (unchanged).
 
-## 7. What stays identical to Japanese
+## 8. What stays identical to Japanese
 
 Card-picking; seat shuffle on start; day/self-justification speaking timers and
 controls; voting mechanics (window, auto-vote on last candidate, tie-break,
@@ -314,7 +555,7 @@ both-leave → no-contest); farewell-speech flow; foul counting + 5s foul-speak 
 LiveKit audio/video; presence; broadcasts; game-log archival; match history;
 admin analytics; the room-closing cleanup countdown.
 
-## 8. Resolved decisions
+## 9. Resolved decisions
 
 All previously-open questions are confirmed:
 
@@ -330,7 +571,15 @@ All previously-open questions are confirmed:
 4. **4th-foul elimination is retained** (`FOULS.ELIMINATION_THRESHOLD = 4`). (§4.2)
 5. **The 3rd-foul speaking ban applies to the next `day_phase`** (one phase
    only), with the 30s exception when ≤ 4 players remain. (§4.2)
-6. **Sports launches UNRATED — ELO is skipped.** No `RATING_CONFIG` entry, so
+6. **Best Move is its own `best_move` phase, night 1 only, void if 2+ left on
+   day 1.** The first-night victim checks 3 suspects — via a round check button
+   centred on each tile — before the farewell; checks toggle until the 3rd lands,
+   then lock. **Everyone sleeps, including the killed player who is picking** —
+   only the host sees the table (dimmed), reusing the `mafia_chooses_target`
+   visibility shape verbatim. The host's advance stays always enabled ("Skip Best
+   Move") so an AFK or disconnected victim cannot stall the game. Unscored at
+   launch. (§6)
+7. **Sports launches UNRATED — ELO is skipped.** No `RATING_CONFIG` entry, so
    `archiveGameLog` records games with no rating change (exactly as an unrated
    type does today). A calibrated config can be added later per
    [ranking-system.md](./ranking-system.md) §9.

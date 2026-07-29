@@ -47,5 +47,6 @@ export const SPORTS_DEFINITION: GameDefinition = {
     hasRightHandPromotion: false,
     firstDaySingleNomineeSkipsToNight: true,
     thirdFoulSpeakingBan: true,
+    hasBestMove: true,
   },
 };

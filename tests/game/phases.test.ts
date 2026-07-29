@@ -21,7 +21,7 @@ import {
  */
 
 describe("GAME_PHASES — frontend (src/lib/constants/game.ts)", () => {
-  it("is the 22-phase Japanese sequence + the Sports-only don_meet, in order", () => {
+  it("is the 22-phase Japanese sequence + the Sports-only phases, in order", () => {
     // Indices 0..21 are the Japanese sequence (+ the phase_transition buffer at
     // 21); Sports-only phases are appended after so those indices stay stable.
     expect(SRC_GAME_PHASES).toEqual([
@@ -48,6 +48,7 @@ describe("GAME_PHASES — frontend (src/lib/constants/game.ts)", () => {
       "end_game",
       "phase_transition",
       "don_meet",
+      "best_move",
     ]);
   });
 

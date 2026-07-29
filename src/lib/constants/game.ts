@@ -95,6 +95,10 @@ export const GAME_PHASES = [
   // inserts after `mafia_meet`. Appended after the shared indices so the
   // GAME_PHASES[0..20] literals used across the app stay stable.
   "don_meet",
+  // Sports-only: the first-night victim names 3 suspects before their farewell
+  // (docs/sports-mafia.md §6). Entered only at dawn of night 1 when the kill
+  // qualifies. Appended last for the same index-stability reason as above.
+  "best_move",
 ] as const;
 
 /** Human-readable labels for each game phase */
@@ -122,6 +126,7 @@ export const GAME_PHASE_LABELS: Record<(typeof GAME_PHASES)[number], string> = {
   end_game: "Game Over",
   phase_transition: "Everyone Asleep",
   don_meet: "Don Meeting",
+  best_move: "Best Move",
 };
 
 // Day Phase Speaking Constants
@@ -231,6 +236,9 @@ export const PHASE_TIMERS: Partial<
   yakuza_and_shogun_chooses_target: 20 * 1000,
   detective_checks_for_mafia: 15 * 1000,
   doctor_heals_player: 15 * 1000,
+  // Sports best move (§6.3): shown to all living players + the host, since the
+  // whole table watches the victim's clock. Visual only — the host advances.
+  best_move: 30 * 1000,
 } as const;
 
 // Sports Mafia night constants (mirrors convex/lib/constants.ts SPORTS).
@@ -239,6 +247,12 @@ export const SPORTS = {
   MAFIA_TARGET_WINDOW_MS: 5 * 1000,
   /** Same, in whole seconds. */
   MAFIA_TARGET_WINDOW_SECONDS: 5,
+  /** Best move (§6): the first-night victim names exactly this many suspects. */
+  BEST_MOVE_SUSPECT_COUNT: 3,
+  /** Visual-only best-move countdown (§6.3) — nothing auto-advances at 0. */
+  BEST_MOVE_WINDOW_MS: 30 * 1000,
+  /** Same, in whole seconds. */
+  BEST_MOVE_WINDOW_SECONDS: 30,
 } as const;
 
 // Card-picking phase constants

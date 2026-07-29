@@ -4,6 +4,7 @@ import { getAuthenticatedUser } from "../lib/auth";
 import { assertIsHost, getPlayersByGameId } from "../lib/games";
 import { enterNightPhase, enterDayPhase } from "../lib/phaseTransitions";
 import { getGameDefinition } from "../games/registry";
+import { isBestMoveEligible } from "../games/sports/bestMove";
 import type { GameDefinition } from "../games/core/types";
 import type { Id } from "../_generated/dataModel";
 import type { DatabaseReader } from "../_generated/server";
@@ -56,6 +57,33 @@ async function getLivingMafiaSeats(
     }
   }
   return seats;
+}
+
+/**
+ * Dead SEATED players — the Sports best-move eligibility input
+ * (docs/sports-mafia.md §6.1 condition 3).
+ *
+ * Counted at the moment the night resolves, this IS the day-1 elimination count:
+ * the night's victim is still `isAlive: true` here (they only flip in
+ * `markDeadAndAdvance`, during the farewell).
+ *
+ * The seat filter matters — the host holds a seat ABOVE `maxPlayers` (11 in
+ * Sports, 13 in Japanese) and must never be counted. Same idiom as
+ * `sessions:startGame` and `computeDaySpeakingOrder`.
+ */
+async function countDeadSeatedPlayers(
+  db: DatabaseReader,
+  gameId: Id<"games">,
+  maxPlayers: number,
+): Promise<number> {
+  const players = await getPlayersByGameId(db, gameId);
+  return players.filter(
+    (p) =>
+      p.seatNumber !== undefined &&
+      p.seatNumber >= 1 &&
+      p.seatNumber <= maxPlayers &&
+      !p.isAlive,
+  ).length;
 }
 
 // ---------------------------------------------------------------------------
@@ -164,6 +192,40 @@ export const startFarewellSpeech = mutation({
 
     const randomizedOrder = shuffleArray(killedPlayers);
 
+    // Sports best move (docs/sports-mafia.md §6): the FIRST night's victim names
+    // 3 suspects before the farewell. A third destination on the branch this
+    // mutation already has — `speakingOrder` is set either way, so advancing
+    // `best_move → farewell_speech` later is a bare `gamePhase` patch and the
+    // farewell flow below is untouched.
+    if (
+      definition.flags.hasBestMove &&
+      isBestMoveEligible({
+        nightNumber,
+        killedSeatCount: killedPlayers.length,
+        deadSeatedCount: await countDeadSeatedPlayers(
+          ctx.db,
+          gameId,
+          game.maxPlayers,
+        ),
+      })
+    ) {
+      await ctx.db.patch(session._id, {
+        gamePhase: "best_move",
+        speakingOrder: randomizedOrder,
+        currentSpeakerIndex: undefined,
+        speakerStartedAt: undefined,
+        // Stamped explicitly: this mutation patches the session directly rather
+        // than through `sessions:update` (which is what normally stamps it), and
+        // the best-move countdown reads it.
+        phaseStartedAt: Date.now(),
+      });
+      await ctx.db.patch(nightSession._id, {
+        bestMoveSeat: randomizedOrder[0],
+        bestMoveSuspects: [],
+      });
+      return { skipToDay: false, bestMove: true };
+    }
+
     await ctx.db.patch(session._id, {
       gamePhase: "farewell_speech",
       speakingOrder: randomizedOrder,
@@ -171,6 +233,9 @@ export const startFarewellSpeech = mutation({
       speakerStartedAt: undefined,
     });
 
+    // NOTE: no `bestMove` key on this path on purpose — the return shape for a
+    // plain night kill stays exactly what it was, so the Japanese
+    // characterization tests keep passing unmodified.
     return { skipToDay: false };
   },
 });

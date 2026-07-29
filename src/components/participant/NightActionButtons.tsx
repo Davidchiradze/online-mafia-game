@@ -8,6 +8,7 @@ import YakuzaTargetIndicator from "./YakuzaTargetIndicator";
 import DoctorHealIndicator from "./DoctorHealIndicator";
 import NightActionWrapper from "./NightActionWrapper";
 import MafiaKillControl from "./MafiaKillControl";
+import BestMoveControl from "./BestMoveControl";
 
 interface NightActionButtonsProps {
   seatNumber: number | null;
@@ -61,6 +62,11 @@ export default function NightActionButtons({
         hasMafiaKillAuthority={hasMafiaKillAuthority}
         isMafiaPhase={isMafiaPhase}
       />
+
+      {/* Sports best move (§6): the first-night victim's public suspect marks +
+          their pick buttons. Self-gated on the `best_move` phase, so this is
+          inert for Japanese and for every other Sports phase. */}
+      <BestMoveControl seatNumber={seatNumber} isTargetHost={isTargetHost} />
 
       {canShowYakuzaKillButton && (
         <NightActionWrapper isSelected={isYakuzaTargetSelected}>

@@ -12,6 +12,10 @@
  *   so revealing teammates here would leak the mafia set. Mafia meet
  *   face-to-face only at `mafia_meet`.
  *
+ *   `best_move` (§6) reuses that exact shape: everyone sleeps — INCLUDING the
+ *   killed player doing the picking — and only the host sees the players. The
+ *   victim's check buttons render above the covers, just like the kill buttons.
+ *
  * Sports has no yakuza, doctor, right-hand, or introduction phases, so those
  * Japanese phase branches are dropped. The two kept info-checks
  * (`don_checks_for_detective`, `detective_checks_for_mafia`) match Japanese.
@@ -71,7 +75,13 @@ function canSeeParticipant(
 
     // Mafia choose target: PRIVATE. Only the host monitors — the acting mafia
     // see no video at all (all tiles covered), just the kill buttons on top.
+    //
+    // Best move (§6) works the same way: the table is still asleep, and so is the
+    // killed player who is picking. Only the host sees the players. The victim
+    // gets their check buttons rendered above the covers, exactly as the mafia get
+    // kill buttons here.
     case "mafia_chooses_target":
+    case "best_move":
       return isViewerHost;
 
     // Detective meet: only the detective (and host).
@@ -108,6 +118,8 @@ function getAwakeRoles(gamePhase: GamePhase): Role[] {
     case "detective_meet":
     case "detective_checks_for_mafia":
       return ["DETECTIVE"];
+    // `best_move` is deliberately ABSENT — during it EVERYONE sleeps, including
+    // the killed player who is picking (§6.6). Only the host sees the players.
     default:
       return [];
   }
@@ -125,6 +137,9 @@ function isNightActivityPhase(gamePhase: GamePhase): boolean {
     "mafia_chooses_target",
     "don_checks_for_detective",
     "detective_checks_for_mafia",
+    // Best move (§6): everyone is still asleep, so it behaves like any other
+    // night phase — the host sees the table dimmed, everyone else is covered.
+    "best_move",
   ];
   return nightPhases.includes(gamePhase);
 }

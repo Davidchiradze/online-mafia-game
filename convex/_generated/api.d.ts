@@ -17,6 +17,7 @@ import type * as community_maintenance from "../community/maintenance.js";
 import type * as community_messages from "../community/messages.js";
 import type * as community_readState from "../community/readState.js";
 import type * as crons from "../crons.js";
+import type * as game_bestMove from "../game/bestMove.js";
 import type * as game_broadcasts from "../game/broadcasts.js";
 import type * as game_cardPicking from "../game/cardPicking.js";
 import type * as game_dayPhase from "../game/dayPhase.js";
@@ -39,6 +40,7 @@ import type * as games_japanese_nightModel from "../games/japanese/nightModel.js
 import type * as games_japanese_phases from "../games/japanese/phases.js";
 import type * as games_japanese_winConditions from "../games/japanese/winConditions.js";
 import type * as games_registry from "../games/registry.js";
+import type * as games_sports_bestMove from "../games/sports/bestMove.js";
 import type * as games_sports_definition from "../games/sports/definition.js";
 import type * as games_sports_nightModel from "../games/sports/nightModel.js";
 import type * as games_sports_phases from "../games/sports/phases.js";
@@ -104,6 +106,7 @@ declare const fullApi: ApiFromModules<{
   "community/messages": typeof community_messages;
   "community/readState": typeof community_readState;
   crons: typeof crons;
+  "game/bestMove": typeof game_bestMove;
   "game/broadcasts": typeof game_broadcasts;
   "game/cardPicking": typeof game_cardPicking;
   "game/dayPhase": typeof game_dayPhase;
@@ -126,6 +129,7 @@ declare const fullApi: ApiFromModules<{
   "games/japanese/phases": typeof games_japanese_phases;
   "games/japanese/winConditions": typeof games_japanese_winConditions;
   "games/registry": typeof games_registry;
+  "games/sports/bestMove": typeof games_sports_bestMove;
   "games/sports/definition": typeof games_sports_definition;
   "games/sports/nightModel": typeof games_sports_nightModel;
   "games/sports/phases": typeof games_sports_phases;

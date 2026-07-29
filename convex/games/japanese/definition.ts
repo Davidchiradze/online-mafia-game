@@ -68,5 +68,6 @@ export const JAPANESE_DEFINITION: GameDefinition = {
     hasRightHandPromotion: true,
     firstDaySingleNomineeSkipsToNight: false,
     thirdFoulSpeakingBan: false,
+    hasBestMove: false,
   },
 };

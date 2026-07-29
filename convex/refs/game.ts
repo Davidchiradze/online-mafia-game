@@ -344,6 +344,26 @@ export const sportsNightPhase = {
 };
 
 // ============================================================================
+// BEST MOVE (Sports — docs/sports-mafia.md §6)
+// ============================================================================
+
+export const bestMove = {
+  /**
+   * Victim-only: mark / un-mark a suspect. Locked once 3 are marked.
+   *
+   * There is no companion read here on purpose — `bestMoveSeat` /
+   * `bestMoveSuspects` are public (§6.6) and already arrive through the reactive
+   * `nightPhase.getCurrent` session that `gameRoomContext` exposes as
+   * `nightPhaseSession`. The UI reads them there.
+   */
+  toggleSuspect: makeFunctionReference<
+    "mutation",
+    { gameId: Id<"games">; seatNumber: number },
+    null
+  >("game/bestMove:toggleSuspect"),
+};
+
+// ============================================================================
 // VOTING
 // ============================================================================
 

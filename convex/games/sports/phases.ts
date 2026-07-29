@@ -30,6 +30,7 @@ export const SPORTS_PHASES: readonly Phase[] = [
   "mafia_chooses_target",
   "don_checks_for_detective",
   "detective_checks_for_mafia",
+  "best_move",
   "farewell_speech",
   "repeat",
   "end_game",
@@ -50,6 +51,11 @@ const HOST_ADVANCE: Record<string, Phase> = {
   mafia_chooses_target: "don_checks_for_detective",
   don_checks_for_detective: "detective_checks_for_mafia",
   detective_checks_for_mafia: "farewell_speech",
+  // Deterministic: `best_move` is only ever entered when the night DID kill
+  // someone (docs/sports-mafia.md §6.1), so the farewell always follows. The
+  // host's advance from here is always enabled — it doubles as "Skip Best Move"
+  // so an AFK/disconnected victim can never stall the game (§6.3).
+  best_move: "farewell_speech",
   voting: "repeat",
 };
 
