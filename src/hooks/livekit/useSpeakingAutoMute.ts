@@ -3,7 +3,10 @@
 import { useEffect, useRef } from "react";
 import { ConnectionState, Room as LiveKitRoom } from "livekit-client";
 import { SPEAKING_STATE } from "@/lib/constants/game";
-import { isSeatMutedThisRound } from "@/lib/game/speakingBan";
+import {
+  countAliveSeatedPlayers,
+  isSeatMutedThisRound,
+} from "@/lib/game/speakingBan";
 import { useConnectionState } from "@livekit/components-react";
 import type { useGameRoom } from "@/lib/context/gameRoomContext";
 
@@ -16,6 +19,11 @@ export function useSpeakingAutoMute(
   players: GamePlayer[],
   userId: string,
   isHost: boolean,
+  /**
+   * Table size, so the 3rd-foul ban's alive count excludes the host seat
+   * (`maxPlayers + 1`). `null` until the game doc loads.
+   */
+  maxPlayers: number | null,
   enabled: boolean = true
 ) {
   const connectionState = useConnectionState(room ?? undefined);
@@ -56,12 +64,14 @@ export function useSpeakingAutoMute(
 
     if (isSpeakingRoundActive) {
       // Muted this round (3rd-foul ban)? Stay locked even on your own turn —
-      // the tile shows the muted (or, if you break the lock, foul) border.
+      // the tile shows the muted (or, if you break the lock, foul) border. Only
+      // in `day_phase`: a farewell speaker keeps their mic even when banned.
       const bannedThisRound = myPlayer
         ? isSeatMutedThisRound(
             myPlayer,
             gameSessionState.currentNightNumber,
-            players.filter((p) => p.isAlive).length,
+            countAliveSeatedPlayers(players, maxPlayers),
+            gameSessionState.gamePhase,
           )
         : false;
       shouldMute = currentSpeakerIndex !== mySeatNumber || bannedThisRound;
@@ -75,5 +85,14 @@ export function useSpeakingAutoMute(
     prevShouldMuteRef.current = shouldMute;
 
     void room.localParticipant.setMicrophoneEnabled(!shouldMute);
-  }, [room, gameSessionState, players, userId, isHost, enabled, isConnected]);
+  }, [
+    room,
+    gameSessionState,
+    players,
+    userId,
+    isHost,
+    maxPlayers,
+    enabled,
+    isConnected,
+  ]);
 }

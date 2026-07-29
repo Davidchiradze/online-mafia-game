@@ -11,6 +11,9 @@ export type { MobileReadyResult } from "./useMobileReady";
 export { useParticipantSpeaking } from "./useParticipantSpeaking";
 export type { ParticipantSpeakingResult } from "./useParticipantSpeaking";
 
+export { useParticipantSpeakingBan } from "./useParticipantSpeakingBan";
+export type { ParticipantSpeakingBanResult } from "./useParticipantSpeakingBan";
+
 export { useParticipantVisibility } from "./useParticipantVisibility";
 
 export { useParticipantReady } from "./useParticipantReady";

@@ -34,13 +34,20 @@ export default function LiveKitTestComponent({
   userId: string;
   isHost: boolean;
 }) {
-  const { gameSessionState, players } = useGameRoom();
+  const { gameSessionState, players, maxPlayers } = useGameRoom();
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   // Room-wide notifications (staff broadcasts + system pushes) as toasts.
   useGameBroadcasts(gameId as Id<"games">);
 
-  useSpeakingAutoMute(room, gameSessionState, players, userId, isHost);
+  useSpeakingAutoMute(
+    room,
+    gameSessionState,
+    players,
+    userId,
+    isHost,
+    maxPlayers,
+  );
 
   // When the game is finished (`gameSessionState.isFinished`) all cameras are
   // re-enabled so the final role reveal works for dead players too.

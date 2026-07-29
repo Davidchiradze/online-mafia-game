@@ -64,7 +64,13 @@ function getCountdownSoundSrc(gamePhase: string | null | undefined): string {
 export function useSpeakingProgress(
   speakerStartedAt: string | null | undefined,
   isActive: boolean,
-  gamePhase?: string | null
+  gamePhase?: string | null,
+  /**
+   * Overrides the phase's default length for this speaker only — used by the
+   * Sports final-day carve-out, where a 3rd-foul-banned player gets a 30s day
+   * speech instead of the phase's 60s (docs/sports-mafia.md §4.2).
+   */
+  durationOverrideMs?: number | null,
 ): number {
   const [progress, setProgress] = useState(0);
   const hasPlayedCountdownRef = useRef(false);
@@ -91,7 +97,7 @@ export function useSpeakingProgress(
       return;
     }
 
-    const duration = getSpeakingDuration(gamePhase);
+    const duration = durationOverrideMs ?? getSpeakingDuration(gamePhase);
     const countdownLead = getCountdownLeadMs(gamePhase);
 
     const updateProgress = () => {
@@ -112,17 +118,20 @@ export function useSpeakingProgress(
         remaining <= countdownLead
       ) {
         hasPlayedCountdownRef.current = true;
-        countdownAudioRef.current = playSound(
-          getCountdownSoundSrc(gamePhase),
-        );
+        countdownAudioRef.current = playSound(getCountdownSoundSrc(gamePhase));
       }
     };
 
     updateProgress();
     const interval = setInterval(updateProgress, 100);
     return () => clearInterval(interval);
-  }, [isActive, speakerStartedAt, gamePhase, getServerTime]);
+  }, [
+    isActive,
+    speakerStartedAt,
+    gamePhase,
+    durationOverrideMs,
+    getServerTime,
+  ]);
 
   return progress;
 }
-

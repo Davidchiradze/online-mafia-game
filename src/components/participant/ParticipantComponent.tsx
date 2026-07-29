@@ -8,7 +8,6 @@ import { FOULS } from "@/lib/constants/game";
 
 // Context
 import { useGameRoom } from "@/lib/context/gameRoomContext";
-import { isSeatMutedThisRound } from "@/lib/game/speakingBan";
 
 // Hooks
 import {
@@ -18,6 +17,7 @@ import {
   useParticipantMenuActions,
   useMobileReady,
   useParticipantSpeaking,
+  useParticipantSpeakingBan,
 } from "@/hooks/participant";
 import {
   useNomination,
@@ -56,7 +56,7 @@ export default function ParticipantComponent({
   playerIndex: number;
   player: NonNullable<ReturnType<typeof useGameRoom>["players"]>[number];
 }) {
-  const { gameSessionState, room, players } = useGameRoom();
+  const { gameSessionState, room } = useGameRoom();
   const tg = useTranslations("game");
   const tc = useTranslations("common");
 
@@ -119,17 +119,10 @@ export default function ParticipantComponent({
     return (FOULS.ALLOWED_PHASES as readonly string[]).includes(currentPhase);
   }, [gameSessionState?.gamePhase]);
 
-  // 3rd-foul speaking ban (Sports): is this player muted this round? Muted
-  // players stay in the speaking order but cannot legitimately speak.
-  const isSpeakingBanned = useMemo(() => {
-    if (!gameSessionState) return false;
-    const aliveCount = players.filter((p) => p.isAlive).length;
-    return isSeatMutedThisRound(
-      player,
-      gameSessionState.currentNightNumber,
-      aliveCount,
-    );
-  }, [gameSessionState, players, player]);
+  // 3rd-foul speaking ban (Sports §4.2) for this tile, plus the final-day 30s
+  // speech override.
+  const { isSpeakingBanned, finalDaySpeechMs } =
+    useParticipantSpeakingBan(player);
 
   // Speaking state
   const { isSpeaking, isMutedTurn, isParticipantFoulSpeaking, speakerBorderClass } =
@@ -148,6 +141,7 @@ export default function ParticipantComponent({
     gameSessionState?.speakerStartedAt,
     isSpeaking && !isMutedTurn,
     gameSessionState?.gamePhase,
+    finalDaySpeechMs,
   );
 
   // Foul-related functionality

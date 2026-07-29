@@ -135,6 +135,14 @@ export const DAY_PHASE_SPEAKING = {
   MAX_SPEAKING_TIME_MS: 60 * 1000,
   /** Maximum speaking time per player in seconds */
   MAX_SPEAKING_TIME_SECONDS: 60,
+  /**
+   * Sports final-day carve-out (docs/sports-mafia.md §4.2): on the last day
+   * phase (≤ 4 alive) a 3rd-foul-banned player still speaks, but for 30 seconds
+   * instead of 60. See `hasShortenedFinalDaySpeech` in `lib/game/speakingBan`.
+   */
+  FINAL_DAY_BANNED_TIME_MS: 30 * 1000,
+  /** Same, in seconds. */
+  FINAL_DAY_BANNED_TIME_SECONDS: 30,
 } as const;
 
 /**
