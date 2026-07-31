@@ -14,7 +14,7 @@
  */
 
 import { SPEAKING_STATE } from "@/lib/constants/game";
-import type { PhaseControlsMap } from "../core/types";
+import type { PhaseControlsMap } from "@/game/core/types";
 import StartPickingRolesButton from "@/components/gameSession/phaseButtonsForHost/StartPickingRolesButton";
 import ConfirmRolesButton from "@/components/gameSession/phaseButtonsForHost/ConfirmRolesButton";
 import PhaseAdvanceButton from "@/components/gameSession/phaseButtonsForHost/PhaseAdvanceButton";

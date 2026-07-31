@@ -13,7 +13,7 @@ import { MAFIA_TEAM_ROLES, YAKUZA_TEAM_ROLES } from "@/lib/constants/game";
 import type {
   NightActionAuthority,
   NightAuthorityInput,
-} from "../core/types";
+} from "@/game/core/types";
 
 const MAFIA_KILL_PRIORITY = ["DON", "MAFIA_RIGHT_HAND", "MAFIA"] as const;
 

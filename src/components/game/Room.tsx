@@ -1,10 +1,10 @@
 "use client";
 
-import LiveKitTestComponent from "../liveKit/LiveKitTestComponent";
+import LiveKitTestComponent from "@/components/liveKit/LiveKitTestComponent";
 import SpectatorView from "./SpectatorView";
 import WaitingRoom from "./WaitingRoom";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
-import LoadingSpinner from "../ui/LoadingSpinner";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { useTranslations } from "next-intl";
 
 export default function Room() {

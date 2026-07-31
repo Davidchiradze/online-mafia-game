@@ -10,7 +10,7 @@ import { SPORTS_MAFIA_TEAM_ROLES } from "@convex/games/sports/roles";
 import type {
   NightActionAuthority,
   NightAuthorityInput,
-} from "../core/types";
+} from "@/game/core/types";
 
 const MAFIA_ROLES: ReadonlySet<string> = new Set(SPORTS_MAFIA_TEAM_ROLES);
 

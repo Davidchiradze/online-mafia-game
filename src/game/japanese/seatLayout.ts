@@ -7,7 +7,7 @@
  * center host+controls panel (grid cols 2–3, rows 2–3).
  */
 
-import type { GridPosition, SeatLayout } from "../core/types";
+import type { GridPosition, SeatLayout } from "@/game/core/types";
 
 function positionForSeat(seatNumber: number): GridPosition {
   switch (seatNumber) {

@@ -3,7 +3,7 @@
 import { api } from "@convex/_generated/api";
 import { useQuery } from "convex/react";
 import { Coins, Menu } from "lucide-react";
-import UserAvatar from "../ui/UserAvatar";
+import UserAvatar from "@/components/ui/UserAvatar";
 import LanguageSwitcher from "@/components/i18n/LanguageSwitcher";
 
 type AuthorizedHeaderProps = {

@@ -2,13 +2,13 @@
 
 import { TrackReferenceOrPlaceholder } from "@livekit/components-react";
 import { motion } from "motion/react";
-import ParticipantComponent from "../participant/ParticipantComponent";
+import ParticipantComponent from "@/components/participant/ParticipantComponent";
 import GamePhaseControls from "./GamePhaseControls";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import VotingDisplay from "./VotingDisplay";
 import { EmptySeat } from "@/components/participant/playerStates";
 import PhaseTitle from "@/components/ui/PhaseTitle";
-import WinnerBanner from "../host-controls/WinnerBanner";
+import WinnerBanner from "@/components/host-controls/WinnerBanner";
 import { useSeatShuffleAnimation } from "@/hooks/game";
 
 const SHUFFLE_TRANSITION_SECONDS = 2.5;
