@@ -1,8 +1,8 @@
 import { ConvexError, v } from "convex/values";
-import { query, mutation, internalMutation } from "../_generated/server";
-import { getAuthenticatedUser, requireFeature } from "../lib/auth";
-import { FEATURES } from "../lib/entitlements";
-import { getGameById, assertIsHost, getPlayerInGame } from "../lib/games";
+import { query, mutation, internalMutation } from "../../_generated/server";
+import { getAuthenticatedUser, requireFeature } from "../../lib/auth";
+import { FEATURES } from "../../lib/entitlements";
+import { getGameById, assertIsHost, getPlayerInGame } from "../../lib/games";
 
 function isGameStarted(status: string) {
   return status === "playing" || status === "finished";
@@ -145,9 +145,9 @@ export const leaveAdminInternal = internalMutation({
 });
 
 async function leaveByUserId(
-  ctx: { db: import("../_generated/server").DatabaseWriter },
-  gameId: import("../_generated/dataModel").Id<"games">,
-  userId: import("../_generated/dataModel").Id<"profiles">,
+  ctx: { db: import("../../_generated/server").DatabaseWriter },
+  gameId: import("../../_generated/dataModel").Id<"games">,
+  userId: import("../../_generated/dataModel").Id<"profiles">,
 ) {
   const game = await getGameById(ctx.db, gameId);
   const player = await getPlayerInGame(ctx.db, gameId, userId);

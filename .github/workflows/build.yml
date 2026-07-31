@@ -1,0 +1,63 @@
+# TEMPORARY — remove after the folder-structure migration completes.
+# Tracked in docs/folder-migration-progress.md → Post-migration cleanup.
+#
+# WHY THIS EXISTS
+# `next build` is the ONLY automated check that catches the failure modes a
+# folder move introduces which `tsc --noEmit` and `vitest` are both blind to:
+#   - CSS import paths      (css.d.ts is `declare module "*.css"` → any path typechecks)
+#   - PNG / static imports
+#   - `next/font/local` src paths (escape into node_modules)
+#   - `"use client"` boundary violations (an import reordered above the directive
+#     silently converts a Client Component into a Server Component)
+#
+# The main Tests workflow deliberately does not run a build (it is slow and
+# needs env plumbing). For the duration of the migration we accept that cost.
+#
+# ENV VARS: `src/lib/env/server/index.ts` and `src/lib/env/client/index.ts`
+# parse `process.env` at MODULE SCOPE, so the build fails without these. The
+# values are dummies but must be structurally valid:
+#   - CONVEX_JWT_PUBLIC_JWK is JSON.parse()d at build time, because
+#     /.well-known/jwks.json is `dynamic = "force-static"` and therefore
+#     prerendered. It must be parseable JSON.
+#   - CONVEX_JWT_PRIVATE_KEY_B64 is only base64-decoded lazily (per request),
+#     so a placeholder is fine.
+name: Build
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          # Server env (Zod-validated at module scope)
+          INTERNAL_API_KEY: ci-dummy
+          CONVEX_SYNC_SECRET: ci-dummy
+          CONVEX_JWT_KID: ci-dummy-kid
+          CONVEX_JWT_PRIVATE_KEY_B64: ZHVtbXk=
+          CONVEX_JWT_PUBLIC_JWK: '{"kty":"RSA","n":"dummy","e":"AQAB"}'
+          # Client env
+          NEXT_PUBLIC_ENVIRONMENT: ci
+          NEXT_PUBLIC_CONVEX_URL: https://dummy.convex.cloud
+          NEXT_PUBLIC_LIVEKIT_URL: wss://dummy.livekit.cloud
+          # LiveKit server SDK (read via process.env directly, non-null asserted)
+          LIVEKIT_API_KEY: ci-dummy
+          LIVEKIT_API_SECRET: ci-dummy

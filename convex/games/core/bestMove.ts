@@ -1,10 +1,10 @@
 import { ConvexError, v } from "convex/values";
-import { mutation } from "../_generated/server";
-import { getAuthenticatedUser } from "../lib/auth";
-import { getPlayerInGame, getPlayersByGameId } from "../lib/games";
-import { SPORTS } from "../lib/constants";
-import type { Id } from "../_generated/dataModel";
-import type { DatabaseReader } from "../_generated/server";
+import { mutation } from "../../_generated/server";
+import { getAuthenticatedUser } from "../../lib/auth";
+import { getPlayerInGame, getPlayersByGameId } from "../../lib/games";
+import { SPORTS } from "../../lib/constants";
+import type { Id } from "../../_generated/dataModel";
+import type { DatabaseReader } from "../../_generated/server";
 
 /**
  * Sports "best move" (docs/sports-mafia.md §6) — the first-night victim names 3

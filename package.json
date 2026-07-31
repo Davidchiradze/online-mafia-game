@@ -9,6 +9,8 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
+    "codegen": "convex codegen",
+    "codegen:check": "convex codegen && git diff --exit-code convex/_generated",
     "test": "vitest run",
     "test:watch": "vitest",
     "auth:keygen": "node scripts/generate-jwt-keypair.mjs",

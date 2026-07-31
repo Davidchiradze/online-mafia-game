@@ -1,11 +1,11 @@
 import { ConvexError, v } from "convex/values";
-import { query, mutation, internalMutation } from "../_generated/server";
-import type { MutationCtx } from "../_generated/server";
-import type { Doc, Id } from "../_generated/dataModel";
-import { getAuthenticatedProfile, requirePermission } from "../lib/auth";
-import { PERMISSIONS, normalizeRole } from "../lib/access";
-import { writeAudit } from "../lib/admin";
-import { GAME_BROADCAST } from "../lib/constants";
+import { query, mutation, internalMutation } from "../../_generated/server";
+import type { MutationCtx } from "../../_generated/server";
+import type { Doc, Id } from "../../_generated/dataModel";
+import { getAuthenticatedProfile, requirePermission } from "../../lib/auth";
+import { PERMISSIONS, normalizeRole } from "../../lib/access";
+import { writeAudit } from "../../lib/admin";
+import { GAME_BROADCAST } from "../../lib/constants";
 
 /**
  * Room-wide notification channel for a single game. Delivered to every client

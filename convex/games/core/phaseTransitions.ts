@@ -1,11 +1,11 @@
 import { ConvexError } from "convex/values";
-import type { DatabaseWriter, MutationCtx } from "../_generated/server";
-import type { Id } from "../_generated/dataModel";
+import type { DatabaseWriter, MutationCtx } from "../../_generated/server";
+import type { Id } from "../../_generated/dataModel";
 import {
   getGameById,
   getPlayersByGameId,
   recordWinnerIfDecided,
-} from "./games";
+} from "../../lib/games";
 import { computeSpeakingOrder } from "./speakingOrder";
 
 /**

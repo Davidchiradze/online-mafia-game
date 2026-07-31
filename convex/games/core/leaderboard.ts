@@ -1,7 +1,7 @@
 import { v } from "convex/values";
-import { query } from "../_generated/server";
-import { getAuthenticatedUser } from "../lib/auth";
-import { gameType as gameTypeValidator } from "../tables/games";
+import { query } from "../../_generated/server";
+import { getAuthenticatedUser } from "../../lib/auth";
+import { gameType as gameTypeValidator } from "../../tables/games";
 
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 100;

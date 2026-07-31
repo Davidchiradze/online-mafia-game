@@ -1,12 +1,12 @@
 import { ConvexError, v } from "convex/values";
-import { query, mutation, internalMutation } from "../_generated/server";
-import { internal } from "../_generated/api";
-import { getAuthenticatedUser } from "../lib/auth";
-import { assertIsHost, getPlayerInGame, getPlayersByGameId } from "../lib/games";
-import { getGameDefinition } from "../games/registry";
-import { SPORTS } from "../lib/constants";
-import type { Id } from "../_generated/dataModel";
-import type { DatabaseReader } from "../_generated/server";
+import { query, mutation, internalMutation } from "../../_generated/server";
+import { internal } from "../../_generated/api";
+import { getAuthenticatedUser } from "../../lib/auth";
+import { assertIsHost, getPlayerInGame, getPlayersByGameId } from "../../lib/games";
+import { getGameDefinition } from "../registry";
+import { SPORTS } from "../../lib/constants";
+import type { Id } from "../../_generated/dataModel";
+import type { DatabaseReader } from "../../_generated/server";
 
 /**
  * Sports Mafia night — the `unanimous-vote` kill model (docs/sports-mafia.md §5).
@@ -91,7 +91,7 @@ export const startMafiaTargetWindow = mutation({
 
     await ctx.scheduler.runAfter(
       SPORTS.MAFIA_TARGET_WINDOW_MS,
-      internal.game.sportsNightPhase.closeMafiaTargetWindowInternal,
+      internal.games.sports.nightPhase.closeMafiaTargetWindowInternal,
       { gameId },
     );
   },

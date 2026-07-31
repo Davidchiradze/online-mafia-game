@@ -1,13 +1,13 @@
 import { ConvexError, v } from "convex/values";
-import { query, mutation } from "../_generated/server";
-import { getAuthenticatedUser, getAuthenticatedProfile } from "../lib/auth";
-import { PERMISSIONS, roleHasPermission } from "../lib/access";
-import { getGameById, assertIsHost, getPlayerInGame } from "../lib/games";
+import { query, mutation } from "../../_generated/server";
+import { getAuthenticatedUser, getAuthenticatedProfile } from "../../lib/auth";
+import { PERMISSIONS, roleHasPermission } from "../../lib/access";
+import { getGameById, assertIsHost, getPlayerInGame } from "../../lib/games";
 import {
   GAME_PHASES,
   MAFIA_TEAM_ROLES,
   YAKUZA_TEAM_ROLES,
-} from "../lib/constants";
+} from "../../lib/constants";
 
 /**
  * Get player roles filtered by team visibility.

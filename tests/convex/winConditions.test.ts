@@ -5,7 +5,7 @@ import {
   type WinContext,
   type GameOutcome,
   type WinMethod,
-} from "@convex/lib/winConditions";
+} from "@convex/games/core/winConditions";
 
 /**
  * CHARACTERIZATION TEST — Japanese win conditions (regression oracle).

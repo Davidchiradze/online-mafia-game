@@ -1,28 +1,28 @@
 import { ConvexError, v } from "convex/values";
-import { mutation } from "../_generated/server";
-import { getAuthenticatedUser } from "../lib/auth";
+import { mutation } from "../../_generated/server";
+import { getAuthenticatedUser } from "../../lib/auth";
 import {
   assertIsHost,
   getGameById,
   getPlayersByGameId,
   recordWinnerIfDecided,
-} from "../lib/games";
+} from "../../lib/games";
 import {
   computeDaySpeakingOrder,
   enterDayPhase as enterDayPhaseTransition,
   enterNightPhase,
   enterVotingPhase,
-} from "../lib/phaseTransitions";
-import { SPEAKING_STATE, FOULS } from "../lib/constants";
-import { getNextSpeaker } from "../lib/speakingOrder";
-import { getGameDefinition } from "../games/registry";
-import { isFirstDayRound } from "../games/core/dayRound";
+} from "./phaseTransitions";
+import { SPEAKING_STATE, FOULS } from "../../lib/constants";
+import { getNextSpeaker } from "./speakingOrder";
+import { getGameDefinition } from "../registry";
+import { isFirstDayRound } from "./dayRound";
 import {
   THIRD_FOUL_BAN_COUNT,
   foulSpeakingBanRound,
-} from "../games/core/fouls";
-import type { Id } from "../_generated/dataModel";
-import type { DatabaseReader } from "../_generated/server";
+} from "./fouls";
+import type { Id } from "../../_generated/dataModel";
+import type { DatabaseReader } from "../../_generated/server";
 
 // ---------------------------------------------------------------------------
 // Helpers
