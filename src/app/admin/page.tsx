@@ -4,14 +4,14 @@ import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { useAccess } from "@/hooks/auth/useAccess";
 import { PERMISSIONS } from "@convex/lib/access";
-import KpiStrip from "@/components/admin/dashboard/KpiStrip";
-import TopPlayersLeaderboard from "@/components/admin/dashboard/TopPlayersLeaderboard";
-import FactionWinDonut from "@/components/admin/dashboard/FactionWinDonut";
-import GamesOverTimeArea from "@/components/admin/dashboard/GamesOverTimeArea";
-import GamesByTypeBar from "@/components/admin/dashboard/GamesByTypeBar";
-import RoleAnalyticsTable from "@/components/admin/dashboard/RoleAnalyticsTable";
-import WinMethodBreakdown from "@/components/admin/dashboard/WinMethodBreakdown";
-import RecentActivityFeed from "@/components/admin/dashboard/RecentActivityFeed";
+import KpiStrip from "@/features/admin/dashboard/KpiStrip";
+import TopPlayersLeaderboard from "@/features/admin/dashboard/TopPlayersLeaderboard";
+import FactionWinDonut from "@/features/admin/dashboard/FactionWinDonut";
+import GamesOverTimeArea from "@/features/admin/dashboard/GamesOverTimeArea";
+import GamesByTypeBar from "@/features/admin/dashboard/GamesByTypeBar";
+import RoleAnalyticsTable from "@/features/admin/dashboard/RoleAnalyticsTable";
+import WinMethodBreakdown from "@/features/admin/dashboard/WinMethodBreakdown";
+import RecentActivityFeed from "@/features/admin/dashboard/RecentActivityFeed";
 
 function SectionLabel({ children }: { children: ReactNode }) {
   return (

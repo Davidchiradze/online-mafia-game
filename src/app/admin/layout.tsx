@@ -1,5 +1,5 @@
 import { PermissionGuard } from "@/components/auth/PermissionGuard";
-import AdminShell from "@/components/admin/AdminShell";
+import AdminShell from "@/features/admin/components/AdminShell";
 import { PERMISSIONS } from "@convex/lib/access";
 
 export default function AdminLayout({

@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import UsersTable from "@/components/admin/UsersTable";
+import UsersTable from "@/features/admin/components/UsersTable";
 
 export default function AdminUsersPage() {
   const t = useTranslations("admin");
