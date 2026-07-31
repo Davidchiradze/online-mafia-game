@@ -58,7 +58,7 @@ const EXTRA_RAW_PATHS: {
     // unguessable sessionToken authorizes removing exactly this session.
     path: "presence:disconnect",
     kind: "mutation",
-    file: "src/components/providers/PresenceBootstrap.tsx",
+    file: "src/providers/PresenceBootstrap.tsx",
     guard: 'path: "presence:disconnect"',
   },
 ];
