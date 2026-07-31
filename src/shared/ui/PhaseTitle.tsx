@@ -3,7 +3,7 @@
 import React from "react";
 import { useTranslations } from "next-intl";
 import { GAME_PHASES, SPEAKING_STATE } from "@/shared/lib/constants/game";
-import PickerIndicator from "@/components/gameSession/cardPicking/PickerIndicator";
+import PickerIndicator from "@/features/game-room/components/card-picking/PickerIndicator";
 import PhaseCountdown from "@/components/game/phase/PhaseCountdown";
 
 type Translator = ReturnType<typeof useTranslations<"game">>;

@@ -18,7 +18,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import LoadingSpinner from "@/shared/ui/LoadingSpinner";
 import AudioPlaybackModal from "@/components/liveKit/AudioPlaybackModal";
 import MicPermissionModal from "@/components/liveKit/MicPermissionModal";
-import CardPickingBoard from "@/components/gameSession/cardPicking/CardPickingBoard";
+import CardPickingBoard from "@/features/game-room/components/card-picking/CardPickingBoard";
 
 export default function LiveKitTestComponent({
   gameId,

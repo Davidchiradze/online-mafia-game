@@ -1,5 +1,5 @@
 import React from "react";
-import StartGameButton from "@/components/gameSession/phaseButtonsForHost/StartGameButton";
+import StartGameButton from "@/features/game-room/components/phase-controls/StartGameButton";
 import NightActionsDisplay from "./NightActionsDisplay";
 import PhaseTitle from "@/shared/ui/PhaseTitle";
 import WinnerBanner from "@/components/host-controls/WinnerBanner";

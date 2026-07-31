@@ -15,20 +15,20 @@
 
 import { SPEAKING_STATE } from "@/shared/lib/constants/game";
 import type { PhaseControlsMap } from "@/game/core/types";
-import StartPickingRolesButton from "@/components/gameSession/phaseButtonsForHost/StartPickingRolesButton";
-import ConfirmRolesButton from "@/components/gameSession/phaseButtonsForHost/ConfirmRolesButton";
-import PhaseAdvanceButton from "@/components/gameSession/phaseButtonsForHost/PhaseAdvanceButton";
-import SportsMafiaTargetControls from "@/components/gameSession/phaseButtonsForHost/SportsMafiaTargetControls";
-import BestMoveControls from "@/components/gameSession/phaseButtonsForHost/BestMoveControls";
-import FarewellSpeechControls from "@/components/gameSession/phaseButtonsForHost/FarewellSpeechControls";
-import VotingPhaseControls from "@/components/gameSession/vote/VotingPhaseControls";
-import ContinueNextRoundButton from "@/components/gameSession/phaseButtonsForHost/ContinueNextRoundButton";
-import EndGameControls from "@/components/gameSession/phaseButtonsForHost/EndGameControls";
-import DayPhaseSpeakingControls from "@/components/gameSession/phaseButtonsForHost/DayPhaseSpeakingControls";
-import StartNominatedPlayersSpeakButton from "@/components/gameSession/phaseButtonsForHost/StartNominatedPlayersSpeakButton";
-import StartVotingButton from "@/components/gameSession/phaseButtonsForHost/StartVotingButton";
-import NominatedPlayersSpeakingControls from "@/components/gameSession/phaseButtonsForHost/NominatedPlayersSpeakingControls";
-import StartNextPhaseButton from "@/components/gameSession/phaseButtonsForHost/StartNextPhaseButton";
+import StartPickingRolesButton from "@/features/game-room/components/phase-controls/StartPickingRolesButton";
+import ConfirmRolesButton from "@/features/game-room/components/phase-controls/ConfirmRolesButton";
+import PhaseAdvanceButton from "@/features/game-room/components/phase-controls/PhaseAdvanceButton";
+import SportsMafiaTargetControls from "@/features/game-room/components/phase-controls/SportsMafiaTargetControls";
+import BestMoveControls from "@/features/game-room/components/phase-controls/BestMoveControls";
+import FarewellSpeechControls from "@/features/game-room/components/phase-controls/FarewellSpeechControls";
+import VotingPhaseControls from "@/features/game-room/components/voting/VotingPhaseControls";
+import ContinueNextRoundButton from "@/features/game-room/components/phase-controls/ContinueNextRoundButton";
+import EndGameControls from "@/features/game-room/components/phase-controls/EndGameControls";
+import DayPhaseSpeakingControls from "@/features/game-room/components/phase-controls/DayPhaseSpeakingControls";
+import StartNominatedPlayersSpeakButton from "@/features/game-room/components/phase-controls/StartNominatedPlayersSpeakButton";
+import StartVotingButton from "@/features/game-room/components/phase-controls/StartVotingButton";
+import NominatedPlayersSpeakingControls from "@/features/game-room/components/phase-controls/NominatedPlayersSpeakingControls";
+import StartNextPhaseButton from "@/features/game-room/components/phase-controls/StartNextPhaseButton";
 
 function isSpeakingComplete(
   currentSpeakerIndex: number | null | undefined,
