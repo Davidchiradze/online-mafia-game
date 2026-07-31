@@ -3,7 +3,7 @@
 import LiveKitTestComponent from "@/components/liveKit/LiveKitTestComponent";
 import SpectatorView from "./SpectatorView";
 import WaitingRoom from "./WaitingRoom";
-import { useGameRoom } from "@/lib/context/gameRoomContext";
+import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 import LoadingSpinner from "@/shared/ui/LoadingSpinner";
 import { useTranslations } from "next-intl";
 

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { MessageSquare } from "lucide-react";
 import type { Id } from "@convex/_generated/dataModel";
-import { useGameRoom } from "@/lib/context/gameRoomContext";
+import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 import ToolButton from "./ToolButton";
 import BroadcastModal from "./BroadcastModal";
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useGameRoom } from "@/lib/context/gameRoomContext";
+import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 
 /**
  * Host-only night-actions summary strip. This is a pure DISPATCH boundary: it

@@ -4,7 +4,7 @@ import { useQuery } from "convex/react";
 import { Crosshair } from "lucide-react";
 import { sportsNightPhase } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
-import { useGameRoom } from "@/lib/context/gameRoomContext";
+import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 
 /**
  * Sports host night-actions summary (docs/sports-mafia.md §5). The Sports night

@@ -11,7 +11,7 @@
 
 import { useMemo } from "react";
 import type { TrackReferenceOrPlaceholder } from "@livekit/components-react";
-import { useGameRoom } from "@/lib/context/gameRoomContext";
+import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 import { VisibilityState } from "@/shared/lib/game/visibility";
 import type { GamePhase, Role } from "@/shared/lib/game/visibility";
 

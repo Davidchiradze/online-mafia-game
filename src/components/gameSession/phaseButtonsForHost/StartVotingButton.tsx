@@ -5,7 +5,7 @@ import { useMutation } from "convex/react";
 import { dayPhase, nightPhase } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
 import { useTranslations } from "next-intl";
-import { useGameRoom } from "@/lib/context/gameRoomContext";
+import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 import PhaseButton from "@/shared/ui/PhaseButton";
 
 type Props = {

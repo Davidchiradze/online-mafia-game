@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { useGameRoom } from "@/lib/context/gameRoomContext";
+import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 
 export interface RightHandPromotionResult {
   /** True only for the Don during `don_chooses_right_hand` when no Right

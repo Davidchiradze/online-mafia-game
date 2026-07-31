@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import FinishGameButton from "./FinishGameButton";
 import { GAME_CLEANUP } from "@convex/lib/constants";
 import { useCountdown } from "@/hooks/game/useCountdown";
-import { useGameRoom } from "@/lib/context/gameRoomContext";
+import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 
 type Winner = "mafia" | "yakuza" | "citizens";
 type Outcome = Winner | "no_contest";

@@ -5,7 +5,7 @@ import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
 import { nightPhase } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
-import { useGameRoom } from "@/lib/context/gameRoomContext";
+import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 
 interface DoctorHealButtonProps {
   seatNumber: number;

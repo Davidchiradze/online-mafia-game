@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
 import { gameSessions } from "@convex/refs/game";
-import { useGameRoom } from "@/lib/context/gameRoomContext";
+import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 import PhaseButton from "@/shared/ui/PhaseButton";
 
 type PhaseAdvanceButtonProps = {

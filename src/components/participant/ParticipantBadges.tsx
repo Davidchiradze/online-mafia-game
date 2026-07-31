@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useGameRoom } from "@/lib/context/gameRoomContext";
+import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 import ParticipantRoleBadge from "./ParticipantRoleBadge";
 import SeatIndicator from "./SeatIndicator";
 import {

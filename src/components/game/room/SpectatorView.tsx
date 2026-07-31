@@ -13,7 +13,7 @@ import GameRoomHeader from "@/components/game/room/GameRoomHeader";
 import StaffToolsButton from "@/components/game/staff-tools";
 import { useRef } from "react";
 import { useGameBroadcasts } from "@/hooks/game/useGameBroadcasts";
-import { useGameRoom } from "@/lib/context/gameRoomContext";
+import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 import type { Id } from "@convex/_generated/dataModel";
 import LoadingSpinner from "@/shared/ui/LoadingSpinner";
 import AudioPlaybackModal from "@/components/liveKit/AudioPlaybackModal";

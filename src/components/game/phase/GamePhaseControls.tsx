@@ -3,7 +3,7 @@ import StartGameButton from "@/components/gameSession/phaseButtonsForHost/StartG
 import NightActionsDisplay from "./NightActionsDisplay";
 import PhaseTitle from "@/shared/ui/PhaseTitle";
 import WinnerBanner from "@/components/host-controls/WinnerBanner";
-import { useGameRoom } from "@/lib/context/gameRoomContext";
+import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 
 /**
  * Renders the phase title + the host's action controls for the current phase.

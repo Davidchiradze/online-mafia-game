@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl";
 import { FOULS } from "@/shared/lib/constants/game";
 
 // Context
-import { useGameRoom } from "@/lib/context/gameRoomContext";
+import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 
 // Hooks
 import {

@@ -1,7 +1,7 @@
 "use client";
 
 import { TrackReferenceOrPlaceholder } from "@livekit/components-react";
-import type { useGameRoom } from "@/lib/context/gameRoomContext";
+import type { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 
 type Player = NonNullable<ReturnType<typeof useGameRoom>["players"]>[number];
 

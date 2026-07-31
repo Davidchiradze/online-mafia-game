@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { TrackReferenceOrPlaceholder } from "@livekit/components-react";
-import type { useGameRoom } from "@/lib/context/gameRoomContext";
+import type { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 
 type GamePlayer = ReturnType<typeof useGameRoom>["players"][number];
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { Room as LiveKitRoom } from "livekit-client";
-import type { useGameRoom } from "@/lib/context/gameRoomContext";
+import type { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 
 type GamePlayer = ReturnType<typeof useGameRoom>["players"][number];
 

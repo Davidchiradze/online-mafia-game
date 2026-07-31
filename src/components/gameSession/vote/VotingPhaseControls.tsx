@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { useGameRoom } from "@/lib/context/gameRoomContext";
+import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 import { LoadingSpinner } from "./LoadingSpinner";
 import { BothLeaveVoteControls } from "./BothLeaveVoteControls";
 import { RegularVotingControls } from "./RegularVotingControls";

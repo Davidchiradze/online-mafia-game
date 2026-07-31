@@ -4,7 +4,7 @@ import { TrackReferenceOrPlaceholder } from "@livekit/components-react";
 import { motion } from "motion/react";
 import ParticipantComponent from "@/components/participant/ParticipantComponent";
 import GamePhaseControls from "@/components/game/phase/GamePhaseControls";
-import { useGameRoom } from "@/lib/context/gameRoomContext";
+import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 import VotingDisplay from "@/components/game/phase/VotingDisplay";
 import { EmptySeat } from "@/components/participant/playerStates";
 import PhaseTitle from "@/shared/ui/PhaseTitle";

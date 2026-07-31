@@ -4,7 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { nightPhase, sportsNightPhase } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
-import { useGameRoom } from "@/lib/context/gameRoomContext";
+import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 import { MAFIA_TEAM_ROLES } from "@/shared/lib/constants/game";
 import MafiaKillButton from "@/components/game/actions/MafiaKillButton";
 import MafiaTargetIndicator from "./MafiaTargetIndicator";

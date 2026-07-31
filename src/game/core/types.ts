@@ -17,7 +17,7 @@ import type {
   VisibilityState,
 } from "@/shared/lib/game/visibility";
 import type { PhaseAdvanceUpdates } from "@/game/japanese/phaseFlow";
-import type { GameSessionState } from "@/lib/context/gameRoomContext";
+import type { GameSessionState } from "@/features/game-room/context/gameRoomContext";
 
 /**
  * A variant's visibility rules (docs/game-types.md §2.4): the phase+role

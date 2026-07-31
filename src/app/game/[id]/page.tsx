@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { lobbyGames, joinRequests } from "@convex/refs/lobby";
 import { gamePlayers, gameSpectators } from "@convex/refs/game";
-import { GameRoomProvider } from "@/lib/context/gameRoomContext";
+import { GameRoomProvider } from "@/features/game-room/context/gameRoomContext";
 import Room from "@/components/game/room/Room";
 import SpectatorJoinPrompt from "@/components/game/room/SpectatorJoinPrompt";
 import LoadingSpinner from "@/shared/ui/LoadingSpinner";

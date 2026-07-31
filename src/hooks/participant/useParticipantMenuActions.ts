@@ -5,7 +5,7 @@ import { useMutation } from "convex/react";
 import { joinRequests, hostTransfer } from "@convex/refs/lobby";
 import type { Id } from "@convex/_generated/dataModel";
 import { removeParticipantFromRoom } from "@/shared/lib/livekit/actions";
-import type { useGameRoom } from "@/lib/context/gameRoomContext";
+import type { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 
 type GameSessionState = NonNullable<ReturnType<typeof useGameRoom>["gameSessionState"]>;
 

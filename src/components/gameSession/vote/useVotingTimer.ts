@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useGameRoom } from "@/lib/context/gameRoomContext";
+import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 import { VOTING } from "@/shared/lib/constants/game";
 import { useServerTime } from "@/shared/lib/time/serverTime";
 

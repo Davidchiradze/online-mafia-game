@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Clock, CheckCircle, X, LogOut } from "lucide-react";
 import { JOIN_REQUEST_STATUSES } from "@/shared/lib/constants/game";
-import { useGameRoom } from "@/lib/context/gameRoomContext";
+import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 
 type Props = {
   status: string;

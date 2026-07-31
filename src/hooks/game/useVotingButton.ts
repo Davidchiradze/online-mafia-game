@@ -5,7 +5,7 @@ import { useMutation } from "convex/react";
 import { voting } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
 import { VOTING } from "@/shared/lib/constants/game";
-import type { useGameRoom } from "@/lib/context/gameRoomContext";
+import type { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 import { useServerTime } from "@/shared/lib/time/serverTime";
 
 type UseVotingButtonOptions = {

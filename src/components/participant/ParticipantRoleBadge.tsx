@@ -6,7 +6,7 @@ import {
   MAFIA_TEAM_ROLES,
   YAKUZA_TEAM_ROLES,
 } from "@/shared/lib/constants/game";
-import { useGameRoom } from "@/lib/context/gameRoomContext";
+import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 
 const MAFIA_ROLE_SET = new Set<string>(MAFIA_TEAM_ROLES);
 const YAKUZA_ROLE_SET = new Set<string>(YAKUZA_TEAM_ROLES);

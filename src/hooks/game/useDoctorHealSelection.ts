@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { useGameRoom } from "@/lib/context/gameRoomContext";
+import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 
 type GameSessionState = NonNullable<
   ReturnType<typeof useGameRoom>["gameSessionState"]

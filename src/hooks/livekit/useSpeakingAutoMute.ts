@@ -8,7 +8,7 @@ import {
   isSeatMutedThisRound,
 } from "@/shared/lib/game/speakingBan";
 import { useConnectionState } from "@livekit/components-react";
-import type { useGameRoom } from "@/lib/context/gameRoomContext";
+import type { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 
 type GameSession = NonNullable<ReturnType<typeof useGameRoom>["gameSessionState"]>;
 type GamePlayer = ReturnType<typeof useGameRoom>["players"][number];

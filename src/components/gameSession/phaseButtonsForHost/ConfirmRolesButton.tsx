@@ -5,7 +5,7 @@ import { useMutation } from "convex/react";
 import { gameSessions } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
 import { useTranslations } from "next-intl";
-import { useGameRoom } from "@/lib/context/gameRoomContext";
+import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 import { useCardPicking } from "@/hooks/game";
 import { advanceUpdates } from "@/game/japanese/phaseFlow";
 import PhaseButton from "@/shared/ui/PhaseButton";
