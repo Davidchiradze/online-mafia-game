@@ -8,8 +8,8 @@ import {
 import { Room, Track } from "livekit-client";
 import "@livekit/components-styles";
 import { useTranslations } from "next-intl";
-import PlayerCircle from "@/components/game/PlayerCircle";
-import GameRoomHeader from "@/components/game/GameRoomHeader";
+import PlayerCircle from "@/components/game/room/PlayerCircle";
+import GameRoomHeader from "@/components/game/room/GameRoomHeader";
 import StaffToolsButton from "@/components/game/staff-tools";
 import { useRef } from "react";
 import { useGameBroadcasts } from "@/hooks/game/useGameBroadcasts";

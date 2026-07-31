@@ -1,9 +1,9 @@
 "use client";
 
-import NominationButton from "@/components/game/NominationButton";
-import FoulButton from "@/components/game/FoulButton";
-import FoulNotification from "@/components/game/FoulNotification";
-import FoulSpeakButton from "@/components/game/FoulSpeakButton";
+import NominationButton from "@/components/game/actions/NominationButton";
+import FoulButton from "@/components/game/actions/FoulButton";
+import FoulNotification from "@/components/game/actions/FoulNotification";
+import FoulSpeakButton from "@/components/game/actions/FoulSpeakButton";
 
 interface NominationFoulSectionProps {
   seatNumber: number | null;
