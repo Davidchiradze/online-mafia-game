@@ -3,8 +3,8 @@ import {
   IS_PROD,
   PHP_LOGOUT_REDIRECT_URL,
   PHP_SESSION_COOKIE_NAME,
-} from "@/lib/auth/constants";
-import { clearAuthCookie } from "@/lib/auth/cookies";
+} from "@/features/auth/lib/constants";
+import { clearAuthCookie } from "@/features/auth/lib/cookies";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

@@ -4,7 +4,7 @@ import {
   composeNextMiddlewares,
   jwtCookieMiddleware,
   publicPageMiddleware,
-} from "@/middlewares";
+} from "@/features/auth/middleware";
 import { LOCALE_COOKIE } from "@/i18n/config";
 
 // Temporary: force every visitor to Georgian (see src/i18n/request.ts).

@@ -8,7 +8,7 @@ import { authProfiles } from "@convex/refs/lobby";
 import { FEATURES, hasFeature } from "@convex/lib/entitlements";
 import { PERMISSIONS, roleHasPermission } from "@convex/lib/access";
 import { Lock, Users } from "lucide-react";
-import { SUBSCRIPTIONS_PATH } from "@/components/auth/SubscriptionGuard";
+import { SUBSCRIPTIONS_PATH } from "@/features/auth/components/SubscriptionGuard";
 import { LobbyGame } from "@/components/lobby/LobbyContent";
 import { LobbyConfirmModal } from "@/components/lobby/LobbyConfirmModal";
 import { buildSeatRing, MODE_TINT, MODE_TINT_FALLBACK } from "./helpers";

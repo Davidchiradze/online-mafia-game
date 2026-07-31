@@ -2,8 +2,8 @@
 
 import { ConvexReactClient, ConvexProviderWithAuth } from "convex/react";
 import { ReactNode } from "react";
-import { useAuthFromTokenEndpoint } from "@/hooks/auth/useAuthFromTokenEndpoint";
-import { AuthBridgeProvider } from "@/lib/auth/authBridgeContext";
+import { useAuthFromTokenEndpoint } from "@/features/auth/hooks/useAuthFromTokenEndpoint";
+import { AuthBridgeProvider } from "@/features/auth/lib/authBridgeContext";
 import ConvexAuthFailureRedirect from "@/providers/ConvexAuthFailureRedirect";
 
 const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!);

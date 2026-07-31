@@ -6,8 +6,8 @@ import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import { Crown, ChevronRight, X } from "lucide-react";
 import Modal from "@/shared/ui/Modal";
-import { useEntitlements } from "@/hooks/auth/useEntitlements";
-import { SUBSCRIPTIONS_PATH } from "@/components/auth/SubscriptionGuard";
+import { useEntitlements } from "@/features/auth/hooks/useEntitlements";
+import { SUBSCRIPTIONS_PATH } from "@/features/auth/components/SubscriptionGuard";
 
 const SESSION_KEY = "lobby_upsell_seen";
 const SHOW_DELAY_MS = 800;

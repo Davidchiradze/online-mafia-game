@@ -13,7 +13,7 @@ import {
   type AccessRole,
 } from "@convex/lib/access";
 import { isSubscriptionActiveByDate } from "@convex/lib/entitlements";
-import { useAccess } from "@/hooks/auth/useAccess";
+import { useAccess } from "@/features/auth/hooks/useAccess";
 import { useInfiniteScroll } from "@/shared/hooks/useInfiniteScroll";
 import { useServerTime } from "@/shared/lib/time/serverTime";
 import { toast } from "@/shared/lib/utils/toast";

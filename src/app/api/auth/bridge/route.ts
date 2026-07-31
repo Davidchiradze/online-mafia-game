@@ -2,16 +2,16 @@ import { type NextRequest, NextResponse } from "next/server";
 import {
   PHP_LOGIN_REDIRECT_URL,
   PHP_SESSION_COOKIE_NAME,
-} from "@/lib/auth/constants";
+} from "@/features/auth/lib/constants";
 import {
   clearAuthCookie,
   setBridgeAttemptCookie,
   isSafeRelativePath,
   setAuthCookie,
-} from "@/lib/auth/cookies";
-import { jwtMaxAgeSeconds, signConvexJwt } from "@/lib/auth/jwt";
-import { fetchUserBySession } from "@/lib/auth/php";
-import { AUTH_ERROR_PATH } from "@/middlewares/constants";
+} from "@/features/auth/lib/cookies";
+import { jwtMaxAgeSeconds, signConvexJwt } from "@/features/auth/lib/jwt";
+import { fetchUserBySession } from "@/features/auth/lib/php";
+import { AUTH_ERROR_PATH } from "@/features/auth/middleware/constants";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

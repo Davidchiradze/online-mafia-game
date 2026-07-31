@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
-import { useAccess } from "@/hooks/auth/useAccess";
+import { useAccess } from "@/features/auth/hooks/useAccess";
 import { PERMISSIONS } from "@convex/lib/access";
 import KpiStrip from "@/features/admin/dashboard/KpiStrip";
 import TopPlayersLeaderboard from "@/features/admin/dashboard/TopPlayersLeaderboard";

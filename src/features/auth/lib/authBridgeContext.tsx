@@ -13,7 +13,7 @@ import {
 import {
   AUTH_TOKEN_ENDPOINT,
   AUTH_TOKEN_REFRESH_ENDPOINT,
-} from "@/lib/auth/constants";
+} from "@/features/auth/lib/constants";
 
 const TOKEN_ENDPOINT = AUTH_TOKEN_ENDPOINT;
 const REFRESH_ENDPOINT = AUTH_TOKEN_REFRESH_ENDPOINT;

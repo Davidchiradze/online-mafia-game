@@ -3,7 +3,7 @@ import {
   CONVEX_JWT_AUDIENCE,
   CONVEX_JWT_ISSUER,
   CONVEX_JWT_TTL_SECONDS,
-} from "@/lib/auth/constants";
+} from "@/features/auth/lib/constants";
 import { serverEnv } from "@/shared/lib/env/server";
 import { getPrivateKey } from "./jwks";
 

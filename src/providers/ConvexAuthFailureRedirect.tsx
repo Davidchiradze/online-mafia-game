@@ -2,8 +2,8 @@
 
 import { useEffect, useRef } from "react";
 import { useConvexAuth } from "convex/react";
-import { useAuthBridge } from "@/lib/auth/authBridgeContext";
-import { LOGOUT_ENDPOINT } from "@/lib/auth/constants";
+import { useAuthBridge } from "@/features/auth/lib/authBridgeContext";
+import { LOGOUT_ENDPOINT } from "@/features/auth/lib/constants";
 
 /**
  * Recovers from a Convex JWT validation failure for any reason —

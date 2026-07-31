@@ -4,7 +4,7 @@ import {
   IS_PROD,
   PHP_LOGIN_REDIRECT_URL,
   PHP_SESSION_COOKIE_NAME,
-} from "@/lib/auth/constants";
+} from "@/features/auth/lib/constants";
 import { AUTH_ERROR_PATH } from "@convex/lib/access";
 
 // Route policy (public prefixes, protected routes) is owned by the central

@@ -8,7 +8,7 @@ import { useTranslations } from "next-intl";
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { PERMISSIONS } from "@convex/lib/access";
-import { useAccess } from "@/hooks/auth/useAccess";
+import { useAccess } from "@/features/auth/hooks/useAccess";
 import { toast } from "@/shared/lib/utils/toast";
 
 type Props = {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { useAuthBridge } from "@/lib/auth/authBridgeContext";
+import { useAuthBridge } from "@/features/auth/lib/authBridgeContext";
 
 /**
  * Bridges Convex's `ConvexProviderWithAuth` to our cookie-backed JWT.

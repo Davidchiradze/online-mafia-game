@@ -4,7 +4,7 @@ import {
   BRIDGE_ATTEMPT_TTL_SECONDS,
   CONVEX_AUTH_COOKIE_NAME,
   IS_PROD,
-} from "@/lib/auth/constants";
+} from "@/features/auth/lib/constants";
 
 interface AuthCookieOptions {
   maxAgeSeconds: number;

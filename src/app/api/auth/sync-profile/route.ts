@@ -3,9 +3,9 @@ import { ConvexHttpClient } from "convex/browser";
 import {
   PHP_SESSION_COOKIE_NAME,
   CONVEX_AUTH_COOKIE_NAME,
-} from "@/lib/auth/constants";
-import { fetchUserBySession } from "@/lib/auth/php";
-import { normalizeAvatarUrl } from "@/lib/auth/avatar";
+} from "@/features/auth/lib/constants";
+import { fetchUserBySession } from "@/features/auth/lib/php";
+import { normalizeAvatarUrl } from "@/features/auth/lib/avatar";
 import { serverEnv } from "@/shared/lib/env/server";
 import { authProfiles } from "@convex/refs/lobby";
 

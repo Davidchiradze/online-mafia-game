@@ -1,5 +1,5 @@
 import AuthGate from "@/components/dashboard/AuthGate";
-import { SubscriptionRouteGuard } from "@/components/auth/SubscriptionRouteGuard";
+import { SubscriptionRouteGuard } from "@/features/auth/components/SubscriptionRouteGuard";
 import { FEATURES } from "@convex/lib/entitlements";
 
 export default function GameLayout({

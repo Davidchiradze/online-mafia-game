@@ -1,4 +1,4 @@
-import { PermissionGuard } from "@/components/auth/PermissionGuard";
+import { PermissionGuard } from "@/features/auth/components/PermissionGuard";
 import AdminShell from "@/features/admin/components/AdminShell";
 import { PERMISSIONS } from "@convex/lib/access";
 

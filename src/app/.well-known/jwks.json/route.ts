@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getPublicJwks } from "@/lib/auth/jwks";
+import { getPublicJwks } from "@/features/auth/lib/jwks";
 
 export const runtime = "nodejs";
 export const dynamic = "force-static";

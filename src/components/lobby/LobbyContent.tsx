@@ -17,7 +17,7 @@ import { LobbySubscriptionModal } from "./LobbySubscriptionModal";
 import {
   SubscriptionGuard,
   SubscriptionUpsell,
-} from "@/components/auth/SubscriptionGuard";
+} from "@/features/auth/components/SubscriptionGuard";
 import { FEATURES } from "@convex/lib/entitlements";
 import { RatingCard } from "@/components/dashboard/matchHistory/StatsHeader";
 

@@ -6,7 +6,7 @@ import { ArrowRight, Check } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { authProfiles } from "@convex/refs/lobby";
 import { cn } from "@/shared/lib/cn";
-import { PHP_API_BASE_URL } from "@/lib/auth/constants";
+import { PHP_API_BASE_URL } from "@/features/auth/lib/constants";
 import {
   SUBSCRIPTIONS_CONFIG,
   packageConfigIdForTier,

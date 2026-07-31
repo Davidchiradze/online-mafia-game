@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
-import { useAccess } from "@/hooks/auth/useAccess";
+import { useAccess } from "@/features/auth/hooks/useAccess";
 import type { Permission } from "@convex/lib/access";
 import LoadingSpinner from "@/shared/ui/LoadingSpinner";
 

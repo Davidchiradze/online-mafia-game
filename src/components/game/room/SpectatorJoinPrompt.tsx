@@ -16,9 +16,9 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useErrorMessage } from "@/shared/lib/i18n/errorMessage";
-import { useEntitlements } from "@/hooks/auth/useEntitlements";
-import { useAccess } from "@/hooks/auth/useAccess";
-import { SUBSCRIPTIONS_PATH } from "@/components/auth/SubscriptionGuard";
+import { useEntitlements } from "@/features/auth/hooks/useEntitlements";
+import { useAccess } from "@/features/auth/hooks/useAccess";
+import { SUBSCRIPTIONS_PATH } from "@/features/auth/components/SubscriptionGuard";
 import { FEATURES } from "@convex/lib/entitlements";
 import { PERMISSIONS } from "@convex/lib/access";
 import { cn } from "@/shared/lib/cn";

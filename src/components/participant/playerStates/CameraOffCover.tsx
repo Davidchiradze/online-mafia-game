@@ -1,6 +1,6 @@
 "use client";
 
-import { normalizeAvatarUrl } from "@/lib/auth/avatar";
+import { normalizeAvatarUrl } from "@/features/auth/lib/avatar";
 
 interface CameraOffCoverProps {
   /** Player's profile picture URL. Falls back to a gradient + initial. */

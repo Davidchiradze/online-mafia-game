@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { Lock } from "lucide-react";
 import type { ReactNode } from "react";
-import { useEntitlements } from "@/hooks/auth/useEntitlements";
+import { useEntitlements } from "@/features/auth/hooks/useEntitlements";
 import { FEATURES, type Feature } from "@convex/lib/entitlements";
 
 /** Where locked controls send the user to subscribe. */

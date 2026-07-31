@@ -3,7 +3,7 @@
 import { motion } from "motion/react";
 import { ShieldAlert, ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { PHP_LOGIN_REDIRECT_URL } from "@/lib/auth/constants";
+import { PHP_LOGIN_REDIRECT_URL } from "@/features/auth/lib/constants";
 
 const BG_IMG = "https://www.mafia.ge/templates/newassets/img/mafiabg.jpg";
 
