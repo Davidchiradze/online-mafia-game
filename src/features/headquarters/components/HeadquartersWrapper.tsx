@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
-import AuthGate from "@/components/dashboard/AuthGate";
-import AuthorizedHeader from "@/components/dashboard/AuthorizedHeader";
-import NavigationSidebar from "@/components/dashboard/NavigationSidebar";
-import FloatingChatWidget from "@/components/dashboard/community-chat/FloatingChatWidget";
+import AuthGate from "@/features/headquarters/components/AuthGate";
+import AuthorizedHeader from "@/features/headquarters/components/AuthorizedHeader";
+import NavigationSidebar from "@/features/headquarters/components/NavigationSidebar";
+import FloatingChatWidget from "@/features/headquarters/community-chat/FloatingChatWidget";
 import { useMyJoinRequestNotifications } from "@/hooks/lobby/useMyJoinRequestNotifications";
 
 type HeadquartersWrapperProps = {

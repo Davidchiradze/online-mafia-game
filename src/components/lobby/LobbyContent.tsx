@@ -19,7 +19,7 @@ import {
   SubscriptionUpsell,
 } from "@/features/auth/components/SubscriptionGuard";
 import { FEATURES } from "@convex/lib/entitlements";
-import { RatingCard } from "@/components/dashboard/matchHistory/StatsHeader";
+import { RatingCard } from "@/features/headquarters/match-history/StatsHeader";
 
 export type LobbyGame = Doc<"games"> & {
   players: (Doc<"gamePlayers"> & { avatar?: string })[];
