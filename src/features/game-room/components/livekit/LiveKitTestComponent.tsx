@@ -8,16 +8,16 @@ import {
 import { Room, Track } from "livekit-client";
 import "@livekit/components-styles";
 import { useTranslations } from "next-intl";
-import PlayerCircle from "@/components/game/room/PlayerCircle";
-import GameRoomHeader from "@/components/game/room/GameRoomHeader";
+import PlayerCircle from "@/features/game-room/components/room/PlayerCircle";
+import GameRoomHeader from "@/features/game-room/components/room/GameRoomHeader";
 import { useRef } from "react";
 import { useSpeakingAutoMute, useDeadPlayerMute } from "@/hooks/livekit";
 import { useGameBroadcasts } from "@/hooks/game/useGameBroadcasts";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 import type { Id } from "@convex/_generated/dataModel";
 import LoadingSpinner from "@/shared/ui/LoadingSpinner";
-import AudioPlaybackModal from "@/components/liveKit/AudioPlaybackModal";
-import MicPermissionModal from "@/components/liveKit/MicPermissionModal";
+import AudioPlaybackModal from "@/features/game-room/components/livekit/AudioPlaybackModal";
+import MicPermissionModal from "@/features/game-room/components/livekit/MicPermissionModal";
 import CardPickingBoard from "@/features/game-room/components/card-picking/CardPickingBoard";
 
 export default function LiveKitTestComponent({

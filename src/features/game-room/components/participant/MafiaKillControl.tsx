@@ -6,7 +6,7 @@ import { nightPhase, sportsNightPhase } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 import { MAFIA_TEAM_ROLES } from "@/shared/lib/constants/game";
-import MafiaKillButton from "@/components/game/actions/MafiaKillButton";
+import MafiaKillButton from "@/features/game-room/components/actions/MafiaKillButton";
 import MafiaTargetIndicator from "./MafiaTargetIndicator";
 import NightActionWrapper from "./NightActionWrapper";
 

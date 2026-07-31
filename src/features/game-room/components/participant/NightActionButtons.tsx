@@ -1,9 +1,9 @@
 "use client";
 
 import type { Id } from "@convex/_generated/dataModel";
-import YakuzaKillButton from "@/components/game/actions/YakuzaKillButton";
-import DoctorHealButton from "@/components/game/actions/DoctorHealButton";
-import PromoteToRightHandButton from "@/components/game/actions/PromoteToRightHandButton";
+import YakuzaKillButton from "@/features/game-room/components/actions/YakuzaKillButton";
+import DoctorHealButton from "@/features/game-room/components/actions/DoctorHealButton";
+import PromoteToRightHandButton from "@/features/game-room/components/actions/PromoteToRightHandButton";
 import YakuzaTargetIndicator from "./YakuzaTargetIndicator";
 import DoctorHealIndicator from "./DoctorHealIndicator";
 import NightActionWrapper from "./NightActionWrapper";

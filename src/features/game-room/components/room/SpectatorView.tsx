@@ -8,15 +8,15 @@ import {
 import { Room, Track } from "livekit-client";
 import "@livekit/components-styles";
 import { useTranslations } from "next-intl";
-import PlayerCircle from "@/components/game/room/PlayerCircle";
-import GameRoomHeader from "@/components/game/room/GameRoomHeader";
-import StaffToolsButton from "@/components/game/staff-tools";
+import PlayerCircle from "@/features/game-room/components/room/PlayerCircle";
+import GameRoomHeader from "@/features/game-room/components/room/GameRoomHeader";
+import StaffToolsButton from "@/features/game-room/components/staff-tools";
 import { useRef } from "react";
 import { useGameBroadcasts } from "@/hooks/game/useGameBroadcasts";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 import type { Id } from "@convex/_generated/dataModel";
 import LoadingSpinner from "@/shared/ui/LoadingSpinner";
-import AudioPlaybackModal from "@/components/liveKit/AudioPlaybackModal";
+import AudioPlaybackModal from "@/features/game-room/components/livekit/AudioPlaybackModal";
 
 type SpectatorViewProps = {
   gameId: string;

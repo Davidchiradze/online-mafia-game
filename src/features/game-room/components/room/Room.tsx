@@ -1,6 +1,6 @@
 "use client";
 
-import LiveKitTestComponent from "@/components/liveKit/LiveKitTestComponent";
+import LiveKitTestComponent from "@/features/game-room/components/livekit/LiveKitTestComponent";
 import SpectatorView from "./SpectatorView";
 import WaitingRoom from "./WaitingRoom";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
