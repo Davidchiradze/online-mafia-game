@@ -1,13 +1,13 @@
 import { ConvexError, v } from "convex/values";
-import { query, mutation } from "../_generated/server";
-import { getAuthenticatedUser } from "../lib/auth";
-import { assertIsHost, getPlayersByGameId } from "../lib/games";
-import { enterNightPhase, enterDayPhase } from "../games/core/phaseTransitions";
-import { getGameDefinition } from "../games/registry";
-import { isBestMoveEligible } from "../games/sports/bestMove";
-import type { GameDefinition } from "../games/core/types";
-import type { Id } from "../_generated/dataModel";
-import type { DatabaseReader } from "../_generated/server";
+import { query, mutation } from "../../_generated/server";
+import { getAuthenticatedUser } from "../../lib/auth";
+import { assertIsHost, getPlayersByGameId } from "../../lib/games";
+import { enterNightPhase, enterDayPhase } from "./phaseTransitions";
+import { getGameDefinition } from "../registry";
+import { isBestMoveEligible } from "../sports/bestMove";
+import type { GameDefinition } from "./types";
+import type { Id } from "../../_generated/dataModel";
+import type { DatabaseReader } from "../../_generated/server";
 
 // ---------------------------------------------------------------------------
 // Helpers

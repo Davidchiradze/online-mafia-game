@@ -40,8 +40,21 @@ const REPO_ROOT = new URL("../../", import.meta.url).pathname;
  */
 const MODULE_MOVES: Record<string, string> = {
   // ── Phase 1, Commit B (convex/game/* → convex/games/*) ──
-  // "game/bestMove": "games/core/bestMove",
-  // "game/sportsNightPhase": "games/sports/nightPhase",
+  "game/bestMove": "games/core/bestMove",
+  "game/broadcasts": "games/core/broadcasts",
+  "game/cardPicking": "games/core/cardPicking",
+  "game/dayPhase": "games/core/dayPhase",
+  "game/farewellSpeech": "games/core/farewellSpeech",
+  "game/gameLogs": "games/core/gameLogs",
+  "game/leaderboard": "games/core/leaderboard",
+  "game/nightPhase": "games/core/nightPhase",
+  "game/players": "games/core/players",
+  "game/roles": "games/core/roles",
+  "game/sessions": "games/core/sessions",
+  "game/spectators": "games/core/spectators",
+  "game/voting": "games/core/voting",
+  "game/webhookHandler": "games/core/webhookHandler",
+  "game/sportsNightPhase": "games/sports/nightPhase",
 };
 
 /** Rewrite the module half of a `module/path:export` id. */

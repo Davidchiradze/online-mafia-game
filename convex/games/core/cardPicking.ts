@@ -4,13 +4,13 @@ import {
   mutation,
   internalMutation,
   type MutationCtx,
-} from "../_generated/server";
-import type { Doc, Id } from "../_generated/dataModel";
-import { getAuthenticatedUser } from "../lib/auth";
-import { assertIsHost, getPlayersByGameId } from "../lib/games";
-import { cardPicking as cardPickingRefs } from "../refs/game";
-import { getGameDefinition } from "../games/registry";
-import { CARD_PICK, GAME_PHASES } from "../lib/constants";
+} from "../../_generated/server";
+import type { Doc, Id } from "../../_generated/dataModel";
+import { getAuthenticatedUser } from "../../lib/auth";
+import { assertIsHost, getPlayersByGameId } from "../../lib/games";
+import { cardPicking as cardPickingRefs } from "../../refs/game";
+import { getGameDefinition } from "../registry";
+import { CARD_PICK, GAME_PHASES } from "../../lib/constants";
 
 // ============================================================================
 // HELPERS

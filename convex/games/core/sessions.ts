@@ -1,16 +1,16 @@
 import { ConvexError, v } from "convex/values";
-import { query, mutation } from "../_generated/server";
+import { query, mutation } from "../../_generated/server";
 import { makeFunctionReference } from "convex/server";
-import type { Id } from "../_generated/dataModel";
-import { getAuthenticatedUser } from "../lib/auth";
+import type { Id } from "../../_generated/dataModel";
+import { getAuthenticatedUser } from "../../lib/auth";
 import {
   getGameById,
   assertIsHost,
   getPlayersByGameId,
   archiveGameLog,
-} from "../lib/games";
-import { getGameDefinition } from "../games/registry";
-import { GAME_CLEANUP } from "../lib/constants";
+} from "../../lib/games";
+import { getGameDefinition } from "../registry";
+import { GAME_CLEANUP } from "../../lib/constants";
 
 const removeGameInternal = makeFunctionReference<
   "mutation",

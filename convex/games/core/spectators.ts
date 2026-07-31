@@ -1,10 +1,10 @@
 import { ConvexError, v } from "convex/values";
-import { query, mutation, internalMutation } from "../_generated/server";
-import { getAuthenticatedUser, requireFeature } from "../lib/auth";
-import { FEATURES } from "../lib/entitlements";
-import { PERMISSIONS, roleHasPermission } from "../lib/access";
-import { getGameById, getPlayerInGame } from "../lib/games";
-import { SPECTATOR } from "../lib/constants";
+import { query, mutation, internalMutation } from "../../_generated/server";
+import { getAuthenticatedUser, requireFeature } from "../../lib/auth";
+import { FEATURES } from "../../lib/entitlements";
+import { PERMISSIONS, roleHasPermission } from "../../lib/access";
+import { getGameById, getPlayerInGame } from "../../lib/games";
+import { SPECTATOR } from "../../lib/constants";
 
 export const listByGame = query({
   args: { gameId: v.id("games") },
@@ -133,9 +133,9 @@ export const leaveAdminInternal = internalMutation({
 });
 
 async function leaveByUserId(
-  db: import("../_generated/server").DatabaseWriter,
-  gameId: import("../_generated/dataModel").Id<"games">,
-  userId: import("../_generated/dataModel").Id<"profiles">,
+  db: import("../../_generated/server").DatabaseWriter,
+  gameId: import("../../_generated/dataModel").Id<"games">,
+  userId: import("../../_generated/dataModel").Id<"profiles">,
 ) {
   const spectator = await db
     .query("gameSpectators")

@@ -1,11 +1,11 @@
 import { ConvexError, v } from "convex/values";
 import { paginationOptsValidator } from "convex/server";
-import { query } from "../_generated/server";
-import { getAuthenticatedUser } from "../lib/auth";
-import { winMethodLabel } from "../games/core/winConditions";
-import { getPlayerRatingValues } from "../lib/playerRatings";
-import { gameType as gameTypeValidator } from "../tables/games";
-import type { Doc } from "../_generated/dataModel";
+import { query } from "../../_generated/server";
+import { getAuthenticatedUser } from "../../lib/auth";
+import { winMethodLabel } from "./winConditions";
+import { getPlayerRatingValues } from "../../lib/playerRatings";
+import { gameType as gameTypeValidator } from "../../tables/games";
+import type { Doc } from "../../_generated/dataModel";
 
 /** Attach the derived human label to a game-log record for convenience. */
 function withLabel(log: Doc<"gameLogs">) {

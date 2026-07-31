@@ -12,7 +12,7 @@
 | Phase | Scope | Status |
 | --- | --- | --- |
 | **0** | Build the safety net | ✅ **Complete** |
-| **1** | Backend — `convex/game/*` → `convex/games/{core,sports}/` | 🔨 Commit A done (uncommitted); Commit B not started |
+| **1** | Backend — `convex/game/*` → `convex/games/{core,sports}/` | ✅ **Complete** (Commit B uncommitted) |
 | **2** | Frontend — `src/` feature-first (C0–C15) | ⏳ Not started |
 | **Cleanup** | Remove temporary artifacts | ⏳ Not started |
 
@@ -254,11 +254,53 @@ prose are not behavior.
 - **Commit B** — 14 files `convex/game/*` → `convex/games/core/`, plus
   `sportsNightPhase.ts` → `games/sports/nightPhase.ts`. **Function paths change**
   → hard cutover in a quiet window, Convex deploy first, then immediately promote
-  the pre-built Vercel deployment.
+  the pre-built Vercel deployment. ✅ **Done (working tree, not yet committed).**
 
 Verification order is not negotiable: **`npx convex codegen` first**, then
 `typecheck`, then `test`. Before codegen, `typecheck` is actively misleading —
 now demonstrated, not theorized.
+
+### Commit B — what was done
+
+`convex/game/` is now **empty and gone**. 15 files moved (`git mv`, recorded as
+renames): 14 → `games/core/`, and `sportsNightPhase.ts` → `games/sports/nightPhase.ts`
+(the only rename that is not a pure directory move — module id
+`game/sportsNightPhase` → `games/sports/nightPhase`).
+
+**Relative imports** — 0 same-dir imports among the 15 (baseline held), so the
+uniform `../` → `../../` depth bump applied cleanly. Imports that now resolve
+within `games/` were collapsed to idiomatic siblings (`../games/core/X` → `./X`,
+`../games/registry` → `../registry`, `../games/sports/X` → `../sports/X`).
+**Gotcha:** two files (`players.ts`, `spectators.ts`) carry inline
+`import("../_generated/…")` **type expressions** mid-file, not `from` imports —
+the header-only pass and a `from`-anchored grep both miss them; `tsc` caught them
+(TS2307). Swept with an `import\("\.\./` grep afterwards.
+
+**Function-path strings & typed accessors rewritten** (all `game/*` →
+`games/core/*`, except `sportsNightPhase` → `games/sports/nightPhase`):
+- `convex/refs/game.ts` — 77 (4 sportsNightPhase → `games/sports/nightPhase`, 73 → `games/core/`)
+- `convex/refs/history.ts` — 3 (`gameLogs`); `convex/refs/leaderboard.ts` — 1
+- `games/core/webhookHandler.ts` — 2 `makeFunctionReference` strings (`players`, `spectators`); its 3rd ref (`lobby/games:removeInternal`) and `sessions.ts`'s lone `lobby/games` ref are unchanged
+- `games/sports/nightPhase.ts:` self-schedule `internal.game.sportsNightPhase.*` → `internal.games.sports.nightPhase.*`
+- `convex/tests/gameEngine.test.ts` — ~110 typed `api.game.*` / `internal.game.*` accessors, routed per-module (core vs `games.sports.nightPhase`)
+
+**Safety-net maintenance** (part of the commit, by design):
+- `apiIntegrity.test.ts` → `INTERNAL_REF_ALLOWLIST`: the 5 `game/*` entries → `games/core/*` (the test asserts the allowlist bidirectionally and rejects stale entries, so this is mandatory, not cosmetic). Two stale module-name comments refreshed.
+- `moveMap.test.ts` → `MODULE_MOVES`: **15 entries added** (unlike Commit A, these modules DO register functions, so the frozen baseline must be remapped). `moveMap` green = every function survives at its new path with a byte-identical signature.
+- `tests/convex/__snapshots__/inventory.txt` — regenerated via `vitest -u`. Diff is **id-column-only** (87 lines, path segment only); `moveMap` is the independent hash-level proof.
+
+**Gate run (mandated order):** `codegen` → `tsc --noEmit` (exit 0, after fixing
+the two inline-import misses) → `vitest run` (**497/497**, 1 snapshot updated) →
+`vitest run` again clean.
+
+Docs (`docs/*.md`) and a handful of code comments still name old `game/*` paths;
+deferred to **C15** per plan (`internal.game.broadcasts.push` in `broadcasts.ts`
+is comment-only — no live call site, so no behavior impact).
+
+**Not yet done (deploy runbook, when shipping):** this commit changes public
+function paths, so it is a hard cutover — **Convex deploy first**, then
+immediately promote the pre-built Vercel deployment. The working tree is verified
+but uncommitted.
 
 ## Phase 2 — Frontend ⏳ Not started
 

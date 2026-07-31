@@ -10,7 +10,7 @@
  * The strings guarded here fail in three especially quiet ways:
  *   - `src/app/api/livekit/webhook/route.ts` catches errors and returns HTTP 200
  *   - `src/app/api/auth/sync-profile/route.ts` is the PHP auth bridge (auth outage)
- *   - the scheduler refs in `game/voting` + `game/cardPicking` hang a live game
+ *   - the scheduler refs in `games/core/voting` + `games/core/cardPicking` hang a live game
  *     mid-round with no client-visible error
  *
  * Three concerns, one shared module import:
@@ -75,11 +75,11 @@ const EXTRA_RAW_PATHS: {
  * code, never from the browser.
  */
 const INTERNAL_REF_ALLOWLIST = new Set([
-  "game/voting:endVoteWindowInternal",
-  "game/voting:endBothLeaveVoteInternal",
-  "game/cardPicking:expireTurnInternal",
-  "game/players:leaveAdminInternal",
-  "game/spectators:leaveAdminInternal",
+  "games/core/voting:endVoteWindowInternal",
+  "games/core/voting:endBothLeaveVoteInternal",
+  "games/core/cardPicking:expireTurnInternal",
+  "games/core/players:leaveAdminInternal",
+  "games/core/spectators:leaveAdminInternal",
   "lobby/games:removeInternal",
 ]);
 
@@ -206,8 +206,8 @@ const inventoryPromise = loadConvexFunctions();
 describe("refs integrity", () => {
   it("extracts every makeFunctionReference call site", () => {
     // 106 makeFunctionReference calls across 8 files (refs/game 77, refs/lobby 18,
-    // refs/history 3, refs/admin 2, refs/leaderboard 1, game/webhookHandler 3,
-    // game/sessions 1, admin/games 1) + 1 sendBeacon path = the 107 raw strings.
+    // refs/history 3, refs/admin 2, refs/leaderboard 1, games/core/webhookHandler 3,
+    // games/core/sessions 1, admin/games 1) + 1 sendBeacon path = the 107 raw strings.
     expect(refs.length).toBe(106);
     expect(refs.length + EXTRA_RAW_PATHS.length).toBe(107);
   });

@@ -25,5 +25,5 @@ export const leaderboard = {
     "query",
     { gameType: GameType; limit?: number },
     LeaderboardRow[]
-  >("game/leaderboard:getLeaderboard"),
+  >("games/core/leaderboard:getLeaderboard"),
 };

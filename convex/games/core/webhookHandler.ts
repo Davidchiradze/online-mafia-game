@@ -1,19 +1,19 @@
 import { v } from "convex/values";
-import { action } from "../_generated/server";
+import { action } from "../../_generated/server";
 import { makeFunctionReference } from "convex/server";
-import type { Id } from "../_generated/dataModel";
+import type { Id } from "../../_generated/dataModel";
 
 const leavePlayerInternal = makeFunctionReference<
   "mutation",
   { gameId: Id<"games">; userId: Id<"profiles"> },
   null
->("game/players:leaveAdminInternal");
+>("games/core/players:leaveAdminInternal");
 
 const leaveSpectatorInternal = makeFunctionReference<
   "mutation",
   { gameId: Id<"games">; userId: Id<"profiles"> },
   null
->("game/spectators:leaveAdminInternal");
+>("games/core/spectators:leaveAdminInternal");
 
 const removeGameInternal = makeFunctionReference<
   "mutation",
