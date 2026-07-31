@@ -1,6 +1,6 @@
 import { useTranslations } from "next-intl";
 import { Eye, Lock, LogIn, Users } from "lucide-react";
-import { LobbyGame } from "@/components/lobby/LobbyContent";
+import { LobbyGame } from "@/features/lobby/components/LobbyContent";
 
 type Props = {
   room: LobbyGame;

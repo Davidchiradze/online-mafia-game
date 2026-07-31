@@ -5,7 +5,7 @@ import { Eye } from "lucide-react";
 import { SPECTATOR } from "@convex/lib/constants";
 import UserAvatar from "@/shared/ui/UserAvatar";
 import ClickableTooltip from "@/shared/ui/ClickableTooltip";
-import { LobbyGame } from "@/components/lobby/LobbyContent";
+import { LobbyGame } from "@/features/lobby/components/LobbyContent";
 
 function SpectatorList({
   spectators,

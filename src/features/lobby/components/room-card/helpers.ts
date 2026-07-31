@@ -1,4 +1,4 @@
-import type { LobbyGame } from "@/components/lobby/LobbyContent";
+import type { LobbyGame } from "@/features/lobby/components/LobbyContent";
 
 export type SeatPlayer = LobbyGame["players"][number];
 

@@ -1,5 +1,5 @@
 import { useTranslations } from "next-intl";
-import { LobbyGame } from "@/components/lobby/LobbyContent";
+import { LobbyGame } from "@/features/lobby/components/LobbyContent";
 
 export default function StatusBadge({
   status,

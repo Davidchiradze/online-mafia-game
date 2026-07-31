@@ -19,7 +19,7 @@ import UserAvatar from "@/shared/ui/UserAvatar";
 import LevelBadge from "@/components/ranking/LevelBadge";
 import { getLevelForRating } from "@/shared/lib/ranking/levels";
 import JoinRequestsDrawer from "@/components/host-controls/JoinRequestsDrawer";
-import CreateGameModal from "@/components/modals/CreateGameModal";
+import CreateGameModal from "@/features/lobby/components/CreateGameModal";
 import type { GAME_TYPES } from "@/shared/lib/constants/game";
 import type { Id } from "@convex/_generated/dataModel";
 import { useJoinRequestNotification } from "@/hooks/game/useJoinRequestNotification";

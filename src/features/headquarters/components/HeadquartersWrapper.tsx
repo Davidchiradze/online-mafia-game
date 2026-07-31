@@ -7,7 +7,7 @@ import AuthGate from "@/features/headquarters/components/AuthGate";
 import AuthorizedHeader from "@/features/headquarters/components/AuthorizedHeader";
 import NavigationSidebar from "@/features/headquarters/components/NavigationSidebar";
 import FloatingChatWidget from "@/features/headquarters/community-chat/FloatingChatWidget";
-import { useMyJoinRequestNotifications } from "@/hooks/lobby/useMyJoinRequestNotifications";
+import { useMyJoinRequestNotifications } from "@/features/headquarters/hooks/useMyJoinRequestNotifications";
 
 type HeadquartersWrapperProps = {
   children: React.ReactNode;
