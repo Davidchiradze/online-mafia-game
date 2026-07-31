@@ -13,7 +13,7 @@
 | ----------- | --------------------------------------------------------- | -------------------------------------- |
 | **0**       | Build the safety net                                      | ✅ **Complete**                        |
 | **1**       | Backend — `convex/game/*` → `convex/games/{core,sports}/` | ✅ **Complete** (A `6fac22e`, B `e06b2ba`; not deployed) |
-| **2**       | Frontend — `src/` feature-first (C0–C15)                  | ⏳ Not started                         |
+| **2**       | Frontend — `src/` feature-first (C0–C15)                  | 🔨 C0–C2 done; C3–C15 pending          |
 | **Cleanup** | Remove temporary artifacts                                | ⏳ Not started                         |
 
 ---
@@ -315,9 +315,36 @@ incl. `/game/[id]`). Backend is testable in isolation via the `convex-test`
 engine suite (`convex/tests/gameEngine.test.ts`, 102 tests). Still pending: the
 coordinated deploy (Convex first, then Vercel promote).
 
-## Phase 2 — Frontend ⏳ Not started
+## Phase 2 — Frontend 🔨 In progress (C0–C2 done)
 
-16 commits (C0–C15). Not started; see the source plan.
+16 commits (C0–C15). Per-commit gate: `rm -rf .next tsconfig.tsbuildinfo` →
+`tsc --noEmit` → `vitest run` → `next build` → clean `git status`.
+
+| Commit | Scope | Status |
+| --- | --- | --- |
+| C0 | ADR-011 (layout + sanctioned cycles/edges) | ✅ `ff1bfb7` |
+| C1 | delete 16 unreferenced modules | ✅ `e285852` |
+| C2 | normalize 21 cross-dir `../` imports → `@/` | ✅ `3973905` |
+| C3 | split `components/game/` → room/phase/actions in place | ⏳ |
+| C4 | `shared/lib` (`utils.ts`→`cn.ts`, `format.ts`) | ⏳ |
+| C5 | `shared/ui` + `ui/icons` + `shared/hooks` | ⏳ |
+| C6 | `src/providers/` | ⏳ |
+| C7 | `features/admin` (pilot) | ⏳ |
+| C8 | `features/auth` (middleware + API routes — fails silently) | ⏳ |
+| C9–C11 | `features/subscriptions`, `headquarters`, `lobby` | ⏳ |
+| C12a–g | `features/game-room` in 7 slices (C12g = cycle-killer, not tsc-verified) | ⏳ |
+| C13 | `features/landing` | ⏳ |
+| C14 | `src/game/` → `features/game-room/variants/` (separately revertable) | ⏳ |
+| C15 | `components.json` aliases + doc path refs + `CLAUDE.md` | ⏳ |
+
+**Invariant now holding after C2:** `rg 'from "\.\.' src` → 0. Every remaining
+commit is a `git mv` of a whole directory plus a pure `@/`-prefix codemod.
+`git grep -c '"use client"' -- 'src/**'` baseline to preserve: **219**
+(the plan's 224 was pre-C1; C1 deleted 5 client components).
+
+See the source plan for the full move table, cycle notes, and manual-QA list
+(the frontend has ~zero component test coverage, so `next build` + manual QA are
+the real gates for the big move commits).
 
 ## Post-migration cleanup ⏳
 
