@@ -9,12 +9,12 @@
 
 ## Phase status
 
-| Phase | Scope | Status |
-| --- | --- | --- |
-| **0** | Build the safety net | ✅ **Complete** |
-| **1** | Backend — `convex/game/*` → `convex/games/{core,sports}/` | ✅ **Complete** (Commit B uncommitted) |
-| **2** | Frontend — `src/` feature-first (C0–C15) | ⏳ Not started |
-| **Cleanup** | Remove temporary artifacts | ⏳ Not started |
+| Phase       | Scope                                                     | Status                                 |
+| ----------- | --------------------------------------------------------- | -------------------------------------- |
+| **0**       | Build the safety net                                      | ✅ **Complete**                        |
+| **1**       | Backend — `convex/game/*` → `convex/games/{core,sports}/` | ✅ **Complete** (A `6fac22e`, B `e06b2ba`; not deployed) |
+| **2**       | Frontend — `src/` feature-first (C0–C15)                  | ⏳ Not started                         |
+| **Cleanup** | Remove temporary artifacts                                | ⏳ Not started                         |
 
 ---
 
@@ -24,31 +24,31 @@ Nothing in Phase 0 changed application code. All new tests land in `tests/`,
 which `vitest.config.mts` already picks up (`include: ["**/*.{test,spec}.{ts,tsx}"]`),
 so no Vitest or CI config changes were needed for the tests themselves.
 
-| Step | Deliverable | Status |
-| --- | --- | --- |
-| 0.1 | Verify the false-green mechanism | ✅ Confirmed |
-| 0.2 | `tests/support/convexModules.ts` — module map + inventory | ✅ 81 modules / 137 functions |
-| 0.3 | `tests/convex/apiIntegrity.test.ts` — refs, drift, snapshot | ✅ 15 tests |
-| 0.4 | `tests/structure/{routeManifest,magicPaths}.test.ts` | ✅ 8 tests |
-| 0.5 | Freeze baselines + `moveMap.test.ts` | ✅ 3 tests |
-| 0.6 | Temporary `next build` CI job | ✅ Green locally |
-| 0.7 | `codegen` / `codegen:check` scripts + pre-push wiring | ✅ |
-| 0.8 | `docs/testing.md` — tier + maintenance contract | ✅ |
+| Step | Deliverable                                                 | Status                        |
+| ---- | ----------------------------------------------------------- | ----------------------------- |
+| 0.1  | Verify the false-green mechanism                            | ✅ Confirmed                  |
+| 0.2  | `tests/support/convexModules.ts` — module map + inventory   | ✅ 81 modules / 137 functions |
+| 0.3  | `tests/convex/apiIntegrity.test.ts` — refs, drift, snapshot | ✅ 15 tests                   |
+| 0.4  | `tests/structure/{routeManifest,magicPaths}.test.ts`        | ✅ 8 tests                    |
+| 0.5  | Freeze baselines + `moveMap.test.ts`                        | ✅ 3 tests                    |
+| 0.6  | Temporary `next build` CI job                               | ✅ Green locally              |
+| 0.7  | `codegen` / `codegen:check` scripts + pre-push wiring       | ✅                            |
+| 0.8  | `docs/testing.md` — tier + maintenance contract             | ✅                            |
 
 ### Baseline facts — all verified, none assumed
 
 Every fact the plan depends on was re-confirmed against the working tree:
 
-| Fact | Plan said | Measured | ✓ |
-| --- | --- | --- | --- |
-| `"game/` string literals | 83 | 83 (refs/game 77, refs/history 3, webhookHandler 2, refs/leaderboard 1) | ✅ |
-| `api.game.*` / `internal.game.*` in `src/` | 0 | 0 — **backend migration needs zero `src/` edits** | ✅ |
-| `convex/game/*` same-dir `./` imports | 0 | 0 — one uniform relative-import rule holds | ✅ |
-| Modules in `api.d.ts` | 81 | 81 | ✅ |
-| Registered Convex functions | 137 | 137 | ✅ |
-| Raw function-path strings | 107 | 107 (106 `makeFunctionReference` + 1 `sendBeacon`) | ✅ |
-| Internal-targeting refs | 6 | 6, exactly the plan's list | ✅ |
-| `skipLibCheck` | `true` | `true` | ✅ |
+| Fact                                       | Plan said | Measured                                                                | ✓   |
+| ------------------------------------------ | --------- | ----------------------------------------------------------------------- | --- |
+| `"game/` string literals                   | 83        | 83 (refs/game 77, refs/history 3, webhookHandler 2, refs/leaderboard 1) | ✅  |
+| `api.game.*` / `internal.game.*` in `src/` | 0         | 0 — **backend migration needs zero `src/` edits**                       | ✅  |
+| `convex/game/*` same-dir `./` imports      | 0         | 0 — one uniform relative-import rule holds                              | ✅  |
+| Modules in `api.d.ts`                      | 81        | 81                                                                      | ✅  |
+| Registered Convex functions                | 137       | 137                                                                     | ✅  |
+| Raw function-path strings                  | 107       | 107 (106 `makeFunctionReference` + 1 `sendBeacon`)                      | ✅  |
+| Internal-targeting refs                    | 6         | 6, exactly the plan's list                                              | ✅  |
+| `skipLibCheck`                             | `true`    | `true`                                                                  | ✅  |
 
 ### 0.1 — The false-green mechanism is real
 
@@ -66,21 +66,21 @@ pushed, and pass CI green.
 **Correction to the plan:** `--skipLibCheck false` cannot be adopted as a
 standing gate. `node_modules` (`@livekit/components-core`, `next-intl`) emits its
 own pre-existing `TS2307`s, so the flag is permanently red for unrelated
-reasons. This *upgrades* the offline drift assertion (0.3) from "required because
+reasons. This _upgrades_ the offline drift assertion (0.3) from "required because
 codegen can't run in CI" to "the only viable mechanism at all."
 
 ### Fault injection — proof the net works
 
 Two injections were run and reverted; the tree is clean.
 
-| Injection | `tsc` | Pre-existing suite | New net |
-| --- | --- | --- | --- |
-| Move `game/bestMove.ts` → `games/core/` (depth change) | ❌ exit 2 | ❌ fails | ✅ 5 tests red |
-| Rename `game/bestMove.ts` in place + rewrite refs | **✅ exit 0 (false green)** | ❌ fails | ✅ 2 tests red (drift + snapshot) |
+| Injection                                              | `tsc`                       | Pre-existing suite | New net                           |
+| ------------------------------------------------------ | --------------------------- | ------------------ | --------------------------------- |
+| Move `game/bestMove.ts` → `games/core/` (depth change) | ❌ exit 2                   | ❌ fails           | ✅ 5 tests red                    |
+| Rename `game/bestMove.ts` in place + rewrite refs      | **✅ exit 0 (false green)** | ❌ fails           | ✅ 2 tests red (drift + snapshot) |
 
 The second row is the important one: it is the post-relative-import-bump state
 that Phase 1 step 2 produces, and it is where `tsc` is actively misleading. Note
-the depth-changing move *is* caught by `tsc` — but only incidentally, via broken
+the depth-changing move _is_ caught by `tsc` — but only incidentally, via broken
 relative imports, not via `api.d.ts`.
 
 ### What the net now guards
@@ -93,6 +93,7 @@ import cleanly in the `node` environment, so the `edge-runtime` fallback the pla
 budgeted for was **not needed**.
 
 **`tests/convex/apiIntegrity.test.ts`** (15 tests):
+
 - every raw function path resolves to a real exported function
 - the declared kind type-argument matches the real kind
 - visibility matches `INTERNAL_REF_ALLOWLIST` **bidirectionally**
@@ -133,7 +134,7 @@ the kind/visibility/signature of any function.
    `JSON.parse`s it at build time. Verified green with the corrected set.
 3. **The route manifest pins the source path alongside the URL.** A URL-only
    manifest collapses root `layout.tsx` and `(headquarters)/layout.tsx` to the
-   same `/` line, so renaming a route *group* would not change the snapshot. The
+   same `/` line, so renaming a route _group_ would not change the snapshot. The
    `← src/app/…` column closes that gap.
 4. **Manifest derivation lives in `tests/support/routeManifest.ts`.** Both the
    structure snapshot and the frozen-baseline check compute it directly, so
@@ -220,41 +221,43 @@ Both re-confirmed against the working tree before touching anything:
 **Rewrites inside the moved files** (`convex/lib/X` → `convex/games/core/X`):
 
 `phaseTransitions.ts` (depth +1, plus two same-dir imports):
+
 - `"../_generated/server"` → `"../../_generated/server"`
 - `"../_generated/dataModel"` → `"../../_generated/dataModel"`
-- `"./games"` → `"../../lib/games"`  *(games.ts stays in `convex/lib/`)*
-- `"./speakingOrder"` → **unchanged** *(moves together into `games/core/`)*
+- `"./games"` → `"../../lib/games"` _(games.ts stays in `convex/lib/`)_
+- `"./speakingOrder"` → **unchanged** _(moves together into `games/core/`)_
 
 `speakingOrder.ts`, `winConditions.ts`: no imports → no internal rewrites.
 
 **Referrers to update** (14 import sites):
 
-| File | Old | New |
-| --- | --- | --- |
-| `convex/game/farewellSpeech.ts` | `../lib/phaseTransitions` | `../games/core/phaseTransitions` |
-| `convex/game/voting.ts` | `../lib/phaseTransitions` | `../games/core/phaseTransitions` |
-| `convex/game/nightPhase.ts` | `../lib/phaseTransitions` | `../games/core/phaseTransitions` |
-| `convex/game/dayPhase.ts` | `../lib/phaseTransitions` | `../games/core/phaseTransitions` |
-| `convex/game/dayPhase.ts` | `../lib/speakingOrder` | `../games/core/speakingOrder` |
-| `convex/admin/stats.ts` | `../lib/winConditions` | `../games/core/winConditions` |
-| `convex/game/gameLogs.ts` | `../lib/winConditions` | `../games/core/winConditions` |
-| `convex/admin/gameLogs.ts` | `../lib/winConditions` | `../games/core/winConditions` |
-| `convex/lib/games.ts` | `./winConditions` | `../games/core/winConditions` |
-| `convex/games/core/types.ts` | `../../lib/winConditions` | `./winConditions` |
-| `convex/tests/gameEngine.test.ts` | `../lib/phaseTransitions` | `../games/core/phaseTransitions` |
-| `tests/convex/speakingOrder.test.ts` | `@convex/lib/speakingOrder` | `@convex/games/core/speakingOrder` |
-| `tests/convex/winConditions.test.ts` | `@convex/lib/winConditions` | `@convex/games/core/winConditions` |
+| File                                  | Old                         | New                                |
+| ------------------------------------- | --------------------------- | ---------------------------------- |
+| `convex/game/farewellSpeech.ts`       | `../lib/phaseTransitions`   | `../games/core/phaseTransitions`   |
+| `convex/game/voting.ts`               | `../lib/phaseTransitions`   | `../games/core/phaseTransitions`   |
+| `convex/game/nightPhase.ts`           | `../lib/phaseTransitions`   | `../games/core/phaseTransitions`   |
+| `convex/game/dayPhase.ts`             | `../lib/phaseTransitions`   | `../games/core/phaseTransitions`   |
+| `convex/game/dayPhase.ts`             | `../lib/speakingOrder`      | `../games/core/speakingOrder`      |
+| `convex/admin/stats.ts`               | `../lib/winConditions`      | `../games/core/winConditions`      |
+| `convex/game/gameLogs.ts`             | `../lib/winConditions`      | `../games/core/winConditions`      |
+| `convex/admin/gameLogs.ts`            | `../lib/winConditions`      | `../games/core/winConditions`      |
+| `convex/lib/games.ts`                 | `./winConditions`           | `../games/core/winConditions`      |
+| `convex/games/core/types.ts`          | `../../lib/winConditions`   | `./winConditions`                  |
+| `convex/tests/gameEngine.test.ts`     | `../lib/phaseTransitions`   | `../games/core/phaseTransitions`   |
+| `tests/convex/speakingOrder.test.ts`  | `@convex/lib/speakingOrder` | `@convex/games/core/speakingOrder` |
+| `tests/convex/winConditions.test.ts`  | `@convex/lib/winConditions` | `@convex/games/core/winConditions` |
 | `tests/game/sportsDefinition.test.ts` | `@convex/lib/winConditions` | `@convex/games/core/winConditions` |
-| `tests/game/gameDefinition.test.ts` | `@convex/lib/winConditions` | `@convex/games/core/winConditions` |
+| `tests/game/gameDefinition.test.ts`   | `@convex/lib/winConditions` | `@convex/games/core/winConditions` |
 
 Docs (`docs/*.md`) still reference the old `convex/lib/{winConditions,
 phaseTransitions,speakingOrder}.ts` paths and a couple of code comments do too;
 those are **left for C15** (the doc-rewrite commit) per the plan — comments and
 prose are not behavior.
+
 - **Commit B** — 14 files `convex/game/*` → `convex/games/core/`, plus
   `sportsNightPhase.ts` → `games/sports/nightPhase.ts`. **Function paths change**
   → hard cutover in a quiet window, Convex deploy first, then immediately promote
-  the pre-built Vercel deployment. ✅ **Done (working tree, not yet committed).**
+  the pre-built Vercel deployment. ✅ **Done — committed `e06b2ba`.**
 
 Verification order is not negotiable: **`npx convex codegen` first**, then
 `typecheck`, then `test`. Before codegen, `typecheck` is actively misleading —
@@ -278,6 +281,7 @@ the header-only pass and a `from`-anchored grep both miss them; `tsc` caught the
 
 **Function-path strings & typed accessors rewritten** (all `game/*` →
 `games/core/*`, except `sportsNightPhase` → `games/sports/nightPhase`):
+
 - `convex/refs/game.ts` — 77 (4 sportsNightPhase → `games/sports/nightPhase`, 73 → `games/core/`)
 - `convex/refs/history.ts` — 3 (`gameLogs`); `convex/refs/leaderboard.ts` — 1
 - `games/core/webhookHandler.ts` — 2 `makeFunctionReference` strings (`players`, `spectators`); its 3rd ref (`lobby/games:removeInternal`) and `sessions.ts`'s lone `lobby/games` ref are unchanged
@@ -285,6 +289,7 @@ the header-only pass and a `from`-anchored grep both miss them; `tsc` caught the
 - `convex/tests/gameEngine.test.ts` — ~110 typed `api.game.*` / `internal.game.*` accessors, routed per-module (core vs `games.sports.nightPhase`)
 
 **Safety-net maintenance** (part of the commit, by design):
+
 - `apiIntegrity.test.ts` → `INTERNAL_REF_ALLOWLIST`: the 5 `game/*` entries → `games/core/*` (the test asserts the allowlist bidirectionally and rejects stale entries, so this is mandatory, not cosmetic). Two stale module-name comments refreshed.
 - `moveMap.test.ts` → `MODULE_MOVES`: **15 entries added** (unlike Commit A, these modules DO register functions, so the frozen baseline must be remapped). `moveMap` green = every function survives at its new path with a byte-identical signature.
 - `tests/convex/__snapshots__/inventory.txt` — regenerated via `vitest -u`. Diff is **id-column-only** (87 lines, path segment only); `moveMap` is the independent hash-level proof.
@@ -299,8 +304,16 @@ is comment-only — no live call site, so no behavior impact).
 
 **Not yet done (deploy runbook, when shipping):** this commit changes public
 function paths, so it is a hard cutover — **Convex deploy first**, then
-immediately promote the pre-built Vercel deployment. The working tree is verified
-but uncommitted.
+immediately promote the pre-built Vercel deployment.
+
+**Shippability verified (2026-07-31, commit `e06b2ba`):** zero `src/` files
+changed across all of Phase 1 (`git diff f43441a..HEAD -- src` empty) — the refs
+indirection means the frontend points at the new paths with no edits. Gate all
+green: `convex codegen` drift-free, `tsc --noEmit` clean (incl. `src/`),
+`vitest run` 497/497, and a full production `next build` succeeds (18 routes,
+incl. `/game/[id]`). Backend is testable in isolation via the `convex-test`
+engine suite (`convex/tests/gameEngine.test.ts`, 102 tests). Still pending: the
+coordinated deploy (Convex first, then Vercel promote).
 
 ## Phase 2 — Frontend ⏳ Not started
 
@@ -308,13 +321,13 @@ but uncommitted.
 
 ## Post-migration cleanup ⏳
 
-| Artifact | Fate |
-| --- | --- |
-| `tests/support/*`, `tests/convex/apiIntegrity.test.ts`, `tests/structure/*` + snapshots | **permanent** — the standing guard on 107 strings |
-| `codegen:check` script + pre-push block | **permanent** |
-| `tests/migration/` (moveMap + frozen baselines) | delete |
-| `.github/workflows/build.yml` | delete, or demote to a `paths:`-filtered PR-only workflow |
-| `pre-folder-migration` tag | keep |
+| Artifact                                                                                | Fate                                                      |
+| --------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| `tests/support/*`, `tests/convex/apiIntegrity.test.ts`, `tests/structure/*` + snapshots | **permanent** — the standing guard on 107 strings         |
+| `codegen:check` script + pre-push block                                                 | **permanent**                                             |
+| `tests/migration/` (moveMap + frozen baselines)                                         | delete                                                    |
+| `.github/workflows/build.yml`                                                           | delete, or demote to a `paths:`-filtered PR-only workflow |
+| `pre-folder-migration` tag                                                              | keep                                                      |
 
 Also in C15: rewrite the `docs/architecture.md` directory section (it currently
 documents four files that do not exist — `convex/auth.ts`, `convex/http.ts`,
