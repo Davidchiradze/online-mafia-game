@@ -1,4 +1,4 @@
-import subscriptionsConfig from "@/config/subscriptions.json";
+import subscriptionsConfig from "./subscriptions.json";
 
 /**
  * Text fields hold next-intl keys (resolved against the `subscriptions`

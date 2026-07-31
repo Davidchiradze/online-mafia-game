@@ -11,7 +11,7 @@ import {
   SUBSCRIPTIONS_CONFIG,
   packageConfigIdForTier,
   type ActiveSubscription,
-} from "@/shared/lib/constants/subscriptions";
+} from "@/features/subscriptions/lib/subscriptions";
 
 /**
  * "2026-06-29T10:42:00" or "2026-06-29 10:42:00" -> "29.06.2026 10:42"
