@@ -4,7 +4,7 @@ import { useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { lobbyGames } from "@convex/refs/lobby";
 import LobbyContent from "@/components/lobby/LobbyContent";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import LoadingSpinner from "@/shared/ui/LoadingSpinner";
 
 export default function LobbyPage() {
   const games = useQuery(lobbyGames.list);

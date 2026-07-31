@@ -3,7 +3,7 @@
 import { useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { authProfiles } from "@convex/refs/lobby";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import LoadingSpinner from "@/shared/ui/LoadingSpinner";
 
 /**
  * Renders its children only once the current user's profile is available.

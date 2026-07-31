@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { WifiOffIcon } from "@/assets/icons";
+import { WifiOffIcon } from "@/shared/ui/icons";
 
 interface DisconnectedCoverProps {
   className?: string;

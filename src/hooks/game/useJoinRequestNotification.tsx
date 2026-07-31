@@ -8,7 +8,7 @@ import { toast } from "@/shared/lib/utils/toast";
 import { toast as toastifyDismiss } from "react-toastify";
 import { Check, X } from "lucide-react";
 import type { Id } from "@convex/_generated/dataModel";
-import UserAvatar from "@/components/ui/UserAvatar";
+import UserAvatar from "@/shared/ui/UserAvatar";
 import { playSound } from "@/shared/lib/audio/audioUnlock";
 
 // ---------------------------------------------------------------------------

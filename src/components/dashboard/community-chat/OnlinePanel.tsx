@@ -4,8 +4,8 @@ import { useMemo, useState } from "react";
 import { Users, Search, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { Id } from "@convex/_generated/dataModel";
-import UserAvatar from "@/components/ui/UserAvatar";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import UserAvatar from "@/shared/ui/UserAvatar";
+import LoadingSpinner from "@/shared/ui/LoadingSpinner";
 import { StaffBadge } from "./StaffBadge";
 import type { OnlineUser } from "./types";
 

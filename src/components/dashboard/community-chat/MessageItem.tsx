@@ -5,7 +5,7 @@ import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import type { Id } from "@convex/_generated/dataModel";
 import { cn } from "@/shared/lib/cn";
-import UserAvatar from "@/components/ui/UserAvatar";
+import UserAvatar from "@/shared/ui/UserAvatar";
 import { StaffBadge } from "./StaffBadge";
 import type { ChatMessage } from "./types";
 

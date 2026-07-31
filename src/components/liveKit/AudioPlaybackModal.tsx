@@ -3,7 +3,7 @@
 import { useAudioPlayback } from "@livekit/components-react";
 import { Room } from "livekit-client";
 import { useTranslations } from "next-intl";
-import AnimatedModal from "@/components/ui/AnimatedModal";
+import AnimatedModal from "@/shared/ui/AnimatedModal";
 
 export default function AudioPlaybackModal({ room }: { room: Room }) {
   const { canPlayAudio, startAudio } = useAudioPlayback(room);

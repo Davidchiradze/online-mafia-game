@@ -1,6 +1,6 @@
 "use client";
 
-import { MicOffIcon, MicOnIcon } from "@/assets/icons";
+import { MicOffIcon, MicOnIcon } from "@/shared/ui/icons";
 import { TOGGLE_BUTTON_CLASS, TOGGLE_ICON_CLASS } from "./toggleStyles";
 
 interface MicToggleButtonProps {

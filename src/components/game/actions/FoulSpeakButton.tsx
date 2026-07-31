@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 import { useTranslations } from "next-intl";
-import { FoulAlertIcon } from "@/assets/icons";
+import { FoulAlertIcon } from "@/shared/ui/icons";
 
 type FoulSpeakButtonProps = {
   onStartFoulSpeak: () => void;

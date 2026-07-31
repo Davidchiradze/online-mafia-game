@@ -2,7 +2,7 @@
 
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { useTranslations } from "next-intl";
-import { MoreVerticalIcon } from "@/assets/icons";
+import { MoreVerticalIcon } from "@/shared/ui/icons";
 
 interface MenuItem {
   label: string;

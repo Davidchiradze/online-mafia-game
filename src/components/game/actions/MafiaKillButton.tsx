@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import Skull from "@/assets/icons/Skull";
+import Skull from "@/shared/ui/icons/Skull";
 
 interface MafiaKillButtonProps {
   /** Highlighted as the viewer's current target. */

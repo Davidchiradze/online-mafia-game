@@ -1,6 +1,6 @@
 "use client";
 
-import { FoulAlertIcon } from "@/assets/icons";
+import { FoulAlertIcon } from "@/shared/ui/icons";
 
 /**
  * Temporary alert that flashes in the center of a participant tile

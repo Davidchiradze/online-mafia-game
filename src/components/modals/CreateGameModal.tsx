@@ -8,7 +8,7 @@ import { gameSessions } from "@convex/refs/game";
 import { createLivekitRoom } from "@/shared/lib/livekit/actions";
 import { GAME_TYPES } from "@/shared/lib/constants/game";
 import { Globe, Loader2, Lock } from "lucide-react";
-import Modal from "@/components/ui/Modal";
+import Modal from "@/shared/ui/Modal";
 import { useErrorMessage } from "@/shared/lib/i18n/errorMessage";
 import type { Id } from "@convex/_generated/dataModel";
 

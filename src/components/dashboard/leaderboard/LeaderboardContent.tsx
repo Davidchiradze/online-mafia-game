@@ -8,7 +8,7 @@ import { leaderboard } from "@convex/refs/leaderboard";
 import { authProfiles } from "@convex/refs/lobby";
 import type { Id } from "@convex/_generated/dataModel";
 import { cn } from "@/shared/lib/cn";
-import UserAvatar from "@/components/ui/UserAvatar";
+import UserAvatar from "@/shared/ui/UserAvatar";
 import LevelBadge from "@/components/ranking/LevelBadge";
 import { useRoleLabel } from "@/shared/lib/game/useRoleLabel";
 import {

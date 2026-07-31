@@ -2,7 +2,7 @@
 
 import { Eye, LogIn, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import Modal from "@/components/ui/Modal";
+import Modal from "@/shared/ui/Modal";
 
 type ModalType = "join" | "spectate";
 

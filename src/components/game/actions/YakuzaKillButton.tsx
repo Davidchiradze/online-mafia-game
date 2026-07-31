@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { nightPhase } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
-import Skull from "@/assets/icons/Skull";
+import Skull from "@/shared/ui/icons/Skull";
 
 interface YakuzaKillButtonProps {
   seatNumber: number;

@@ -7,7 +7,7 @@ import { dayPhase } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { FOULS } from "@/shared/lib/constants/game";
-import { FoulAlertIcon } from "@/assets/icons";
+import { FoulAlertIcon } from "@/shared/ui/icons";
 import FoulEliminationModal from "./FoulEliminationModal";
 
 type FoulButtonProps = {

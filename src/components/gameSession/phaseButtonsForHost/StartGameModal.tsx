@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import Modal from "@/components/ui/Modal";
+import Modal from "@/shared/ui/Modal";
 
 type Props = {
   open: boolean;

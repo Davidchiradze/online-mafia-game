@@ -4,8 +4,8 @@ import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
 import { joinRequests } from "@convex/refs/lobby";
-import Drawer from "@/components/ui/Drawer";
-import UserAvatar from "@/components/ui/UserAvatar";
+import Drawer from "@/shared/ui/Drawer";
+import UserAvatar from "@/shared/ui/UserAvatar";
 import { Check, X, UserPlus, Users } from "lucide-react";
 import type { Id } from "@convex/_generated/dataModel";
 

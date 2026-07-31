@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { Lock } from "lucide-react";
 import { useEntitlements } from "@/hooks/auth/useEntitlements";
 import type { Feature } from "@convex/lib/entitlements";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import LoadingSpinner from "@/shared/ui/LoadingSpinner";
 import { toast } from "@/shared/lib/utils/toast";
 import { SUBSCRIPTIONS_PATH } from "./SubscriptionGuard";
 

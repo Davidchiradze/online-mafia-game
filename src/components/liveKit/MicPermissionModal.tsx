@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { Mic, MicOff } from "lucide-react";
-import AnimatedModal from "@/components/ui/AnimatedModal";
+import AnimatedModal from "@/shared/ui/AnimatedModal";
 import { useMicPermission } from "@/hooks/livekit";
 
 /**

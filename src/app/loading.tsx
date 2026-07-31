@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import LoadingSpinner from "@/shared/ui/LoadingSpinner";
 
 export default async function Loading() {
   const tc = await getTranslations("common");

@@ -4,7 +4,7 @@ import { useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { Crosshair } from "lucide-react";
 import { api } from "@convex/_generated/api";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import LoadingSpinner from "@/shared/ui/LoadingSpinner";
 import { DashboardCard, CardTitle, EmptyState } from "./primitives";
 
 export default function WinMethodBreakdown() {

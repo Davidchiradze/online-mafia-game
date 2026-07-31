@@ -6,7 +6,7 @@ import { Archive, Search, SearchX } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { adminGameLogs } from "@convex/refs/admin";
 import { GAME_TYPES } from "@/shared/lib/constants/game";
-import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
+import { useInfiniteScroll } from "@/shared/hooks/useInfiniteScroll";
 import ArchiveRow from "./ArchiveRow";
 
 const PAGE_SIZE = 10;

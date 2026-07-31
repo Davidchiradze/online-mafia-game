@@ -5,7 +5,7 @@ import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
 import { gameSessions } from "@convex/refs/game";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
-import PhaseButton from "@/components/ui/PhaseButton";
+import PhaseButton from "@/shared/ui/PhaseButton";
 
 type PhaseAdvanceButtonProps = {
   gameSessionState: NonNullable<

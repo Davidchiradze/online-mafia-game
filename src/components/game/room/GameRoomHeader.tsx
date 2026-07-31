@@ -11,11 +11,11 @@ import {
   UsersIcon,
   FullscreenEnterIcon,
   FullscreenExitIcon,
-} from "@/assets/icons";
+} from "@/shared/ui/icons";
 import { LogOut, Settings } from "lucide-react";
 import { useFullscreen } from "@/hooks/game/useFullscreen";
-import ClickableTooltip from "@/components/ui/ClickableTooltip";
-import UserAvatar from "@/components/ui/UserAvatar";
+import ClickableTooltip from "@/shared/ui/ClickableTooltip";
+import UserAvatar from "@/shared/ui/UserAvatar";
 import LevelBadge from "@/components/ranking/LevelBadge";
 import { getLevelForRating } from "@/shared/lib/ranking/levels";
 import JoinRequestsDrawer from "@/components/host-controls/JoinRequestsDrawer";

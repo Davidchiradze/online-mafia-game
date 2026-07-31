@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
 import { useAccess } from "@/hooks/auth/useAccess";
 import type { Permission } from "@convex/lib/access";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import LoadingSpinner from "@/shared/ui/LoadingSpinner";
 
 interface PermissionGuardProps {
   permission: Permission;

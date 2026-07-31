@@ -15,7 +15,7 @@ import { useSpeakingAutoMute, useDeadPlayerMute } from "@/hooks/livekit";
 import { useGameBroadcasts } from "@/hooks/game/useGameBroadcasts";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import type { Id } from "@convex/_generated/dataModel";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import LoadingSpinner from "@/shared/ui/LoadingSpinner";
 import AudioPlaybackModal from "@/components/liveKit/AudioPlaybackModal";
 import MicPermissionModal from "@/components/liveKit/MicPermissionModal";
 import CardPickingBoard from "@/components/gameSession/cardPicking/CardPickingBoard";

@@ -10,7 +10,7 @@ import { gamePlayers, gameSpectators } from "@convex/refs/game";
 import { GameRoomProvider } from "@/lib/context/gameRoomContext";
 import Room from "@/components/game/room/Room";
 import SpectatorJoinPrompt from "@/components/game/room/SpectatorJoinPrompt";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import LoadingSpinner from "@/shared/ui/LoadingSpinner";
 import type { Id } from "@convex/_generated/dataModel";
 
 type PageProps = {

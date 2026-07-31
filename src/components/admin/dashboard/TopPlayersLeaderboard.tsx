@@ -6,8 +6,8 @@ import { useTranslations } from "next-intl";
 import { Trophy } from "lucide-react";
 import { api } from "@convex/_generated/api";
 import { cn } from "@/shared/lib/cn";
-import UserAvatar from "@/components/ui/UserAvatar";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import UserAvatar from "@/shared/ui/UserAvatar";
+import LoadingSpinner from "@/shared/ui/LoadingSpinner";
 import { DashboardCard, CardTitle, EmptyState } from "./primitives";
 
 type SortBy = "wins" | "winRate" | "matches";

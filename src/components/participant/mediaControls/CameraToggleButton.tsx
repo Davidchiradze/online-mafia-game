@@ -1,6 +1,6 @@
 "use client";
 
-import { VideoOffIcon, VideoOnIcon } from "@/assets/icons";
+import { VideoOffIcon, VideoOnIcon } from "@/shared/ui/icons";
 import { TOGGLE_BUTTON_CLASS, TOGGLE_ICON_CLASS } from "./toggleStyles";
 
 interface CameraToggleButtonProps {

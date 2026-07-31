@@ -5,7 +5,7 @@ import Link from "next/link";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import { Crown, ChevronRight, X } from "lucide-react";
-import Modal from "@/components/ui/Modal";
+import Modal from "@/shared/ui/Modal";
 import { useEntitlements } from "@/hooks/auth/useEntitlements";
 import { SUBSCRIPTIONS_PATH } from "@/components/auth/SubscriptionGuard";
 

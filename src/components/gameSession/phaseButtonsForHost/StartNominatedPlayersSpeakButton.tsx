@@ -6,7 +6,7 @@ import { dayPhase, nightPhase } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
 import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
-import PhaseButton from "@/components/ui/PhaseButton";
+import PhaseButton from "@/shared/ui/PhaseButton";
 
 type Props = {
   gameSessionState: NonNullable<

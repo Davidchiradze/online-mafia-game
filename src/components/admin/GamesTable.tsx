@@ -7,7 +7,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import { PERMISSIONS } from "@convex/lib/access";
 import { useAccess } from "@/hooks/auth/useAccess";
 import { toast } from "@/shared/lib/utils/toast";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import LoadingSpinner from "@/shared/ui/LoadingSpinner";
 
 const STATUS_STYLE: Record<string, string> = {
   playing: "bg-emerald-500/15 text-emerald-400",

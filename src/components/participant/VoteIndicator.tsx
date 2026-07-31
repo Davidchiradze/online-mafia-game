@@ -1,6 +1,6 @@
 "use client";
 
-import { VoteIndicatorIcon } from "@/assets/icons";
+import { VoteIndicatorIcon } from "@/shared/ui/icons";
 
 /**
  * Vote indicator overlay - shows voted badge when player voted for current candidate.

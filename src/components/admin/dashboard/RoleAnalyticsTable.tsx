@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { Drama } from "lucide-react";
 import { api } from "@convex/_generated/api";
 import { getRoleDisplayConfig } from "@/shared/lib/utils/roleDisplay";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import LoadingSpinner from "@/shared/ui/LoadingSpinner";
 import { DashboardCard, CardTitle, EmptyState, formatRole } from "./primitives";
 
 export default function RoleAnalyticsTable() {

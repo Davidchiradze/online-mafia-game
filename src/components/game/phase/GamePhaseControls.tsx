@@ -1,7 +1,7 @@
 import React from "react";
 import StartGameButton from "@/components/gameSession/phaseButtonsForHost/StartGameButton";
 import NightActionsDisplay from "./NightActionsDisplay";
-import PhaseTitle from "@/components/ui/PhaseTitle";
+import PhaseTitle from "@/shared/ui/PhaseTitle";
 import WinnerBanner from "@/components/host-controls/WinnerBanner";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 

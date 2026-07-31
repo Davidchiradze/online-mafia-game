@@ -2,7 +2,7 @@
 
 import Image, { type StaticImageData } from "next/image";
 import { useTranslations } from "next-intl";
-import FlipCard from "@/components/ui/FlipCard";
+import FlipCard from "@/shared/ui/FlipCard";
 import { CARD_BACK_IMAGE, getRoleImage } from "./cardImages";
 
 export interface RoleCardProps {

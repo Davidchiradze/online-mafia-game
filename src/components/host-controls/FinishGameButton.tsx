@@ -5,7 +5,7 @@ import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
 import { gameSessions } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
-import Modal from "@/components/ui/Modal";
+import Modal from "@/shared/ui/Modal";
 
 type FinishGameButtonProps = {
   gameId: string;

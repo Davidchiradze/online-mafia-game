@@ -1,6 +1,6 @@
 "use client";
 
-import { MicOffIcon, MicOnIcon } from "@/assets/icons";
+import { MicOffIcon, MicOnIcon } from "@/shared/ui/icons";
 
 interface MicIndicatorProps {
   isMuted: boolean;

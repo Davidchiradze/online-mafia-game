@@ -5,7 +5,7 @@ import { usePaginatedQuery } from "convex/react";
 import { Swords, SearchX } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { gameLogs as historyRefs } from "@convex/refs/history";
-import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
+import { useInfiniteScroll } from "@/shared/hooks/useInfiniteScroll";
 import MatchRow from "./MatchRow";
 import type { OutcomeFilter, GameTypeFilter } from "./MatchFilters";
 import type { Id } from "@convex/_generated/dataModel";

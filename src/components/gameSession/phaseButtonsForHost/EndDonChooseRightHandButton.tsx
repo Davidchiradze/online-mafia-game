@@ -6,7 +6,7 @@ import { gameSessions } from "@convex/refs/game";
 import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { advanceUpdates } from "@/game/japanese/phaseFlow";
-import PhaseButton from "@/components/ui/PhaseButton";
+import PhaseButton from "@/shared/ui/PhaseButton";
 
 type EndDonChooseRightHandButtonProps = {
   gameSessionState: NonNullable<ReturnType<typeof useGameRoom>["gameSessionState"]>;

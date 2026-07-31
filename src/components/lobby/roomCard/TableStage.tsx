@@ -1,5 +1,5 @@
 import { useTranslations } from "next-intl";
-import UserAvatar from "@/components/ui/UserAvatar";
+import UserAvatar from "@/shared/ui/UserAvatar";
 import { SeatSlot, SEAT_RING } from "./helpers";
 
 const HOST_RING =

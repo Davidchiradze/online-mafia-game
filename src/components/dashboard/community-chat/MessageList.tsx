@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { AnimatePresence } from "motion/react";
 import { useTranslations } from "next-intl";
 import type { Id } from "@convex/_generated/dataModel";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import LoadingSpinner from "@/shared/ui/LoadingSpinner";
 import { MessageItem } from "./MessageItem";
 import type { ChatMessage } from "./types";
 
