@@ -15,13 +15,13 @@ import {
   X,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { useErrorMessage } from "@/lib/i18n/errorMessage";
+import { useErrorMessage } from "@/shared/lib/i18n/errorMessage";
 import { useEntitlements } from "@/hooks/auth/useEntitlements";
 import { useAccess } from "@/hooks/auth/useAccess";
 import { SUBSCRIPTIONS_PATH } from "@/components/auth/SubscriptionGuard";
 import { FEATURES } from "@convex/lib/entitlements";
 import { PERMISSIONS } from "@convex/lib/access";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/lib/cn";
 import type { Id } from "@convex/_generated/dataModel";
 
 type GameSummary = {

@@ -3,7 +3,7 @@ import {
   MAFIA_TEAM_ROLES,
   YAKUZA_TEAM_ROLES,
   JAPANESE_MAFIA_ROLE_LABEL,
-} from "@/lib/constants/game";
+} from "@/shared/lib/constants/game";
 
 export type Faction = "mafia" | "yakuza" | "citizens";
 

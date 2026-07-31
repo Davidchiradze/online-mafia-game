@@ -7,7 +7,7 @@ import { Lock } from "lucide-react";
 import { useEntitlements } from "@/hooks/auth/useEntitlements";
 import type { Feature } from "@convex/lib/entitlements";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import { toast } from "@/lib/utils/toast";
+import { toast } from "@/shared/lib/utils/toast";
 import { SUBSCRIPTIONS_PATH } from "./SubscriptionGuard";
 
 interface SubscriptionRouteGuardProps {

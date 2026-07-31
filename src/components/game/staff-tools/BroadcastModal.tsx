@@ -7,8 +7,8 @@ import { Send, X } from "lucide-react";
 import { gameBroadcasts } from "@convex/refs/game";
 import { GAME_BROADCAST } from "@convex/lib/constants";
 import type { Id } from "@convex/_generated/dataModel";
-import { useErrorMessage } from "@/lib/i18n/errorMessage";
-import { toast } from "@/lib/utils/toast";
+import { useErrorMessage } from "@/shared/lib/i18n/errorMessage";
+import { toast } from "@/shared/lib/utils/toast";
 
 /**
  * Compose + send a broadcast to everyone in the room. Staff-only; the `send`

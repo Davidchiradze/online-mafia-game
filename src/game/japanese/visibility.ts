@@ -15,7 +15,7 @@ import {
   isNightActivityPhase,
   getVisibilityState,
   getVisibilityStateWithDeath,
-} from "@/lib/game/visibility";
+} from "@/shared/lib/game/visibility";
 import type { VisibilityRuleset } from "@/game/core/types";
 
 export const JAPANESE_VISIBILITY: VisibilityRuleset = {

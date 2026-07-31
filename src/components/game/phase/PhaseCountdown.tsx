@@ -2,8 +2,8 @@
 
 import React from "react";
 import { useTranslations } from "next-intl";
-import { PHASE_TIMERS, SPORTS } from "@/lib/constants/game";
-import { type GamePhase, type Role } from "@/lib/game/visibility";
+import { PHASE_TIMERS, SPORTS } from "@/shared/lib/constants/game";
+import { type GamePhase, type Role } from "@/shared/lib/game/visibility";
 import { useCountdown } from "@/hooks/game/useCountdown";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 

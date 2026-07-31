@@ -11,14 +11,14 @@ import {
 } from "motion/react";
 import { UserCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { cn } from "@/lib/utils";
-import { JAPANESE_MAFIA_ROLES } from "@/lib/constants/game";
+import { cn } from "@/shared/lib/cn";
+import { JAPANESE_MAFIA_ROLES } from "@/shared/lib/constants/game";
 import {
   roleToFaction,
   factionIcon,
   factionBadgeClass,
-} from "@/lib/game/roleDisplay";
-import { useRoleLabel } from "@/lib/game/useRoleLabel";
+} from "@/shared/lib/game/roleDisplay";
+import { useRoleLabel } from "@/shared/lib/game/useRoleLabel";
 import type { PlayerStats, RoleStat } from "@convex/refs/history";
 
 interface Props {

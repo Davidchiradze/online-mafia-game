@@ -3,14 +3,14 @@
 import { Users, Trophy } from "lucide-react";
 import { useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/lib/cn";
 import { gameLogs as historyRefs } from "@convex/refs/history";
 import {
   roleToFaction,
   factionIcon,
   factionBadgeClass,
-} from "@/lib/game/roleDisplay";
-import { useRoleLabel } from "@/lib/game/useRoleLabel";
+} from "@/shared/lib/game/roleDisplay";
+import { useRoleLabel } from "@/shared/lib/game/useRoleLabel";
 import type { Id } from "@convex/_generated/dataModel";
 
 interface Props {

@@ -5,7 +5,7 @@ import {
   TrackReferenceOrPlaceholder,
   isTrackReference,
 } from "@livekit/components-react";
-import { VisibilityState } from "@/lib/game/visibility";
+import { VisibilityState } from "@/shared/lib/game/visibility";
 import ParticipantCover from "@/components/video/ParticipantCover";
 import CameraOffCover from "./playerStates/CameraOffCover";
 

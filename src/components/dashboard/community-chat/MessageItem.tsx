@@ -4,7 +4,7 @@ import { Trash2 } from "lucide-react";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import type { Id } from "@convex/_generated/dataModel";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/lib/cn";
 import UserAvatar from "@/components/ui/UserAvatar";
 import { StaffBadge } from "./StaffBadge";
 import type { ChatMessage } from "./types";

@@ -4,12 +4,12 @@ import { useEffect, useRef, useCallback, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useQuery, useMutation } from "convex/react";
 import { joinRequests } from "@convex/refs/lobby";
-import { toast } from "@/lib/utils/toast";
+import { toast } from "@/shared/lib/utils/toast";
 import { toast as toastifyDismiss } from "react-toastify";
 import { Check, X } from "lucide-react";
 import type { Id } from "@convex/_generated/dataModel";
 import UserAvatar from "@/components/ui/UserAvatar";
-import { playSound } from "@/lib/audio/audioUnlock";
+import { playSound } from "@/shared/lib/audio/audioUnlock";
 
 // ---------------------------------------------------------------------------
 // Toast body rendered inside each join-request notification

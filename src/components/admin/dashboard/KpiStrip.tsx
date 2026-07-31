@@ -14,7 +14,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { api } from "@convex/_generated/api";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/lib/cn";
 import { DashboardCard } from "./primitives";
 import { ACCENT, type Accent } from "./theme";
 

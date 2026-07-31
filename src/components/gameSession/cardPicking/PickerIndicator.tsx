@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useCardPicking } from "@/hooks/game";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
-import { GAME_PHASES } from "@/lib/constants/game";
+import { GAME_PHASES } from "@/shared/lib/constants/game";
 import type { Id } from "@convex/_generated/dataModel";
 
 /**

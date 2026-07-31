@@ -4,7 +4,7 @@ import { TrackReferenceOrPlaceholder } from "@livekit/components-react";
 import { Check } from "lucide-react";
 import { useCallback, useMemo } from "react";
 import { useTranslations } from "next-intl";
-import { FOULS } from "@/lib/constants/game";
+import { FOULS } from "@/shared/lib/constants/game";
 
 // Context
 import { useGameRoom } from "@/lib/context/gameRoomContext";
@@ -39,7 +39,7 @@ import ParticipantBadges from "./ParticipantBadges";
 import NominationFoulSection from "./NominationFoulSection";
 import NightActionButtons from "./NightActionButtons";
 import VoteIndicator from "./VoteIndicator";
-import { muteParticipantMicrophone } from "@/lib/liveKit/actions";
+import { muteParticipantMicrophone } from "@/shared/lib/livekit/actions";
 
 export default function ParticipantComponent({
   gameId,

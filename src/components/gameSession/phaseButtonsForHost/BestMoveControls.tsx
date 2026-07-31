@@ -3,7 +3,7 @@
 import React from "react";
 import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
-import { SPORTS } from "@/lib/constants/game";
+import { SPORTS } from "@/shared/lib/constants/game";
 import PhaseAdvanceButton from "./PhaseAdvanceButton";
 
 type Props = {

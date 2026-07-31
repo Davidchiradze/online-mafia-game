@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Send } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { COMMUNITY_CHAT } from "@convex/lib/constants";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/lib/cn";
 
 type Props = {
   /** Sends the message; returns false on failure so the draft can be restored. */

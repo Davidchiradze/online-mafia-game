@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { PieChart as PieIcon } from "lucide-react";
 import { Cell, Legend, Pie, PieChart, Tooltip } from "recharts";
 import { api } from "@convex/_generated/api";
-import { FACTION_HEX, type Faction } from "@/lib/constants/factions";
+import { FACTION_HEX, type Faction } from "@/shared/lib/constants/factions";
 import ChartFrame, { TOOLTIP_STYLE } from "./ChartFrame";
 
 const NO_WINNER_HEX = "#6b7280"; // gray-500

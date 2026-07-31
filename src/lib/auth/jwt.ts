@@ -4,7 +4,7 @@ import {
   CONVEX_JWT_ISSUER,
   CONVEX_JWT_TTL_SECONDS,
 } from "@/lib/auth/constants";
-import { serverEnv } from "@/lib/env/server";
+import { serverEnv } from "@/shared/lib/env/server";
 import { getPrivateKey } from "./jwks";
 
 

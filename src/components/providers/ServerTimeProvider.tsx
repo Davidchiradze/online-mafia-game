@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { ServerTimeContext } from "@/lib/time/serverTime";
+import { ServerTimeContext } from "@/shared/lib/time/serverTime";
 
 /**
  * Fetches the server clock via `GET /api/time` on mount and computes

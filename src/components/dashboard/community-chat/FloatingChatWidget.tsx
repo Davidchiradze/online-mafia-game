@@ -8,7 +8,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { FEATURES } from "@convex/lib/entitlements";
 import { useEntitlements } from "@/hooks/auth/useEntitlements";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/lib/cn";
 import { useCommunityChat } from "./useCommunityChat";
 import { MessageList } from "./MessageList";
 import { Composer } from "./Composer";

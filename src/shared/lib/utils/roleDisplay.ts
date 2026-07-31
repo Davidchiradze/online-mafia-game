@@ -1,4 +1,4 @@
-import { JAPANESE_MAFIA_ROLES } from "@/lib/constants/game";
+import { JAPANESE_MAFIA_ROLES } from "@/shared/lib/constants/game";
 
 type RoleType = (typeof JAPANESE_MAFIA_ROLES)[number];
 

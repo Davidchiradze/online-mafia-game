@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useTranslations } from "next-intl";
-import { GAME_PHASES, SPEAKING_STATE } from "@/lib/constants/game";
+import { GAME_PHASES, SPEAKING_STATE } from "@/shared/lib/constants/game";
 import PickerIndicator from "@/components/gameSession/cardPicking/PickerIndicator";
 import PhaseCountdown from "@/components/game/phase/PhaseCountdown";
 

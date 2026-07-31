@@ -5,7 +5,7 @@ import { usePaginatedQuery } from "convex/react";
 import { Archive, Search, SearchX } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { adminGameLogs } from "@convex/refs/admin";
-import { GAME_TYPES } from "@/lib/constants/game";
+import { GAME_TYPES } from "@/shared/lib/constants/game";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 import ArchiveRow from "./ArchiveRow";
 

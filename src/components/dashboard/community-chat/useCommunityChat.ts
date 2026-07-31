@@ -5,8 +5,8 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { roleHasPermission, PERMISSIONS } from "@convex/lib/access";
-import { toast } from "@/lib/utils/toast";
-import { useErrorMessage } from "@/lib/i18n/errorMessage";
+import { toast } from "@/shared/lib/utils/toast";
+import { useErrorMessage } from "@/shared/lib/i18n/errorMessage";
 
 /**
  * Live community-chat data + actions. Wraps the reactive `useQuery`

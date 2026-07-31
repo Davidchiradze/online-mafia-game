@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { bestMove } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
-import { SPORTS } from "@/lib/constants/game";
+import { SPORTS } from "@/shared/lib/constants/game";
 import BestMoveIndicator from "./BestMoveIndicator";
 
 /**

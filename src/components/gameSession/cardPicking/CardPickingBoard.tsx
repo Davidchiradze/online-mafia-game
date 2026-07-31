@@ -5,8 +5,8 @@ import { motion, AnimatePresence } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 import { useCardPicking } from "@/hooks/game";
-import { CARD_PICK, GAME_PHASES } from "@/lib/constants/game";
-import { useServerTime } from "@/lib/time/serverTime";
+import { CARD_PICK, GAME_PHASES } from "@/shared/lib/constants/game";
+import { useServerTime } from "@/shared/lib/time/serverTime";
 import type { Id } from "@convex/_generated/dataModel";
 import RoleCard from "./RoleCard";
 

@@ -7,7 +7,7 @@ import { Shield, X } from "lucide-react";
 import { authProfiles } from "@convex/refs/lobby";
 import { PERMISSIONS, roleHasPermission } from "@convex/lib/access";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/lib/cn";
 import RevealRolesTool from "./RevealRolesTool";
 import BroadcastTool from "./BroadcastTool";
 

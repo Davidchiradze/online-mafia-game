@@ -8,7 +8,7 @@
  * ruleset's map instead of branching on the Japanese phase order.
  */
 
-import { SPEAKING_STATE } from "@/lib/constants/game";
+import { SPEAKING_STATE } from "@/shared/lib/constants/game";
 import type { PhaseControlsMap } from "@/game/core/types";
 import StartPickingRolesButton from "@/components/gameSession/phaseButtonsForHost/StartPickingRolesButton";
 import ConfirmRolesButton from "@/components/gameSession/phaseButtonsForHost/ConfirmRolesButton";

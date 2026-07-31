@@ -1,7 +1,7 @@
 "use client";
 
-import { cn } from "@/lib/utils";
-import { RANK_LEVELS } from "@/lib/constants/ranking";
+import { cn } from "@/shared/lib/cn";
+import { RANK_LEVELS } from "@/shared/lib/constants/ranking";
 
 // Circular dial geometry (SVG viewBox is 36×36) — same ring math as
 // SeatIndicator. The dial has a 60° opening at the bottom like a car gauge;

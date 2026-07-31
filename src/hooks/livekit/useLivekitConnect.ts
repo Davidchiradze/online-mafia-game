@@ -2,8 +2,8 @@
 
 import { useEffect } from "react";
 import { Room as LiveKitRoom } from "livekit-client";
-import { JOIN_REQUEST_STATUSES } from "@/lib/constants/game";
-import { generateLivekitAccessToken } from "@/lib/liveKit/actions";
+import { JOIN_REQUEST_STATUSES } from "@/shared/lib/constants/game";
+import { generateLivekitAccessToken } from "@/shared/lib/livekit/actions";
 
 type Params = {
   gameId: string;

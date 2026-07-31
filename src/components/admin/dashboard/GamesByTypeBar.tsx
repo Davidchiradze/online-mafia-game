@@ -13,7 +13,7 @@ import {
   YAxis,
 } from "recharts";
 import { api } from "@convex/_generated/api";
-import { CHART_SERIES_HEX } from "@/lib/constants/factions";
+import { CHART_SERIES_HEX } from "@/shared/lib/constants/factions";
 import ChartFrame, { TOOLTIP_STYLE } from "./ChartFrame";
 
 export default function GamesByTypeBar() {

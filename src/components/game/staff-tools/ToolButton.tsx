@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/lib/cn";
 
 /**
  * Presentational row used for every entry in the staff-tools panel: a leading

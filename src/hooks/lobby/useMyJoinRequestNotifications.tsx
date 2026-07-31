@@ -5,10 +5,10 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useQuery } from "convex/react";
 import { joinRequests } from "@convex/refs/lobby";
-import { toast } from "@/lib/utils/toast";
+import { toast } from "@/shared/lib/utils/toast";
 import { toast as toastify } from "react-toastify";
 import { LogIn } from "lucide-react";
-import { playSound } from "@/lib/audio/audioUnlock";
+import { playSound } from "@/shared/lib/audio/audioUnlock";
 
 // ---------------------------------------------------------------------------
 // Toast body for an accepted join request — text + "Enter room" button

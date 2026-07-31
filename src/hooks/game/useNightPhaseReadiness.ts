@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
-import { MAFIA_TEAM_ROLES } from "@/lib/constants/game";
+import { MAFIA_TEAM_ROLES } from "@/shared/lib/constants/game";
 
 /**
  * Determines whether the host can end each night action phase.

@@ -7,15 +7,15 @@ import type { LeaderboardRow } from "@convex/refs/leaderboard";
 import { leaderboard } from "@convex/refs/leaderboard";
 import { authProfiles } from "@convex/refs/lobby";
 import type { Id } from "@convex/_generated/dataModel";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/lib/cn";
 import UserAvatar from "@/components/ui/UserAvatar";
 import LevelBadge from "@/components/ranking/LevelBadge";
-import { useRoleLabel } from "@/lib/game/useRoleLabel";
+import { useRoleLabel } from "@/shared/lib/game/useRoleLabel";
 import {
   getLevelForRating,
   getLevelProgress,
   pointsToNextLevel,
-} from "@/lib/ranking/levels";
+} from "@/shared/lib/ranking/levels";
 
 /**
  * All-time ELO leaderboard for japanese_mafia (see /docs/ranking-system.md).

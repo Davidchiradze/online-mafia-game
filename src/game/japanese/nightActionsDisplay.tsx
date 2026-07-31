@@ -1,7 +1,7 @@
 "use client";
 
 import { useGameRoom } from "@/lib/context/gameRoomContext";
-import { GAME_PHASES } from "@/lib/constants/game";
+import { GAME_PHASES } from "@/shared/lib/constants/game";
 
 /**
  * Japanese host night-actions summary (docs/game-types.md §2.4). Shows the

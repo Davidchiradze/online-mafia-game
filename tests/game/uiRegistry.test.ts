@@ -11,7 +11,7 @@ import {
   getVisibilityState,
   getVisibilityStateWithDeath,
   VisibilityState,
-} from "@/lib/game/visibility";
+} from "@/shared/lib/game/visibility";
 
 /**
  * CHARACTERIZATION TEST — the frontend UI ruleset registry (P1-T8).

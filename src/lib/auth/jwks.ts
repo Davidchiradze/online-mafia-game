@@ -1,5 +1,5 @@
 import { importPKCS8, type JWK, type CryptoKey } from "jose";
-import { serverEnv } from "@/lib/env/server";
+import { serverEnv } from "@/shared/lib/env/server";
 
 let cachedPrivateKey: CryptoKey | null = null;
 let cachedPublicJwks: { keys: JWK[] } | null = null;

@@ -4,8 +4,8 @@ import { useQuery } from "convex/react";
 import { useTranslations, useLocale } from "next-intl";
 import { Activity } from "lucide-react";
 import { api } from "@convex/_generated/api";
-import type { Faction } from "@/lib/constants/factions";
-import { FACTION_TEXT } from "@/lib/constants/factions";
+import type { Faction } from "@/shared/lib/constants/factions";
+import { FACTION_TEXT } from "@/shared/lib/constants/factions";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { DashboardCard, CardTitle, EmptyState } from "./primitives";
 

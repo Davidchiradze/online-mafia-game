@@ -6,7 +6,7 @@ import { dayPhase } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
 import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
-import { SPEAKING_STATE } from "@/lib/constants/game";
+import { SPEAKING_STATE } from "@/shared/lib/constants/game";
 import PhaseButton from "@/components/ui/PhaseButton";
 
 const BUTTON_RENDER_DELAY_MS = 2000;

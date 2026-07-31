@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
-import { YAKUZA_TEAM_ROLES } from "@/lib/constants/game";
+import { YAKUZA_TEAM_ROLES } from "@/shared/lib/constants/game";
 
 type GameSessionState = NonNullable<
   ReturnType<typeof useGameRoom>["gameSessionState"]

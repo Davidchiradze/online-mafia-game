@@ -5,11 +5,11 @@ import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
 import { lobbyGames } from "@convex/refs/lobby";
 import { gameSessions } from "@convex/refs/game";
-import { createLivekitRoom } from "@/lib/liveKit/actions";
-import { GAME_TYPES } from "@/lib/constants/game";
+import { createLivekitRoom } from "@/shared/lib/livekit/actions";
+import { GAME_TYPES } from "@/shared/lib/constants/game";
 import { Globe, Loader2, Lock } from "lucide-react";
 import Modal from "@/components/ui/Modal";
-import { useErrorMessage } from "@/lib/i18n/errorMessage";
+import { useErrorMessage } from "@/shared/lib/i18n/errorMessage";
 import type { Id } from "@convex/_generated/dataModel";
 
 type CreateModeProps = {

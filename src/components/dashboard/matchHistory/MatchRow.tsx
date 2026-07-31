@@ -2,12 +2,12 @@
 
 import { ChevronDown, Clock, Trophy, XCircle, MinusCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { cn } from "@/lib/utils";
-import { factionIcon, factionBadgeClass } from "@/lib/game/roleDisplay";
-import { useRoleLabel } from "@/lib/game/useRoleLabel";
-import { getLevelForRating } from "@/lib/ranking/levels";
+import { cn } from "@/shared/lib/cn";
+import { factionIcon, factionBadgeClass } from "@/shared/lib/game/roleDisplay";
+import { useRoleLabel } from "@/shared/lib/game/useRoleLabel";
+import { getLevelForRating } from "@/shared/lib/ranking/levels";
 import LevelBadge from "@/components/ranking/LevelBadge";
-import { formatDate, formatTime, formatDuration } from "./format";
+import { formatDate, formatTime, formatDuration } from "@/shared/lib/format";
 import MatchRosterPanel from "./MatchRosterPanel";
 import type { GameLogRow } from "@convex/refs/history";
 import type { Id } from "@convex/_generated/dataModel";

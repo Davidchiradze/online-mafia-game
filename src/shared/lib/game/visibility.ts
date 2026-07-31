@@ -5,7 +5,7 @@
  * The visibility is based on the viewer's role and the current game phase.
  */
 
-import type { GAME_PHASES, JAPANESE_MAFIA_ROLES } from "@/lib/constants/game";
+import type { GAME_PHASES, JAPANESE_MAFIA_ROLES } from "@/shared/lib/constants/game";
 
 export type GamePhase = (typeof GAME_PHASES)[number];
 export type Role = (typeof JAPANESE_MAFIA_ROLES)[number] | null;

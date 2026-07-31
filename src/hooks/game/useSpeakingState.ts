@@ -5,10 +5,10 @@ import {
   DAY_PHASE_SPEAKING,
   NOMINATED_PLAYERS_SPEAKING,
   FAREWELL_SPEECH,
-} from "@/lib/constants/game";
-import { calculateRemainingTime } from "@/lib/game/speakingOrder";
-import { playSound } from "@/lib/audio/audioUnlock";
-import { useServerTime } from "@/lib/time/serverTime";
+} from "@/shared/lib/constants/game";
+import { calculateRemainingTime } from "@/shared/lib/game/speakingOrder";
+import { playSound } from "@/shared/lib/audio/audioUnlock";
+import { useServerTime } from "@/shared/lib/time/serverTime";
 
 /**
  * Get the speaking duration based on game phase.

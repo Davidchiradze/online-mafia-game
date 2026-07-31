@@ -26,7 +26,7 @@ import {
   createVisibilityHelpers,
   type GamePhase,
   type Role,
-} from "@/lib/game/visibility";
+} from "@/shared/lib/game/visibility";
 import type { VisibilityRuleset } from "@/game/core/types";
 
 const SPORTS_MAFIA_ROLES: Role[] = ["DON", "MAFIA"];

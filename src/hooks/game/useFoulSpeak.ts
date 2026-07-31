@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Room as LiveKitRoom } from "livekit-client";
-import { FOULS } from "@/lib/constants/game";
+import { FOULS } from "@/shared/lib/constants/game";
 import type { useGameRoom } from "@/lib/context/gameRoomContext";
 
 type Player = NonNullable<ReturnType<typeof useGameRoom>["players"]>[number];

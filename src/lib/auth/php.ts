@@ -1,5 +1,5 @@
 import { PHP_API_BASE_URL } from "@/lib/auth/constants";
-import { serverEnv } from "@/lib/env/server";
+import { serverEnv } from "@/shared/lib/env/server";
 import type { PhpUser } from "./jwt";
 
 /**

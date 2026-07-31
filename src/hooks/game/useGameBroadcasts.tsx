@@ -5,7 +5,7 @@ import { useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { gameBroadcasts } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
-import { toast } from "@/lib/utils/toast";
+import { toast } from "@/shared/lib/utils/toast";
 
 type BroadcastKind = "staff" | "system" | "news";
 

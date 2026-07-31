@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Clock, CheckCircle, X, LogOut } from "lucide-react";
-import { JOIN_REQUEST_STATUSES } from "@/lib/constants/game";
+import { JOIN_REQUEST_STATUSES } from "@/shared/lib/constants/game";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
 
 type Props = {

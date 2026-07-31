@@ -6,7 +6,7 @@ import {
 } from "@/lib/auth/constants";
 import { fetchUserBySession } from "@/lib/auth/php";
 import { normalizeAvatarUrl } from "@/lib/auth/avatar";
-import { serverEnv } from "@/lib/env/server";
+import { serverEnv } from "@/shared/lib/env/server";
 import { authProfiles } from "@convex/refs/lobby";
 
 export const runtime = "nodejs";

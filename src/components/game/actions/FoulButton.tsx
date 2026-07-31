@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { dayPhase } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
-import { FOULS } from "@/lib/constants/game";
+import { FOULS } from "@/shared/lib/constants/game";
 import { FoulAlertIcon } from "@/assets/icons";
 import FoulEliminationModal from "./FoulEliminationModal";
 

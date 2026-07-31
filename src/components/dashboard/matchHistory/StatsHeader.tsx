@@ -7,7 +7,7 @@ import {
   getLevelForRating,
   getLevelProgress,
   pointsToNextLevel,
-} from "@/lib/ranking/levels";
+} from "@/shared/lib/ranking/levels";
 import type { PlayerStats } from "@convex/refs/history";
 
 interface Props {

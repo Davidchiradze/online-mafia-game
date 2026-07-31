@@ -13,7 +13,7 @@ import {
   countAliveSeatedPlayers,
   hasShortenedFinalDaySpeech,
   isSeatMutedThisRound,
-} from "@/lib/game/speakingBan";
+} from "@/shared/lib/game/speakingBan";
 
 /**
  * CHARACTERIZATION TEST — the shared day-round derivation + 3rd-foul speaking

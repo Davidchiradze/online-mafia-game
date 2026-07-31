@@ -12,12 +12,12 @@
 
 import { useMemo } from "react";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
-import { DAY_PHASE_SPEAKING } from "@/lib/constants/game";
+import { DAY_PHASE_SPEAKING } from "@/shared/lib/constants/game";
 import {
   countAliveSeatedPlayers,
   hasShortenedFinalDaySpeech,
   isSeatMutedThisRound,
-} from "@/lib/game/speakingBan";
+} from "@/shared/lib/game/speakingBan";
 
 type ConvexGamePlayer = NonNullable<
   ReturnType<typeof useGameRoom>["players"]

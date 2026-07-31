@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
-import { VOTING } from "@/lib/constants/game";
-import { useServerTime } from "@/lib/time/serverTime";
+import { VOTING } from "@/shared/lib/constants/game";
+import { useServerTime } from "@/shared/lib/time/serverTime";
 
 type UseVotingTimerReturn = {
   timeLeft: number;

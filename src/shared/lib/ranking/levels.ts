@@ -1,4 +1,4 @@
-import { RANK_LEVELS, type RankLevel } from "@/lib/constants/ranking";
+import { RANK_LEVELS, type RankLevel } from "@/shared/lib/constants/ranking";
 
 /**
  * Pure level math over the FACEIT-style brackets (no DB, no React — same

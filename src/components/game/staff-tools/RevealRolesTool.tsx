@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import { Eye } from "lucide-react";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/lib/cn";
 import ToolButton from "./ToolButton";
 
 /**

@@ -4,11 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Crosshair, LogOut } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/lib/cn";
 import {
   NAVIGATION_SIDEBAR_ITEMS,
   type NavigationSidebarItem,
-} from "@/lib/constants/navigationSidebarItems";
+} from "@/shared/lib/constants/navigationSidebarItems";
 
 type NavigationSidebarProps = {
   expanded: boolean;

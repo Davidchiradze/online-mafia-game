@@ -9,7 +9,7 @@
  * unchanged (imports-only move for the hook).
  */
 
-import { MAFIA_TEAM_ROLES, YAKUZA_TEAM_ROLES } from "@/lib/constants/game";
+import { MAFIA_TEAM_ROLES, YAKUZA_TEAM_ROLES } from "@/shared/lib/constants/game";
 import type {
   NightActionAuthority,
   NightAuthorityInput,

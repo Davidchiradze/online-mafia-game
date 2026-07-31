@@ -4,9 +4,9 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { useMutation } from "convex/react";
 import { voting } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
-import { VOTING } from "@/lib/constants/game";
+import { VOTING } from "@/shared/lib/constants/game";
 import type { useGameRoom } from "@/lib/context/gameRoomContext";
-import { useServerTime } from "@/lib/time/serverTime";
+import { useServerTime } from "@/shared/lib/time/serverTime";
 
 type UseVotingButtonOptions = {
   votingSession: ReturnType<typeof useGameRoom>["votingSession"];

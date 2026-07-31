@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { initAudioUnlock } from "@/lib/audio/audioUnlock";
+import { initAudioUnlock } from "@/shared/lib/audio/audioUnlock";
 
 /**
  * Registers the iOS Safari audio-unlock listeners on app load. Renders

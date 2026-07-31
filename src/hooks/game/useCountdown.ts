@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useServerTime } from "@/lib/time/serverTime";
+import { useServerTime } from "@/shared/lib/time/serverTime";
 
 export type Countdown = {
   /** Whole seconds remaining, clamped to >= 0. */

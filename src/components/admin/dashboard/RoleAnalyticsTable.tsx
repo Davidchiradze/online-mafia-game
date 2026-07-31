@@ -4,7 +4,7 @@ import { useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { Drama } from "lucide-react";
 import { api } from "@convex/_generated/api";
-import { getRoleDisplayConfig } from "@/lib/utils/roleDisplay";
+import { getRoleDisplayConfig } from "@/shared/lib/utils/roleDisplay";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { DashboardCard, CardTitle, EmptyState, formatRole } from "./primitives";
 

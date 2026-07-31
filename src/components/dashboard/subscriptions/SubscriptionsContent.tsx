@@ -5,13 +5,13 @@ import { useQuery } from "convex/react";
 import { ArrowRight, Check } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { authProfiles } from "@convex/refs/lobby";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/lib/cn";
 import { PHP_API_BASE_URL } from "@/lib/auth/constants";
 import {
   SUBSCRIPTIONS_CONFIG,
   packageConfigIdForTier,
   type ActiveSubscription,
-} from "@/lib/constants/subscriptions";
+} from "@/shared/lib/constants/subscriptions";
 
 /**
  * "2026-06-29T10:42:00" or "2026-06-29 10:42:00" -> "29.06.2026 10:42"

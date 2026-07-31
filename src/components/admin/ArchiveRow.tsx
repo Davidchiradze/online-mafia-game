@@ -3,18 +3,18 @@
 import { useState } from "react";
 import { ChevronDown, Clock, Trophy, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/lib/cn";
 import {
   roleToFaction,
   factionIcon,
   factionBadgeClass,
-} from "@/lib/game/roleDisplay";
-import { useRoleLabel } from "@/lib/game/useRoleLabel";
+} from "@/shared/lib/game/roleDisplay";
+import { useRoleLabel } from "@/shared/lib/game/useRoleLabel";
 import {
   formatDate,
   formatTime,
   formatDuration,
-} from "@/components/dashboard/matchHistory/format";
+} from "@/shared/lib/format";
 import type { AdminGameLogRow } from "@convex/refs/admin";
 import ArchiveRowActions from "./ArchiveRowActions";
 

@@ -11,7 +11,7 @@ import {
   useLivekitConnect,
   useLivekitCleanup,
 } from "@/hooks/livekit";
-import { JOIN_REQUEST_STATUSES } from "@/lib/constants/game";
+import { JOIN_REQUEST_STATUSES } from "@/shared/lib/constants/game";
 
 export type JoinStatus = "pending" | "accepted" | "rejected" | "none";
 

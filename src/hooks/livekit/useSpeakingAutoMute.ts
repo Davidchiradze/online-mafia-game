@@ -2,11 +2,11 @@
 
 import { useEffect, useRef } from "react";
 import { ConnectionState, Room as LiveKitRoom } from "livekit-client";
-import { SPEAKING_STATE } from "@/lib/constants/game";
+import { SPEAKING_STATE } from "@/shared/lib/constants/game";
 import {
   countAliveSeatedPlayers,
   isSeatMutedThisRound,
-} from "@/lib/game/speakingBan";
+} from "@/shared/lib/game/speakingBan";
 import { useConnectionState } from "@livekit/components-react";
 import type { useGameRoom } from "@/lib/context/gameRoomContext";
 

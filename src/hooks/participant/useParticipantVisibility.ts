@@ -12,8 +12,8 @@
 import { useMemo } from "react";
 import type { TrackReferenceOrPlaceholder } from "@livekit/components-react";
 import { useGameRoom } from "@/lib/context/gameRoomContext";
-import { VisibilityState } from "@/lib/game/visibility";
-import type { GamePhase, Role } from "@/lib/game/visibility";
+import { VisibilityState } from "@/shared/lib/game/visibility";
+import type { GamePhase, Role } from "@/shared/lib/game/visibility";
 
 type ConvexGamePlayer = NonNullable<
   ReturnType<typeof useGameRoom>["players"]

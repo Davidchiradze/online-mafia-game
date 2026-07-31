@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { GAME_TYPES } from "@/lib/constants/game";
+import { GAME_TYPES } from "@/shared/lib/constants/game";
 
 export type OutcomeFilter = "all" | "win" | "loss" | "no_contest";
 export type GameTypeFilter = "all" | (typeof GAME_TYPES)[number];

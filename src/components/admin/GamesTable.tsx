@@ -6,7 +6,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { PERMISSIONS } from "@convex/lib/access";
 import { useAccess } from "@/hooks/auth/useAccess";
-import { toast } from "@/lib/utils/toast";
+import { toast } from "@/shared/lib/utils/toast";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 const STATUS_STYLE: Record<string, string> = {
