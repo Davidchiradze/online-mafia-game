@@ -1,7 +1,7 @@
 "use client";
 
 import { MicOffIcon, MicOnIcon } from "@/shared/ui/icons";
-import { TOGGLE_BUTTON_CLASS, TOGGLE_ICON_CLASS } from "./toggleStyles";
+import { TOGGLE_BUTTON_CLASS, TOGGLE_ICON_CLASS } from "./toggle-styles";
 
 interface MicToggleButtonProps {
   isMuted: boolean;

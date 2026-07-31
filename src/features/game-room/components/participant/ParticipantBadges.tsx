@@ -8,7 +8,7 @@ import {
   MicToggleButton,
   MicIndicator,
   CameraToggleButton,
-} from "./mediaControls";
+} from "./media-controls";
 
 type GameSessionState = NonNullable<
   ReturnType<typeof useGameRoom>["gameSessionState"]

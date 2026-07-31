@@ -1,7 +1,7 @@
 "use client";
 
 import { VideoOffIcon, VideoOnIcon } from "@/shared/ui/icons";
-import { TOGGLE_BUTTON_CLASS, TOGGLE_ICON_CLASS } from "./toggleStyles";
+import { TOGGLE_BUTTON_CLASS, TOGGLE_ICON_CLASS } from "./toggle-styles";
 
 interface CameraToggleButtonProps {
   cameraOff: boolean;

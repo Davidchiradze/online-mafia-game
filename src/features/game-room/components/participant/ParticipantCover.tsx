@@ -15,7 +15,7 @@ import {
   DimmedCover,
   MaskedCover,
   DisconnectedCover,
-} from "@/components/participant/playerStates";
+} from "@/features/game-room/components/participant/player-states";
 
 export type CoverState =
   | "sleeping"

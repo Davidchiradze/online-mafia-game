@@ -2,11 +2,11 @@
 
 import { TrackReferenceOrPlaceholder } from "@livekit/components-react";
 import { motion } from "motion/react";
-import ParticipantComponent from "@/components/participant/ParticipantComponent";
+import ParticipantComponent from "@/features/game-room/components/participant/ParticipantComponent";
 import GamePhaseControls from "@/components/game/phase/GamePhaseControls";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 import VotingDisplay from "@/components/game/phase/VotingDisplay";
-import { EmptySeat } from "@/components/participant/playerStates";
+import { EmptySeat } from "@/features/game-room/components/participant/player-states";
 import PhaseTitle from "@/shared/ui/PhaseTitle";
 import WinnerBanner from "@/components/host-controls/WinnerBanner";
 import { useSeatShuffleAnimation } from "@/hooks/game";

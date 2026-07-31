@@ -6,8 +6,8 @@ import {
   isTrackReference,
 } from "@livekit/components-react";
 import { VisibilityState } from "@/shared/lib/game/visibility";
-import ParticipantCover from "@/components/video/ParticipantCover";
-import CameraOffCover from "./playerStates/CameraOffCover";
+import ParticipantCover from "@/features/game-room/components/participant/ParticipantCover";
+import CameraOffCover from "./player-states/CameraOffCover";
 
 interface ParticipantOverlayProps {
   visibilityState: VisibilityState;
