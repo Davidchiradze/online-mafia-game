@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   computeSpeakingOrder,
   getNextSpeaker,
-} from "@convex/lib/speakingOrder";
+} from "@convex/games/core/speakingOrder";
 
 /**
  * CHARACTERIZATION TEST — day-phase speaking order (regression oracle).

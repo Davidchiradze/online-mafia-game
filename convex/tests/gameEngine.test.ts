@@ -8,7 +8,7 @@ import {
   enterNightPhase,
   enterDayPhase,
   enterVotingPhase,
-} from "../lib/phaseTransitions";
+} from "../games/core/phaseTransitions";
 import { recordWinnerIfDecided } from "../lib/games";
 import { JAPANESE_MAFIA_ROLE_DISTRIBUTION } from "../lib/constants";
 import { SPORTS_MAFIA_ROLE_DISTRIBUTION } from "../games/sports/roles";

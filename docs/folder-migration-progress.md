@@ -12,7 +12,7 @@
 | Phase | Scope | Status |
 | --- | --- | --- |
 | **0** | Build the safety net | ✅ **Complete** |
-| **1** | Backend — `convex/game/*` → `convex/games/{core,sports}/` | ⏳ Not started |
+| **1** | Backend — `convex/game/*` → `convex/games/{core,sports}/` | 🔨 Commit A done (uncommitted); Commit B not started |
 | **2** | Frontend — `src/` feature-first (C0–C15) | ⏳ Not started |
 | **Cleanup** | Remove temporary artifacts | ⏳ Not started |
 
@@ -189,7 +189,68 @@ surface.
 
 - **Commit A** — `convex/lib/{phaseTransitions,speakingOrder,winConditions}.ts`
   → `convex/games/core/`. No registered functions, so **no deploy window
-  needed** and it can ship on its own schedule.
+  needed** and it can ship on its own schedule. ✅ **Done (working tree, not
+  yet committed).** 3 files moved, 14 import sites rewritten (+ 4 internal
+  rewrites in `phaseTransitions.ts`), `npx convex codegen` regenerated
+  `api.d.ts` (the only `_generated` change: 6 lines, `lib/*` → `games/core/*`).
+  Gate order run green: **codegen → `tsc --noEmit` (exit 0) → `npm test`
+  (497/497)**. `moveMap.test.ts` stays green with `MODULE_MOVES = {}` (zero
+  functions moved), and `apiIntegrity`'s drift test flipped green only after
+  codegen — confirming correction #1 live.
+- **Commit B** — see below.
+
+### Commit A — two verified corrections to the plan
+
+Both re-confirmed against the working tree before touching anything:
+
+1. **`npx convex codegen` IS required.** All three files are modules in
+   `api.d.ts` (`lib/phaseTransitions`, `lib/speakingOrder`, `lib/winConditions`)
+   even though they register **zero** Convex functions. The `_generated` drift
+   test compares the bundler's full module-key set (not just function-bearing
+   modules) against `api.d.ts`, so it stays red until regeneration. "No
+   registered functions" = deploy-safe (no function paths change), **not**
+   codegen-free. Because there are zero functions, `MODULE_MOVES` in
+   `tests/migration/moveMap.test.ts` gets **no new entries** — it remaps
+   `module:export` function ids, and these modules contribute none.
+
+2. **`phaseTransitions.ts` has same-dir `./` imports** — the uniform `"../"` →
+   `"../../"` depth bump does not cover them. The plan's "0 same-dir imports"
+   fact was verified for `convex/game/*` (Commit B), not `convex/lib/`.
+
+**Rewrites inside the moved files** (`convex/lib/X` → `convex/games/core/X`):
+
+`phaseTransitions.ts` (depth +1, plus two same-dir imports):
+- `"../_generated/server"` → `"../../_generated/server"`
+- `"../_generated/dataModel"` → `"../../_generated/dataModel"`
+- `"./games"` → `"../../lib/games"`  *(games.ts stays in `convex/lib/`)*
+- `"./speakingOrder"` → **unchanged** *(moves together into `games/core/`)*
+
+`speakingOrder.ts`, `winConditions.ts`: no imports → no internal rewrites.
+
+**Referrers to update** (14 import sites):
+
+| File | Old | New |
+| --- | --- | --- |
+| `convex/game/farewellSpeech.ts` | `../lib/phaseTransitions` | `../games/core/phaseTransitions` |
+| `convex/game/voting.ts` | `../lib/phaseTransitions` | `../games/core/phaseTransitions` |
+| `convex/game/nightPhase.ts` | `../lib/phaseTransitions` | `../games/core/phaseTransitions` |
+| `convex/game/dayPhase.ts` | `../lib/phaseTransitions` | `../games/core/phaseTransitions` |
+| `convex/game/dayPhase.ts` | `../lib/speakingOrder` | `../games/core/speakingOrder` |
+| `convex/admin/stats.ts` | `../lib/winConditions` | `../games/core/winConditions` |
+| `convex/game/gameLogs.ts` | `../lib/winConditions` | `../games/core/winConditions` |
+| `convex/admin/gameLogs.ts` | `../lib/winConditions` | `../games/core/winConditions` |
+| `convex/lib/games.ts` | `./winConditions` | `../games/core/winConditions` |
+| `convex/games/core/types.ts` | `../../lib/winConditions` | `./winConditions` |
+| `convex/tests/gameEngine.test.ts` | `../lib/phaseTransitions` | `../games/core/phaseTransitions` |
+| `tests/convex/speakingOrder.test.ts` | `@convex/lib/speakingOrder` | `@convex/games/core/speakingOrder` |
+| `tests/convex/winConditions.test.ts` | `@convex/lib/winConditions` | `@convex/games/core/winConditions` |
+| `tests/game/sportsDefinition.test.ts` | `@convex/lib/winConditions` | `@convex/games/core/winConditions` |
+| `tests/game/gameDefinition.test.ts` | `@convex/lib/winConditions` | `@convex/games/core/winConditions` |
+
+Docs (`docs/*.md`) still reference the old `convex/lib/{winConditions,
+phaseTransitions,speakingOrder}.ts` paths and a couple of code comments do too;
+those are **left for C15** (the doc-rewrite commit) per the plan — comments and
+prose are not behavior.
 - **Commit B** — 14 files `convex/game/*` → `convex/games/core/`, plus
   `sportsNightPhase.ts` → `games/sports/nightPhase.ts`. **Function paths change**
   → hard cutover in a quiet window, Convex deploy first, then immediately promote

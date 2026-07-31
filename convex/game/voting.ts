@@ -2,7 +2,7 @@ import { ConvexError, v } from "convex/values";
 import { query, mutation, internalMutation } from "../_generated/server";
 import { getAuthenticatedUser } from "../lib/auth";
 import { assertIsHost, getPlayerInGame } from "../lib/games";
-import { enterNightPhase } from "../lib/phaseTransitions";
+import { enterNightPhase } from "../games/core/phaseTransitions";
 import { voting as votingRefs } from "../refs/game";
 import { VOTING } from "../lib/constants";
 import type { Id } from "../_generated/dataModel";

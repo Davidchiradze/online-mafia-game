@@ -9,7 +9,7 @@ import {
   type WinContext,
   type Winner,
   type GameOutcome,
-} from "./winConditions";
+} from "../games/core/winConditions";
 import { roleToFaction } from "./roles";
 import { getGameDefinition } from "../games/registry";
 import {

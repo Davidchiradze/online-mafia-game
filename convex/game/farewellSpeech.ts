@@ -2,7 +2,7 @@ import { ConvexError, v } from "convex/values";
 import { query, mutation } from "../_generated/server";
 import { getAuthenticatedUser } from "../lib/auth";
 import { assertIsHost, getPlayersByGameId } from "../lib/games";
-import { enterNightPhase, enterDayPhase } from "../lib/phaseTransitions";
+import { enterNightPhase, enterDayPhase } from "../games/core/phaseTransitions";
 import { getGameDefinition } from "../games/registry";
 import { isBestMoveEligible } from "../games/sports/bestMove";
 import type { GameDefinition } from "../games/core/types";

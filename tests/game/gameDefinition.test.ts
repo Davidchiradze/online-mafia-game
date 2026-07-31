@@ -9,7 +9,7 @@ import {
 } from "@convex/lib/constants";
 import { roleToFaction, type Faction } from "@convex/lib/roles";
 import { decideWinner } from "@convex/games/japanese/winConditions";
-import type { WinContext } from "@convex/lib/winConditions";
+import type { WinContext } from "@convex/games/core/winConditions";
 import { JAPANESE_MAFIA_ROLES } from "@/lib/constants/game";
 
 /**

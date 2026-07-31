@@ -2,7 +2,7 @@ import { ConvexError, v } from "convex/values";
 import { paginationOptsValidator } from "convex/server";
 import { query } from "../_generated/server";
 import { getAuthenticatedUser } from "../lib/auth";
-import { winMethodLabel } from "../lib/winConditions";
+import { winMethodLabel } from "../games/core/winConditions";
 import { getPlayerRatingValues } from "../lib/playerRatings";
 import { gameType as gameTypeValidator } from "../tables/games";
 import type { Doc } from "../_generated/dataModel";

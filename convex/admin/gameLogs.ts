@@ -4,7 +4,7 @@ import { mutation, query } from "../_generated/server";
 import { requirePermission } from "../lib/auth";
 import { writeAudit } from "../lib/admin";
 import { PERMISSIONS } from "../lib/access";
-import { winMethodLabel } from "../lib/winConditions";
+import { winMethodLabel } from "../games/core/winConditions";
 import { annulGameLog } from "../lib/games";
 import { gameType as gameTypeValidator } from "../tables/games";
 

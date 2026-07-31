@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { getGameDefinition } from "@convex/games/registry";
 import { SPORTS_DEFINITION } from "@convex/games/sports/definition";
-import type { WinContext } from "@convex/lib/winConditions";
+import type { WinContext } from "@convex/games/core/winConditions";
 
 /**
  * CHARACTERIZATION TEST — the Sports Mafia `GameDefinition` (Phase 2, data only).

@@ -19,7 +19,7 @@
  */
 
 import type { Faction } from "../../lib/roles";
-import type { WinContext, GameOutcome, WinMethod } from "../../lib/winConditions";
+import type { WinContext, GameOutcome, WinMethod } from "./winConditions";
 
 export type { Faction, WinContext, WinMethod };
 

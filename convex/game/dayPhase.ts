@@ -12,9 +12,9 @@ import {
   enterDayPhase as enterDayPhaseTransition,
   enterNightPhase,
   enterVotingPhase,
-} from "../lib/phaseTransitions";
+} from "../games/core/phaseTransitions";
 import { SPEAKING_STATE, FOULS } from "../lib/constants";
-import { getNextSpeaker } from "../lib/speakingOrder";
+import { getNextSpeaker } from "../games/core/speakingOrder";
 import { getGameDefinition } from "../games/registry";
 import { isFirstDayRound } from "../games/core/dayRound";
 import {
