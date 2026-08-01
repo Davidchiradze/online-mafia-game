@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { CONVEX_AUTH_COOKIE_NAME } from "@/lib/auth/constants";
+import { CONVEX_AUTH_COOKIE_NAME } from "@/features/auth/lib/constants";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

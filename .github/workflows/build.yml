@@ -1,9 +1,10 @@
-# TEMPORARY — remove after the folder-structure migration completes.
-# Tracked in docs/folder-migration-progress.md → Post-migration cleanup.
+# PR-only build gate (paths-filtered). Originally a temporary folder-migration
+# guard; demoted in C15 to a permanent PR check that only runs when build-affecting
+# files change.
 #
 # WHY THIS EXISTS
-# `next build` is the ONLY automated check that catches the failure modes a
-# folder move introduces which `tsc --noEmit` and `vitest` are both blind to:
+# `next build` is the ONLY automated check that catches failure modes that
+# `tsc --noEmit` and `vitest` are both blind to:
 #   - CSS import paths      (css.d.ts is `declare module "*.css"` → any path typechecks)
 #   - PNG / static imports
 #   - `next/font/local` src paths (escape into node_modules)
@@ -11,7 +12,7 @@
 #     silently converts a Client Component into a Server Component)
 #
 # The main Tests workflow deliberately does not run a build (it is slow and
-# needs env plumbing). For the duration of the migration we accept that cost.
+# needs env plumbing), so this workflow carries that check on relevant PRs.
 #
 # ENV VARS: `src/lib/env/server/index.ts` and `src/lib/env/client/index.ts`
 # parse `process.env` at MODULE SCOPE, so the build fails without these. The
@@ -24,8 +25,16 @@
 name: Build
 
 on:
-  push:
   pull_request:
+    paths:
+      - "src/**"
+      - "public/**"
+      - "next.config.*"
+      - "package.json"
+      - "package-lock.json"
+      - "tsconfig.json"
+      - "components.json"
+      - ".github/workflows/build.yml"
 
 concurrency:
   group: build-${{ github.ref }}

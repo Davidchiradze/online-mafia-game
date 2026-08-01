@@ -1,8 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { PHP_SESSION_COOKIE_NAME } from "@/lib/auth/constants";
-import { clearAuthCookie, setAuthCookie } from "@/lib/auth/cookies";
-import { jwtMaxAgeSeconds, signConvexJwt } from "@/lib/auth/jwt";
-import { fetchUserBySession } from "@/lib/auth/php";
+import { PHP_SESSION_COOKIE_NAME } from "@/features/auth/lib/constants";
+import { clearAuthCookie, setAuthCookie } from "@/features/auth/lib/cookies";
+import { jwtMaxAgeSeconds, signConvexJwt } from "@/features/auth/lib/jwt";
+import { fetchUserBySession } from "@/features/auth/lib/php";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

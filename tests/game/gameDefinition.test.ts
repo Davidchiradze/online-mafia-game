@@ -10,7 +10,7 @@ import {
 import { roleToFaction, type Faction } from "@convex/lib/roles";
 import { decideWinner } from "@convex/games/japanese/winConditions";
 import type { WinContext } from "@convex/games/core/winConditions";
-import { JAPANESE_MAFIA_ROLES } from "@/lib/constants/game";
+import { JAPANESE_MAFIA_ROLES } from "@/shared/lib/constants/game";
 
 /**
  * EQUIVALENCE / CHARACTERIZATION TEST — the Japanese `GameDefinition`.

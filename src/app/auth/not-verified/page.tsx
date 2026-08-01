@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import NotVerifiedScreen from "@/components/auth/NotVerifiedScreen";
+import NotVerifiedScreen from "@/features/auth/components/NotVerifiedScreen";
 
 export const metadata: Metadata = {
   title: "Mafia Online",

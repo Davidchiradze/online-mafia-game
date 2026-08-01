@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   GAME_PHASES as SRC_GAME_PHASES,
   JAPANESE_MAFIA_ROLES,
-} from "@/lib/constants/game";
+} from "@/shared/lib/constants/game";
 import {
   GAME_PHASES as CONVEX_GAME_PHASES,
   JAPANESE_MAFIA_ROLE_DISTRIBUTION,

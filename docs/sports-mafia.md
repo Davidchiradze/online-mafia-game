@@ -384,7 +384,7 @@ shared dawn seam reads a flag rather than a `gameType` literal (§8 guardrails i
 [game-types.md](./game-types.md)).
 
 > **Registration note.** `best_move` must be **appended last** to `GAME_PHASES`
-> in `src/lib/constants/game.ts` — the same treatment `phase_transition` and
+> in `src/shared/lib/constants/game.ts` — the same treatment `phase_transition` and
 > `don_meet` got — so the positional `GAME_PHASES[0..20]` literals the Japanese
 > code still uses stay stable. (`convex/lib/constants.ts`'s `GAME_PHASES` is the
 > shorter Japanese-only list and needs no entry.) Labels go in
@@ -445,7 +445,7 @@ stand-in for hearing the victim call out their three seats at a real table. Only
 the victim's circles are clickable; everybody else's are inert, and unchecked
 tiles show nothing at all.
 
-Three lines of rules, all in `src/game/sports/visibility.ts`:
+Three lines of rules, all in `src/features/game-room/variants/sports/visibility.ts`:
 
 - `canSeeParticipant("best_move")` → `isViewerHost` — sharing a `case` with
   `mafia_chooses_target`, since the rule is identical;

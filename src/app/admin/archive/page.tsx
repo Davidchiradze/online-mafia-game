@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import ArchiveList from "@/components/admin/ArchiveList";
+import ArchiveList from "@/features/admin/components/ArchiveList";
 
 export default function AdminArchivePage() {
   const t = useTranslations("admin");

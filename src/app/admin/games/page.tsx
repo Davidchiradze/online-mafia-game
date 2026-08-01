@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import GamesTable from "@/components/admin/GamesTable";
+import GamesTable from "@/features/admin/components/GamesTable";
 
 export default function AdminGamesPage() {
   const t = useTranslations("admin");

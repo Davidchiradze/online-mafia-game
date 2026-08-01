@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { advanceUpdates } from "@/game/japanese/phaseFlow";
+import { advanceUpdates } from "@/features/game-room/variants/japanese/phaseFlow";
 
 /**
  * CHARACTERIZATION TEST — the Japanese host-advance `updates` payloads.

@@ -5,12 +5,12 @@ import {
   factionIcon,
   factionBadgeClass,
   roleLabel,
-} from "@/lib/game/roleDisplay";
+} from "@/shared/lib/game/roleDisplay";
 import {
   ROLE_DISPLAY_CONFIG,
   getRoleDisplayConfig,
   getRoleEmoji,
-} from "@/lib/utils/roleDisplay";
+} from "@/shared/lib/utils/roleDisplay";
 
 /**
  * CHARACTERIZATION TEST — role display / labelling (regression oracle).

@@ -64,10 +64,10 @@ This documentation describes the architecture, patterns, and conventions used in
 - `convex/schema.ts` - Database schema (all tables, indexes, types)
 - `convex/_generated/dataModel.d.ts` - Auto-generated types (`Doc<>`, `Id<>`)
 - `convex/_generated/api.d.ts` - Auto-generated API (`api.games.create`, etc.)
-- `src/lib/constants/game.ts` - Game phases, roles, statuses
-- `src/lib/game/visibility.ts` - Role-based visibility logic
-- `src/lib/context/gameRoomContext.tsx` - Central game room React context
-- `src/components/providers/ConvexClientProvider.tsx` - Convex client provider
+- `src/shared/lib/constants/game.ts` - Game phases, roles, statuses
+- `src/shared/lib/game/visibility.ts` - Role-based visibility logic
+- `src/features/game-room/context/gameRoomContext.tsx` - Central game room React context
+- `src/providers/ConvexClientProvider.tsx` - Convex client provider
 
 ## Before You Code
 

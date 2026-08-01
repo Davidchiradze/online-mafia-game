@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import AuthErrorScreen from "@/components/auth/AuthErrorScreen";
+import AuthErrorScreen from "@/features/auth/components/AuthErrorScreen";
 
 export const metadata: Metadata = {
   title: "Online Mafia",

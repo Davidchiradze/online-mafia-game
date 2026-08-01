@@ -8,8 +8,8 @@ import {
   VisibilityState,
   type GamePhase,
   type Role,
-} from "@/lib/game/visibility";
-import { GAME_PHASES } from "@/lib/constants/game";
+} from "@/shared/lib/game/visibility";
+import { GAME_PHASES } from "@/shared/lib/constants/game";
 
 /**
  * CHARACTERIZATION TEST — Japanese role/phase visibility (regression oracle).

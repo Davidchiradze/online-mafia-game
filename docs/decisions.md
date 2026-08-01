@@ -258,6 +258,79 @@ authoritatively in Convex functions; the `/admin` route is gated in layers.
 
 ---
 
+## ADR-011: Folder Structure — Feature-first `src/`, variant-keyed `convex/games/`
+
+**Status**: Accepted (in progress — folder-structure migration)
+
+**Decision**: Reorganize the repository so a newcomer learns exactly one rule:
+*"find the feature, then pick `components`/`hooks`/`lib`; shared things are in
+`shared/`; the backend lives in `convex/games/`."*
+
+**Context**:
+
+- `convex/game/` (15 feature mutation files) and `convex/games/` (the variant
+  registry) were one letter apart with completely different jobs. Game UI was
+  scattered across six sibling `components/` folders with no inferable rule
+  (`MafiaKillButton` in `components/game/` but `MafiaKillControl` in
+  `components/participant/`). Three directory naming conventions (kebab, camel,
+  flat) coexisted, so no path could be typed from memory.
+
+**Target layout**:
+
+```
+convex/games/{core,japanese,sports}/     ← backend, keyed by variant (Phase 1, done)
+src/
+├── app/  middleware.ts  i18n/            ★ immovable (framework/next-intl coupled)
+├── providers/                            root-layout composition
+├── features/
+│   ├── auth/  subscriptions/  lobby/  headquarters/  admin/  game-room/  landing/
+│   │        each: components/, hooks/, lib/ (+ feature-specific subdirs)
+└── shared/  ui/ (+ ui/icons/)  hooks/  lib/ (cn, format, constants, game, …)
+```
+
+`tsconfig.json`/`vitest.config.mts` need no change — `@/*` → `./src/*` already
+resolves `@/features/*` and `@/shared/*`.
+
+**Absolute constraint**: **zero behavior change** — file moves and import-path
+updates only. Exactly two deviations from "pure move", both path-only:
+`src/lib/utils.ts` → `shared/lib/cn.ts`, and directory kebab-casing (component
+filenames stay PascalCase; hooks stay `useXxx.ts`).
+
+**Sanctioned cross-feature edges** (kept intentionally; splitting them would be a
+logic refactor, which this migration forbids):
+
+1. `lobby → headquarters` — `LobbyContent` imports `RatingCard` (a named export
+   sharing a file with `StatsHeader`).
+2. `game-room → lobby` — `GameRoomHeader` imports `CreateGameModal`.
+
+Edges the migration *removes*: `admin → dashboard` (`format.ts` → `shared/`) and
+`game → landing` (`LandingLogo` → `shared/`).
+
+**Runtime value cycle — preserve byte-for-byte**: `gameRoomContext ⇄ registry ⇄
+ruleset ⇄ nightActionsDisplay ⇄ useGameRoom` is a real ESM value cycle that works
+only because the back-edge is called at render, not module-eval. **No new
+`index.ts` barrels**, and **no import reordering** (an import landing above a
+`"use client"` directive silently converts a Client Component to a Server
+Component). The whole SCC lands inside `features/game-room/`.
+
+**`src/game/` (variant UI) → `features/game-room/variants/`**: it has ~33 edges
+into game-room components, sits inside the runtime SCC, and has zero importers
+outside game-room + tests — so it is game-room's *interior*, not a shared layer.
+Sequenced last so disagreeing costs one `git revert`.
+
+**Rejected**:
+
+- **Type-first folders** (`components/`, `hooks/`, `lib/` at the root) — the
+  status quo; gives no locality and no inferable path.
+- **Barrels to tidy imports** — would risk `Cannot access 'X' before
+  initialization` inside the live render-time cycle, invisible to tsc and CI.
+
+**Consequences**: one navigation sentence; every later codemod in the migration
+becomes a pure path-prefix swap once cross-directory `../` imports are normalized
+to `@/`. See [folder-migration-progress.md](./folder-migration-progress.md).
+
+---
+
 ## Summary
 
 | Decision | Key Technology |
@@ -272,3 +345,4 @@ authoritatively in Convex functions; the `/admin` route is gated in layers.
 | Role Filtering | Server-side (Convex queries) |
 | Database | Convex (document DB) |
 | Authorization | Convex-owned roles + permission-based RBAC |
+| Folder Structure | Feature-first `src/features/*` + `src/shared/*`; variant-keyed `convex/games/*` |

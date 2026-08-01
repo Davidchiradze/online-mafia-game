@@ -1,4 +1,4 @@
-import MatchHistoryContent from "@/components/dashboard/matchHistory/MatchHistoryContent";
+import MatchHistoryContent from "@/features/headquarters/match-history/MatchHistoryContent";
 
 export default function MatchHistoryPage() {
   return <MatchHistoryContent />;

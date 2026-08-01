@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { GAME_PHASES } from "@/lib/constants/game";
+import { GAME_PHASES } from "@/shared/lib/constants/game";
 
 /**
  * CHARACTERIZATION SPEC — the deterministic host-advance transition graph.

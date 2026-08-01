@@ -53,7 +53,7 @@ The game follows this phase sequence:
 
 ## Role-Based Visibility
 
-Visibility rules determine who can see whom during each phase. See `src/lib/game/visibility.ts` for the complete implementation.
+Visibility rules determine who can see whom during each phase. See `src/shared/lib/game/visibility.ts` for the complete implementation.
 
 ### Key Rules
 
@@ -76,7 +76,7 @@ Participant tiles are driven by a single `VisibilityState` enum:
 | `DEAD`         | Permanent dead overlay                                                 |
 | `DISCONNECTED` | No video track / connection lost                                       |
 
-The primary function is `getVisibilityStateWithDeath()` which accounts for game phase, roles, alive status, and game-finished state. See `src/lib/game/visibility.ts` for the full implementation.
+The primary function is `getVisibilityStateWithDeath()` which accounts for game phase, roles, alive status, and game-finished state. See `src/shared/lib/game/visibility.ts` for the full implementation.
 
 ## Game Flow
 
@@ -210,18 +210,18 @@ acting role knows how long they have to decide (e.g. mafia choosing a target,
 detective checking a player). It does **not** auto-advance — the host still
 clicks the phase's End button when the timer runs out.
 
-- **Durations** live in `PHASE_TIMERS` in `src/lib/constants/game.ts` (fixed
+- **Durations** live in `PHASE_TIMERS` in `src/shared/lib/constants/game.ts` (fixed
   per phase). Speaking/voting phases are intentionally excluded — they already
   have their own per-speaker timers.
 - **Timestamp**: `gameSessions.update` stamps `phaseStartedAt = Date.now()`
   whenever `gamePhase` changes. All meet/decision transitions route through this
   mutation, so the stamp is centralized (not duplicated across phase buttons).
 - **Who sees it**: the acting role(s) for the phase — resolved via
-  `getAwakeRoles()` in `src/lib/game/visibility.ts` — plus the host. **Never
+  `getAwakeRoles()` in `src/shared/lib/game/visibility.ts` — plus the host. **Never
   spectators.**
-- **Rendering**: `<PhaseCountdown />` (in `src/components/game/`) sits in the
+- **Rendering**: `<PhaseCountdown />` (in `src/features/game-room/components/phase/`) sits in the
   `PhaseTitle` area and self-gates on role/host. The countdown is computed with
-  `useCountdown()` (`src/hooks/game/useCountdown.ts`), which is server-clock
+  `useCountdown()` (`src/features/game-room/hooks/game/useCountdown.ts`), which is server-clock
   corrected via `useServerTime()` — see `/docs/server-time.md`. Turns red and
   pulses in the final 5 seconds.
 
@@ -230,7 +230,7 @@ clicks the phase's End button when the timer runs out.
 After a game finishes, the winner banner shows a "Room closes in Ns" countdown
 until the server's scheduled cleanup deletes the room. It counts down
 `GAME_CLEANUP.DELAY_MS` from `gameSessions.finishedAt`. The client copy of
-`GAME_CLEANUP.DELAY_MS` (in `src/lib/constants/game.ts`) **must** match the
+`GAME_CLEANUP.DELAY_MS` (in `src/shared/lib/constants/game.ts`) **must** match the
 server copy (in `convex/lib/constants.ts`).
 
 ## Role Filtering (Security)
@@ -245,7 +245,7 @@ See `convex/gamePlayerRoles.ts` (`getFiltered` query) for implementation.
 
 ## Constants
 
-All game constants are defined in `src/lib/constants/game.ts`:
+All game constants are defined in `src/shared/lib/constants/game.ts`:
 
 - `GAME_PHASES` - Array of all game phases
 - `JAPANESE_MAFIA_ROLES` - Array of all roles
@@ -257,7 +257,7 @@ All game constants are defined in `src/lib/constants/game.ts`:
 
 ## Phase Transitions
 
-Phase transitions are controlled by host actions in `src/components/gameSession/phaseButtonsForHost/`. Each phase has:
+Phase transitions are controlled by host actions in `src/features/game-room/components/phase-controls/`. Each phase has:
 
 - **Start button** - Transitions TO this phase
 - **End button** - Transitions FROM this phase to the next
@@ -271,7 +271,7 @@ Example:
 
 1. **Server-side authority**: All phase transitions happen via Convex mutations
 2. **Real-time updates**: Phase changes automatically update all clients via reactive queries
-3. **Visibility logic**: Centralized in `src/lib/game/visibility.ts` (pure functions, no DB dependency)
-4. **Role assignment**: Random shuffle in `convex/game/sessions.ts` (`assignRandomRoles`)
+3. **Visibility logic**: Centralized in `src/shared/lib/game/visibility.ts` (pure functions, no DB dependency)
+4. **Role assignment**: Random shuffle in `convex/games/core/sessions.ts` (`assignRandomRoles`)
 5. **Seat shuffling**: Implemented in `convex/game/sessions.ts` (`startGame`)
 6. **Atomic transitions**: Convex mutations ensure phase transitions are transactional
