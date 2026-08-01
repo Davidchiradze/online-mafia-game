@@ -96,7 +96,7 @@ without regenerating and that import becomes unresolvable — but `skipLibCheck`
 suppresses the diagnostic, the type silently degrades to `any`, and every
 `api.game.*` call site typechecks clean.
 
-This was verified empirically, not assumed. Renaming `convex/game/bestMove.ts`
+This was verified empirically, not assumed. Renaming `convex/games/core/bestMove.ts`
 and updating its refs strings:
 
 ```
@@ -259,7 +259,8 @@ deployment. CI is the backstop; the pre-push hook is the same gate run locally.
 
 [`.github/workflows/build.yml`](../.github/workflows/build.yml) runs
 `npm run build` — **temporary, for the duration of the folder-structure
-migration** (see [folder-migration-progress.md](./folder-migration-progress.md)).
+migration** (see
+[archive/folder-migration-2026-08.md](./archive/folder-migration-2026-08.md)).
 It exists because `next build` is the only automated check that catches CSS
 paths, static-asset paths, `next/font/local` src paths, and `"use client"`
 boundary violations — all invisible to `tsc` and `vitest`, and all reachable by a

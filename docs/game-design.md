@@ -241,7 +241,7 @@ server copy (in `convex/lib/constants.ts`).
 - **Non-teammates** cannot see roles (returned as `null`)
 - **Host** can see all roles
 
-See `convex/gamePlayerRoles.ts` (`getFiltered` query) for implementation.
+See `convex/games/core/roles.ts` (`getFiltered` query) for implementation.
 
 ## Constants
 
@@ -273,5 +273,5 @@ Example:
 2. **Real-time updates**: Phase changes automatically update all clients via reactive queries
 3. **Visibility logic**: Centralized in `src/shared/lib/game/visibility.ts` (pure functions, no DB dependency)
 4. **Role assignment**: Random shuffle in `convex/games/core/sessions.ts` (`assignRandomRoles`)
-5. **Seat shuffling**: Implemented in `convex/game/sessions.ts` (`startGame`)
+5. **Seat shuffling**: Implemented in `convex/games/core/sessions.ts` (`startGame`)
 6. **Atomic transitions**: Convex mutations ensure phase transitions are transactional

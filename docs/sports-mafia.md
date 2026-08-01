@@ -410,7 +410,7 @@ bestMoveSuspects: v.optional(v.array(v.number())),  // 0–3 named seats, in pic
 - `bestMoveSeat` duplicates `speakingOrder[0]`, deliberately — it makes the row
   self-describing for game logs and any later scoring pass.
 
-One new server function, in its own `convex/game/bestMove.ts` (best move is a
+One new server function, in its own `convex/games/core/bestMove.ts` (best move is a
 *dawn* action, not a night action, so it stays out of `sportsNightPhase.ts`):
 
 | function | caller | behaviour |

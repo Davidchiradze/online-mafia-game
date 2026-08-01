@@ -140,9 +140,9 @@ functions start with `requirePermission`:
 | Entry mutation | File | Gate |
 |---|---|---|
 | Create game | `convex/lobby/games.ts` → `create` | `PLAY_GAME` |
-| Join / rejoin | `convex/game/players.ts` → `join` | `PLAY_GAME` |
+| Join / rejoin | `convex/games/core/players.ts` → `join` | `PLAY_GAME` |
 | Auto join-request (fired on page load) | `convex/lobby/joinRequests.ts` → `checkOrRequest`, `request` | `PLAY_GAME` |
-| Spectate | `convex/game/spectators.ts` → `join` | `SPECTATE_GAME` |
+| Spectate | `convex/games/core/spectators.ts` → `join` | `SPECTATE_GAME` |
 
 A non-subscriber cannot create a join request, join, or spectate even if they
 bypass the client (disabled JS, scripted calls). They never get a LiveKit token,

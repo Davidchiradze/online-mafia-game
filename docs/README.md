@@ -35,9 +35,13 @@ This documentation describes the architecture, patterns, and conventions used in
 - **[ranking-system.md](./ranking-system.md)** - Player ELO rating + FACEIT-style Levels 1-10 (faction-calibrated payouts, level badges, leaderboards, backfill)
 - **[server-time.md](./server-time.md)** - Server-corrected client clock (use `useServerTime()` for any timer math involving a server timestamp)
 - **[testing.md](./testing.md)** - Vitest setup, pure-logic unit tests, testing tiers, CI, and the game-types refactor regression oracle
-- **[folder-migration-progress.md](./folder-migration-progress.md)** - **Active work:** folder-structure migration status, verified baselines, and the safety net guarding the 107 raw Convex function-path strings
 - **[decisions.md](./decisions.md)** - Architectural Decision Records (ADRs)
 - **[livekit-server.md](./livekit-server.md)** - Self-hosted LiveKit server (VPS setup, monitoring, maintenance)
+
+### Not current
+
+- **[archive/](./archive/)** - Completed migration narratives, frozen at the date in each filename. Historical only; paths are deliberately pre-migration.
+- **[proposals/](./proposals/)** - Designed but unbuilt. Do not assume any of it exists.
 
 ## Core Principles
 
@@ -45,7 +49,7 @@ This documentation describes the architecture, patterns, and conventions used in
 2. **Reactive real-time**: Convex `useQuery` auto-syncs UI with database -- guaranteed consistency
 3. **Type safety**: Use `Doc<"tableName">` from `convex/_generated/dataModel` for all types
 4. **Component composition**: Break down UIs into small, reusable components
-5. **Custom hooks**: Extract data fetching and side effects into hooks under `src/hooks`
+5. **Custom hooks**: Extract data fetching and side effects into hooks — `src/features/<feature>/hooks/` when feature-specific, `src/shared/hooks/` when used by two or more features
 6. **Role-based visibility**: Game phase and role determine what players can see (video/UI)
 
 ## Technology Stack

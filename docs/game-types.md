@@ -27,7 +27,7 @@ second variant can exist safely:
 
 | Concern              | Location                                                                                             | Japanese assumption baked in                                                                      |
 | -------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| Phase list           | `lib/constants.ts` → `GAME_PHASES` (also duplicated in `src/lib/constants/game.ts`)                  | 22 phases in the exact Japanese order; phases are referenced positionally (`GAME_PHASES[3]` etc.) |
+| Phase list           | `lib/constants.ts` → `GAME_PHASES` (also duplicated in `src/shared/lib/constants/game.ts`)                  | 22 phases in the exact Japanese order; phases are referenced positionally (`GAME_PHASES[3]` etc.) |
 | Role deck            | `lib/constants.ts` → `JAPANESE_MAFIA_ROLE_DISTRIBUTION`                                              | 12 cards incl. SHOGUN/YAKUZA/DOCTOR                                                               |
 | Teams / factions     | `lib/constants.ts` → `MAFIA_TEAM_ROLES`, `YAKUZA_TEAM_ROLES`; `lib/roles.ts` → `roleToFaction`       | 3 factions (mafia/yakuza/citizens)                                                                |
 | Night kill model     | `game/nightPhase.ts` → `getMafiaKillAuthority` / `getYakuzaKillAuthority` / `getDoctorHealAuthority` | single "kill authority" priority DON>RH>MAFIA; Yakuza + Doctor exist                              |
@@ -178,7 +178,7 @@ of reading scalars directly.
 
 ### 2.4 Visibility
 
-`src/lib/game/visibility.ts` becomes a thin dispatcher that asks the variant's
+`src/shared/lib/game/visibility.ts` becomes a thin dispatcher that asks the variant's
 `VisibilityRuleset` two questions the rest of the UI already needs:
 `getAwakeRoles(phase)` and `canSeeParticipant(viewer, target, phase, state)`.
 The Japanese literal chains move verbatim into `japanese/visibility.ts`; Sports
@@ -255,9 +255,11 @@ no behavior change). Convex's flat function namespace means moving files changes
 
 ## 5. Phased refactor plan
 
-> The live, task-by-task checklist that operationalizes this plan — with the
-> guarding test for each task and status boxes to flip as work lands — is
-> [game-types-refactor-tasks.md](./game-types-refactor-tasks.md).
+> The task-by-task checklist that operationalized this plan is complete and
+> archived at
+> [archive/game-types-refactor-2026-08.md](./archive/game-types-refactor-2026-08.md).
+> Its two still-open items are lifted below under **Remaining work** — that list,
+> not the archive, is the live one.
 
 Each phase is independently shippable and leaves the Japanese game fully working.
 
@@ -271,7 +273,7 @@ Each phase is independently shippable and leaves the Japanese game fully working
 - **Phase 1 — Introduce the abstraction, extract Japanese (no behavior change).**
   Define `GameDefinition` + the `NightModel` / `VisibilityRuleset` interfaces.
   Move Japanese constants/logic into `convex/games/japanese/*` and
-  `src/game/japanese/*` and wire `getGameDefinition("japanese_mafia")`. Replace
+  `src/features/game-room/variants/japanese/*` and wire `getGameDefinition("japanese_mafia")`. Replace
   the positional `GAME_PHASES[n]` transitions in the phase buttons with
   `definition.nextPhase(...)`. **Ship it; the Japanese game must be byte-for-byte
   equivalent.** This is the biggest, most careful step and the one that "makes
@@ -298,6 +300,25 @@ Each phase is independently shippable and leaves the Japanese game fully working
   `CreateGameModal`. Ship **unrated** first (absent from `RATING_CONFIG` → ELO
   skipped, exactly as today), then add its own config + E-table once ~200
   decided games exist (see [ranking-system.md](./ranking-system.md) §9).
+
+### Remaining work
+
+Everything above has landed. Two items are still open, lifted here from the
+archived task tracker so this is the only place they live:
+
+- **Japanese roles and constants have not moved into the variant folder.**
+  `convex/games/japanese/definition.ts` still imports
+  `JAPANESE_MAFIA_ROLE_DISTRIBUTION`, `MAFIA_TEAM_ROLES`, `YAKUZA_TEAM_ROLES`
+  and `GAME_PHASES` from `convex/lib/constants.ts`, and `roleToFaction` from
+  `convex/lib/roles.ts`. Sports already owns its equivalents in
+  `convex/games/sports/roles.ts`, so the two variants are asymmetric. This is a
+  mechanical move guarded by `tests/game/gameDefinition.test.ts` — import paths
+  change, values must not.
+
+- **Sports is intentionally unrated.** `RATING_CONFIG` in
+  `convex/lib/constants.ts` has only a `japanese_mafia` entry; a missing entry
+  means ELO is skipped entirely. Add the Sports config and E-table once ~200
+  decided Sports games exist (see [ranking-system.md](./ranking-system.md) §9).
 
 ## 6. Latent bug to fix in Phase 4: `maxPlayers` is never plumbed
 

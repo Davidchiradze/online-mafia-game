@@ -189,7 +189,7 @@ const gameId: Id<"games"> = ...;
 Filter sensitive data in Convex queries (server-side):
 
 ```typescript
-// convex/gamePlayerRoles.ts - getFiltered query
+// convex/games/core/roles.ts - getFiltered query
 // Returns roles filtered by team visibility
 // Host sees all, teammates see each other, others see null
 ```

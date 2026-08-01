@@ -18,7 +18,7 @@ const tick = () => {
 ## The bug we are preventing
 
 Convex mutations write absolute server timestamps. For example
-`convex/game/voting.ts` does:
+`convex/games/core/voting.ts` does:
 
 ```ts
 await ctx.db.patch(id, { votingStartedAt: new Date().toISOString() });
@@ -162,8 +162,8 @@ export function useSpeakingProgress(/* ... */) {
 ## Server-side timestamps are unaffected
 
 Convex mutations like `new Date().toISOString()` in
-`convex/game/voting.ts`, `convex/game/dayPhase.ts`,
-`convex/game/farewellSpeech.ts` run on Convex's NTP-synced hosts and
+`convex/games/core/voting.ts`, `convex/games/core/dayPhase.ts`,
+`convex/games/core/farewellSpeech.ts` run on Convex's NTP-synced hosts and
 are correct. Do not change them.
 
 ## Future extensions (not implemented yet)

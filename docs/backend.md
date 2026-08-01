@@ -256,7 +256,7 @@ if (game?.hostId !== userId) throw new Error("Forbidden");
 Filter sensitive data in Convex queries:
 
 ```typescript
-// convex/gamePlayerRoles.ts - getFiltered query
+// convex/games/core/roles.ts - getFiltered query
 // Host sees all roles
 // Teammates see each other's roles
 // Others see null for role field

@@ -2,7 +2,7 @@
 
 > Status: **Implemented.** All open questions resolved (see §8). This document
 > describes the rules for automatically detecting the end of a Japanese-Mafia
-> game. The logic lives in `convex/lib/winConditions.ts` (`decideWinner`, pure)
+> game. The logic lives in `convex/games/japanese/winConditions.ts` (`decideWinner`, pure)
 > and is wired in via `recordWinnerIfDecided` (`convex/lib/games.ts`).
 >
 > **Detection only — the host still confirms.** When a faction is decided, the
@@ -15,7 +15,7 @@
 ## 1. Purpose
 
 Today a game only ends when the host manually clicks **Finish**
-(`convex/game/sessions.ts` → `finishGame`).
+(`convex/games/core/sessions.ts` → `finishGame`).
 
 Goal: a pure helper that is run **at every phase transition into `night_phase`
 and into `day_phase`**. It inspects the alive players and their roles, decides
@@ -43,7 +43,7 @@ Throughout this doc:
 
 ## 3. Role abilities that matter for win detection
 
-(Confirmed from `convex/game/nightPhase.ts`.)
+(Confirmed from `convex/games/core/nightPhase.ts`.)
 
 - **Mafia** can kill **every night** while at least one Mafia member is alive.
 - **Yakuza faction can kill only if `YAKUZA` is alive.**
@@ -76,7 +76,7 @@ the result is identical in both contexts.
 ### Single-source transition helpers
 
 Entering night/day is consolidated into **one helper per direction** in
-`convex/lib/phaseTransitions.ts`:
+`convex/games/core/phaseTransitions.ts`:
 
 - **`enterNightPhase(db, gameId)`** — clears any voting session, bumps the night
   number, resets speaking/nomination/foul state, creates the `nightPhaseSessions`
@@ -107,7 +107,7 @@ Because of this consolidation, the win-check is added in exactly **two** places
 ### Immediate check after a foul elimination
 
 A 4th foul kills a player **instantly, outside any night/day transition**
-(`convex/game/dayPhase.ts` → `giveFoul`: sets `isAlive: false` with no farewell and
+(`convex/games/core/dayPhase.ts` → `giveFoul`: sets `isAlive: false` with no farewell and
 sets `foulEliminationOccurred`). If this removes the last Mafia/Yakuza/Shogun, the
 winner must be **detected immediately** — not at the next night/day boundary (the
 host still confirms the finish from the resulting win banner).
@@ -336,7 +336,7 @@ These were confirmed and are baked into the rules above:
    `convex/tables/gameSessions.ts`. `"no_contest"` is the total-mutual-elimination outcome
    (§5 rule 0); it pauses on the banner like a win but logs as no contest.
 2. **Pure helper:** ✅ `decideWinner(aliveRoles, context)` in
-   `convex/lib/winConditions.ts` — returns `"mafia" | "yakuza" | "citizens" |
+   `convex/games/japanese/winConditions.ts` — returns `"mafia" | "yakuza" | "citizens" |
    "no_contest" | null`, implementing §6/§7. No DB access. (`describeWin` returns the
    same, with a full `WinMethod` snapshot for faction wins and the bare `"no_contest"`
    sentinel for `N = 0`.)

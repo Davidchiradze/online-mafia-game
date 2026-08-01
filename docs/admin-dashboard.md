@@ -90,7 +90,7 @@ write-path logic**:
   with no decided games is `0%`.
 - **`topPlayers` by `winRate`** requires ≥3 decided games to rank, so a lone
   1-0 player can't top a seasoned 80% one; ties break by volume.
-- **Win-method label** is derived via `winMethodLabel` (`convex/lib/winConditions.ts`),
+- **Win-method label** is derived via `winMethodLabel` (`convex/games/core/winConditions.ts`),
   never stored — wording can change without migration.
 
 ### Performance — compute-on-read

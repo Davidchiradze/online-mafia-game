@@ -181,7 +181,7 @@ components/
 **Implementation**:
 
 - Roles stored in `gamePlayerRoles` table (separate from `gamePlayers`)
-- `getFiltered` query in `convex/gamePlayerRoles.ts` filters by team visibility
+- `getFiltered` query in `convex/games/core/roles.ts` filters by team visibility
 - `useQuery(api.gamePlayerRoles.getFiltered, { gameId })` at `GameRoomContext` level
 - Teammates can see each other's roles:
   - Mafia team (DON, MAFIA, MAFIA_RIGHT_HAND) see each other
@@ -327,7 +327,8 @@ Sequenced last so disagreeing costs one `git revert`.
 
 **Consequences**: one navigation sentence; every later codemod in the migration
 becomes a pure path-prefix swap once cross-directory `../` imports are normalized
-to `@/`. See [folder-migration-progress.md](./folder-migration-progress.md).
+to `@/`. See
+[archive/folder-migration-2026-08.md](./archive/folder-migration-2026-08.md).
 
 ---
 

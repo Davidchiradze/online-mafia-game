@@ -1,12 +1,23 @@
 # Folder Structure Migration — Progress
 
-> **Status: Phase 1 complete; Phase 2 in progress (C3–C14 committed, C15 underway).**
-> Safety net built and fault-injection verified; backend moved; frontend is
-> feature-first through the landing slice with `src/components/` fully dissolved.
+> **ARCHIVED — frozen 2026-08. This is historical narrative, not current state.**
+>
+> The migration is **complete**. Every path, status box, and file listing below
+> was accurate on the date in this file's name and many are deliberately
+> pre-migration — the fault-injection record only makes sense with the old paths
+> quoted verbatim. Do not repoint them, and do not read this file to learn where
+> code lives today: see [architecture.md](../architecture.md).
+>
+> Because its claims are intentionally frozen, this file is exempt from the
+> stale-path check in `tests/structure/docLinks.test.ts`. The `ARCHIVED` marker
+> above is what earns that exemption.
+>
+> Durable lessons extracted from this file live in [testing.md](../testing.md)
+> ("Structural tests: the safety net on magic strings").
 >
 > Source plan: `~/.claude/plans/game-types-refactor-is-sleepy-pony.md`
-> Absolute constraint: **zero behavior change** — file moves and import-path
-> updates only.
+> Absolute constraint at the time: **zero behavior change** — file moves and
+> import-path updates only.
 
 ## Phase status
 
