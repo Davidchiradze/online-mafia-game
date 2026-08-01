@@ -4,7 +4,7 @@ import React from "react";
 import { useTranslations } from "next-intl";
 import { PHASE_TIMERS, SPORTS } from "@/shared/lib/constants/game";
 import { type GamePhase, type Role } from "@/shared/lib/game/visibility";
-import { useCountdown } from "@/hooks/game/useCountdown";
+import { useCountdown } from "@/features/game-room/hooks/game/useCountdown";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 
 type TimerSource = { durationMs: number; startMs: number };

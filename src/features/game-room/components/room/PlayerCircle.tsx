@@ -9,7 +9,7 @@ import VotingDisplay from "@/features/game-room/components/phase/VotingDisplay";
 import { EmptySeat } from "@/features/game-room/components/participant/player-states";
 import PhaseTitle from "@/shared/ui/PhaseTitle";
 import WinnerBanner from "@/features/game-room/components/host/WinnerBanner";
-import { useSeatShuffleAnimation } from "@/hooks/game";
+import { useSeatShuffleAnimation } from "@/features/game-room/hooks/game";
 
 const SHUFFLE_TRANSITION_SECONDS = 2.5;
 

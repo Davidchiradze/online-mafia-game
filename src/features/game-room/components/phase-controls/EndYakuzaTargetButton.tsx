@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 import { advanceUpdates } from "@/game/japanese/phaseFlow";
 import PhaseButton from "@/shared/ui/PhaseButton";
-import { useNightPhaseReadiness } from "@/hooks/game/useNightPhaseReadiness";
+import { useNightPhaseReadiness } from "@/features/game-room/hooks/game/useNightPhaseReadiness";
 
 type EndYakuzaTargetButtonProps = {
   gameSessionState: NonNullable<ReturnType<typeof useGameRoom>["gameSessionState"]>;

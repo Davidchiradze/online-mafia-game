@@ -10,7 +10,7 @@ import {
   useLivekitRoom,
   useLivekitConnect,
   useLivekitCleanup,
-} from "@/hooks/livekit";
+} from "@/features/game-room/hooks/livekit";
 import { JOIN_REQUEST_STATUSES } from "@/shared/lib/constants/game";
 
 export type JoinStatus = "pending" | "accepted" | "rejected" | "none";

@@ -12,7 +12,7 @@ import PlayerCircle from "@/features/game-room/components/room/PlayerCircle";
 import GameRoomHeader from "@/features/game-room/components/room/GameRoomHeader";
 import StaffToolsButton from "@/features/game-room/components/staff-tools";
 import { useRef } from "react";
-import { useGameBroadcasts } from "@/hooks/game/useGameBroadcasts";
+import { useGameBroadcasts } from "@/features/game-room/hooks/game/useGameBroadcasts";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 import type { Id } from "@convex/_generated/dataModel";
 import LoadingSpinner from "@/shared/ui/LoadingSpinner";

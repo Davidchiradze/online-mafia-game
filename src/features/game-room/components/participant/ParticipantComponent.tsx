@@ -18,7 +18,7 @@ import {
   useMobileReady,
   useParticipantSpeaking,
   useParticipantSpeakingBan,
-} from "@/hooks/participant";
+} from "@/features/game-room/hooks/participant";
 import {
   useNomination,
   useFoulSpeak,
@@ -28,8 +28,8 @@ import {
   useNightActionAuthority,
   useRightHandPromotion,
   useVoteIndicator,
-} from "@/hooks/game";
-import { useFoulNotification } from "@/hooks/game/useFoulNotification";
+} from "@/features/game-room/hooks/game";
+import { useFoulNotification } from "@/features/game-room/hooks/game/useFoulNotification";
 
 // Components
 import ReadyButton from "@/shared/ui/ReadyButton";

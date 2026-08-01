@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import { Mic, MicOff } from "lucide-react";
 import AnimatedModal from "@/shared/ui/AnimatedModal";
-import { useMicPermission } from "@/hooks/livekit";
+import { useMicPermission } from "@/features/game-room/hooks/livekit";
 
 /**
  * Prompts the player to grant microphone access up front (in the lobby / on

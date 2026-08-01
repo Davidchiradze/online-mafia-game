@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
-import { useCardPicking } from "@/hooks/game";
+import { useCardPicking } from "@/features/game-room/hooks/game";
 import { CARD_PICK, GAME_PHASES } from "@/shared/lib/constants/game";
 import { useServerTime } from "@/shared/lib/time/serverTime";
 import type { Id } from "@convex/_generated/dataModel";

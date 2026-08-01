@@ -3,7 +3,7 @@
 import React, { useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
-import { useVotingButton } from "@/hooks/game/useVotingButton";
+import { useVotingButton } from "@/features/game-room/hooks/game/useVotingButton";
 
 export default function VotingDisplay() {
   const t = useTranslations("game.voting");

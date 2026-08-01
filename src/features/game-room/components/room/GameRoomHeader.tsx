@@ -13,7 +13,7 @@ import {
   FullscreenExitIcon,
 } from "@/shared/ui/icons";
 import { LogOut, Settings } from "lucide-react";
-import { useFullscreen } from "@/hooks/game/useFullscreen";
+import { useFullscreen } from "@/features/game-room/hooks/game/useFullscreen";
 import ClickableTooltip from "@/shared/ui/ClickableTooltip";
 import UserAvatar from "@/shared/ui/UserAvatar";
 import LevelBadge from "@/components/ranking/LevelBadge";
@@ -22,7 +22,7 @@ import JoinRequestsDrawer from "@/features/game-room/components/host/JoinRequest
 import CreateGameModal from "@/features/lobby/components/CreateGameModal";
 import type { GAME_TYPES } from "@/shared/lib/constants/game";
 import type { Id } from "@convex/_generated/dataModel";
-import { useJoinRequestNotification } from "@/hooks/game/useJoinRequestNotification";
+import { useJoinRequestNotification } from "@/features/game-room/hooks/game/useJoinRequestNotification";
 import { useRouter } from "next/navigation";
 
 function SpectatorTooltipContent({

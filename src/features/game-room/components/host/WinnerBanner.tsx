@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import FinishGameButton from "./FinishGameButton";
 import { GAME_CLEANUP } from "@convex/lib/constants";
-import { useCountdown } from "@/hooks/game/useCountdown";
+import { useCountdown } from "@/features/game-room/hooks/game/useCountdown";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 
 type Winner = "mafia" | "yakuza" | "citizens";
