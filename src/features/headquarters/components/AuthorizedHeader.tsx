@@ -4,7 +4,7 @@ import { api } from "@convex/_generated/api";
 import { useQuery } from "convex/react";
 import { Coins, Menu } from "lucide-react";
 import UserAvatar from "@/shared/ui/UserAvatar";
-import LanguageSwitcher from "@/components/i18n/LanguageSwitcher";
+import LanguageSwitcher from "@/shared/ui/LanguageSwitcher";
 
 type AuthorizedHeaderProps = {
   onOpenMobileMenu: () => void;

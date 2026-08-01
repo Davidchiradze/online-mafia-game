@@ -16,7 +16,7 @@ import { LogOut, Settings } from "lucide-react";
 import { useFullscreen } from "@/features/game-room/hooks/game/useFullscreen";
 import ClickableTooltip from "@/shared/ui/ClickableTooltip";
 import UserAvatar from "@/shared/ui/UserAvatar";
-import LevelBadge from "@/components/ranking/LevelBadge";
+import LevelBadge from "@/shared/ui/LevelBadge";
 import { getLevelForRating } from "@/shared/lib/ranking/levels";
 import JoinRequestsDrawer from "@/features/game-room/components/host/JoinRequestsDrawer";
 import CreateGameModal from "@/features/lobby/components/CreateGameModal";

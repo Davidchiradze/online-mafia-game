@@ -9,7 +9,7 @@ import { authProfiles } from "@convex/refs/lobby";
 import type { Id } from "@convex/_generated/dataModel";
 import { cn } from "@/shared/lib/cn";
 import UserAvatar from "@/shared/ui/UserAvatar";
-import LevelBadge from "@/components/ranking/LevelBadge";
+import LevelBadge from "@/shared/ui/LevelBadge";
 import { useRoleLabel } from "@/shared/lib/game/useRoleLabel";
 import {
   getLevelForRating,

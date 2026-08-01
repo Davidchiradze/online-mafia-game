@@ -6,7 +6,7 @@ import { cn } from "@/shared/lib/cn";
 import { factionIcon, factionBadgeClass } from "@/shared/lib/game/roleDisplay";
 import { useRoleLabel } from "@/shared/lib/game/useRoleLabel";
 import { getLevelForRating } from "@/shared/lib/ranking/levels";
-import LevelBadge from "@/components/ranking/LevelBadge";
+import LevelBadge from "@/shared/ui/LevelBadge";
 import { formatDate, formatTime, formatDuration } from "@/shared/lib/format";
 import MatchRosterPanel from "./MatchRosterPanel";
 import type { GameLogRow } from "@convex/refs/history";

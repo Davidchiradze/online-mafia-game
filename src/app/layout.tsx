@@ -10,7 +10,7 @@ import ProfileSyncBootstrap from "@/providers/ProfileSyncBootstrap";
 import PresenceBootstrap from "@/providers/PresenceBootstrap";
 import VerificationGate from "@/providers/VerificationGate";
 import ServerTimeProvider from "@/providers/ServerTimeProvider";
-import { ThemeProvider } from "@/components/theme-provider/theme-provider";
+import { ThemeProvider } from "@/providers/theme-provider";
 import { ToastContainer } from "react-toastify";
 import "./globals.css";
 import "@/features/game-room/styles/game.css";

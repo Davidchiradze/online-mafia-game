@@ -2,7 +2,7 @@
 
 import { Crosshair, Gamepad2, TrendingUp } from "lucide-react";
 import { useTranslations } from "next-intl";
-import LevelBadge from "@/components/ranking/LevelBadge";
+import LevelBadge from "@/shared/ui/LevelBadge";
 import {
   getLevelForRating,
   getLevelProgress,
