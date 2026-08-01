@@ -13,7 +13,7 @@
  */
 
 import { sportsNextPhase } from "@convex/games/sports/phases";
-import type { PhaseAdvanceUpdates } from "@/game/japanese/phaseFlow";
+import type { PhaseAdvanceUpdates } from "@/features/game-room/variants/japanese/phaseFlow";
 
 /** Sources whose host-advance sleeps through the neutral buffer first. */
 const BUFFER_MEDIATED: ReadonlySet<string> = new Set([

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { TrackReferenceOrPlaceholder } from "@livekit/components-react";
 import type { useGameRoom } from "@/features/game-room/context/gameRoomContext";
-import type { GridPosition } from "@/game/core/types";
+import type { GridPosition } from "@/features/game-room/variants/core/types";
 
 type GamePlayer = ReturnType<typeof useGameRoom>["players"][number];
 

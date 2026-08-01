@@ -9,7 +9,7 @@
  */
 
 import { SPEAKING_STATE } from "@/shared/lib/constants/game";
-import type { PhaseControlsMap } from "@/game/core/types";
+import type { PhaseControlsMap } from "@/features/game-room/variants/core/types";
 import StartPickingRolesButton from "@/features/game-room/components/phase-controls/StartPickingRolesButton";
 import ConfirmRolesButton from "@/features/game-room/components/phase-controls/ConfirmRolesButton";
 import EndDonChooseRightHandButton from "@/features/game-room/components/phase-controls/EndDonChooseRightHandButton";

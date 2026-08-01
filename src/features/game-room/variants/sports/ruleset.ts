@@ -7,7 +7,7 @@
  * and the night-action authority (every living mafia acts, §5).
  */
 
-import type { UiRuleset } from "@/game/core/types";
+import type { UiRuleset } from "@/features/game-room/variants/core/types";
 import { SPORTS_VISIBILITY } from "./visibility";
 import { sportsAdvanceUpdates } from "./phaseFlow";
 import { SPORTS_PHASE_CONTROLS } from "./phaseControls";

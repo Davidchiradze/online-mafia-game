@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
-import type { NightActionAuthority } from "@/game/core/types";
+import type { NightActionAuthority } from "@/features/game-room/variants/core/types";
 
 export type { NightActionAuthority };
 

@@ -16,7 +16,7 @@ import {
   getVisibilityState,
   getVisibilityStateWithDeath,
 } from "@/shared/lib/game/visibility";
-import type { VisibilityRuleset } from "@/game/core/types";
+import type { VisibilityRuleset } from "@/features/game-room/variants/core/types";
 
 export const JAPANESE_VISIBILITY: VisibilityRuleset = {
   canSeeParticipant,

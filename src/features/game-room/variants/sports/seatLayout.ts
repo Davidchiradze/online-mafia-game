@@ -13,7 +13,7 @@
  * (`maxPlayers + 1`), rendered in `hostPanel`.
  */
 
-import type { GridPosition, SeatLayout } from "@/game/core/types";
+import type { GridPosition, SeatLayout } from "@/features/game-room/variants/core/types";
 
 function positionForSeat(seatNumber: number): GridPosition {
   switch (seatNumber) {

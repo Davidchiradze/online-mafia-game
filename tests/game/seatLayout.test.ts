@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { JAPANESE_SEAT_LAYOUT } from "@/game/japanese/seatLayout";
-import { SPORTS_SEAT_LAYOUT } from "@/game/sports/seatLayout";
-import type { GridPosition } from "@/game/core/types";
+import { JAPANESE_SEAT_LAYOUT } from "@/features/game-room/variants/japanese/seatLayout";
+import { SPORTS_SEAT_LAYOUT } from "@/features/game-room/variants/sports/seatLayout";
+import type { GridPosition } from "@/features/game-room/variants/core/types";
 
 /**
  * CHARACTERIZATION TEST — the participant-circle ring geometry (oracle gap G4,

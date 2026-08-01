@@ -5,7 +5,7 @@
  * registry (docs/game-types.md §2.2).
  */
 
-import type { UiRuleset } from "@/game/core/types";
+import type { UiRuleset } from "@/features/game-room/variants/core/types";
 import { JAPANESE_VISIBILITY } from "./visibility";
 import { advanceUpdates } from "./phaseFlow";
 import { JAPANESE_PHASE_CONTROLS } from "./phaseControls";

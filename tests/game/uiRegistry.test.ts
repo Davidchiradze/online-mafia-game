@@ -1,9 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { getUiRuleset } from "@/game/registry";
-import { JAPANESE_UI_RULESET } from "@/game/japanese/ruleset";
-import { SPORTS_UI_RULESET } from "@/game/sports/ruleset";
-import { advanceUpdates } from "@/game/japanese/phaseFlow";
-import { sportsAdvanceUpdates } from "@/game/sports/phaseFlow";
+import { getUiRuleset } from "@/features/game-room/variants/registry";
+import { JAPANESE_UI_RULESET } from "@/features/game-room/variants/japanese/ruleset";
+import { SPORTS_UI_RULESET } from "@/features/game-room/variants/sports/ruleset";
+import { advanceUpdates } from "@/features/game-room/variants/japanese/phaseFlow";
+import { sportsAdvanceUpdates } from "@/features/game-room/variants/sports/phaseFlow";
 import {
   canSeeParticipant,
   getAwakeRoles,

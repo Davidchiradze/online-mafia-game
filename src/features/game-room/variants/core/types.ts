@@ -16,7 +16,7 @@ import type {
   Role,
   VisibilityState,
 } from "@/shared/lib/game/visibility";
-import type { PhaseAdvanceUpdates } from "@/game/japanese/phaseFlow";
+import type { PhaseAdvanceUpdates } from "@/features/game-room/variants/japanese/phaseFlow";
 import type { GameSessionState } from "@/features/game-room/context/gameRoomContext";
 
 /**

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { japaneseNightAuthority } from "@/game/japanese/nightAuthority";
-import { sportsNightAuthority } from "@/game/sports/nightAuthority";
-import type { NightAuthorityInput } from "@/game/core/types";
+import { japaneseNightAuthority } from "@/features/game-room/variants/japanese/nightAuthority";
+import { sportsNightAuthority } from "@/features/game-room/variants/sports/nightAuthority";
+import type { NightAuthorityInput } from "@/features/game-room/variants/core/types";
 
 /**
  * CHARACTERIZATION TEST — night-action authority per variant (P4-T3).

@@ -5,7 +5,7 @@ import { useMutation } from "convex/react";
 import { gameSessions } from "@convex/refs/game";
 import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
-import { advanceUpdates } from "@/game/japanese/phaseFlow";
+import { advanceUpdates } from "@/features/game-room/variants/japanese/phaseFlow";
 import PhaseButton from "@/features/game-room/components/ui/PhaseButton";
 
 type EndDonChooseRightHandButtonProps = {

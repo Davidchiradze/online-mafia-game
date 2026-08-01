@@ -15,8 +15,8 @@ import {
 } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
 import LoadingSpinner from "@/shared/ui/LoadingSpinner";
-import { getUiRuleset } from "@/game/registry";
-import type { UiRuleset } from "@/game/core/types";
+import { getUiRuleset } from "@/features/game-room/variants/registry";
+import type { UiRuleset } from "@/features/game-room/variants/core/types";
 import {
   useGameRoomConnection,
   type JoinStatus,
