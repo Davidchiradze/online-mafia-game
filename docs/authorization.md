@@ -104,7 +104,7 @@ The module exports:
   `isPublicPath(pathname)`, `requiredPermissionForPath(pathname)`.
 
 Style follows the existing constants modules (`convex/lib/constants.ts`,
-`src/lib/constants/game.ts`): `as const`, union literals, `Record<…>` maps.
+`src/shared/lib/constants/game.ts`): `as const`, union literals, `Record<…>` maps.
 
 ## Backend enforcement (authoritative)
 
@@ -196,7 +196,7 @@ route policy lives in one place and never drifts.
 
 ## Frontend usage
 
-### `useAccess()` hook — `src/hooks/auth/useAccess.ts` (new)
+### `useAccess()` hook — `src/features/auth/hooks/useAccess.ts` (new)
 
 Built on the existing profile query, derives permissions via the shared map:
 
@@ -214,10 +214,9 @@ export function useAccess() {
 }
 ```
 
-Export through a `src/hooks/auth/index.ts` barrel and add `export * from "./auth"`
-to `src/hooks/index.ts`.
+Lives with the auth feature under `src/features/auth/hooks/`.
 
-### `PermissionGuard` — `src/components/auth/PermissionGuard.tsx` (new)
+### `PermissionGuard` — `src/features/auth/components/PermissionGuard.tsx` (new)
 
 Client guard used by the `/admin` layout: loading → `LoadingSpinner`; missing
 permission → `router.replace`; else render children. **UX only, not security.**
@@ -236,7 +235,7 @@ const { can } = useAccess();
 - `src/app/admin/` (new): `layout.tsx` (wraps children in
   `<PermissionGuard permission={ADMIN_PANEL_ACCESS}>`), `page.tsx` (dashboard),
   `users/page.tsx`, `games/page.tsx`.
-- `src/components/admin/` (new): `UserTable`, `RoleSelect`, `AuditLogList`, etc.,
+- `src/features/admin/components/` (new): `UserTable`, `RoleSelect`, `AuditLogList`, etc.,
   following the feature-folder convention ([ADR-007](./decisions.md)).
 
 ## Internationalization
@@ -274,10 +273,10 @@ table, find your row, set `role: "admin"`. No code path needed.
 | `convex/tables/adminAuditLog.ts` | new | Audit table (register in `convex/schema.ts`) |
 | `convex/tables/profiles.ts` | edit | Typed `role`, `bannedAt`, `banReason` |
 | `convex/migrations.ts` | new | One-time clear of stale `role` strings |
-| `src/middlewares/constants.ts` | edit | Re-export route policy from `@convex/lib/access` |
-| `src/hooks/auth/useAccess.ts` (+ `index.ts`) | new | `useAccess()` |
-| `src/components/auth/PermissionGuard.tsx` | new | Client guard |
-| `src/components/admin/*` | new folder | Admin UI components |
+| `src/features/auth/middleware/constants.ts` | edit | Re-export route policy from `@convex/lib/access` |
+| `src/features/auth/hooks/useAccess.ts` | new | `useAccess()` |
+| `src/features/auth/components/PermissionGuard.tsx` | new | Client guard |
+| `src/features/admin/components/*` | new folder | Admin UI components |
 | `src/app/admin/*` | new folder | `/admin` route, layout, sections |
 | `messages/en.json`, `messages/ka.json` | edit | `admin` i18n namespace |
 

@@ -116,8 +116,8 @@ On top of that, **107 Convex function paths are raw strings** invisible to `tsc`
 | --- | --- |
 | `convex/refs/game.ts` | 77 |
 | `convex/refs/{lobby,history,admin,leaderboard}.ts` | 24 |
-| `convex/{game/webhookHandler,game/sessions,admin/games}.ts` | 5 |
-| `src/components/providers/PresenceBootstrap.tsx` (`sendBeacon`) | 1 |
+| `convex/{games/core/webhookHandler,games/core/sessions,admin/games}.ts` | 5 |
+| `src/providers/PresenceBootstrap.tsx` (`sendBeacon`) | 1 |
 
 Three of these fail **silently**: the LiveKit webhook route catches errors and
 returns HTTP 200; `api/auth/sync-profile` is the PHP auth bridge (a total auth
@@ -229,7 +229,7 @@ idealized behavior.
 ### Known drift the suite pins
 
 `GAME_PHASES` is **duplicated and out of sync**:
-`src/lib/constants/game.ts` has **22** phases (includes `phase_transition`),
+`src/shared/lib/constants/game.ts` has **22** phases (includes `phase_transition`),
 `convex/lib/constants.ts` has **21** (no `phase_transition`).
 `tests/game/phases.test.ts` locks both current forms and flags this, so when the
 refactor collapses them into `definition.phases` it is a deliberate, visible
@@ -263,7 +263,7 @@ migration** (see [folder-migration-progress.md](./folder-migration-progress.md))
 It exists because `next build` is the only automated check that catches CSS
 paths, static-asset paths, `next/font/local` src paths, and `"use client"`
 boundary violations — all invisible to `tsc` and `vitest`, and all reachable by a
-file move. It needs 10 dummy env vars because `src/lib/env/{server,client}`
+file move. It needs 10 dummy env vars because `src/shared/lib/env/{server,client}`
 parse `process.env` at module scope; `CONVEX_JWT_PUBLIC_JWK` must be parseable
 JSON because `/.well-known/jwks.json` is `dynamic = "force-static"` and so is
 prerendered at build time.

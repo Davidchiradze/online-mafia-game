@@ -208,8 +208,10 @@ relocation, and **G2 + G4** before Phase 3 / Phase 4 respectively.
 >   sensitive auth/admin code — deferred, not mechanical.
 > - **T2/T7 registered-function churn + runtime risk.** `voting.ts` /
 >   `cardPicking.ts` are registered Convex functions; moving them rewrites their
->   `api.*` paths, which means editing **24+ `makeFunctionReference` string paths**
->   in `convex/refs/*`. Those strings are typed as plain strings — a typo is a
+>   `api.*` paths, which means editing **dozens of `makeFunctionReference` string
+>   paths** in `convex/refs/*` (the full `convex/game/*` relocation rewrites ~83
+>   such strings; 101 across all of `refs/` — the earlier "24+" estimate was low
+>   by ~4×). Those strings are typed as plain strings — a typo is a
 >   **runtime "function not found", invisible to `tsc`** and not covered by the
 >   test suite (which calls `api.*` directly, not the refs). The move also
 >   requires regenerating the committed `convex/_generated/` via a live

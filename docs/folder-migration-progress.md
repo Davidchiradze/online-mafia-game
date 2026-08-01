@@ -1,6 +1,6 @@
 # Folder Structure Migration — Progress
 
-> **Status: Phase 1 complete; Phase 2 in progress (C3–C13 committed, C14 staged).**
+> **Status: Phase 1 complete; Phase 2 in progress (C3–C14 committed, C15 underway).**
 > Safety net built and fault-injection verified; backend moved; frontend is
 > feature-first through the landing slice with `src/components/` fully dissolved.
 >
@@ -14,7 +14,7 @@
 | ----------- | --------------------------------------------------------- | -------------------------------------- |
 | **0**       | Build the safety net                                      | ✅ **Complete**                        |
 | **1**       | Backend — `convex/game/*` → `convex/games/{core,sports}/` | ✅ **Complete** (A `6fac22e`, B `e06b2ba`; not deployed) |
-| **2**       | Frontend — `src/` feature-first (C0–C15)                  | 🔨 C0–C13 committed; C14 staged (awaiting QA); C15 pending |
+| **2**       | Frontend — `src/` feature-first (C0–C15)                  | 🔨 C0–C14 committed; C15 in progress   |
 | **Cleanup** | Remove temporary artifacts                                | ⏳ Not started                         |
 
 ---
@@ -316,7 +316,7 @@ incl. `/game/[id]`). Backend is testable in isolation via the `convex-test`
 engine suite (`convex/tests/gameEngine.test.ts`, 102 tests). Still pending: the
 coordinated deploy (Convex first, then Vercel promote).
 
-## Phase 2 — Frontend 🔨 In progress (C0–C13 committed, C14 staged)
+## Phase 2 — Frontend 🔨 In progress (C0–C14 committed, C15 underway)
 
 16 commits (C0–C15). Per-commit gate: `rm -rf .next tsconfig.tsbuildinfo` →
 `tsc --noEmit` → `vitest run` → `next build` → clean `git status`.
@@ -344,8 +344,8 @@ coordinated deploy (Convex first, then Vercel promote).
 | C12g | card assets + `game.css` → game-room (wildcard-typed, not tsc-verified) | ✅ `68ff89a` |
 | C13 | `features/landing` | ✅ `01a849a` |
 | C13-cleanup | dissolve `src/components/` (theme-provider, LanguageSwitcher, LevelBadge stragglers) → `@/components/` = 0 | ✅ `08cd8af` |
-| C14 | `src/game/` → `features/game-room/variants/` (SCC-sensitive, separately revertable) | 🔨 staged, awaiting runtime QA |
-| C15 | `components.json` aliases + doc path refs + `CLAUDE.md` + temp-artifact cleanup | ⏳ |
+| C14 | `src/game/` → `features/game-room/variants/` (SCC-sensitive, separately revertable) | ✅ `c3c6d42` |
+| C15 | `components.json` aliases + doc path refs + temp-artifact cleanup (build.yml demote, tests/migration delete) | 🔨 in progress |
 
 **Invariant holding since C2:** `rg 'from "\.\.' src` → 0. Every move commit is a
 `git mv` of a whole directory plus a pure `@/`-prefix codemod.
@@ -361,19 +361,35 @@ See the source plan for the full move table, cycle notes, and manual-QA list
 (the frontend has ~zero component test coverage, so `next build` + manual QA are
 the real gates for the big move commits).
 
-## Post-migration cleanup ⏳
+## Post-migration cleanup (C15)
 
 | Artifact                                                                                | Fate                                                      |
 | --------------------------------------------------------------------------------------- | --------------------------------------------------------- |
 | `tests/support/*`, `tests/convex/apiIntegrity.test.ts`, `tests/structure/*` + snapshots | **permanent** — the standing guard on 107 strings         |
 | `codegen:check` script + pre-push block                                                 | **permanent**                                             |
-| `tests/migration/` (moveMap + frozen baselines)                                         | delete                                                    |
-| `.github/workflows/build.yml`                                                           | delete, or demote to a `paths:`-filtered PR-only workflow |
+| `tests/migration/` (moveMap + frozen baselines)                                         | ✅ deleted                                                |
+| `.github/workflows/build.yml`                                                           | ✅ demoted to a `paths:`-filtered PR-only workflow        |
 | `pre-folder-migration` tag                                                              | keep                                                      |
 
-Also in C15: rewrite the `docs/architecture.md` directory section (it currently
-documents four files that do not exist — `convex/auth.ts`, `convex/http.ts`,
-`ResendOTP.ts`, `ResendOTPPasswordReset.ts`), collapse `.cursorrules` +
-`.cursor/rules/` to point at `CLAUDE.md`, and correct
-`docs/game-types-refactor-tasks.md:211` (its "24+ string paths" estimate is off
-by ~4×; the real number is 83 for the `convex/game/*` move, 101 total in `refs/`).
+Also done in C15:
+
+- `components.json` aliases repointed to the feature-first layout
+  (`@/shared/ui`, `@/shared/lib`, `@/shared/lib/cn`, `@/shared/hooks`).
+- Rewrote the `docs/architecture.md` directory section (both `convex/` and `src/`
+  trees — it documented four files that never existed: `convex/auth.ts`,
+  `convex/http.ts`, `ResendOTP.ts`, `ResendOTPPasswordReset.ts`).
+- Swept stale `src/lib|hooks|components|game`-style path references out of the
+  **current-guidance** docs (README, CLAUDE, frontend, game-design, server-time,
+  game-broadcasts, community-chat, testing, authorization, subscriptions,
+  ranking-system, admin-dashboard, sports-mafia).
+- Corrected `docs/game-types-refactor-tasks.md` "24+ string paths" estimate
+  (~83 for the `convex/game/*` move, 101 total in `refs/`).
+
+**Deliberately left as historical narrative** (rewriting them would corrupt a
+before/after refactor record): `docs/folder-migration-progress.md` (this file),
+`docs/decisions.md` (ADR rationale), `docs/game-types-refactor-tasks.md` body,
+and `docs/game-types.md` (a coherent "planned, not yet built" design doc whose
+`src/game/*` design target is referenced throughout).
+
+**Per user decision:** `.cursorrules` + `.cursor/rules/*.mdc` were left untouched
+(not collapsed into `CLAUDE.md`).

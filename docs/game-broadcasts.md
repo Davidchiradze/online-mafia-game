@@ -84,20 +84,20 @@ Client-facing refs (`send`, `recent`) are in `convex/refs/game.ts → gameBroadc
 
 ### Receiving — `useGameBroadcasts` (the listener)
 
-`src/hooks/game/useGameBroadcasts.tsx` subscribes to `gameBroadcasts.recent` and
-turns each **new** row into a toast (`src/lib/utils/toast.tsx`). It tracks shown
+`src/features/game-room/hooks/game/useGameBroadcasts.tsx` subscribes to `gameBroadcasts.recent` and
+turns each **new** row into a toast (`src/shared/lib/utils/toast.tsx`). It tracks shown
 ids in a `useRef<Set>`; on first load it adopts the current window as already-seen
 so joining mid-game never replays the backlog — the same skip-first-render approach
 as `useFoulNotification`. Presentation switches on `kind` (staff messages show the
 sender label, news shows its title). Toasts auto-close after 8s.
 
 The hook is called directly in the two components that render a room —
-`src/components/liveKit/LiveKitTestComponent.tsx` (players) and
-`src/components/game/SpectatorView.tsx` (spectators). These views are mutually
+`src/features/game-room/components/livekit/LiveKitTestComponent.tsx` (players) and
+`src/features/game-room/components/room/SpectatorView.tsx` (spectators). These views are mutually
 exclusive per client, so exactly one instance runs — no duplicate toasts. It is
 **not** mounted in `gameRoomContext` (nothing in the context consumes it).
 
-### Sending — the staff tool (`src/components/game/staff-tools/`)
+### Sending — the staff tool (`src/features/game-room/components/staff-tools/`)
 
 The floating staff toolbar is a folder of single-responsibility components:
 

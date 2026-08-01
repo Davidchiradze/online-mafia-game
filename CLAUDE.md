@@ -48,10 +48,10 @@
 ### Key files
 
 - `convex/schema.ts` — Database schema (single source of truth)
-- `src/lib/constants/game.ts` — Game phases, roles, statuses
-- `src/lib/game/visibility.ts` — Role-based visibility logic (pure functions)
-- `src/lib/time/serverTime.ts` — `useServerTime()` for server-corrected client clock
-- `src/lib/context/gameRoomContext.tsx` — Central game room React context
+- `src/shared/lib/constants/game.ts` — Game phases, roles, statuses
+- `src/shared/lib/game/visibility.ts` — Role-based visibility logic (pure functions)
+- `src/shared/lib/time/serverTime.ts` — `useServerTime()` for server-corrected client clock
+- `src/features/game-room/context/gameRoomContext.tsx` — Central game room React context
 
 ## Key Principles
 

@@ -92,51 +92,56 @@
 ```
 convex/                          # All backend logic (deployed to Convex)
 ├── _generated/                  # Auto-generated types and API (DO NOT EDIT)
-├── schema.ts                    # Database schema (tables, indexes)
+├── schema.ts                    # Database schema (imports tables/)
 ├── tables/                      # Table definitions (imported by schema.ts)
-├── auth.ts                      # Convex Auth configuration
-├── auth.config.ts               # Auth provider config
-├── http.ts                      # HTTP routes (auth endpoints)
-├── ResendOTP.ts                 # Email OTP verification
-├── ResendOTPPasswordReset.ts    # Password reset OTP
+├── auth.config.ts               # Auth provider config (custom JWT bridge)
+├── convex.config.ts             # Convex components config (presence, etc.)
 ├── auth/                        # Auth queries/mutations (profiles)
 ├── lobby/                       # Lobby: games CRUD, join requests, host transfer
-├── game/                        # Game: players, spectators, roles, sessions,
-│                                #   dayPhase, nightPhase, voting, farewellSpeech
-├── lib/                         # Shared helpers (auth, constants, speakingOrder)
+├── games/                       # Game engine, split by variant
+│   ├── core/                    #   shared engine (players, roles, sessions,
+│   │                            #   dayPhase, nightPhase, voting, farewellSpeech)
+│   ├── japanese/                #   Japanese Mafia variant (definition, phases)
+│   ├── sports/                  #   Sports Mafia variant (definition, phases)
+│   └── registry.ts              #   variant registry (getGameDefinition)
+├── admin/                       # Admin/moderator queries (users, games, stats)
+├── community/                   # Community chat (messages, read state)
+├── crons.ts                     # Scheduled jobs (community prune, etc.)
+├── presence.ts                  # Presence component wiring
+├── migrations.ts                # One-off data migrations
+├── lib/                         # Shared helpers (auth, access, constants, ratings)
 └── refs/                        # makeFunctionReference wrappers (TS2589 workaround)
 
 src/
-├── app/                         # Next.js App Router pages
-│   ├── api/                     # API routes (LiveKit webhook)
-│   ├── (auth)/                  # Authentication pages (sign-in, sign-up)
-│   ├── lobby/                   # Game lobby
+├── app/                         # Next.js App Router pages (thin wrappers only)
+│   ├── api/                     # API routes (LiveKit webhook, auth bridge)
+│   ├── (headquarters)/          # Lobby, leaderboard, match history, subscriptions
 │   ├── game/[id]/               # Game room page
-│   └── layout.tsx               # Root layout (Convex providers)
+│   └── layout.tsx               # Root layout (providers)
 │
-├── components/                  # React components
-│   ├── providers/               # ConvexClientProvider
-│   ├── auth/                    # Auth forms (SignInForm, SignUpForm)
-│   ├── game/                    # Game UI components
-│   ├── gameSession/             # Phase-specific host controls
-│   ├── host-controls/           # Host-only UI
-│   ├── liveKit/                 # LiveKit video components
-│   ├── modals/                  # Modal dialogs
-│   ├── participant/             # Participant video components
-│   ├── ui/                      # Reusable UI primitives
-│   └── video/                   # Video-related components
+├── features/                    # Feature-first UI + hooks + feature-local lib
+│   ├── admin/                   # Admin panel + analytics dashboard
+│   ├── auth/                    # Auth components, hooks, middleware, JWT bridge
+│   ├── game-room/               # The in-game experience (largest feature)
+│   │   ├── components/          #   room/phase/actions/voting/participant/host/…
+│   │   ├── context/             #   gameRoomContext (central room state)
+│   │   ├── hooks/               #   game/participant/livekit hooks
+│   │   ├── variants/            #   client rulesets: core/japanese/sports + registry
+│   │   ├── assets/              #   role card PNGs
+│   │   └── styles/              #   game.css
+│   ├── headquarters/            # Authed shell: nav, community chat, match history
+│   ├── landing/                 # Marketing landing page
+│   ├── lobby/                   # Lobby content + room cards
+│   └── subscriptions/           # Billing page + subscription config
 │
-├── hooks/                       # Custom React hooks
-│   ├── game/                    # Game logic hooks
-│   ├── livekit/                 # LiveKit hooks
-│   └── participant/             # Participant state hooks
-│
-└── lib/                         # Utility libraries
-    ├── constants/               # Game constants (phases, roles)
-    ├── context/                 # React contexts (GameRoomContext)
-    ├── game/                    # Game logic (visibility, speaking order)
-    ├── liveKit/                 # LiveKit server actions (token, room mgmt)
-    └── utils/                   # Utility functions
+├── providers/                   # App-level providers/bootstraps (Convex, ServerTime…)
+├── i18n/                         # next-intl config
+├── middleware.ts                # Next.js root middleware (composes auth middleware)
+└── shared/                      # Cross-feature leaf modules (no upward deps)
+    ├── ui/                      # Reusable UI primitives + icons
+    ├── hooks/                   # Generic hooks (useInfiniteScroll)
+    └── lib/                     # constants, game logic (visibility, speaking order),
+                                 #   time (serverTime), env, livekit actions, cn, utils
 ```
 
 ## Key Architectural Patterns
