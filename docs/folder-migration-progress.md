@@ -1,7 +1,8 @@
 # Folder Structure Migration — Progress
 
-> **Status: Phase 0 complete.** Safety net built and fault-injection verified.
-> Nothing has moved yet. Phase 1 (backend) is unblocked and awaiting sign-off.
+> **Status: Phase 1 complete; Phase 2 in progress (C3–C13 committed, C14 staged).**
+> Safety net built and fault-injection verified; backend moved; frontend is
+> feature-first through the landing slice with `src/components/` fully dissolved.
 >
 > Source plan: `~/.claude/plans/game-types-refactor-is-sleepy-pony.md`
 > Absolute constraint: **zero behavior change** — file moves and import-path
@@ -13,7 +14,7 @@
 | ----------- | --------------------------------------------------------- | -------------------------------------- |
 | **0**       | Build the safety net                                      | ✅ **Complete**                        |
 | **1**       | Backend — `convex/game/*` → `convex/games/{core,sports}/` | ✅ **Complete** (A `6fac22e`, B `e06b2ba`; not deployed) |
-| **2**       | Frontend — `src/` feature-first (C0–C15)                  | 🔨 C0–C2 done; C3–C15 pending          |
+| **2**       | Frontend — `src/` feature-first (C0–C15)                  | 🔨 C0–C13 committed; C14 staged (awaiting QA); C15 pending |
 | **Cleanup** | Remove temporary artifacts                                | ⏳ Not started                         |
 
 ---
@@ -315,7 +316,7 @@ incl. `/game/[id]`). Backend is testable in isolation via the `convex-test`
 engine suite (`convex/tests/gameEngine.test.ts`, 102 tests). Still pending: the
 coordinated deploy (Convex first, then Vercel promote).
 
-## Phase 2 — Frontend 🔨 In progress (C0–C2 done)
+## Phase 2 — Frontend 🔨 In progress (C0–C13 committed, C14 staged)
 
 16 commits (C0–C15). Per-commit gate: `rm -rf .next tsconfig.tsbuildinfo` →
 `tsc --noEmit` → `vitest run` → `next build` → clean `git status`.
@@ -325,22 +326,36 @@ coordinated deploy (Convex first, then Vercel promote).
 | C0 | ADR-011 (layout + sanctioned cycles/edges) | ✅ `ff1bfb7` |
 | C1 | delete 16 unreferenced modules | ✅ `e285852` |
 | C2 | normalize 21 cross-dir `../` imports → `@/` | ✅ `3973905` |
-| C3 | split `components/game/` → room/phase/actions in place | ⏳ |
-| C4 | `shared/lib` (`utils.ts`→`cn.ts`, `format.ts`) | ⏳ |
-| C5 | `shared/ui` + `ui/icons` + `shared/hooks` | ⏳ |
-| C6 | `src/providers/` | ⏳ |
-| C7 | `features/admin` (pilot) | ⏳ |
-| C8 | `features/auth` (middleware + API routes — fails silently) | ⏳ |
-| C9–C11 | `features/subscriptions`, `headquarters`, `lobby` | ⏳ |
-| C12a–g | `features/game-room` in 7 slices (C12g = cycle-killer, not tsc-verified) | ⏳ |
-| C13 | `features/landing` | ⏳ |
-| C14 | `src/game/` → `features/game-room/variants/` (separately revertable) | ⏳ |
-| C15 | `components.json` aliases + doc path refs + `CLAUDE.md` | ⏳ |
+| C3 | split `components/game/` → room/phase/actions in place | ✅ `a53a1a5` |
+| C4 | `src/lib/*` → `src/shared/lib` | ✅ `9477cd0` |
+| C5 | `shared/ui` + `ui/icons` + `shared/hooks` | ✅ `12e6c48` |
+| C6 | `components/providers` → `src/providers/` | ✅ `81adeee` |
+| C7 | `features/admin` (pilot) | ✅ `49e33a7` |
+| C8 | `features/auth` (middleware + API routes — fails silently) | ✅ `7116fcd` |
+| C9 | `features/subscriptions` | ✅ `d64fd29` |
+| C10 | `dashboard` → `features/headquarters` | ✅ `0a4b289` |
+| C11 | `features/lobby` | ✅ `31e16cd` |
+| C12a | `gameRoomContext` → `features/game-room/context` | ✅ `cecf0d3` |
+| C12b | `participant/` + `video/ParticipantCover` → game-room | ✅ `f952367` |
+| C12c | `card-picking`/`phase-controls`/`voting` → game-room | ✅ `25916cd` |
+| C12d | `room`/`phase`/`actions`/`host`/`livekit`/`staff-tools` → game-room | ✅ `3b08cbd` |
+| C12e | `hooks/{game,participant,livekit}` → game-room | ✅ `e7cef37` |
+| C12f | `PhaseTitle`/`PhaseButton`/`ReadyButton`/`useDelayedDisable` → game-room (**cycle-killer**, not tsc-verified) | ✅ `cd8058d` |
+| C12g | card assets + `game.css` → game-room (wildcard-typed, not tsc-verified) | ✅ `68ff89a` |
+| C13 | `features/landing` | ✅ `01a849a` |
+| C13-cleanup | dissolve `src/components/` (theme-provider, LanguageSwitcher, LevelBadge stragglers) → `@/components/` = 0 | ✅ `08cd8af` |
+| C14 | `src/game/` → `features/game-room/variants/` (SCC-sensitive, separately revertable) | 🔨 staged, awaiting runtime QA |
+| C15 | `components.json` aliases + doc path refs + `CLAUDE.md` + temp-artifact cleanup | ⏳ |
 
-**Invariant now holding after C2:** `rg 'from "\.\.' src` → 0. Every remaining
-commit is a `git mv` of a whole directory plus a pure `@/`-prefix codemod.
-`git grep -c '"use client"' -- 'src/**'` baseline to preserve: **219**
+**Invariant holding since C2:** `rg 'from "\.\.' src` → 0. Every move commit is a
+`git mv` of a whole directory plus a pure `@/`-prefix codemod.
+`git grep -c '"use client"' -- 'src/**'` baseline preserved: **219**
 (the plan's 224 was pre-C1; C1 deleted 5 client components).
+
+**Structural invariants now holding:** `@/components/` → **0** (after C13-cleanup),
+`@/game/` → **0** once C14 lands. No uppercase directory segments remain under
+`src/` (directories kebab-cased: `player-states`, `media-controls`, `host`,
+`livekit`).
 
 See the source plan for the full move table, cycle notes, and manual-QA list
 (the frontend has ~zero component test coverage, so `next build` + manual QA are
