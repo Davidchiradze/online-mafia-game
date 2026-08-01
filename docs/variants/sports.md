@@ -1,15 +1,19 @@
 # Sports Mafia — Ruleset Specification
 
-> Status: **Spec, not built.** This defines the Sports Mafia variant and its
-> exact deltas from Japanese Mafia. Implementation follows the architecture in
-> [game-types.md](./game-types.md) (Phases 2–5). `gameType` id: **`sports_mafia`**
-> (renamed from the legacy `traditional`), **10 players**, seat count `10`
-> (host sits in seat `11`).
+> Status: **Built and creatable.** The definition, night model, best-move flow
+> and UI ruleset all ship; `CreateGameModal` filters only `city_mafia`. The one
+> deliberate gap is rating — Sports is absent from `RATING_CONFIG`, so games are
+> unrated by design until there is enough data to calibrate
+> ([ranking-system.md](../ranking-system.md) §9).
 >
-> Read [game-design.md](./game-design.md) and
-> [game-end-conditions.md](./game-end-conditions.md) first — Sports is defined as
-> a **diff** against that Japanese baseline. Anything not listed as a difference
-> below is **identical to Japanese**.
+> `gameType` id: **`sports_mafia`** (renamed from the legacy `traditional`),
+> **10 players**, seat count `10` (host sits in seat `11`). Architecture:
+> [engine/variant-architecture.md](../engine/variant-architecture.md).
+>
+> Read [japanese/rules.md](./japanese/rules.md) and
+> [japanese/win-conditions.md](./japanese/win-conditions.md) first — Sports is
+> defined as a **diff** against that Japanese baseline. Anything not listed as a
+> difference below is **identical to Japanese**.
 
 ## 1. Overview
 
@@ -381,7 +385,7 @@ mutations and `nextPhase` returns `null` for them.
 Definition surface: add `hasBestMove: boolean` to `GameFlags`
 (`convex/games/core/types.ts`) — `false` for Japanese, `true` for Sports — so the
 shared dawn seam reads a flag rather than a `gameType` literal (§8 guardrails in
-[game-types.md](./game-types.md)).
+[game-types.md](../engine/variant-architecture.md)).
 
 > **Registration note.** `best_move` must be **appended last** to `GAME_PHASES`
 > in `src/shared/lib/constants/game.ts` — the same treatment `phase_transition` and
@@ -582,4 +586,4 @@ All previously-open questions are confirmed:
 7. **Sports launches UNRATED — ELO is skipped.** No `RATING_CONFIG` entry, so
    `archiveGameLog` records games with no rating change (exactly as an unrated
    type does today). A calibrated config can be added later per
-   [ranking-system.md](./ranking-system.md) §9.
+   [ranking-system.md](../ranking-system.md) §9.

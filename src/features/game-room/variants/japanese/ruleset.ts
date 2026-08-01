@@ -2,7 +2,7 @@
  * The Japanese frontend UI ruleset — the UI-side counterpart to
  * `convex/games/japanese/definition.ts`. Assembles the pieces the shared UI
  * consults (visibility + host-advance flow) into one object resolved by the
- * registry (docs/game-types.md §2.2).
+ * registry (docs/engine/variant-architecture.md §2.2).
  */
 
 import type { UiRuleset } from "@/features/game-room/variants/core/types";

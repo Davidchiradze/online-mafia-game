@@ -20,7 +20,7 @@ from the **access-role axis** (`user / moderator / admin` — see
 |---|---|---|---|
 | **Subscription tier** (this doc) | `profiles.subscription.packageId` | what paid features are unlocked | ✅ |
 | **Access role** | `profiles.role` | staff capabilities (admin panel, moderation) | [authorization.md](./authorization.md) |
-| In-game role | `gamePlayerRoles.role` | DON/MAFIA/DOCTOR | [game-design.md](./game-design.md) |
+| In-game role | `gamePlayerRoles.role` | DON/MAFIA/DOCTOR | [game-design.md](./variants/japanese/rules.md) |
 
 The single bridge between the two axes is the **staff override**: moderators and
 admins are granted the highest tier's features regardless of whether they hold a

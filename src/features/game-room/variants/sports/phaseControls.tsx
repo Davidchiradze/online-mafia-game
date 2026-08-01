@@ -1,5 +1,5 @@
 /**
- * Sports phase → host-controls map (docs/sports-mafia.md §3, Phase 4).
+ * Sports phase → host-controls map (docs/variants/sports.md §3, Phase 4).
  *
  * Reuses the SHARED, variant-agnostic controls (card picking, day/nominated
  * speaking, voting, farewell, continue, end, and the neutral-buffer

@@ -1,9 +1,9 @@
 /**
- * Game Definition registry (docs/game-types.md §2.2).
+ * Game Definition registry (docs/engine/variant-architecture.md §2.2).
  *
  * Maps `game.gameType` → its `GameDefinition`. The ONLY backend place (besides
  * the definitions themselves) allowed to name a variant by string literal
- * (docs/game-types.md §8). Shared engine code calls `getGameDefinition(...)`
+ * (docs/engine/variant-architecture.md §8). Shared engine code calls `getGameDefinition(...)`
  * and reads the definition instead of branching on `gameType`.
  *
  * Registers Japanese (Phase 1) and Sports (Phase 2). `sports_mafia` stays

@@ -18,7 +18,7 @@ const SLOTS = Array.from(
 );
 
 /**
- * Host controls for `best_move` (docs/sports-mafia.md §6.3).
+ * Host controls for `best_move` (docs/variants/sports.md §6.3).
  *
  * Shows which seats the killed player has named so far, then ONE button whose
  * label morphs with progress:

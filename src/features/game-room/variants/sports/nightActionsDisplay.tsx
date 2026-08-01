@@ -7,7 +7,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 
 /**
- * Sports host night-actions summary (docs/sports-mafia.md §5). The Sports night
+ * Sports host night-actions summary (docs/variants/sports.md §5). The Sports night
  * is the `unanimous-vote` model: every living mafia PRIVATELY picks a target in
  * a 5s window. Per-mafia picks are server-private (§5.4) — only the host may see
  * who each mafia chose, via the host-only `getHostSelections` query.

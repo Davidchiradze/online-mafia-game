@@ -10,7 +10,7 @@ export const gamePlayers = defineTable({
   fouls: v.number(),
   foulSpeakStartedAt: v.optional(v.number()),
   // Day round for which this player is muted from their main day speech after a
-  // 3rd foul (Sports `thirdFoulSpeakingBan`, docs/sports-mafia.md §4.2). Optional
+  // 3rd foul (Sports `thirdFoulSpeakingBan`, docs/variants/sports.md §4.2). Optional
   // and additive — Japanese never sets it, so existing rows validate unchanged.
   foulSpeakingBanRound: v.optional(v.number()),
   state: v.optional(v.string()),

@@ -1,5 +1,5 @@
 /**
- * Japanese seat geometry — the current 4×4 ring (docs/game-types.md §6).
+ * Japanese seat geometry — the current 4×4 ring (docs/engine/variant-architecture.md §6).
  *
  * The `positionForSeat` mapping is moved verbatim from the old hardcoded switch
  * in `useSeatShuffleAnimation`; only its home changed (imports-only, pinned by

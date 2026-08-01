@@ -1,6 +1,6 @@
 /**
  * Sports Mafia roles, deck, teams, and faction mapping
- * (docs/sports-mafia.md §2). Two factions only — `mafia` (DON + 2×MAFIA) and
+ * (docs/variants/sports.md §2). Two factions only — `mafia` (DON + 2×MAFIA) and
  * `citizens` (DETECTIVE + 6×CITIZEN). No Yakuza clan, Doctor, or Right Hand.
  */
 

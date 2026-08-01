@@ -2,7 +2,7 @@
 
 > Unit tests over the game's **pure logic**, plus CI that runs them on every
 > push. The suite's primary job right now is to be the **regression oracle** for
-> the game-types refactor (see [game-types.md](./game-types.md) §8: "Japanese is
+> the game-types refactor (see [game-types.md](./engine/variant-architecture.md) §8: "Japanese is
 > the regression oracle").
 
 ## Stack
@@ -224,7 +224,7 @@ idealized behavior.
   not a refactor — investigate before changing it.
 - New pure logic (e.g. the Sports `decideWinner`) gets its own characterization
   tests _as it is written_ (refactor Phase 2), validated against
-  [sports-mafia.md](./sports-mafia.md).
+  [sports-mafia.md](./variants/sports.md).
 
 ### Known drift the suite pins
 

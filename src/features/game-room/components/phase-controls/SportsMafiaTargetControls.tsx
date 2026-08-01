@@ -16,7 +16,7 @@ type SportsMafiaTargetControlsProps = {
 };
 
 /**
- * Host controls for `mafia_chooses_target` (docs/sports-mafia.md §5). Three
+ * Host controls for `mafia_chooses_target` (docs/variants/sports.md §5). Three
  * sequential states, driven by the current night session's window fields:
  *
  *  1. window not yet opened  → "Open Kill Window" (arms the 5s selection window)

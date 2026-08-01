@@ -8,11 +8,15 @@ This is a **Japanese Mafia** game variant with 12 players. The game follows a st
 
 Currently supported:
 
-- `japanese_mafia` - 12 players (**only fully implemented variant** — everything
-  in this document describes it)
-- `sports_mafia` - 10 players (**planned** — see [sports-mafia.md](./sports-mafia.md)
-  and [game-types.md](./game-types.md); renamed from the legacy `traditional`)
-- `city_mafia` - 12 players (reserved; not implemented)
+- `japanese_mafia` - 12 players — **the variant this document describes.**
+- `sports_mafia` - 10 players — **built and creatable**; documented separately in
+  [variants/sports.md](../sports.md) as a diff from this one. Renamed from the
+  legacy `traditional`.
+- `city_mafia` - reserved in the `GameType` union; **no definition registered**,
+  so it cannot be created.
+
+For how a variant is resolved at runtime rather than branched on, see
+[engine/variant-architecture.md](../../engine/variant-architecture.md).
 
 ## Roles (Japanese Mafia - 12 Players)
 

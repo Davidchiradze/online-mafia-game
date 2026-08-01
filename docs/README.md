@@ -9,9 +9,9 @@ This documentation describes the architecture, patterns, and conventions used in
 1. **New to the codebase?** Start with [architecture.md](./architecture.md) for an overview
 2. **Implementing a feature?** Check [frontend.md](./frontend.md) and [backend.md](./backend.md)
 3. **Working with real-time updates?** Read [realtime.md](./realtime.md)
-4. **Understanding game logic?** See [game-design.md](./game-design.md)
-   - **Adding / changing a game variant?** Read [game-types.md](./game-types.md)
-     (multi-variant architecture) and [sports-mafia.md](./sports-mafia.md).
+4. **Understanding game logic?** See [variants/japanese/rules.md](./variants/japanese/rules.md)
+   - **Adding / changing a game variant?** Read [engine/variant-architecture.md](./engine/variant-architecture.md)
+     (multi-variant architecture) and [variants/sports.md](./variants/sports.md).
 5. **Adding roles, permissions, or the admin panel?** Read [authorization.md](./authorization.md)
 6. **Gating features by paid subscription?** Read [subscriptions.md](./subscriptions.md)
 7. **Writing or running tests?** See [testing.md](./testing.md)
@@ -21,10 +21,10 @@ This documentation describes the architecture, patterns, and conventions used in
 
 - **[architecture.md](./architecture.md)** - Stack overview, system boundaries, data flow
 - **[realtime.md](./realtime.md)** - Convex reactive queries (real-time updates)
-- **[game-design.md](./game-design.md)** - Mafia game rules, phases, role visibility (Japanese variant)
-- **[game-end-conditions.md](./game-end-conditions.md)** - Auto win-detection rules (when a game ends automatically)
-- **[game-types.md](./game-types.md)** - Multi-variant architecture: the `GameDefinition` registry, shared-core vs per-variant split, and the phased refactor plan for supporting more than one variant
-- **[sports-mafia.md](./sports-mafia.md)** - Sports Mafia ruleset spec (10 players, 2 factions), defined as a diff from Japanese
+- **[variants/japanese/rules.md](./variants/japanese/rules.md)** - Mafia game rules, phases, role visibility (Japanese variant)
+- **[variants/japanese/win-conditions.md](./variants/japanese/win-conditions.md)** - Auto win-detection rules (when a game ends automatically)
+- **[engine/variant-architecture.md](./engine/variant-architecture.md)** - Multi-variant architecture: the `GameDefinition` registry, shared-core vs per-variant split, and the phased refactor plan for supporting more than one variant
+- **[variants/sports.md](./variants/sports.md)** - Sports Mafia ruleset spec (10 players, 2 factions), defined as a diff from Japanese
 - **[frontend.md](./frontend.md)** - React conventions, component patterns, UI guidelines
 - **[backend.md](./backend.md)** - Convex mutations, queries, database patterns
 - **[authorization.md](./authorization.md)** - Access roles (admin/moderator), permissions, `/admin` route gating

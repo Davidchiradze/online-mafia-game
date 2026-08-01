@@ -15,7 +15,7 @@ word "role":
 | Concept | Lives in | Example values | This doc? |
 |---|---|---|---|
 | **Access role** (this doc) | Convex `profiles.role` | `user`, `moderator`, `admin` | ✅ |
-| In-game role | `gamePlayerRoles.role` | `DON`, `MAFIA`, `DOCTOR` | ❌ (see [game-design.md](./game-design.md)) |
+| In-game role | `gamePlayerRoles.role` | `DON`, `MAFIA`, `DOCTOR` | ❌ (see [game-design.md](./variants/japanese/rules.md)) |
 | PHP account role | MySQL `accounts` | billing/account type | ❌ never synced into Convex |
 
 The PHP account role is **not** synced into Convex (the sync in

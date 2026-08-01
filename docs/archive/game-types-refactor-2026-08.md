@@ -4,7 +4,7 @@
 >
 > Every phase P0–P6 landed; the sole open item was `P5-T3` (Sports
 > `RATING_CONFIG`, deferred by design). The remaining work has been lifted into
-> [game-types.md](../game-types.md) §5, which is now the only place to look for
+> [game-types.md](../engine/variant-architecture.md) §5, which is now the only place to look for
 > it. Paths, test counts, and status boxes below are frozen at the date in this
 > file's name and are largely pre-migration.
 >
@@ -13,7 +13,7 @@
 > above is what earns that exemption.
 >
 > Original purpose, for context: this file decomposed the phased plan in
-> [game-types.md](../game-types.md) §5 into small, independently verifiable
+> [game-types.md](../engine/variant-architecture.md) §5 into small, independently verifiable
 > tasks, and recorded which characterization test in `tests/` /
 > `convex/tests/` **guarded** each one.
 >

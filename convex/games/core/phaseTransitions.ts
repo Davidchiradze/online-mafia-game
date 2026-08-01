@@ -14,7 +14,7 @@ import { computeSpeakingOrder } from "./speakingOrder";
  * These are the SINGLE source of truth for entering `night_phase` and
  * `day_phase`. Every flow that moves the game into night or day must go through
  * `enterNightPhase` / `enterDayPhase` so that all state resets live in one place
- * and the win-condition check (see docs/game-end-conditions.md) has exactly one
+ * and the win-condition check (see docs/engine/win-check-seam.md) has exactly one
  * home per direction.
  *
  * Do NOT set `gamePhase` to "night_phase" / "day_phase" anywhere else
@@ -106,7 +106,7 @@ async function createNightSessionIfNeeded(
  * Before transitioning, runs the `beforeNight` win check. If a faction has won,
  * the pending winner is recorded and the transition is skipped (the game pauses
  * on the win screen until the host clicks "Finish Game").
- * See docs/game-end-conditions.md.
+ * See docs/engine/win-check-seam.md.
  *
  * @returns the winning faction if the game is decided, otherwise `null`.
  */
@@ -194,7 +194,7 @@ export async function enterVotingPhase(
  * Before transitioning, runs the `beforeDay` win check. If a faction has won,
  * the pending winner is recorded and the transition is skipped (the game pauses
  * on the win screen until the host clicks "Finish Game").
- * See docs/game-end-conditions.md.
+ * See docs/engine/win-check-seam.md.
  *
  * @returns the winning faction if the game is decided, otherwise `null`.
  */

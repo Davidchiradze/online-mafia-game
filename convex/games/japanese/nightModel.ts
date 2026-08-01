@@ -1,5 +1,5 @@
 /**
- * Japanese night model — `single-authority` (docs/game-types.md §2.3).
+ * Japanese night model — `single-authority` (docs/engine/variant-architecture.md §2.3).
  *
  * One kill authority per team picks one target; the Doctor can save one; the
  * two teams can each kill. State is the scalar `mafiaTarget` / `yakuzaTarget` /

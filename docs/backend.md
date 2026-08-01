@@ -29,7 +29,9 @@ export const create = mutation({
       hostId: userId,
       gameStatus: "not_started",
       gameType: args.type,
-      maxPlayers: 12,
+      // Never hardcode a seat count — it is variant-specific (Japanese 12,
+      // Sports 10). Read it from the definition.
+      maxPlayers: getGameDefinition(args.type).seatCount,
     });
 
     return gameId;

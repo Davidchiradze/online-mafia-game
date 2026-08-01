@@ -6,7 +6,7 @@ import { GAME_PHASES } from "@/shared/lib/constants/game";
  *
  * Today this graph does not exist as a function: each transition is a hardcoded
  * `GAME_PHASES[n]` literal inside a phase-button component under
- * `src/components/gameSession/phaseButtonsForHost/*` (docs/game-types.md §1:
+ * `src/components/gameSession/phaseButtonsForHost/*` (docs/engine/variant-architecture.md §1:
  * "each button hardcodes the next GAME_PHASES[n] — the transition graph lives in
  * the buttons"). The refactor replaces those literals with
  * `definition.nextPhase(phase, ctx)` (§2.1).

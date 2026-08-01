@@ -183,9 +183,9 @@ components/
 - Roles stored in `gamePlayerRoles` table (separate from `gamePlayers`)
 - `getFiltered` query in `convex/games/core/roles.ts` filters by team visibility
 - `useQuery(api.gamePlayerRoles.getFiltered, { gameId })` at `GameRoomContext` level
-- Teammates can see each other's roles:
-  - Mafia team (DON, MAFIA, MAFIA_RIGHT_HAND) see each other
-  - Yakuza team (YAKUZA, SHOGUN) see each other
+- Teammates can see each other's roles. **Which roles form a team is
+  variant-specific** — read `definition.teams`, never a hardcoded list. Japanese
+  has two teams (mafia and yakuza); Sports has one.
 - Host can see all roles
 - Others see `null` for role field
 

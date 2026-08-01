@@ -1,17 +1,23 @@
 # Game Types — Multi-Variant Architecture
 
-> Status: **Design + refactor plan.** The rename `traditional → sports_mafia`
-> (Phase 0) is **done**. A characterization test suite pinning current Japanese
-> behavior is **in place** (`tests/`, see [testing.md](./testing.md)) to serve
-> as the Phase-1 regression oracle. The variant-abstraction refactor
-> (Phases 1–5) is **planned, not yet built.** This document is the source of
-> truth for how the codebase should evolve to support more than one game variant
-> without destabilizing the working Japanese game.
+> Status: **Built.** Both registries ship — `convex/games/registry.ts`
+> (`getGameDefinition`) on the backend and
+> `src/features/game-room/variants/registry.ts` (`getUiRuleset`) on the
+> frontend — with `japanese_mafia` and `sports_mafia` registered. Phases 1–5 all
+> landed; the remaining work is listed in §5.
 >
-> For the concrete Sports Mafia ruleset, see [sports-mafia.md](./sports-mafia.md).
-> For the (Japanese) game rules this all descends from, see
-> [game-design.md](./game-design.md) and
-> [game-end-conditions.md](./game-end-conditions.md).
+> This document is the source of truth for **how a variant is declared and
+> dispatched**. It is deliberately the one doc under `docs/engine/` allowed to
+> name variant-specific roles and phases, because comparing variants is its
+> subject — see the exemption in `tests/structure/variantDocs.test.ts`.
+>
+> **Where the rules themselves live:**
+>
+> | | |
+> | --- | --- |
+> | Shared win-check mechanism | [engine/win-check-seam.md](./win-check-seam.md) |
+> | Japanese rules | [variants/japanese/rules.md](../variants/japanese/rules.md), [win-conditions.md](../variants/japanese/win-conditions.md) |
+> | Sports rules | [variants/sports.md](../variants/sports.md) |
 
 ## 1. The problem
 
@@ -257,7 +263,7 @@ no behavior change). Convex's flat function namespace means moving files changes
 
 > The task-by-task checklist that operationalized this plan is complete and
 > archived at
-> [archive/game-types-refactor-2026-08.md](./archive/game-types-refactor-2026-08.md).
+> [archive/game-types-refactor-2026-08.md](../archive/game-types-refactor-2026-08.md).
 > Its two still-open items are lifted below under **Remaining work** — that list,
 > not the archive, is the live one.
 
@@ -281,7 +287,7 @@ Each phase is independently shippable and leaves the Japanese game fully working
 
 - **Phase 2 — Author the Sports definition (data only).** Roles, deck, 2
   factions, phase list, `decideWinner` (parity rule), timers, flags. Unit-test
-  `decideWinner` against the tables in [sports-mafia.md](./sports-mafia.md).
+  `decideWinner` against the tables in [sports-mafia.md](../variants/sports.md).
   Nothing wired to the UI yet.
 
 - **Phase 3 — Sports night model + new mechanics.** Add
@@ -299,7 +305,7 @@ Each phase is independently shippable and leaves the Japanese game fully working
 - **Phase 5 — Enable + calibrate.** Un-filter `sports_mafia` in
   `CreateGameModal`. Ship **unrated** first (absent from `RATING_CONFIG` → ELO
   skipped, exactly as today), then add its own config + E-table once ~200
-  decided games exist (see [ranking-system.md](./ranking-system.md) §9).
+  decided games exist (see [ranking-system.md](../ranking-system.md) §9).
 
 ### Remaining work
 
@@ -318,7 +324,7 @@ archived task tracker so this is the only place they live:
 - **Sports is intentionally unrated.** `RATING_CONFIG` in
   `convex/lib/constants.ts` has only a `japanese_mafia` entry; a missing entry
   means ELO is skipped entirely. Add the Sports config and E-table once ~200
-  decided Sports games exist (see [ranking-system.md](./ranking-system.md) §9).
+  decided Sports games exist (see [ranking-system.md](../ranking-system.md) §9).
 
 ## 6. Latent bug to fix in Phase 4: `maxPlayers` is never plumbed
 
@@ -366,6 +372,6 @@ Sports game would render two phantom empty seats and mis-place the host slot
 - **Japanese is the regression oracle.** Every phase of the refactor is
   validated by the Japanese game behaving identically; only then is Sports wired
   in. This is enforced concretely by the characterization suite in `tests/`
-  (see [testing.md](./testing.md)): when modules move, update only the import
+  (see [testing.md](../testing.md)): when modules move, update only the import
   paths — never the assertions. A forced assertion change is a real regression,
   not a refactor. CI runs it on every push.

@@ -1,5 +1,5 @@
 /**
- * Japanese phase → host-controls map (docs/game-types.md §2.2, Phase 4).
+ * Japanese phase → host-controls map (docs/engine/variant-architecture.md §2.2, Phase 4).
  *
  * A byte-for-byte transcription of the `switch (currentPhase)` that used to live
  * in `GamePhaseControls`, re-keyed from positional `GAME_PHASES[n]` literals to

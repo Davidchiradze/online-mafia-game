@@ -16,7 +16,7 @@ import {
  * CHARACTERIZATION TEST — role display / labelling (regression oracle).
  *
  * These are pure presentational maps that move into the variant folder
- * (docs/game-types.md §1: "Role labels"). NOTE: `roleToFaction` is duplicated
+ * (docs/engine/variant-architecture.md §1: "Role labels"). NOTE: `roleToFaction` is duplicated
  * here (src/lib/game/roleDisplay.ts) AND in convex/lib/roles.ts — the refactor
  * collapses them into `definition.roleToFaction`. Pinned in both places so the
  * consolidation is a visible, intentional diff.

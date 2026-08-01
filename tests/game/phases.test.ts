@@ -15,7 +15,7 @@ import {
  *
  * These are the "phases / roles / deck / factions" that become variant-specific
  * (`definition.phases`, `definition.roles`, `definition.roleDistribution`) in the
- * refactor (docs/game-types.md §2.1, §4). Pinning the current Japanese values
+ * refactor (docs/engine/variant-architecture.md §2.1, §4). Pinning the current Japanese values
  * makes any consolidation a deliberate, visible diff — and guards the guardrail
  * "phases by name, never by index" by locking the exact ordering.
  */

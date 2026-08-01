@@ -1,12 +1,12 @@
 /**
  * Core, variant-AGNOSTIC types for the Game Definition registry.
  *
- * See docs/game-types.md §2.1. A `GameDefinition` declares everything
+ * See docs/engine/variant-architecture.md §2.1. A `GameDefinition` declares everything
  * variant-specific behind stable interfaces so the shared engine can consult it
  * once per game (keyed by `game.gameType`) instead of threading `gameType`
  * literals through the codebase.
  *
- * GUARDRAIL (docs/game-types.md §8): definitions are **pure** — no `ctx.db`,
+ * GUARDRAIL (docs/engine/variant-architecture.md §8): definitions are **pure** — no `ctx.db`,
  * no React, no server coupling — so the same module is safe on client and
  * server and is unit-testable in isolation.
  *
@@ -14,7 +14,7 @@
  * roles, deck, factions, phases + transitions, the night resolution seam, win
  * detection, and engine flags. UI-only concerns (per-phase timers, the
  * `VisibilityRuleset`, the phase→controls map, seat-layout geometry) live in a
- * PARALLEL frontend registry under `src/game/*` (docs/game-types.md §2.2) so
+ * PARALLEL frontend registry under `src/game/*` (docs/engine/variant-architecture.md §2.2) so
  * that `convex/` never imports from `src/`. Those are introduced in P1-T8.
  */
 
@@ -46,7 +46,7 @@ export type PhaseContext = {
 
 /**
  * The recorded night, as a superset covering every variant's shape
- * (docs/game-types.md §2.3, option 1: additive optional fields). Japanese
+ * (docs/engine/variant-architecture.md §2.3, option 1: additive optional fields). Japanese
  * uses the single-authority scalars; Sports (Phase 3) uses the per-mafia
  * `mafiaTargetSelections` array. A variant's `resolveKills` reads only the
  * fields its model records and ignores the rest.
@@ -77,7 +77,7 @@ export type NightResolveContext = {
 
 /**
  * How a variant chooses AND resolves night kills — the deepest divergence
- * (docs/game-types.md §2.3). Only `resolveKills` is pure/shared here; the
+ * (docs/engine/variant-architecture.md §2.3). Only `resolveKills` is pure/shared here; the
  * DB-coupled "who has authority / record a selection" logic stays in the
  * night-phase mutations (a definition may not touch `ctx.db`).
  */
@@ -94,7 +94,7 @@ export interface NightModel {
   resolveKills: (state: NightState, context?: NightResolveContext) => number[];
 }
 
-/** Variant switches the shared engine reads (docs/game-types.md §2.1). */
+/** Variant switches the shared engine reads (docs/engine/variant-architecture.md §2.1). */
 export type GameFlags = {
   hasIntroductionPhase: boolean;
   hasFarewellSpeech: boolean;
@@ -105,7 +105,7 @@ export type GameFlags = {
   thirdFoulSpeakingBan: boolean;
   /**
    * Sports: the first-night victim names 3 suspects in a dedicated `best_move`
-   * phase before their farewell (docs/sports-mafia.md §6). Read by the shared
+   * phase before their farewell (docs/variants/sports.md §6). Read by the shared
    * dawn seam (`farewellSpeech:startFarewellSpeech`) so it never names a variant.
    */
   hasBestMove: boolean;
@@ -134,7 +134,7 @@ export interface GameDefinition {
    * Given the current phase (+ optional state), the phase the host's advance
    * action moves to — or `null` when the transition is state-dependent and
    * owned by a server mutation. Replaces the positional `GAME_PHASES[n]`
-   * literals hardcoded in the phase buttons (docs/game-types.md §2.1).
+   * literals hardcoded in the phase buttons (docs/engine/variant-architecture.md §2.1).
    */
   nextPhase: (phase: Phase, ctx?: PhaseContext) => Phase | null;
 
@@ -147,7 +147,7 @@ export interface GameDefinition {
    * Structured endgame snapshot (or `"no_contest"` / `null`) recorded on the
    * session and used for the win-method label. Japanese ships the 3-faction
    * snapshot; Sports a 2-faction one (`yakuzaAlive`/`shogunAlive` always false,
-   * per sports-mafia.md §7). `decideWinner` is the faction-only convenience;
+   * per variants/sports.md §7). `decideWinner` is the faction-only convenience;
    * both agree on the outcome.
    */
   describeWin: (

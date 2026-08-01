@@ -96,7 +96,7 @@ export const GAME_PHASES = [
   // GAME_PHASES[0..20] literals used across the app stay stable.
   "don_meet",
   // Sports-only: the first-night victim names 3 suspects before their farewell
-  // (docs/sports-mafia.md §6). Entered only at dawn of night 1 when the kill
+  // (docs/variants/sports.md §6). Entered only at dawn of night 1 when the kill
   // qualifies. Appended last for the same index-stability reason as above.
   "best_move",
 ] as const;
@@ -136,7 +136,7 @@ export const DAY_PHASE_SPEAKING = {
   /** Maximum speaking time per player in seconds */
   MAX_SPEAKING_TIME_SECONDS: 60,
   /**
-   * Sports final-day carve-out (docs/sports-mafia.md §4.2): on the last day
+   * Sports final-day carve-out (docs/variants/sports.md §4.2): on the last day
    * phase (≤ 4 alive) a 3rd-foul-banned player still speaks, but for 30 seconds
    * instead of 60. See `hasShortenedFinalDaySpeech` in `lib/game/speakingBan`.
    */

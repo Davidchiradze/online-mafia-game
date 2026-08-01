@@ -1,6 +1,6 @@
 /**
  * Sports host-advance flow — the UI-side counterpart to Japanese `phaseFlow.ts`
- * (docs/sports-mafia.md §3). The logical destination comes from the pure
+ * (docs/variants/sports.md §3). The logical destination comes from the pure
  * `sportsNextPhase` graph; whether an advance first sleeps through the neutral
  * `phase_transition` buffer is a presentation concern encoded here.
  *

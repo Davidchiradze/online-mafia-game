@@ -101,7 +101,7 @@ const HISTORICAL_PATHS: { doc: string; path: string; supersededBy: string }[] = 
     supersededBy: "convex/games/japanese/winConditions.ts",
   },
   {
-    doc: "docs/game-types.md",
+    doc: "docs/engine/variant-architecture.md",
     path: "convex/game/*",
     supersededBy: "convex/games/core/",
   },

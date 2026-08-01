@@ -1,27 +1,25 @@
-# Game End Conditions (Auto-Win Detection)
+# Japanese Mafia — Win Conditions
 
-> Status: **Implemented.** All open questions resolved (see §8). This document
-> describes the rules for automatically detecting the end of a Japanese-Mafia
-> game. The logic lives in `convex/games/japanese/winConditions.ts` (`decideWinner`, pure)
-> and is wired in via `recordWinnerIfDecided` (`convex/lib/games.ts`).
+> **Scope: `japanese_mafia` only.** These are the rules the Japanese variant
+> evaluates. *When* they are evaluated, who calls them, and what happens when
+> one fires are variant-agnostic and documented once in
+> [engine/win-check-seam.md](../../engine/win-check-seam.md).
 >
-> **Detection only — the host still confirms.** When a faction is decided, the
-> winner is *recorded* on the session (`gameSessions.winner`) and the pending
-> phase transition is skipped, pausing the game. The host then sees a
-> faction-win banner (`WinnerBanner`) with a **Finish Game** button; clicking it
-> runs the existing `finishGame` mutation, which is what actually finishes the
-> game and schedules cleanup. The game is **not** auto-finished.
+> Implemented in `convex/games/japanese/winConditions.ts` (`decideWinner` /
+> `describeWin`, both pure). Sports has its own rules — a flat parity rule with
+> no context sensitivity — in [variants/sports.md](../sports.md) §7.
+>
+> Section numbers here are load-bearing: `convex/games/japanese/winConditions.ts`
+> cites §7. Do not renumber.
 
 ## 1. Purpose
 
-Today a game only ends when the host manually clicks **Finish**
-(`convex/games/core/sessions.ts` → `finishGame`).
-
-Goal: a pure helper that is run **at every phase transition into `night_phase`
-and into `day_phase`**. It inspects the alive players and their roles, decides
-whether a faction has won, and if so **records the pending winner and pauses the
-game** (skips the transition) so the host can confirm the end via the Finish
-Game button. If no win condition is met, the transition proceeds normally.
+> Moved. The detection-vs-confirmation model, and why a pure helper runs at the
+> phase-transition seams at all, are shared engine concerns:
+> [engine/win-check-seam.md §1](../../engine/win-check-seam.md).
+>
+> What remains Japanese-specific is *which* faction wins at which alive-count,
+> and that is §5 through §8 below.
 
 ## 2. Factions
 
@@ -62,81 +60,28 @@ Throughout this doc:
 
 ## 4. When the check runs
 
-The check has **two contexts**, because the _next_ thing that happens changes the
-outcome:
+> Mostly moved. The two transition seams (`enterNightPhase` / `enterDayPhase`),
+> their full caller list, and the immediate re-check after an eliminating foul
+> are shared engine mechanism:
+> [engine/win-check-seam.md §4–§5](../../engine/win-check-seam.md).
 
-- **`beforeNight`** — we are about to enter `night_phase` (a day elimination just
-  happened; the Yakuza/Mafia get to act at night next).
-- **`beforeDay`** — we are about to enter `day_phase` (night kills just happened;
-  a day discussion + vote happens next, where Mafia majority controls the vote).
+One thing here **is** Japanese-specific and stays:
 
-The context **only changes the result for `N = 5`** (see §6). For all other counts
-the result is identical in both contexts.
-
-### Single-source transition helpers
-
-Entering night/day is consolidated into **one helper per direction** in
-`convex/games/core/phaseTransitions.ts`:
-
-- **`enterNightPhase(db, gameId)`** — clears any voting session, bumps the night
-  number, resets speaking/nomination/foul state, creates the `nightPhaseSessions`
-  row. This is the **single home for the `beforeNight` check.**
-- **`enterDayPhase(db, gameId)`** — resets speaking state. The **single home for the
-  `beforeDay` check.**
-
-`gamePhase` may **not** be set to `night_phase` / `day_phase` anywhere else —
-`game/sessions:update` rejects those values, so every flow is forced through the
-helpers.
-
-**Callers of `enterNightPhase` (`beforeNight`):**
-
-- `nightPhase.ts` → `enterNight` (client-facing: intro → night, continue → night,
-  day skip → night)
-- `voting.ts` → `skipToNightAfterTie`
-- `farewellSpeech.ts` → `advanceFromFarewell` (vote-elimination path)
-- `dayPhase.ts` → `advanceNominatedSpeaker` (foul-elimination path)
-
-**Callers of `enterDayPhase` (`beforeDay`):**
-
-- `farewellSpeech.ts` → `startFarewellSpeech` (no-kill skip-to-day path)
-- `farewellSpeech.ts` → `advanceFromFarewell` (night-kills path)
-
-Because of this consolidation, the win-check is added in exactly **two** places
-(the two helpers), not scattered across every transition mutation.
-
-### Immediate check after a foul elimination
-
-A 4th foul kills a player **instantly, outside any night/day transition**
-(`convex/games/core/dayPhase.ts` → `giveFoul`: sets `isAlive: false` with no farewell and
-sets `foulEliminationOccurred`). If this removes the last Mafia/Yakuza/Shogun, the
-winner must be **detected immediately** — not at the next night/day boundary (the
-host still confirms the finish from the resulting win banner).
-
-So the check **also runs immediately at the end of `giveFoul`** (only when the foul
-actually eliminates the player, i.e. the 4th foul).
-
-- The immediate foul check runs the **full** win logic (§7), not just the sweep.
-- Foul-allowed phases are all day-side (`introduction_phase`, `farewell_speech`,
-  `day_phase`, `nominated_players_speak`, `voting`) and head toward night, so the
-  `N = 5` context-sensitive case uses the **`beforeNight`** context.
-
-> Scope note: only `giveFoul` triggers the immediate check. Host manual `kill`
-> (`players.ts`) and `markDeadAndAdvance` (`farewellSpeech.ts`) do **not** — those
-> are left to the normal night/day boundary checks.
+- The seam supplies a `beforeNight` / `beforeDay` context on every call. For
+  Japanese, that context **only changes the result at `N = 5`** (see §6) — every
+  other alive-count evaluates identically in both. Sports ignores the context
+  entirely.
+- Because the foul trigger fires from day-side phases that head toward night, it
+  always evaluates with the **`beforeNight`** context.
 
 ## 5. Global rules (apply at any `N`)
 
-0. **No contest — total mutual elimination (`N = 0`).** If **no** player is left alive,
-   the game is a **no contest**: nobody met a win condition. Reachable when the last
-   survivors all leave at once — e.g. the final 3 tie twice, trigger a **"both leave"**
-   vote, and all vote to leave, so all 3 are eliminated in one farewell round. This is
-   checked **first**, because the Citizens-sweep condition below (`m = 0` and `!YA` and
-   `!SH`) is *vacuously true* when nobody is alive and would otherwise mis-declare a
-   Citizens win. A no contest **pauses on the winner banner** like a faction win (host
-   confirms via **Finish Game**), and is recorded as `winner: "no_contest"` on the session
-   and logged as **no contest** (`gameLogs.winner = null`, no `winMethod`, **no ELO
-   change** for anyone) — the same terminal outcome as an admin force-end. There is no
-   separate "draw" state: total mutual elimination reuses the existing no-contest concept.
+0. **No contest (`N = 0`)** is checked first and is shared engine behaviour —
+   see [engine/win-check-seam.md §6](../../engine/win-check-seam.md). It matters
+   here for one Japanese-specific reason: the Citizens-sweep condition below
+   (`m = 0` and `!YA` and `!SH`) is *vacuously true* when nobody is alive, so
+   without the earlier `N = 0` check this variant would mis-declare a Citizens
+   win on total mutual elimination.
 
 1. **Single-faction sweep (highest priority).** If **every** alive player belongs to
    a single faction, that faction wins — at _any_ player count, even above 6:
@@ -332,32 +277,19 @@ These were confirmed and are baked into the rules above:
 
 ## 9. Implementation (built)
 
-1. **Schema:** ✅ optional `winner` (`mafia | yakuza | citizens | no_contest`) on
-   `convex/tables/gameSessions.ts`. `"no_contest"` is the total-mutual-elimination outcome
-   (§5 rule 0); it pauses on the banner like a win but logs as no contest.
-2. **Pure helper:** ✅ `decideWinner(aliveRoles, context)` in
-   `convex/games/japanese/winConditions.ts` — returns `"mafia" | "yakuza" | "citizens" |
-   "no_contest" | null`, implementing §6/§7. No DB access. (`describeWin` returns the
-   same, with a full `WinMethod` snapshot for faction wins and the bare `"no_contest"`
-   sentinel for `N = 0`.)
-3. **Record helper:** ✅ `recordWinnerIfDecided(ctx, gameId, context)` in
-   `convex/lib/games.ts` — loads the roles of alive role-holders (excludes the host),
-   calls `describeWin`; if non-null, patches `winner` (+ `winMethod` for faction wins;
-   `"no_contest"` carries no `winMethod`) on the session and returns the outcome. It does
-   **not** set `isFinished`/`gameStatus` or schedule cleanup — that is the host's
-   `finishGame` step. `archiveGameLog` maps a `"no_contest"` session winner to
-   `winner: null` (no contest, no ELO), the same as an admin force-end. Idempotent
-   (re-returns an already-recorded outcome); no-ops once the session is finished.
-4. **`enterNightPhase`** (`beforeNight`) and **`enterDayPhase`** (`beforeDay`): ✅ both
-   take `ctx` and call `recordWinnerIfDecided` _before_ the phase patch; if a winner is
-   returned they skip the transition (pausing the game) and return the winner. Single
-   home per direction.
-5. **`giveFoul`:** ✅ after a 4th-foul elimination, runs `recordWinnerIfDecided(ctx,
-   gameId, "beforeNight")` and returns `{ playerEliminated: true, winnerDecided }`.
-6. **Host confirmation (UI):** ✅ when `gameSessions.winner` is set and `isFinished` is
-   false, the host's `GamePhaseControls` renders `WinnerBanner` (faction title +
-   `FinishGameButton`) instead of phase controls; the button calls the existing
-   `finishGame` mutation to actually end the game. (Host-only by design.)
+> Moved. The schema field, the `recordWinnerIfDecided` record helper, the two
+> transition helpers, the `giveFoul` trigger, and the host-confirmation UI are
+> all shared engine wiring:
+> [engine/win-check-seam.md §7](../../engine/win-check-seam.md).
 
-> Note: `aliveRoles` counts only alive players that hold a `gamePlayerRoles` entry,
-> so the host (who has no role) is naturally excluded from `N` and `m`.
+What is Japanese-owned is only the pure rule module itself:
+
+- `convex/games/japanese/winConditions.ts` — `decideWinner(aliveRoles, context)`
+  returns `"mafia" | "yakuza" | "citizens" | "no_contest" | null`, implementing
+  §6 and §7 above. `describeWin` returns the same decision plus a full
+  `WinMethod` snapshot for faction wins. No DB access.
+- Reached through `JAPANESE_DEFINITION.decideWinner` / `.describeWin`, so the
+  engine never names this module directly.
+
+> `aliveRoles` counts only alive players holding a `gamePlayerRoles` entry, so
+> the host — who has no role — is excluded from `N` and `m`.

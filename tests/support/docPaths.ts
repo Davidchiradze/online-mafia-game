@@ -171,7 +171,7 @@ export function markdownLinks(text: string): string[] {
 export type DocCitation = { doc: string; sections: string[] };
 
 /**
- * `docs/game-types.md §2.1` and chained forms like `docs/game-types.md §1; §8`.
+ * `docs/engine/variant-architecture.md §2.1` and chained forms like `docs/engine/variant-architecture.md §1; §8`.
  * Only sections attached directly to a filename are attributed to it — a bare
  * `§3` further along a sentence is ambiguous and deliberately ignored.
  */
