@@ -5,7 +5,7 @@ import { useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { joinRequests } from "@convex/refs/lobby";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
-import { LandingLogo } from "@/components/landing/LandingLogo";
+import { LandingLogo } from "@/shared/ui/LandingLogo";
 import {
   EyeIcon,
   UsersIcon,

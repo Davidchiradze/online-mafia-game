@@ -1,4 +1,4 @@
-import { LandingLogo } from "./LandingLogo";
+import { LandingLogo } from "@/shared/ui/LandingLogo";
 
 const footerLinks = ["About", "Privacy", "Terms", "Contact"];
 

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
-import { LandingLogo } from "./LandingLogo";
+import { LandingLogo } from "@/shared/ui/LandingLogo";
 import LanguageSwitcher from "@/components/i18n/LanguageSwitcher";
 
 const navLinks = [
