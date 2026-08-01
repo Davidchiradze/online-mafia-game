@@ -8,7 +8,7 @@ import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 import { useCardPicking } from "@/features/game-room/hooks/game";
 import { advanceUpdates } from "@/game/japanese/phaseFlow";
-import PhaseButton from "@/shared/ui/PhaseButton";
+import PhaseButton from "@/features/game-room/components/ui/PhaseButton";
 
 type ConfirmRolesButtonProps = {
   gameSessionState: NonNullable<ReturnType<typeof useGameRoom>["gameSessionState"]>;

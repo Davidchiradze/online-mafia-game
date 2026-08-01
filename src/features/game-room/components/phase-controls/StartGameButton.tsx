@@ -6,8 +6,8 @@ import { gameSessions } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
 import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
-import PhaseButton from "@/shared/ui/PhaseButton";
-import PhaseTitle from "@/shared/ui/PhaseTitle";
+import PhaseButton from "@/features/game-room/components/ui/PhaseButton";
+import PhaseTitle from "@/features/game-room/components/phase/PhaseTitle";
 import StartGameModal from "./StartGameModal";
 
 const CONTAINER_CLASS = "flex flex-col items-center gap-3 w-44";

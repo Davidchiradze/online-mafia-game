@@ -32,7 +32,7 @@ import {
 import { useFoulNotification } from "@/features/game-room/hooks/game/useFoulNotification";
 
 // Components
-import ReadyButton from "@/shared/ui/ReadyButton";
+import ReadyButton from "@/features/game-room/components/ui/ReadyButton";
 import ParticipantMenuButton from "./ParticipantMenuButton";
 import ParticipantOverlay from "./ParticipantOverlay";
 import ParticipantBadges from "./ParticipantBadges";

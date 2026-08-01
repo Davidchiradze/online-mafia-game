@@ -7,7 +7,7 @@ import GamePhaseControls from "@/features/game-room/components/phase/GamePhaseCo
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 import VotingDisplay from "@/features/game-room/components/phase/VotingDisplay";
 import { EmptySeat } from "@/features/game-room/components/participant/player-states";
-import PhaseTitle from "@/shared/ui/PhaseTitle";
+import PhaseTitle from "@/features/game-room/components/phase/PhaseTitle";
 import WinnerBanner from "@/features/game-room/components/host/WinnerBanner";
 import { useSeatShuffleAnimation } from "@/features/game-room/hooks/game";
 

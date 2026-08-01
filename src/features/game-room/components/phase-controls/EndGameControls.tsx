@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import PhaseButton from "@/shared/ui/PhaseButton";
+import PhaseButton from "@/features/game-room/components/ui/PhaseButton";
 
 /**
  * Controls displayed when the game has ended

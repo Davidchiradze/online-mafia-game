@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { sportsNightPhase } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
-import PhaseButton from "@/shared/ui/PhaseButton";
+import PhaseButton from "@/features/game-room/components/ui/PhaseButton";
 import PhaseAdvanceButton from "./PhaseAdvanceButton";
 
 type SportsMafiaTargetControlsProps = {

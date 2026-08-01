@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useDelayedDisable } from "@/shared/hooks/useDelayedDisable";
+import { useDelayedDisable } from "@/features/game-room/hooks/game/useDelayedDisable";
 
 type PhaseButtonVariant =
   | "primary"

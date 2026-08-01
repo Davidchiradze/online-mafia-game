@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import PhaseButton from "@/shared/ui/PhaseButton";
+import PhaseButton from "@/features/game-room/components/ui/PhaseButton";
 
 export type ActionState =
   | "loading"
