@@ -13,6 +13,11 @@ set -e
 echo "pre-push ▸ typecheck (tsc --noEmit)…"
 npm run --silent typecheck
 
+# Errors only. The convention backlog surfaces as warnings and is ratcheted by
+# tests/structure/conventions.test.ts in the run below.
+echo "pre-push ▸ lint (eslint)…"
+npm run --silent lint
+
 echo "pre-push ▸ unit tests (vitest)…"
 npm test
 
