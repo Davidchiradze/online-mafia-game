@@ -13,7 +13,7 @@ import ServerTimeProvider from "@/providers/ServerTimeProvider";
 import { ThemeProvider } from "@/components/theme-provider/theme-provider";
 import { ToastContainer } from "react-toastify";
 import "./globals.css";
-import "@/styles/game.css";
+import "@/features/game-room/styles/game.css";
 
 const inter = Inter({
   variable: "--font-inter",

@@ -1,12 +1,12 @@
 import type { StaticImageData } from "next/image";
-import cardBack from "@/assets/images/cards/CardBack.png";
-import don from "@/assets/images/cards/don.png";
-import mafia from "@/assets/images/cards/mafia.png";
-import shogun from "@/assets/images/cards/shogun.png";
-import yakuza from "@/assets/images/cards/yakuza.png";
-import detective from "@/assets/images/cards/detective.png";
-import doctor from "@/assets/images/cards/doctor.png";
-import citizen from "@/assets/images/cards/citizen.png";
+import cardBack from "@/features/game-room/assets/cards/CardBack.png";
+import don from "@/features/game-room/assets/cards/don.png";
+import mafia from "@/features/game-room/assets/cards/mafia.png";
+import shogun from "@/features/game-room/assets/cards/shogun.png";
+import yakuza from "@/features/game-room/assets/cards/yakuza.png";
+import detective from "@/features/game-room/assets/cards/detective.png";
+import doctor from "@/features/game-room/assets/cards/doctor.png";
+import citizen from "@/features/game-room/assets/cards/citizen.png";
 
 /** Decorative back face used for face-down cards. */
 export const CARD_BACK_IMAGE: StaticImageData = cardBack;
