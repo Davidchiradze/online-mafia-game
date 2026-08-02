@@ -19,49 +19,24 @@
 > | Japanese rules | [variants/japanese/rules.md](../variants/japanese/rules.md), [win-conditions.md](../variants/japanese/win-conditions.md) |
 > | Sports rules | [variants/sports.md](../variants/sports.md) |
 
-## 1. The problem
+## 1. The problem (historical)
 
-The app was built for a single variant — **Japanese Mafia (12 players)** — and
-the ruleset is **hardwired end to end**. There is **no dispatch layer**: nothing
-in the live game-room render path or the phase engine consults `gameType`.
-`gameType` is read only for labels, seat counts, filters, and ELO namespacing.
+> Kept because `convex/games/japanese/phases.ts` and
+> `variants/japanese/phaseFlow.ts` cite §1 for *why* they exist. The
+> condition it describes is **fixed**.
 
-Everything below is Japanese-specific and must be made variant-aware before a
-second variant can exist safely:
+The app was built for a single variant and the ruleset was hardwired end to
+end: no dispatch layer, nothing in the render path or the phase engine
+consulted `gameType`, and phases were referenced **positionally**
+(`GAME_PHASES[3]`). A second variant would have meant either forking half the
+codebase or threading `if (gameType === ...)` through dozens of files.
 
-### Backend (`convex/`)
-
-| Concern              | Location                                                                                             | Japanese assumption baked in                                                                      |
-| -------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| Phase list           | `lib/constants.ts` → `GAME_PHASES` (also duplicated in `src/shared/lib/constants/game.ts`)                  | 22 phases in the exact Japanese order; phases are referenced positionally (`GAME_PHASES[3]` etc.) |
-| Role deck            | `lib/constants.ts` → `JAPANESE_MAFIA_ROLE_DISTRIBUTION`                                              | 12 cards incl. SHOGUN/YAKUZA/DOCTOR                                                               |
-| Teams / factions     | `lib/constants.ts` → `MAFIA_TEAM_ROLES`, `YAKUZA_TEAM_ROLES`; `lib/roles.ts` → `roleToFaction`       | 3 factions (mafia/yakuza/citizens)                                                                |
-| Night kill model     | `game/nightPhase.ts` → `getMafiaKillAuthority` / `getYakuzaKillAuthority` / `getDoctorHealAuthority` | single "kill authority" priority DON>RH>MAFIA; Yakuza + Doctor exist                              |
-| Kill resolution      | `game/farewellSpeech.ts` → `startFarewellSpeech`                                                     | reads `mafiaTarget` / `yakuzaTarget` / `healedPlayer` (single scalars)                            |
-| Win detection        | `lib/winConditions.ts` → `describeWin` / `decideWinner`                                              | 3-faction tables, N=5 Doctor+Yakuza context exception, Yakuza-clan sweeps                         |
-| Phase transitions    | `lib/phaseTransitions.ts` → `enterNightPhase` / `enterDayPhase`                                      | correct as generic seams, but the win-check they call is Japanese                                 |
-| Role deal            | `game/sessions.ts` → `assignRandomRoles`; `game/cardPicking.ts` → `start`                            | deck = `JAPANESE_MAFIA_ROLE_DISTRIBUTION`; deck-size cap = its length                             |
-| Right-hand promotion | `game/roles.ts` → `promoteToRightHand`                                                               | Japanese-only mechanic                                                                            |
-| Night session shape  | `tables/nightPhaseSessions.ts`                                                                       | `mafiaTarget` / `yakuzaTarget` / `healedPlayer` scalars                                           |
-
-### Frontend (`src/`)
-
-| Concern               | Location                                                                                                 | Japanese assumption baked in                                                                            |
-| --------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Phase → host buttons  | `components/game/GamePhaseControls.tsx`                                                                  | one big `switch (gamePhase)`; no `gameType` branch                                                      |
-| Host phase buttons    | `components/gameSession/phaseButtonsForHost/*`                                                           | each button hardcodes the next `GAME_PHASES[n]` — the transition graph lives in the buttons             |
-| Visibility            | `lib/game/visibility.ts`                                                                                 | `canSeeParticipant` / `getAwakeRoles` / `isNightActivityPhase` are phase+role literal chains            |
-| Night authority       | `hooks/game/useNightActionAuthority.ts`, `useRightHandPromotion.ts`, `useNightPhaseReadiness.ts`         | DON>RH>MAFIA priority, Yakuza/Doctor/Shogun rules                                                       |
-| Seat geometry         | `components/game/PlayerCircle.tsx`, `hooks/game/useSeatShuffleAnimation.ts`                              | fixed 4×4 grid; seats 1–13 mapped to explicit cells                                                     |
-| Role labels           | `lib/game/roleDisplay.ts`, `lib/utils/roleDisplay.ts`, `components/participant/ParticipantRoleBadge.tsx` | iterate `JAPANESE_MAFIA_ROLES`                                                                          |
-| `maxPlayers` plumbing | `components/liveKit/LiveKitTestComponent.tsx`, `components/game/SpectatorView.tsx`                       | **render `<PlayerCircle>` without `maxPlayers`** → defaults to 12 for every game (a latent bug, see §6) |
-
-### Consequence
-
-You cannot add a variant by "just adding a `gameType`." A second variant with
-different phases, roles, night mechanics, win conditions, and player count would
-either fork half the codebase or thread `if (gameType === ...)` through dozens
-of files — both of which are exactly the fragility the user flagged.
+Every concern that was hardwired — phase list, role deck, teams, night kill
+model, kill resolution, win detection, role deal, right-hand promotion, seat
+geometry — now resolves through one of the two registries in §2. The current
+per-variant values are generated into
+[generated/game-spec.md](../generated/game-spec.md); this section deliberately
+does not restate them.
 
 ## 2. The design: a Game Definition registry
 
@@ -88,49 +63,46 @@ _rules_ are swapped, chosen once per game by `game.gameType`.
 
 ### 2.1 The interface (backend)
 
-A definition is **pure data + pure functions** (no DB access), so it can be
-imported by both Convex functions and React with no server coupling. Sketch:
+A definition is **pure data + pure functions** (no `ctx.db`, no React), so it
+imports cleanly into Convex functions, React, and node-environment tests
+alike. This is the shipped shape — see `convex/games/core/types.ts`:
 
 ```ts
-// convex/games/core/types.ts  (shared, imported by every definition)
-export type GameDefinition = {
-  id: GameType; // "japanese_mafia" | "sports_mafia" | ...
-  seatCount: number; // seated non-host players (12 | 10)
+export interface GameDefinition {
+  id: GameType;                      // "japanese_mafia" | "sports_mafia" | …
+  seatCount: number;                 // seated non-host players
 
-  roles: readonly Role[]; // every role this variant can assign
-  roleDistribution: readonly Role[]; // the deck dealt at picking time (len === seatCount)
-  factions: readonly Faction[]; // ["mafia","yakuza","citizens"] | ["mafia","citizens"]
+  roles: readonly Role[];            // every role this variant can assign
+  roleDistribution: readonly Role[]; // the deck (length === seatCount)
+  factions: readonly Faction[];
   roleToFaction: (role: Role) => Faction;
-  teams: Record<string, readonly Role[]>; // who meets/sees together (mafia team, yakuza team…)
+  teams: Record<string, readonly Role[]>;  // who meets / sees together
 
-  phases: readonly Phase[]; // ordered phase ids for THIS variant
-  /** Given the current phase + game state, what phase is "next" on the host's
-   *  advance action. Replaces the transition literals hardcoded in the phase
-   *  buttons. Pure; the mutation applies the result. */
-  nextPhase: (phase: Phase, ctx: PhaseContext) => Phase | null;
+  phases: readonly Phase[];          // ordered phase ids for THIS variant
+  /** Host-advance target, or null when the next phase depends on DB state. */
+  nextPhase: (phase: Phase, ctx?: PhaseContext) => Phase | null;
 
-  night: NightModel; // how kills are chosen AND resolved (see §2.3)
+  night: NightModel;                 // kind, actingRoles, resolveKills (§2.3)
 
-  /** Returns the decided outcome or null to continue. Generalizes
-   *  decideWinner; each variant ships its own tables. */
+  /** Decided outcome, or null to continue. */
   decideWinner: (aliveRoles: Role[], context: WinContext) => Outcome | null;
+  /** Same decision plus a WinMethod snapshot for faction wins. */
+  describeWin: (aliveRoles: Role[], context: WinContext) => WinMethod | "no_contest" | null;
 
-  visibility: VisibilityRuleset; // phase+role → awake roles / can-see (see §2.4)
-
-  timers: Partial<Record<Phase, number>>; // per-phase decision countdowns
-
-  flags: {
-    hasIntroductionPhase: boolean; // Japanese: true, Sports: false
-    hasFarewellSpeech: boolean;
-    firstDaySingleNomineeSkipsToNight: boolean; // Sports day-1 rule
-    // …variant switches that the shared engine reads
-  };
-};
+  flags: GameFlags;                  // switches the shared engine reads
+}
 ```
 
-Key point: **phase ids stay strings, referenced by name, never by index.** The
-positional `GAME_PHASES[3]` pattern in the phase buttons is the single biggest
-source of coupling and must be replaced by `definition.nextPhase(...)`.
+Two things live on the **UI** ruleset (§2.2) rather than here, because they
+are rendering concerns: `visibility` and per-phase decision `timers`. Do not
+reach for `definition.visibility` — it does not exist.
+
+Current field values for every registered variant are generated into
+[generated/game-spec.md](../generated/game-spec.md).
+
+Key point: **phase ids are strings, referenced by name, never by index.** The
+positional `GAME_PHASES[3]` pattern was the single biggest source of coupling
+and is replaced by `definition.nextPhase(...)`.
 
 ### 2.2 The registry
 
@@ -191,45 +163,33 @@ The Japanese literal chains move verbatim into `japanese/visibility.ts`; Sports
 ships a smaller ruleset (no doctor/yakuza phases). The `VisibilityState`
 enum and `getVisibilityStateWithDeath` layering stay shared.
 
-## 3. Directory structure (target)
+## 3. Directory structure
 
-Physically separate the variants, per the requirement that each type's phases
-and components live in their own folders so a new variant "does not cause bugs"
-in the working one.
+This shipped. What follows is the tree as it exists, not a target.
 
 ```
-convex/
-  games/
-    core/                     # variant-AGNOSTIC engine (moved from game/ + lib/)
-      types.ts                # GameDefinition, NightModel, VisibilityRuleset, …
-      phaseTransitions.ts     # enterNightPhase/enterDayPhase (call def.decideWinner)
-      speakingOrder.ts        # unchanged pure logic
-      voting.ts               # shared voting mechanics
-      fouls.ts                # shared foul counting (+ variant flags)
-      cardPicking.ts          # deck comes from def.roleDistribution
-      archive.ts              # archiveGameLog, ELO (def.roleToFaction)
-    japanese/
-      definition.ts  phases.ts  roles.ts  nightModel.ts  winConditions.ts  visibility.ts
-    sports/
-      definition.ts  phases.ts  roles.ts  nightModel.ts  winConditions.ts  visibility.ts
-    registry.ts               # gameType → GameDefinition
+convex/games/
+  registry.ts            getGameDefinition(gameType) — the ONLY backend place
+                         allowed to name a variant by string literal
+  core/                  variant-agnostic engine + shared types
+  japanese/              definition, phases, nightModel, winConditions
+  sports/                the same, plus roles.ts and bestMove.ts
 
-src/
-  game/
-    core/                     # shared UI: PlayerCircle (parameterized), speaking/voting/foul controls
-    japanese/
-      phaseControls.tsx       # phase→button map for this variant
-      visibility.ts  nightAuthority.ts  constants.ts  seatLayout.ts
-    sports/
-      phaseControls.tsx
-      visibility.ts  nightAuthority.ts  constants.ts  seatLayout.ts
-    registry.ts               # gameType → UI ruleset
+src/features/game-room/variants/
+  registry.ts            getUiRuleset(gameType)
+  core/types.ts          UiRuleset and friends
+  japanese/              visibility, phaseFlow, phaseControls, seatLayout,
+  sports/                nightAuthority, nightActionsDisplay, ruleset
 ```
 
-The existing `convex/game/*` and `convex/lib/*` are migrated into
-`convex/games/core` + `convex/games/japanese` during Phase 1 (a **pure move**,
-no behavior change). Convex's flat function namespace means moving files changes
-`api.*` paths — do this in one mechanical commit and update `convex/refs/*`.
+Two asymmetries are real and intentional, not oversights:
+
+- Japanese has no `roles.ts`. Its deck and team constants still live in
+  `convex/lib/constants.ts`; Sports owns its own. Closing that gap is the
+  first item in §5's remaining work.
+- Only Sports has `bestMove.ts`, because only Sports has the mechanic.
+
+For the wider layout see [architecture.md](../architecture.md).
 
 ## 4. Shared vs variant-specific — the split
 
@@ -259,53 +219,35 @@ no behavior change). Convex's flat function namespace means moving files changes
 - Special mechanics: right-hand promotion (Japanese), 3rd-foul speaking ban
   (Sports), day-1 single-nominee rule (Sports).
 
-## 5. Phased refactor plan
+## 5. Phased refactor plan (complete)
 
-> The task-by-task checklist that operationalized this plan is complete and
-> archived at
+> All six phases landed. Kept as the record of how the abstraction was
+> introduced without destabilising the live Japanese game — the sequencing is
+> the reusable part. Task-level detail is archived at
 > [archive/game-types-refactor-2026-08.md](../archive/game-types-refactor-2026-08.md).
-> Its two still-open items are lifted below under **Remaining work** — that list,
-> not the archive, is the live one.
 
-Each phase is independently shippable and leaves the Japanese game fully working.
-
-- **Phase 0 — Rename (DONE).** `traditional → sports_mafia` across the schema
-  validator, `RATING_CONFIG`, `refs/*`, frontend constants, i18n (`en`/`ka`),
-  and docs. The legacy `"traditional"` literal was dropped outright — there are
-  no `traditional` rows in any deployment, so no data migration is needed (see
-  §7). `sports_mafia` is defined but **not creatable** (filtered out in
-  `CreateGameModal`).
-
-- **Phase 1 — Introduce the abstraction, extract Japanese (no behavior change).**
-  Define `GameDefinition` + the `NightModel` / `VisibilityRuleset` interfaces.
-  Move Japanese constants/logic into `convex/games/japanese/*` and
-  `src/features/game-room/variants/japanese/*` and wire `getGameDefinition("japanese_mafia")`. Replace
-  the positional `GAME_PHASES[n]` transitions in the phase buttons with
-  `definition.nextPhase(...)`. **Ship it; the Japanese game must be byte-for-byte
-  equivalent.** This is the biggest, most careful step and the one that "makes
-  the new implementation safe."
-
-- **Phase 2 — Author the Sports definition (data only).** Roles, deck, 2
-  factions, phase list, `decideWinner` (parity rule), timers, flags. Unit-test
-  `decideWinner` against the tables in [sports-mafia.md](../variants/sports.md).
-  Nothing wired to the UI yet.
-
-- **Phase 3 — Sports night model + new mechanics.** Add
-  `mafiaTargetSelections` to `nightPhaseSessions`; implement the unanimous-vote
-  `NightModel` (5s window like the voting window; `resolveKills` = unanimity).
-  Implement the 3rd-foul speaking ban and the day-1 single-nominee rule as
-  shared-engine behavior gated on definition flags.
-
-- **Phase 4 — Frontend dispatch + geometry.** `gameRoomContext` resolves the UI
-  ruleset from `gameData.gameType`. `GamePhaseControls` renders from the
-  variant's phase→controls map. `visibility.ts` and night-authority hooks
-  dispatch to the ruleset. **Fix the `maxPlayers` plumbing** (§6) and add a
-  10-seat layout for Sports.
-
-- **Phase 5 — Enable + calibrate.** Un-filter `sports_mafia` in
-  `CreateGameModal`. Ship **unrated** first (absent from `RATING_CONFIG` → ELO
-  skipped, exactly as today), then add its own config + E-table once ~200
-  decided games exist (see [ranking-system.md](../ranking-system.md) §9).
+- **Phase 0 — Rename.** `traditional → sports_mafia` across the schema
+  validator, `RATING_CONFIG`, `refs/*`, frontend constants, i18n and docs. The
+  legacy literal was dropped outright; no deployment held `traditional` rows,
+  so no data migration was needed (§7).
+- **Phase 1 — Introduce the abstraction, extract Japanese.** Defined
+  `GameDefinition` and the `NightModel` / `VisibilityRuleset` interfaces, moved
+  the Japanese rules behind them, and replaced the positional
+  `GAME_PHASES[n]` transitions with `definition.nextPhase(...)`. Byte-for-byte
+  equivalent behaviour, guarded by the characterization suite.
+- **Phase 2 — Author the Sports definition (data only).** Roles, deck, two
+  factions, phase list, parity `decideWinner`, flags. Nothing wired to the UI.
+- **Phase 3 — Sports night model + new mechanics.** Added
+  `mafiaTargetSelections` to `nightPhaseSessions`, implemented the
+  unanimous-vote `NightModel`, and added the third-foul speaking ban and the
+  day-1 single-nominee rule as shared-engine behaviour gated on flags.
+- **Phase 4 — Frontend dispatch + geometry.** `gameRoomContext` resolves the
+  UI ruleset from `gameData.gameType`; `GamePhaseControls` renders from the
+  variant's phase→controls map; visibility and night-authority dispatch
+  through the ruleset. Fixed the `maxPlayers` plumbing (§6) and added the
+  10-seat layout.
+- **Phase 5 — Enable.** `sports_mafia` un-filtered in `CreateGameModal` and
+  shipped **unrated** (absent from `RATING_CONFIG` → rating skipped).
 
 ### Remaining work
 
@@ -326,20 +268,25 @@ archived task tracker so this is the only place they live:
   means ELO is skipped entirely. Add the Sports config and E-table once ~200
   decided Sports games exist (see [ranking-system.md](../ranking-system.md) §9).
 
-## 6. Latent bug to fix in Phase 4: `maxPlayers` is never plumbed
+## 6. Seat geometry
 
-`PlayerCircle` takes `maxPlayers` (default `12`) but both call sites —
-`LiveKitTestComponent.tsx` and `SpectatorView.tsx` — render it **without the
-prop**, so every game renders a 12-seat ring regardless of `game.maxPlayers`.
-Today all creatable games are 12-player Japanese, so it is invisible. A 10-player
-Sports game would render two phantom empty seats and mis-place the host slot
-(`hostSlotKey = maxPlayers + 1`). Additionally, `useSeatShuffleAnimation`'s
-`gridPositionForSeat` hardcodes seats 1–13 into a 4×4 grid. Phase 4 must:
+> Was titled "latent bug to fix in Phase 4: `maxPlayers` is never plumbed".
+> Fixed. The heading is cited from `variants/*/seatLayout.ts` and
+> `variants/core/types.ts`, so it keeps its number.
 
-1. Thread `maxPlayers` from `useGameRoom()` into both `<PlayerCircle>` renders.
-2. Make the seat layout come from the variant's `seatLayout` (a 10-seat ring +
-   host for Sports, the current 12-ring for Japanese) instead of a hardcoded
-   switch.
+Ring geometry is per-variant and comes from `ruleset.seatLayout`, never from a
+hardcoded grid:
+
+- `cols` / `rows` — grid template. Japanese is 4×4 for 12 seats; Sports 4×3
+  for 10.
+- `positionForSeat(seat)` — the ring cell for a 1-based seat.
+- `center` — the region the host and controls occupy. Japanese **merges** host
+  video and controls into one panel; Sports **splits** them into `hostPanel`
+  and `controlsPanel`. When both split fields are set the renderer uses the
+  split layout, otherwise it falls back to the merged panel.
+
+`maxPlayers` is now derived from `definition.seatCount` rather than defaulting
+to 12, so a Sports room no longer renders a 12-seat ring.
 
 ## 7. Data & migration notes
 

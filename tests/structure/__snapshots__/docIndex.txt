@@ -8,7 +8,7 @@ docs/authorization.md | Authorization — Roles, Permissions & the Admin Panel |
 docs/backend.md | Backend Patterns | 
 docs/community-chat.md | Community Chat | 
 docs/decisions.md | Architectural Decision Records (ADR) | 
-docs/engine/variant-architecture.md | Game Types — Multi-Variant Architecture | §1 The problem; §2 The design: a Game Definition registry; §2.1 The interface (backend); §2.2 The registry; §2.3 The night model — the deepest divergence; §2.4 Visibility; §3 Directory structure (target); §4 Shared vs variant-specific — the split; §5 Phased refactor plan; §6 Latent bug to fix in Phase 4: `maxPlayers` is never plumbed; §7 Data & migration notes; §8 Guardrails
+docs/engine/variant-architecture.md | Game Types — Multi-Variant Architecture | §1 The problem (historical); §2 The design: a Game Definition registry; §2.1 The interface (backend); §2.2 The registry; §2.3 The night model — the deepest divergence; §2.4 Visibility; §3 Directory structure; §4 Shared vs variant-specific — the split; §5 Phased refactor plan (complete); §6 Seat geometry; §7 Data & migration notes; §8 Guardrails
 docs/engine/win-check-seam.md | Win-Check Seam (variant-agnostic) | §1 What this seam does; §2 Dispatch — which rules get evaluated; §3 The two contexts; §4 Where it runs; §5 The third trigger: immediate check after a foul elimination; §6 No contest (`N = 0`); §7 Implementation
 docs/frontend.md | Frontend Guidelines | 
 docs/game-broadcasts.md | Game Room Notifications (Staff Broadcasts + System Pushes) | 
@@ -20,6 +20,6 @@ docs/realtime.md | Real-time Communication | §1 No useEffect for Subscriptions;
 docs/server-time.md | Server Time on the Client | 
 docs/subscriptions.md | Subscriptions — Tiers, Entitlements & Access Gating | 
 docs/testing.md | Testing | 
-docs/variants/japanese/rules.md | Game Design | §1 Game Creation; §2 Game Start; §3 Role Assignment; §4 Night Phases; §5 Day Phase; §6 Win Conditions
+docs/variants/japanese/rules.md | Japanese Mafia — Rules | §1 Game Creation; §2 Game Start; §3 Role Assignment; §4 Night Phases; §5 Day Phase; §6 Win Conditions
 docs/variants/japanese/win-conditions.md | Japanese Mafia — Win Conditions | §1 Purpose; §2 Factions; §3 Role abilities that matter for win detection; §4 When the check runs; §5 Global rules (apply at any `N`); §6 Decision tables (with examples); §7 Evaluation algorithm (priority order); §8 Resolved decisions; §9 Implementation (built)
 docs/variants/sports.md | Sports Mafia — Ruleset Specification | §1 Overview; §2 Roles & factions; §3 Phase flow; §4 Day-phase rules; §4.1 First day phase — single-nominee exception; §4.2 Third-foul speaking ban (new mechanic); §5 Night — mafia kill by unanimous vote (biggest change); §5.1 Behaviour (confirmed); §5.2 Kill resolution (at dawn); §5.3 Window mechanics; §5.4 Frontend selection privacy; §6 Best Move (საუკეთესო სვლა) — first-night victim names 3 suspects; §6.1 When it is granted; §6.2 Behaviour; §6.3 Host control & the deadlock guard; §6.4 Technical decision: a real `best_move` phase — DECIDED; §6.5 Data model; §6.6 Visibility — everyone sleeps; only the host sees; §6.7 Scoring — out of scope for launch; §6.8 Edge cases; §7 Win conditions; §8 What stays identical to Japanese; §9 Resolved decisions

@@ -100,11 +100,6 @@ const HISTORICAL_PATHS: { doc: string; path: string; supersededBy: string }[] = 
     path: "convex/lib/winConditions.ts",
     supersededBy: "convex/games/japanese/winConditions.ts",
   },
-  {
-    doc: "docs/engine/variant-architecture.md",
-    path: "convex/game/*",
-    supersededBy: "convex/games/core/",
-  },
 ];
 
 const isHistorical = (doc: string, path: string) =>

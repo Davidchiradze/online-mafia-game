@@ -25,88 +25,31 @@ authority.
 
 ## 2. Roles & factions
 
-| Role | Count | Faction |
-| --- | --- | --- |
-| `DON` | 1 | Mafia |
-| `MAFIA` | 2 | Mafia |
-| `DETECTIVE` | 1 | Citizens |
-| `CITIZEN` | 6 | Citizens |
+> **Generated.** Roles, deck counts, factions and night actors: [game-spec.md#roles](../generated/game-spec.md#roles).
 
-- **Two factions:** `mafia` (`DON` + `MAFIA` ×2 = 3) and `citizens` (`DETECTIVE`
-  + `CITIZEN` ×6 = 7).
-- **Removed vs Japanese:** `SHOGUN`, `YAKUZA`, `DOCTOR`, `MAFIA_RIGHT_HAND`, and
-  the entire `yakuza` faction.
-- `roleToFaction`: `DON` / `MAFIA` → `mafia`; everything else → `citizens`.
+The decisions behind those numbers, which the table cannot express:
 
-> **Role count — DECIDED: 6 citizens → 10 players.** (The original written list
-> summed to 11; confirmed as **6 citizens**, so `seatCount = 10`, host in seat 11.)
-
-### Role distribution (deck)
-
-```ts
-// convex/games/sports/roles.ts
-export const SPORTS_MAFIA_ROLE_DISTRIBUTION = [
-  "DON",
-  "MAFIA", "MAFIA",
-  "DETECTIVE",
-  "CITIZEN", "CITIZEN", "CITIZEN", "CITIZEN", "CITIZEN", "CITIZEN",
-] as const;   // length 10 === seatCount
-```
-
-Dealt through the **existing shared card-picking flow** — no change to the
-picking mechanic, only the deck source (`def.roleDistribution`).
+- **Two factions, not three.** No yakuza clan, no doctor. That is the single
+  biggest structural difference from Japanese and it is what makes the win
+  rule a flat parity check (§7).
+- **Six citizens → 10 players — DECIDED.** The deck was sized to land on a
+  10-seat table rather than reusing the 12-seat ring.
 
 ## 3. Phase flow
 
-Sports has **no `introduction_phase`, no `don_chooses_right_hand`, no
-`doctor_meet`, no `yakuda_shogun_meet`, and no Yakuza/Doctor night phases.** It
-**keeps** the two information-gathering night checks — `don_checks_for_detective`
-and `detective_checks_for_mafia` — **identical to Japanese**. The phase list:
+> **Generated.** Phase order, timers, awake roles and advance targets: [game-spec.md#phases](../generated/game-spec.md#phases).
+> The graph, including the branches a Convex mutation owns, is drawn at
+> [game-spec.md#state-machine](../generated/game-spec.md#state-machine).
+> For a side-by-side against Japanese, [game-spec.md#phase-universe](../generated/game-spec.md#phase-universe)
+> marks every phase as shared or variant-specific.
 
-```
-game_session_started
-picking_roles
-mafia_meet                 # DON + 2 MAFIA introduce to each other (same as Japanese, NO right-hand pick)
-don_meet                   # DON wakes alone — host and Don see each other (no right-hand pick)
-detective_meet             # same as Japanese
-day_phase                  # DAY 1 — a full day: nominations + voting available (no introduction phase)
-nominated_players_speak
-voting
-night_phase
-mafia_chooses_target       # 5s kill window; ALL living mafia pick PRIVATELY; unanimous → kill (see §5)
-don_checks_for_detective   # Don checks if a player is the Detective (same as Japanese)
-detective_checks_for_mafia # Detective checks if a player is Mafia (same as Japanese)
-best_move                  # NIGHT 1 ONLY, conditional — the killed player names 3 suspects (§6)
-farewell_speech
-repeat
-end_game
-phase_transition           # shared "everyone asleep" buffer (reused where the awake role changes)
-```
+What the tables do not say — the reasoning behind the diff:
 
-Cycle after the meets: `day_phase → nominated_players_speak → voting →
-(farewell_speech if someone leaves) → night_phase → mafia_chooses_target →
-don_checks_for_detective → detective_checks_for_mafia → (best_move if the night-1
-kill qualifies, §6) → (farewell_speech if a kill) → day_phase → …`
-
-### Diff summary vs Japanese
-
-| Japanese phase | Sports |
-| --- | --- |
-| `don_chooses_right_hand` | **removed** — no right hand |
-| `yakuda_shogun_meet` | **removed** — no yakuza |
-| `doctor_meet` | **removed** — no doctor |
-| `introduction_phase` | **removed** — day 1 is a normal `day_phase` |
-| `mafia_chooses_target` | **kept, re-implemented** — 5s private unanimous-vote model (§5) |
-| `don_checks_for_detective` | **kept — identical to Japanese** (Don checks for the Detective) |
-| `right_hand_checks_for_yakuza` | **removed** |
-| `yakuza_and_shogun_chooses_target` | **removed** |
-| `detective_checks_for_mafia` | **kept — identical to Japanese** (Detective checks for Mafia) |
-| `doctor_heals_player` | **removed** — no doctor |
-| — | **`best_move` ADDED** — no Japanese equivalent; entered only at dawn of night 1 when the kill qualifies (§6) |
-
-The two kept check phases reuse the existing host buttons (`EndDonCheckButton`,
-`EndDetectiveCheckButton`) and Japanese visibility rules verbatim — low risk, no
-new logic.
+- **Added:** `don_meet` (the Don acts alone) and `best_move` (§6).
+- **Removed:** every yakuza, doctor and right-hand phase, plus
+  `introduction_phase`.
+- **Kept identical to Japanese** wherever there was no reason to differ, so
+  the shared engine keeps one implementation of the day/vote/farewell cycle.
 
 ## 4. Day-phase rules
 
@@ -504,60 +447,32 @@ displayed anywhere.
 
 ## 7. Win conditions
 
-Two factions only → far simpler than Japanese (no Yakuza clan, no N=5 Doctor
-context exception, no context sensitivity).
+> **Generated.** Complete table over every reachable roster: [game-spec.md#win-conditions](../generated/game-spec.md#win-conditions).
 
-- **Mafia wins** when `m ≥ (N − m)` — i.e. living mafia ≥ living citizens
-  (parity or better). Equivalently `2m ≥ N`.
-- **Citizens win** when `m = 0` (all mafia eliminated).
-- **No contest** when `N = 0` (total mutual elimination — reuse the existing
-  `no_contest` outcome and its "both leave" path unchanged).
-- Otherwise **continue**.
+The rule is a flat parity check: mafia win once `2m ≥ N`, citizens win when
+`m = 0`, otherwise the game continues. Two properties are worth stating
+because they are the opposite of Japanese:
 
-`m` = living mafia-faction players (`DON` + `MAFIA`). `N` = living non-host
-role-holders. **Context (`beforeNight` / `beforeDay`) does not matter** — the
-parity outcome is a declared result at the boundary, so `decideWinner` can
-ignore it (the signature keeps `context` for interface compatibility).
+- **Context is irrelevant.** `beforeNight` and `beforeDay` give the same
+  answer for every roster — the generated table shows both columns so this
+  is checkable rather than asserted.
+- **No exceptions and no cap.** There is no `N ≤ 6` ceiling and no
+  role-presence carve-out, so the key needs nothing beyond `N` and `m`. The
+  generator derives that; it is not hand-declared.
 
-```ts
-// convex/games/sports/winConditions.ts
-export function decideSportsWinner(aliveRoles: Role[]): Outcome | null {
-  const N = aliveRoles.length;
-  if (N === 0) return "no_contest";
-  const m = aliveRoles.filter(isMafiaRole).length;
-  if (m === 0) return "citizens";
-  if (m >= N - m) return "mafia";
-  return null; // continue
-}
-```
-
-### Worked examples
-
-| Alive (m vs citizens) | N | m | Result | Why |
-| --- | --- | --- | --- | --- |
-| 3 mafia, 4 cit | 7 | 3 | continue | 3 < 4 |
-| 3 mafia, 3 cit | 6 | 3 | **MAFIA** | 3 ≥ 3 (the "3v3" example) |
-| 2 mafia, 2 cit | 4 | 2 | **MAFIA** | "2v2" |
-| 1 mafia, 1 cit | 2 | 1 | **MAFIA** | "1v1" |
-| 2 mafia, 3 cit | 5 | 2 | continue | 2 < 3 |
-| 1 mafia, 2 cit | 3 | 1 | continue | 1 < 2 |
-| 0 mafia, 4 cit | 4 | 0 | **CITIZENS** | all mafia dead |
-| 0 alive | 0 | 0 | **no contest** | mutual elimination |
-
-The check plugs into the **same two seams** as Japanese —
-`enterNightPhase` (`beforeNight`) and `enterDayPhase` (`beforeDay`) in
-`phaseTransitions.ts`, plus the immediate check in `giveFoul` — via
-`definition.decideWinner`. The host still confirms via the Finish Game banner
-(unchanged).
+It plugs into the same two seams and the same foul trigger as every other
+variant — see [engine/win-check-seam.md](../engine/win-check-seam.md). The
+host still confirms via the Finish Game banner.
 
 ## 8. What stays identical to Japanese
 
-Card-picking; seat shuffle on start; day/self-justification speaking timers and
-controls; voting mechanics (window, auto-vote on last candidate, tie-break,
-both-leave → no-contest); farewell-speech flow; foul counting + 5s foul-speak +
-4th-foul elimination; phase-transition win-check seams and host confirmation;
-LiveKit audio/video; presence; broadcasts; game-log archival; match history;
-admin analytics; the room-closing cleanup countdown.
+> Moved. This list was a verbatim duplicate of the shared/variant split in
+> [engine/variant-architecture.md §4](../engine/variant-architecture.md),
+> which is now its single source. Two copies of the same thirteen items is
+> how they drift apart.
+
+In short: everything not listed as a difference in this document is shared
+engine behaviour and has exactly one implementation.
 
 ## 9. Resolved decisions
 

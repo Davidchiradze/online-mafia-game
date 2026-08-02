@@ -23,17 +23,12 @@
 
 ## 2. Factions
 
-There are **three factions**:
+> **Generated.** Faction membership and starting counts: [game-spec.md#roles](../../generated/game-spec.md#roles).
 
-| Faction      | Roles                               | Count at start |
-| ------------ | ----------------------------------- | -------------- |
-| **Mafia**    | `DON`, `MAFIA_RIGHT_HAND`, `MAFIA`  | 3              |
-| **Yakuza**   | `YAKUZA`, `SHOGUN`                  | 2              |
-| **Citizens** | `DETECTIVE`, `DOCTOR`, `CITIZEN` ×5 | 7              |
+The notation used throughout the rest of this document — it is what the
+generated decision table's columns mean:
 
-Throughout this doc:
-
-- **`m`** = number of alive Mafia-faction players (`DON` + `MAFIA_RIGHT_HAND` + `MAFIA`).
+- **`m`** = alive Mafia-faction players (`DON` + `MAFIA_RIGHT_HAND` + `MAFIA`).
 - **`YA`** = the `YAKUZA` is alive.
 - **`SH`** = the `SHOGUN` is alive.
 - **Town** = `DETECTIVE` / `DOCTOR` / `CITIZEN` (Citizens faction).
@@ -99,144 +94,37 @@ One thing here **is** Japanese-specific and stays:
 
 ## 6. Decision tables (with examples)
 
-Notation for examples: `DON`, `RH`(=right hand), `M`, `SH`, `YA`, `DOC`, `DET`, `CIT`.
+> **Generated, and now complete.** [game-spec.md#win-conditions](../../generated/game-spec.md#win-conditions)
+> enumerates **every reachable alive-roster** in both contexts, rather than
+> the six hand-picked `N` tables that used to sit here.
+>
+> The generated table also carries a `naive parity` column marking every row
+> where a `2m ≥ N` shortcut gives the wrong answer — **81 of 280 rows**.
 
-### N = 6
-
-| Alive                   | m   | Result        | Why                                   |
-| ----------------------- | --- | ------------- | ------------------------------------- |
-| `DON,RH,M, CIT,CIT,YA`  | 3   | **continue**  | Yakuza alive → can still kill a Mafia |
-| `DON,RH,M, YA,SH,CIT`   | 3   | **continue**  | Yakuza alive                          |
-| `DON,RH,M, CIT,CIT,SH`  | 3   | **MAFIA win** | Yakuza dead (lone Shogun can't kill)  |
-| `DON,RH,M, DET,DOC,CIT` | 3   | **MAFIA win** | Yakuza dead                           |
-| `DON,M, ...` (m ≤ 2)    | ≤2  | **continue**  | —                                     |
-
-**Rule:** at `N = 6`, **Mafia win iff `m = 3` and Yakuza is dead**. Otherwise continue
-(Shogun presence is irrelevant here).
-
-### N = 5 — context matters
-
-**`beforeNight`:** Mafia win iff `m = 3`, **except** the other 2 are exactly
-`DOCTOR + YAKUZA` → continue.
-
-| Alive (beforeNight) | m   | Result        | Why                                                |
-| ------------------- | --- | ------------- | -------------------------------------------------- |
-| `DON,RH,M, DOC,YA`  | 3   | **continue**  | Yakuza can kill a Mafia + Doctor can save → unsure |
-| `DON,RH,M, DOC,SH`  | 3   | **MAFIA win** | Shogun can't kill                                  |
-| `DON,RH,M, YA,SH`   | 3   | **MAFIA win** | No Doctor to save → Mafia majority guaranteed      |
-| `DON,RH,M, YA,CIT`  | 3   | **MAFIA win** | No Doctor                                          |
-| `DON,RH,M, DOC,DET` | 3   | **MAFIA win** | No Yakuza                                          |
-
-**`beforeDay`:** Mafia win iff `m = 3` (no exceptions — Mafia majority controls the day vote).
-
-| Alive (beforeDay)   | m   | Result        |
-| ------------------- | --- | ------------- |
-| `DON,RH,M, DOC,YA`  | 3   | **MAFIA win** |
-| `DON,RH,M, <any 2>` | 3   | **MAFIA win** |
-
-For `m ≤ 2` at `N = 5`: **continue** (both contexts).
-
-### N = 4
-
-Priority: Citizens-sweep → Yakuza-pair win → Mafia win → continue.
-
-| Alive             | Result           | Why                                               |
-| ----------------- | ---------------- | ------------------------------------------------- |
-| `DON,RH,M, X`     | **MAFIA win**    | `m = 3`                                           |
-| `M,M, SH,CIT`     | **MAFIA win**    | `m = 2`, no Yakuza among the other 2              |
-| `M,M, DOC,DET`    | **MAFIA win**    | `m = 2`, no Yakuza                                |
-| `YA,SH, M,M`      | **YAKUZA win**   | Yakuza+Shogun pair beats any 2 (incl. 2 Mafia)    |
-| `YA,SH, M,CIT`    | **YAKUZA win**   | Yakuza+Shogun pair                                |
-| `YA,SH, DOC,CIT`  | **YAKUZA win**   | Yakuza+Shogun pair (`m = 0`)                      |
-| `YA,SH, M,DOC`    | **continue**     | **Exception:** other 2 are Doctor + any 1 Mafia member |
-| `M,M, YA,CIT`     | **continue**     | `m = 2` but Yakuza alive                          |
-| `M,M, YA,DOC`     | **continue**     | `m = 2` but Yakuza alive                          |
-| `M, YA, CIT,CIT`  | **continue**     | `m = 1`, no Yakuza+Shogun pair                    |
-| `YA, CIT,CIT,CIT` | **continue**     | `m = 0`, lone Yakuza — NOT a sweep (Yakuza alive) |
-| `SH, CIT,CIT,CIT` | **continue**     | `m = 0`, lone Shogun — NOT a sweep (Shogun alive) |
-| `DOC,DET,CIT,CIT` | **CITIZENS win** | `m = 0`, no Yakuza, no Shogun → sweep             |
-
-### N = 3
-
-| Alive         | Result           | Why                                  |
-| ------------- | ---------------- | ------------------------------------ |
-| `M,M, X`      | **MAFIA win**    | `m = 2`                              |
-| `YA,SH, X`    | **YAKUZA win**   | Yakuza+Shogun pair (incl. `YA,SH,M`) |
-| `M, YA, CIT`  | **continue**     | `m = 1`, no Yakuza+Shogun pair       |
-| `M, CIT,CIT`  | **continue**     | —                                    |
-| `YA, CIT,CIT` | **continue**     | lone Yakuza, `m = 0`, not a sweep    |
-| `SH, CIT,CIT` | **continue**     | lone Shogun, `m = 0`, not a sweep    |
-| `DOC,DET,CIT` | **CITIZENS win** | sweep                                |
-
-### N = 1
-
-Reachable only when two players die in one night (see §5 rule 1). The lone survivor
-is always the last faction standing — decided by the single-faction sweep, so context
-is irrelevant.
-
-| Alive  | Result           | Why                         |
-| ------ | ---------------- | --------------------------- |
-| `YA`   | **YAKUZA win**   | only Yakuza clan remains    |
-| `SH`   | **YAKUZA win**   | only Yakuza clan remains    |
-| `M`    | **MAFIA win**    | only Mafia remains          |
-| `CIT`  | **CITIZENS win** | Town sweep                  |
-
-### N = 2
-
-| Alive      | Result           | Why                                     |
-| ---------- | ---------------- | --------------------------------------- |
-| `M,M`      | **MAFIA win**    | last faction standing                   |
-| `M, CIT`   | **MAFIA win**    | Mafia beats Town 1-on-1                 |
-| `M, DOC`   | **MAFIA win**    | Mafia beats Town 1-on-1                 |
-| `M, DET`   | **MAFIA win**    | Mafia beats Town 1-on-1                 |
-| `M, YA`    | **YAKUZA win**   | Yakuza beats lone Mafia                 |
-| `M, SH`    | **YAKUZA win**   | Shogun beats lone Mafia (declared rule) |
-| `YA, SH`   | **YAKUZA win**   | last faction standing                   |
-| `DOC, CIT` | **CITIZENS win** | sweep                                   |
-| `YA, CIT`  | **YAKUZA win**   | 1vs1 Yakuza and shogun clan always wins |
-| `SH, CIT`  | **YAKUZA win**   | 1vs1 Yakuza and shogun clan always wins |
-| `SH, M`    | **YAKUZA win**   | 1vs1 Yakuza and shogun clan always wins |
+Reading it: the columns are `N`, `m`, and presence flags for `YAKUZA`,
+`SHOGUN` and `DOCTOR`. Those three are not a stylistic choice — the
+generator *derives* which roles the key needs by growing it until it
+predicts the outcome, and those are the ones whose presence changes the
+answer. If a future rule starts reading another role, the generator says so.
 
 ## 7. Evaluation algorithm (priority order)
 
-```
-function decideWinner(alive, context):           // context ∈ {beforeNight, beforeDay}
-  if N == 0:                        return NO_CONTEST    // mutual elimination — nobody left alive
-  // Single-faction sweeps — last faction standing wins at any N (incl. N = 1).
-  if m == 0 and !YA and !SH:        return CITIZENS      // only Town remain
-  if N >= 1 and m == N:             return MAFIA         // only Mafia remain
-  if N >= 1 and m == 0 and allYakuzaClan(alive):
-                                    return YAKUZA        // only Yakuza clan remain
-  if N > 6:                         return CONTINUE      // nothing else above 6
+> **Generated.** The transcribed pseudocode that used to live here is
+> replaced by the complete decision table at
+> [game-spec.md#win-conditions](../../generated/game-spec.md#win-conditions), and by the
+> implementation it was transcribed *from*:
+> `convex/games/japanese/winConditions.ts` (~160 self-documenting lines).
+>
+> A hand-copied algorithm is a fourth source of truth that can drift from the
+> other three. It did.
 
-  switch N:
-    case 6:
-      if m == 3 and !YA:            return MAFIA
-      return CONTINUE
-    case 5:
-      if m == 3:
-        if context == beforeNight and others == {DOCTOR, YAKUZA}:
-                                    return CONTINUE
-        return MAFIA
-      return CONTINUE
-    case 4:
-      if m == 3:                    return MAFIA
-      if YA and SH:
-        if others == {DOCTOR, <any 1 Mafia member>}:  return CONTINUE   // exception
-        return YAKUZA
-      if m == 2 and !YA:            return MAFIA
-      return CONTINUE
-    case 3:
-      if m == 2:                    return MAFIA
-      if YA and SH:                 return YAKUZA
-      return CONTINUE
-    case 2:
-      if m == 2:                    return MAFIA
-      if YA or SH:                  return YAKUZA   // clan always wins a 1-on-1,
-                                                    // incl. lone YA / lone SH vs Town
-      if m == 1:                    return MAFIA    // lone Mafia vs Town
-      return CONTINUE   // unreachable (m==0 w/o YA/SH is a sweep → CITIZENS above)
-```
+Priority order, which the table encodes but does not state:
+
+1. `N = 0` → no contest (shared engine — see
+   [engine/win-check-seam.md §6](../../engine/win-check-seam.md)).
+2. Single-faction sweep (§5 rule 1) — applies at any `N`.
+3. Above `N = 6`, nothing else can decide the game (§5 rule 2).
+4. Otherwise the per-`N` outcome, context-sensitive only at `N = 5`.
 
 ## 8. Resolved decisions
 
