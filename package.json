@@ -14,7 +14,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "auth:keygen": "node scripts/generate-jwt-keypair.mjs",
-    "prepare": "git config core.hooksPath .githooks || true"
+    "prepare": "git config core.hooksPath .githooks || true",
+    "docs:generate": "vitest run tests/docs --update",
+    "docs:check": "vitest run tests/docs"
   },
   "dependencies": {
     "@convex-dev/presence": "^0.3.1",
