@@ -8,7 +8,7 @@ All game logic and database operations happen via **Convex mutations and queries
 
 ```typescript
 // convex/games.ts
-import { getAuthUserId } from "@convex-dev/auth/server";
+import { getAuthenticatedUser } from "./lib/auth";
 import { mutation } from "./_generated/server";
 import { v } from "convex/values";
 
@@ -19,7 +19,7 @@ export const create = mutation({
   },
   handler: async (ctx, args) => {
     // 1. Authenticate user
-    const userId = await getAuthUserId(ctx);
+    const userId = await getAuthenticatedUser(ctx);
     if (!userId) throw new Error("Not authenticated");
 
     // 2. Perform database operation
@@ -59,7 +59,7 @@ export const getByGame = query({
 
 ### Key Points
 
-1. **Authenticate first** - Call `getAuthUserId(ctx)` at the start of mutations/queries
+1. **Authenticate first** - Call `getAuthenticatedUser(ctx)` (from `convex/lib/auth.ts`) at the start of mutations/queries. There is no `getAuthUserId` in this repo — see ADR-006 (superseded).
 2. **Validate permissions** - Check if user has permission (e.g., is host)
 3. **Use `ctx.db` for all operations** - No separate admin client needed
 4. **Throw errors on failure** - Caught by `useMutation` on frontend
@@ -211,7 +211,7 @@ Throw errors in mutations/queries. The error message is available on the fronten
 ```typescript
 export const start = mutation({
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await getAuthenticatedUser(ctx);
     if (!userId) throw new Error("Not authenticated");
 
     const game = await ctx.db.get(args.gameId);
@@ -240,7 +240,7 @@ try {
 Always authenticate in Convex functions:
 
 ```typescript
-const userId = await getAuthUserId(ctx);
+const userId = await getAuthenticatedUser(ctx);
 if (!userId) throw new Error("Not authenticated");
 ```
 
@@ -339,7 +339,7 @@ Organized by domain in `convex/`:
 
 ## Best Practices
 
-1. **Always authenticate** - `getAuthUserId(ctx)` in every function
+1. **Always authenticate** - `getAuthenticatedUser(ctx)` in every function
 2. **Validate permissions** - Check if user can perform the action
 3. **Use indexes** - Always query with `.withIndex()` for performance
 4. **Throw descriptive errors** - Clear error messages for the frontend

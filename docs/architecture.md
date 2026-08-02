@@ -14,7 +14,7 @@
 ### Backend
 
 - **Database & Server Functions**: Convex (document DB + mutations/queries)
-- **Authentication**: Convex Auth (`@convex-dev/auth` with Password + Resend OTP)
+- **Authentication**: custom JWT bridge to an external PHP service (`convex/lib/auth.ts`; **not** `@convex-dev/auth` — see ADR-006, superseded)
 - **Real-time**: Convex reactive queries (guaranteed consistency)
 - **Video/Audio**: LiveKit (WebRTC via LiveKit Server SDK)
 - **Webhooks**: Next.js API Routes (LiveKit webhooks)
@@ -40,7 +40,7 @@
 
 - All game logic and state transitions (mutations)
 - Database reads with access control (queries)
-- Authentication via `getAuthUserId(ctx)`
+- Authentication via `getAuthenticatedUser(ctx)`
 - Role-based data filtering
 - External API calls via `internalAction` (LiveKit token generation)
 
@@ -151,7 +151,7 @@ All game state changes go through Convex mutations:
 export const start = mutation({
   args: { gameId: v.id("games") },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await getAuthenticatedUser(ctx);
     if (!userId) throw new Error("Not authenticated");
     // Validate, update database
   },
@@ -202,7 +202,7 @@ Filter sensitive data in Convex queries (server-side):
 1. User signs up/signs in via Convex Auth (Password + Resend OTP)
 2. Profile created in `profiles` table linked to `users` table
 3. `convexAuthNextjsMiddleware` protects routes in `middleware.ts`
-4. Convex functions authenticate via `getAuthUserId(ctx)`
+4. Convex functions authenticate via `getAuthenticatedUser(ctx)`
 
 ## Deployment
 

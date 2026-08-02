@@ -96,6 +96,12 @@ const HISTORICAL_PATHS: { doc: string; path: string; supersededBy: string }[] = 
     supersededBy: "src/shared/lib/cn.ts",
   },
   {
+    // ADR-007 is superseded and says so; the dissolved directory IS its subject.
+    doc: "docs/decisions.md",
+    path: "src/components/",
+    supersededBy: "src/features/",
+  },
+  {
     doc: "docs/testing.md",
     path: "convex/lib/winConditions.ts",
     supersededBy: "convex/games/japanese/winConditions.ts",

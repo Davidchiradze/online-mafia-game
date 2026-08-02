@@ -331,10 +331,10 @@ export function MyComponent({ gameId, userId, onComplete }: MyComponentProps) {
 
 ### Sign In / Sign Up
 
-Use `useAuthActions()` from `@convex-dev/auth/react`:
+Auth is a JWT bridge to an external PHP service, **not** `@convex-dev/auth` (see ADR-006, superseded). `useAuthActions` is not used anywhere in this codebase. Sign-in flows go through the bridge:
 
 ```typescript
-import { useAuthActions } from "@convex-dev/auth/react";
+import { useAuthBridge } from "@/features/auth/lib/authBridgeContext";
 
 const { signIn, signOut } = useAuthActions();
 ```
