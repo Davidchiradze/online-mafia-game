@@ -19,7 +19,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { existsSync } from "node:fs";
+import { existsSync, lstatSync, readlinkSync } from "node:fs";
 import { join } from "node:path";
 
 import {
@@ -193,6 +193,21 @@ describe("docs", () => {
       broken,
       "these code comments cite a doc section that no longer exists — the doc was renumbered or gutted without repointing them",
     ).toEqual([]);
+  });
+
+  it("keeps CLAUDE.md pointing at AGENTS.md", () => {
+    // AGENTS.md holds the bytes (the cross-tool convention); CLAUDE.md is the
+    // filename Claude Code actually auto-loads. If a tool write-through-breaks
+    // the symlink, the two silently diverge and the agent reads a stale copy —
+    // with no error anywhere.
+    const claude = p("CLAUDE.md");
+    expect(existsSync(claude), "CLAUDE.md is missing — nothing is auto-loaded").toBe(true);
+    expect(
+      lstatSync(claude).isSymbolicLink(),
+      "CLAUDE.md is a real file, not a symlink to AGENTS.md — they will drift",
+    ).toBe(true);
+    expect(readlinkSync(claude), "CLAUDE.md should link to AGENTS.md").toBe("AGENTS.md");
+    expect(existsSync(p("AGENTS.md")), "the symlink target does not exist").toBe(true);
   });
 
   it("keeps docs/generated/* marked DO NOT EDIT", () => {

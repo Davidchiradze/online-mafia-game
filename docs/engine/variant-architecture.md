@@ -46,20 +46,35 @@ everything variant-specific behind stable interfaces. Shared _engine_ code
 archiving, ELO, broadcasts) stays **one implementation**. Only the variant
 _rules_ are swapped, chosen once per game by `game.gameType`.
 
+```mermaid
+flowchart TD
+    GT["game.gameType"] --> BR["getGameDefinition(gameType)<br/><i>convex/games/registry.ts</i>"]
+    GT --> FR["getUiRuleset(gameType)<br/><i>variants/registry.ts</i>"]
+
+    BR --> JD["JAPANESE_DEFINITION"]
+    BR --> SD["SPORTS_DEFINITION"]
+    BR -.-> CD["city_mafia<br/><i>reserved, unregistered</i>"]
+
+    FR --> JU["JAPANESE_UI_RULESET"]
+    FR --> SU["SPORTS_UI_RULESET"]
+
+    JD --> ENG["Shared engine<br/>convex/games/core/*<br/><small>voting · fouls · speaking order · card picking<br/>phase transitions · farewell · logs · rating</small>"]
+    SD --> ENG
+    JU --> UI["Shared UI<br/><small>participant grid · phase controls · timers</small>"]
+    SU --> UI
+
+    ENG --> NL["no gameType literals<br/>beyond the two registries"]
+    UI --> NL
 ```
-                       game.gameType
-                            │
-                            ▼
-                 getGameDefinition(gameType)   ← registry
-                            │
-        ┌───────────────────┼───────────────────┐
-        ▼                   ▼                   ▼
-  JAPANESE_DEF         SPORTS_DEF          CITY_DEF (future)
-        │                   │
-        └─────── implements GameDefinition ───────┘
-                            │
-   consumed by shared engine + shared UI (no gameType literals)
-```
+
+Two parallel registries, resolved once per game and read everywhere else. The
+backend half owns the **rules**; the frontend half owns the **rendering
+concerns** the rules do not cover — visibility, phase→controls map, seat
+geometry, night authority, per-phase timers.
+
+`city_mafia` is in the `GameType` union with no definition registered, so it
+cannot be created. Registering it will fail the build until a doc for it exists
+under `docs/variants/` — see `tests/structure/variantDocs.test.ts`.
 
 ### 2.1 The interface (backend)
 

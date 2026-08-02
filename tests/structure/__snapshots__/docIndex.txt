@@ -1,5 +1,6 @@
-CLAUDE.md | Online Mafia Game - Claude Code | 
-docs/README.md | Online Mafia Game - Documentation | 
+AGENTS.md | Online Mafia | 
+CLAUDE.md | Online Mafia | 
+docs/README.md | Documentation | 
 docs/admin-dashboard.md | Admin Panel & Dashboard | 
 docs/architecture.md | Architecture | §1 Convex Mutations (Server-Side Logic); §2 Reactive Queries (Real-Time); §3 Type Safety; §4 Role-Based Data Filtering
 docs/archive/folder-migration-2026-08.md | Folder Structure Migration — Progress | §0.1 — The false-green mechanism is real

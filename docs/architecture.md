@@ -52,40 +52,36 @@
 
 ### Data Flow
 
+The reactive loop is the thing to internalise: a client never re-fetches. It
+subscribes, and Convex re-runs the affected queries when the data they read
+changes.
+
+```mermaid
+flowchart TD
+    B["Browser (React)"] -->|useMutation| M["Convex mutation<br/>server-side, atomic"]
+    M -->|"getAuthenticatedUser<br/>requirePermission / requireFeature"| A{authorized?}
+    A -->|no| E["ConvexError({ code })<br/>client maps code to errors.CODE"]
+    A -->|yes| DB[("Convex DB")]
+    DB -->|"Convex re-runs every query<br/>that read the changed data"| Q["useQuery on every<br/>subscribed client"]
+    Q --> B
+
+    B <-->|"WebRTC media only"| LK["LiveKit"]
+    M -.->|internalAction| LK
+    LK -.->|"webhook (returns 200 even on error)"| WH["convex/games/core/webhookHandler.ts"]
+
+    MW["src/middleware.ts"] -->|"JWT cookie, route gating"| B
+    MW <-->|"external auth bridge"| PHP["PHP service"]
 ```
-┌─────────────┐
-│   Browser    │
-│   (React)    │
-└──────┬───────┘
-       │
-       │ 1. User Action (e.g., vote, start phase)
-       │    calls useMutation(api.gameSessions.start)
-       │
-       ▼
-┌──────────────────┐
-│  Convex Mutation  │
-│  (server-side)    │
-└──────┬───────────┘
-       │
-       │ 2. Validate auth + permissions, write to DB
-       │    (atomic transaction)
-       │
-       ▼
-┌──────────────────┐
-│    Convex DB     │
-│ (document store)  │
-└──────┬───────────┘
-       │
-       │ 3. Convex detects which queries read
-       │    the changed data, re-runs them
-       │
-       ▼
-┌──────────────────────────┐
-│  All subscribed clients  │
-│  useQuery auto-updates   │
-│  (guaranteed delivery)   │
-└──────────────────────────┘
-```
+
+Three things this encodes that are easy to get wrong:
+
+- **No manual subscriptions and no `useEffect` for data.** `useQuery` *is* the
+  subscription; Convex decides what to re-run.
+- **Authorization is server-side and authoritative.** Route gating in middleware
+  and the `/admin` layout is UX; the Convex check is the real one.
+- **The LiveKit webhook returns 200 even when it fails** — a break there is
+  invisible. It is one of the paths `tests/convex/apiIntegrity.test.ts` exists to
+  protect.
 
 ## Directory Structure
 

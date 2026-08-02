@@ -24,5 +24,19 @@
     "additionalDirectories": [
       "/Users/david/Desktop/online-mafia/messages"
     ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/i18n-parity.mjs\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
   }
 }
