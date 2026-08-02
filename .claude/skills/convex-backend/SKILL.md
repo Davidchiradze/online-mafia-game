@@ -49,6 +49,70 @@ breaks the generator and the UI ruleset both.
 `convex/` are **relative** (`../../lib/constants`) — Convex's bundler does not
 read tsconfig paths, so `@convex/` does not work here.
 
+## Shared reads live in `lib/`, never re-declared per file
+
+A `db` read helper used by two or more modules belongs in `convex/lib/` and is
+imported. Do not re-declare it at the top of each file that needs it.
+
+`lib/games.ts` is the existing home for game-shaped reads — `getGameById`,
+`getPlayerInGame`, `getPlayersByGameId`, `getJoinRequestByRequester`. New ones
+go beside them.
+
+Before writing a private `async function get…(db, …)`, grep for the name. The
+cost of getting this wrong is not style: `getGameSession` exists as **six
+byte-identical copies** (`games/core/{bestMove,dayPhase,nightPhase,farewellSpeech,phaseTransitions}.ts`
+and `games/sports/nightPhase.ts`), and every one of them throws
+`new ConvexError("Game session not found")` — a bare string, which breaks the
+`{ code, message }` contract below, so the client cannot translate it. One bug,
+copied six times, fixable in six places. Fold these into `lib/games.ts` when you
+next touch one.
+
+Type the parameter `DatabaseReader` unless the helper writes. `DatabaseWriter`
+extends it, so a reader signature accepts both and the helper stays usable from
+queries.
+
+## Writes: name the transition, don't wrap the patch
+
+**Do not add a generic `updateSession(db, id, fields)` wrapper.** `ctx.db.patch`
+is already exact-typed against the schema; wrapping it generically trades that
+for a bag and buys no safety. `games/core/sessions.ts:update` is what that
+approach becomes — a hand-maintained validator list that drifts from the schema,
+`Record<string, unknown>`, and a null→undefined dance. Do not extend the
+pattern.
+
+The duplication worth removing is **semantic**: the same state transition
+re-spelled at many call sites. Extract those as named helpers.
+
+```ts
+// no — pass-through, loses field types, protects nothing
+await updateSession(ctx.db, id, { currentSpeakerIndex: n, speakerStartedAt: iso });
+
+// yes — the invariant is now unbreakable and the clock format has one owner
+await startSpeaker(ctx.db, session, n);
+await pauseSpeaker(ctx.db, session);
+```
+
+Why it matters here: `speakerStartedAt` must be set exactly when
+`currentSpeakerIndex` names a live speaker and cleared otherwise. A hand-written
+patch can set one and forget the other; a named transition cannot. Same for
+`votingActive` / `votingStartedAt`. Timestamps are also not uniform —
+`speakerStartedAt` and `votingStartedAt` are ISO `v.string()`,
+`phaseStartedAt` is epoch `v.number()` — so each transition helper is the one
+place that has to encode its clock correctly.
+
+Rules when writing a mutation:
+
+- **One patch per document per handler.** Build the object across your branches,
+  apply it once at the end. `games/core/dayPhase.ts` patches the same `player`
+  three times in the foul handler; that is the shape to avoid. Convex mutations
+  are transactional so this is not a correctness bug, but it hides the final
+  state from the reader.
+- If a multi-field patch shape appears at a second call site, extract it as a
+  named transition before adding the third.
+- Keep transition helpers next to the state they own — session transitions in
+  `games/core/`, not `lib/` — and keep them variant-agnostic. Anything a single
+  variant needs is gated on a definition flag, never on `gameType`.
+
 ## The silent-failure section
 
 This is the part worth internalising.
