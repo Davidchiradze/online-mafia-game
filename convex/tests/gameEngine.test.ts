@@ -22,7 +22,7 @@ import { SPORTS_MAFIA_ROLE_DISTRIBUTION } from "../games/sports/roles";
  * edge-runtime environment (see the docblock above), which convex-test requires.
  *
  * These pin the behavior that the game-types refactor makes variant-specific
- * (docs/game-types.md §2.3 night model, §1 win detection & phase transitions):
+ * (docs/engine/variant-architecture.md §2.3 night model, §1 win detection & phase transitions):
  * night kill authority, night kill resolution, and the enter*Phase transitions
  * with their embedded win check. As the logic moves into
  * convex/games/japanese/*, only imports/api paths change — not the assertions.
@@ -763,7 +763,7 @@ describe("right-hand promotion (promoteToRightHand)", () => {
 // G1 — Voting mechanics (SHARED engine; relocated to core/ in Phase 1).
 // Pins the vote window, per-round casting, auto-vote on the last candidate,
 // results tally, tie-break detection, and the both-leave threshold — the flow
-// docs/game-types.md §4 keeps shared while Phase 3 layers the day-1
+// docs/engine/variant-architecture.md §4 keeps shared while Phase 3 layers the day-1
 // single-nominee rule on top as a definition flag. Scheduler *timing*
 // (endVoteWindowInternal firing after VOTE_WINDOW_MS) is infra, not game logic,
 // and is out of scope; the window state changes are pinned directly.
@@ -1603,7 +1603,7 @@ describe("fouls — giveFoul", () => {
 });
 
 // ===========================================================================
-// P3-T2 — Sports unanimous-vote night (docs/sports-mafia.md §5).
+// P3-T2 — Sports unanimous-vote night (docs/variants/sports.md §5).
 // The window lifecycle + per-mafia private selection (`sportsNightPhase.ts`),
 // and the dawn resolution wired through the SHARED `startFarewellSpeech` (which
 // branches on `definition.night.kind`). The Japanese single-authority path is
@@ -1892,7 +1892,7 @@ describe("sports night — dawn resolution via startFarewellSpeech", () => {
 });
 
 // ===========================================================================
-// Best move (docs/sports-mafia.md §6) — dawn ROUTING + the victim's picks.
+// Best move (docs/variants/sports.md §6) — dawn ROUTING + the victim's picks.
 //
 // Two halves:
 //  - routing: which of the three dawn destinations the night-1 resolution picks
@@ -2279,7 +2279,7 @@ describe("sports win detection (recordWinnerIfDecided → definition)", () => {
 });
 
 // ===========================================================================
-// P3-T4 — Sports single-nominee day rule (docs/sports-mafia.md §4.1), gated on
+// P3-T4 — Sports single-nominee day rule (docs/variants/sports.md §4.1), gated on
 // `flags.firstDaySingleNomineeSkipsToNight`:
 //   • Day 1 (night 0), one nominee → NO elimination, skip voting → night.
 //   • Day 2+ (night ≥ 1), one nominee → eliminated without a vote → farewell →
@@ -2414,7 +2414,7 @@ describe("sports single-nominee day rule (startNominatedPlayersSpeaking)", () =>
 });
 
 // ===========================================================================
-// P3-T3 — Sports 3rd-foul speaking ban (docs/sports-mafia.md §4.2), gated on
+// P3-T3 — Sports 3rd-foul speaking ban (docs/variants/sports.md §4.2), gated on
 // `flags.thirdFoulSpeakingBan`. `giveFoul` stamps `foulSpeakingBanRound` on the
 // 3rd foul; `startDaySpeaking` drops a player muted for the current round from
 // the day speaking order — unless it is the final day phase (≤ 4 alive), where

@@ -1,6 +1,6 @@
 /**
  * Core, variant-AGNOSTIC types for the FRONTEND UI ruleset registry
- * (docs/game-types.md §2.2 — the "parallel registry of UI rulesets" that mirrors
+ * (docs/engine/variant-architecture.md §2.2 — the "parallel registry of UI rulesets" that mirrors
  * the backend `GameDefinition`). Resolved once per game in `gameRoomContext`
  * from `gameData.gameType` and passed down via context, so shared UI never
  * branches on a `gameType` literal.
@@ -20,7 +20,7 @@ import type { PhaseAdvanceUpdates } from "@/features/game-room/variants/japanese
 import type { GameSessionState } from "@/features/game-room/context/gameRoomContext";
 
 /**
- * A variant's visibility rules (docs/game-types.md §2.4): the phase+role
+ * A variant's visibility rules (docs/engine/variant-architecture.md §2.4): the phase+role
  * questions the participant grid asks. The `VisibilityState` enum and the
  * `getVisibilityStateWithDeath` death-layering stay shared; each variant answers
  * "who is awake / who can see whom".
@@ -76,7 +76,7 @@ export type PhaseControlRenderer = (ctx: PhaseControlsContext) => ReactNode;
 export type NightActionsRenderer = () => ReactNode;
 
 /**
- * A variant's phase id → host-controls renderer map (docs/game-types.md §2.2,
+ * A variant's phase id → host-controls renderer map (docs/engine/variant-architecture.md §2.2,
  * Phase 4). Replaces the positional `GAME_PHASES[n]` switch that
  * `GamePhaseControls` hardcoded — the shared component looks up the current
  * phase by NAME in the resolved ruleset instead of branching on a variant's
@@ -96,7 +96,7 @@ export type GridSpan = {
 };
 
 /**
- * The participant-circle ring geometry for a variant (docs/game-types.md §6,
+ * The participant-circle ring geometry for a variant (docs/engine/variant-architecture.md §6,
  * P4-T5). Replaces the hardcoded 4×4 switch in `useSeatShuffleAnimation` so a
  * 10-seat Sports ring and the 12-seat Japanese ring both come from the resolved
  * ruleset. `center` is the region the host + host-controls occupy; seats fill

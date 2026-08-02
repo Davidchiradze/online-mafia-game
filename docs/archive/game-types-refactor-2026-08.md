@@ -1,14 +1,25 @@
 # Game Types Refactor — Task Tracker
 
-> Status: **Living checklist.** This file decomposes the phased plan in
-> [game-types.md](./game-types.md) §5 into small, independently verifiable
-> tasks, and records which characterization test in `tests/` /
-> `convex/tests/` **guards** each one. It is the operational companion to
-> game-types.md (the design source of truth) and testing.md (the oracle spec).
+> **ARCHIVED — frozen 2026-08. This is a completed changelog, not a live checklist.**
 >
-> **Update protocol:** after finishing a task, flip its status box and add the
+> Every phase P0–P6 landed; the sole open item was `P5-T3` (Sports
+> `RATING_CONFIG`, deferred by design). The remaining work has been lifted into
+> [game-types.md](../engine/variant-architecture.md) §5, which is now the only place to look for
+> it. Paths, test counts, and status boxes below are frozen at the date in this
+> file's name and are largely pre-migration.
+>
+> Because its claims are intentionally frozen, this file is exempt from the
+> stale-path check in `tests/structure/docLinks.test.ts`. The `ARCHIVED` marker
+> above is what earns that exemption.
+>
+> Original purpose, for context: this file decomposed the phased plan in
+> [game-types.md](../engine/variant-architecture.md) §5 into small, independently verifiable
+> tasks, and recorded which characterization test in `tests/` /
+> `convex/tests/` **guarded** each one.
+>
+> **Update protocol (historical):** after finishing a task, flip its status box and add the
 > commit SHA. If a task's guarding test needed an *assertion* change (not just an
-> import-path change), stop — per [testing.md](./testing.md), that is a behavior
+> import-path change), stop — per [testing.md](../testing.md), that is a behavior
 > regression, not a refactor. Record it under "Regressions caught" at the bottom
 > instead of marking the task done.
 

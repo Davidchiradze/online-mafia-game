@@ -314,7 +314,7 @@ export type VisibilityOptions = {
  * Builds the shared visibility-STATE layering (COVERED / DIMMED / VISIBLE / DEAD)
  * from a variant's phase+role primitives.
  *
- * Per docs/game-types.md §2.4 the layering — the `VisibilityState` enum and the
+ * Per docs/engine/variant-architecture.md §2.4 the layering — the `VisibilityState` enum and the
  * `getVisibilityStateWithDeath` death-layering — is IDENTICAL across variants;
  * only the injected `canSeeParticipant` / `getAwakeRoles` / `isNightActivityPhase`
  * differ. Japanese derives its module exports below from the Japanese primitives

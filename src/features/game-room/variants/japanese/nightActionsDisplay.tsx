@@ -4,7 +4,7 @@ import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 import { GAME_PHASES } from "@/shared/lib/constants/game";
 
 /**
- * Japanese host night-actions summary (docs/game-types.md §2.4). Shows the
+ * Japanese host night-actions summary (docs/engine/variant-architecture.md §2.4). Shows the
  * single-authority scalars the night records: Mafia (M), Yakuza (Y), and the
  * Doctor's heal (H), highlighting the pill for the phase currently choosing.
  *

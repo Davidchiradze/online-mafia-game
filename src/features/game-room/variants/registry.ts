@@ -1,5 +1,5 @@
 /**
- * Frontend UI ruleset registry (docs/game-types.md §2.2) — the parallel of the
+ * Frontend UI ruleset registry (docs/engine/variant-architecture.md §2.2) — the parallel of the
  * backend `getGameDefinition`. Maps `gameData.gameType` → its `UiRuleset`.
  * Resolved once in `gameRoomContext`; shared UI reads the ruleset instead of
  * branching on `gameType`.

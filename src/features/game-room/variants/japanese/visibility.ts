@@ -1,5 +1,5 @@
 /**
- * Japanese visibility ruleset (docs/game-types.md §2.4).
+ * Japanese visibility ruleset (docs/engine/variant-architecture.md §2.4).
  *
  * Phase-1 note: this WRAPS the current implementations in
  * `src/lib/game/visibility.ts` by reference — same functions, zero behavior

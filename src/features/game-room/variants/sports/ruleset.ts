@@ -1,6 +1,6 @@
 /**
  * The Sports frontend UI ruleset — the UI-side counterpart to
- * `convex/games/sports/definition.ts` (docs/game-types.md §2.2).
+ * `convex/games/sports/definition.ts` (docs/engine/variant-architecture.md §2.2).
  *
  * Assembles the pieces the shared UI consults for a Sports game: visibility,
  * the host-advance flow (`sportsAdvanceUpdates`), the phase → host-controls map,

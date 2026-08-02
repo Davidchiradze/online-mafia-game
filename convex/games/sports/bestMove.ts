@@ -1,5 +1,5 @@
 /**
- * Sports "best move" eligibility (docs/sports-mafia.md §6.1) — pure.
+ * Sports "best move" eligibility (docs/variants/sports.md §6.1) — pure.
  *
  * The player killed on the FIRST night gets one public shot at naming 3 mafia
  * before their farewell speech. It is granted only when all three hold:

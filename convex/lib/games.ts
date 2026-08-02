@@ -180,7 +180,7 @@ async function getAliveRoles(
  * Idempotent: if a winner is already recorded, it is returned again (the game
  * stays paused). No-op once the game is finished.
  *
- * See docs/game-end-conditions.md. Called from `enterNightPhase` (beforeNight),
+ * See docs/engine/win-check-seam.md. Called from `enterNightPhase` (beforeNight),
  * `enterDayPhase` (beforeDay), and the immediate `giveFoul` check (beforeNight).
  */
 export async function recordWinnerIfDecided(
@@ -197,7 +197,7 @@ export async function recordWinnerIfDecided(
   // Already decided on a previous transition — keep the game paused.
   if (session.winner) return session.winner;
 
-  // Dispatch the win decision to the game's variant (sports-mafia.md §6). The
+  // Dispatch the win decision to the game's variant (variants/sports.md §6). The
   // Japanese definition reuses the exact `describeWin` this seam called before,
   // so Japanese behavior is unchanged; Sports gets its parity snapshot.
   const game = await getGameById(ctx.db, gameId);

@@ -17,9 +17,10 @@ Give players a persistent skill rating that is **fair regardless of which role
 the shuffle deals them**. The game has three factions with different sizes and
 different win probabilities, so a naive "+25 win / −25 loss" system would:
 
-1. Bleed the average player's rating (the average player wins only ~33.5% of
-   games in a 3-faction format), and
-2. Make Mafia seats strictly more profitable than Yakuza seats.
+1. Bleed the average player's rating (in Japanese's 3-faction format the
+   average player wins only ~33.5% of games), and
+2. Make some faction's seats strictly more profitable than another's —
+   in Japanese, Mafia over Yakuza.
 
 The fix: point payouts **calibrated to each faction's real win rate** — so the
 expected rating change for an average player is ~zero in every role — plus a
@@ -47,7 +48,12 @@ its own ELO calculation**. Nothing about a rating is global:
   model for players, like FACEIT); a future variant may override them in its
   config if its rating scale differs.
 
-## 2. Production data (calibration source)
+## 2. Production data (calibration source) — `japanese_mafia`
+
+> Every number in this section and in §3 is **Japanese-specific**: it is
+> derived from Japanese games and calibrates the Japanese E-table. The
+> *method* generalizes; the values do not. A second rated variant gets its
+> own snapshot and its own table (§9).
 
 Snapshot from production as of **2026-07** (280 archived games, 269 decided):
 
@@ -66,6 +72,10 @@ Average per-player win rate (weighted by faction size): **~33.5%**.
 > per-role adjustment is needed or wanted.
 
 ## 3. Rating formula
+
+> Shape is shared; the constants below are the **Japanese** calibration
+> (see §2). `RATING_CONFIG` is keyed by `gameType`, and a variant absent
+> from it is unrated rather than rated with someone else's numbers.
 
 Two parts: a **faction-calibrated base** (expected-score ELO, K = 80 — the
 K = 40 ratios scaled 2×, see below) plus a

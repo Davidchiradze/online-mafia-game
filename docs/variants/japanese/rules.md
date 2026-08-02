@@ -1,55 +1,62 @@
-# Game Design
+# Japanese Mafia — Rules
+
+> **Scope: `japanese_mafia` only.** 12 players, three factions, structured
+> phase flow with role-based visibility. Sports is a separate variant with a
+> separate doc ([variants/sports.md](../sports.md)); shared engine mechanism
+> lives under [docs/engine/](../../engine/).
+>
+> Roles, decks, phase order and win outcomes are **generated** from the
+> definition — see [generated/game-spec.md](../../generated/game-spec.md).
+> This doc owns the parts that are not derivable: visibility rules, flow
+> narrative, data model and constants.
 
 ## Overview
 
-This is a **Japanese Mafia** game variant with 12 players. The game follows a structured phase-based flow with role-based visibility rules.
+A structured phase-based flow in which what each player can see depends on
+the current phase and their role.
 
 ## Game Types
 
 Currently supported:
 
-- `japanese_mafia` - 12 players (**only fully implemented variant** — everything
-  in this document describes it)
-- `sports_mafia` - 10 players (**planned** — see [sports-mafia.md](./sports-mafia.md)
-  and [game-types.md](./game-types.md); renamed from the legacy `traditional`)
-- `city_mafia` - 12 players (reserved; not implemented)
+- `japanese_mafia` - 12 players — **the variant this document describes.**
+- `sports_mafia` - 10 players — **built and creatable**; documented separately in
+  [variants/sports.md](../sports.md) as a diff from this one. Renamed from the
+  legacy `traditional`.
+- `city_mafia` - reserved in the `GameType` union; **no definition registered**,
+  so it cannot be created.
+
+For how a variant is resolved at runtime rather than branched on, see
+[engine/variant-architecture.md](../../engine/variant-architecture.md).
 
 ## Roles (Japanese Mafia - 12 Players)
 
-1. **DON** - Mafia boss
-2. **MAFIA** (3x) - Mafia members
-3. **MAFIA_RIGHT_HAND** - Don's right hand (chosen by Don)
-4. **SHOGUN** - Yakuza leader
-5. **YAKUZA** (2x) - Yakuza members
-6. **DETECTIVE** - Can check if a player is mafia
-7. **DOCTOR** - Can heal a player
-8. **CITIZEN** (2x) - Regular citizens
+> **Generated.** Role list, deck counts, faction mapping and which roles act
+> at night come from the deck itself:
+> [game-spec.md#roles](../../generated/game-spec.md#roles).
+>
+> The prose that used to live here said `MAFIA (3x)` and `CITIZEN (2x)`.
+> The real deck is `MAFIA ×2` and `CITIZEN ×5`. That is exactly the kind of
+> drift generating the table removes.
+
+`MAFIA_RIGHT_HAND` is worth calling out: it is a real role but is **not in
+the deck**. It is reached in-game when the Don promotes a `MAFIA` during
+`don_chooses_right_hand`.
 
 ## Game Phases
 
-The game follows this phase sequence:
+> **Generated.** Phase order, display labels, decision timers, which roles
+> are awake, and each phase's host-advance target:
+> [game-spec.md#phases](../../generated/game-spec.md#phases).
+> The transition graph is drawn at
+> [game-spec.md#state-machine](../../generated/game-spec.md#state-machine).
 
-1. **game_session_started** - Game begins, players can see everyone
-2. **picking_roles** - Host assigns roles, only host can see
-3. **mafia_meet** - Mafia team meets (Don, Mafia, Right Hand visible to each other)
-4. **don_chooses_right_hand** - Don selects their right hand
-5. **yakuda_shogun_meet** - Yakuza team meets (Shogun, Yakuza visible to each other)
-6. **detective_meet** - Detective phase (only Detective + Host visible)
-7. **doctor_meet** - Doctor phase (only Doctor + Host visible)
-8. **introduction_phase** - Day begins, everyone introduces themselves
-9. **night_phase** - Night falls, no one can see anyone
-10. **mafia_chooses_target** - Mafia selects kill target
-11. **don_checks_for_detective** - Don checks if a player is Detective
-12. **right_hand_checks_for_yakuza** - Right Hand checks if a player is Yakuza
-13. **yakuza_and_shogun_chooses_target** - Yakuza team selects kill target
-14. **detective_checks_for_mafia** - Detective checks if a player is Mafia
-15. **doctor_heals_player** - Doctor selects a player to heal
-16. **farewell_speech** - Killed player(s) give farewell speech
-17. **day_phase** - Day discussion phase, everyone can see everyone
-18. **nominated_players_speak** - Nominated players give 30-second self-justification in nomination order
-19. **voting** - Players vote to eliminate someone
-20. **repeat** - Cycle back to night_phase (if game continues)
-21. **end_game** - Game ends, win condition met
+Two things the table encodes that are easy to miss:
+
+- Phases marked `server-owned` have no fixed successor — the next phase
+  depends on database state, so a Convex mutation picks it.
+- Most Japanese host-advances park in the shared `phase_transition` sleep
+  buffer before landing on the target phase.
 
 ## Role-Based Visibility
 
@@ -121,17 +128,16 @@ The primary function is `getVisibilityStateWithDeath()` which accounts for game 
 
 ### 6. Win Conditions
 
-**Mafia wins** when:
-
-- Mafia + Don + Right Hand >= Citizens + Detective + Doctor + Yakuza + Shogun
-
-**Citizens win** when:
-
-- All Mafia, Don, and Right Hand are eliminated
-
-**Yakuza wins** when:
-
-- Yakuza + Shogun >= All other players
+> **Generated.** Complete decision table — every reachable alive-roster, in
+> both contexts: [game-spec.md#win-conditions](../../generated/game-spec.md#win-conditions).
+> Rules and rationale: [win-conditions.md](./win-conditions.md).
+> When the check runs: [engine/win-check-seam.md](../../engine/win-check-seam.md).
+>
+> ⚠️ The prose removed from here stated a **naive parity rule** (mafia win
+> once they equal the rest). That is not what ships. Enumerating every
+> roster shows **81 of 280 cases where parity gives the wrong answer** — most
+> visibly, the real rules refuse to end the game above `N = 6` except by a
+> single-faction sweep. Do not reason about this from parity.
 
 ## Data Model
 
@@ -241,7 +247,7 @@ server copy (in `convex/lib/constants.ts`).
 - **Non-teammates** cannot see roles (returned as `null`)
 - **Host** can see all roles
 
-See `convex/gamePlayerRoles.ts` (`getFiltered` query) for implementation.
+See `convex/games/core/roles.ts` (`getFiltered` query) for implementation.
 
 ## Constants
 
@@ -273,5 +279,5 @@ Example:
 2. **Real-time updates**: Phase changes automatically update all clients via reactive queries
 3. **Visibility logic**: Centralized in `src/shared/lib/game/visibility.ts` (pure functions, no DB dependency)
 4. **Role assignment**: Random shuffle in `convex/games/core/sessions.ts` (`assignRandomRoles`)
-5. **Seat shuffling**: Implemented in `convex/game/sessions.ts` (`startGame`)
+5. **Seat shuffling**: Implemented in `convex/games/core/sessions.ts` (`startGame`)
 6. **Atomic transitions**: Convex mutations ensure phase transitions are transactional

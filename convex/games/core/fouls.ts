@@ -1,6 +1,6 @@
 /**
  * Shared foul mechanics that a variant switches on via a definition flag
- * (docs/sports-mafia.md §4.2). Pure + variant-agnostic — no `ctx.db`, so it is
+ * (docs/variants/sports.md §4.2). Pure + variant-agnostic — no `ctx.db`, so it is
  * unit-testable in isolation and safe to import anywhere.
  *
  * The 3rd-foul SPEAKING BAN (Sports, gated on `flags.thirdFoulSpeakingBan`):

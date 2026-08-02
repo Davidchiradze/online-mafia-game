@@ -1,5 +1,5 @@
 /**
- * Client-side helper for the Sports 3rd-foul speaking ban (docs/sports-mafia.md
+ * Client-side helper for the Sports 3rd-foul speaking ban (docs/variants/sports.md
  * §4.2). Reuses the pure, variant-agnostic server logic so client and server
  * agree from a single source of truth — the ban is a UI concern (muted players
  * stay in the speaking order; they are only rendered/muted differently).
@@ -9,7 +9,7 @@ import { dayRoundFromNightNumber } from "@convex/games/core/dayRound";
 import { isSpeakingBanned, LAST_DAY_ALIVE_MAX } from "@convex/games/core/fouls";
 
 /**
- * The ONLY phase the ban applies to: docs/sports-mafia.md §4.2 bans the player
+ * The ONLY phase the ban applies to: docs/variants/sports.md §4.2 bans the player
  * from "their 1-minute speech on the next day phase only". Every other speaking
  * phase keeps its speech — most importantly the `farewell_speech` of a player
  * killed the same night, which shares the banned round's night number and would

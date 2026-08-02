@@ -2,7 +2,7 @@
  * Japanese host-advance flow — the single place that knows, for each phase, the
  * session `updates` the host's "advance" button applies. Replaces the positional
  * `GAME_PHASES[n]` literals that were duplicated across the phase-button
- * components (docs/game-types.md §1; §8 "phases by name, never by index").
+ * components (docs/engine/variant-architecture.md §1; §8 "phases by name, never by index").
  *
  * The LOGICAL destination comes from the pure `japaneseNextPhase` graph
  * (`definition.nextPhase`). Whether an advance first sleeps through the neutral

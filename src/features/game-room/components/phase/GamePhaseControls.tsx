@@ -9,7 +9,7 @@ import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
  * Renders the phase title + the host's action controls for the current phase.
  *
  * The per-phase controls come from the resolved variant's `ruleset.phaseControls`
- * map (docs/game-types.md §2.2, Phase 4) — a phase-NAME lookup that replaced the
+ * map (docs/engine/variant-architecture.md §2.2, Phase 4) — a phase-NAME lookup that replaced the
  * positional `GAME_PHASES[n]` switch this component used to hardcode (§8). The
  * pre-phase framing (no session / decided winner / finished) stays here since it
  * is variant-agnostic.

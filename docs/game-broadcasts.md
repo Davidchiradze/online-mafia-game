@@ -47,7 +47,7 @@ Tunables live in `convex/lib/constants.ts → GAME_BROADCAST`:
 `deleteGameAndRelations` cascades the rows away when the game is deleted. There is
 no separate prune job — broadcasts live and die with their game.
 
-## Backend — `convex/game/broadcasts.ts`
+## Backend — `convex/games/core/broadcasts.ts`
 
 One private `insertBroadcast` helper is the single source of truth for game
 existence and text validation (`GAME_NOT_FOUND` / `BROADCAST_EMPTY` /
@@ -60,7 +60,7 @@ existence and text validation (`GAME_NOT_FOUND` / `BROADCAST_EMPTY` /
   **system** producer. No auth, no sender. Call it from other Convex functions,
   crons, or `ctx.scheduler` via `internal.game.broadcasts.push` to emit news or
   automated notifications. Mirrors the internal-only pattern used by the
-  `*Internal` mutations in `convex/game/*`.
+  `*Internal` mutations in `convex/games/core/*`.
 - **`recent`** (query, `{ gameId }`) — any authenticated user (all lobby members
   receive room notifications regardless of subscription tier). Returns rows for the
   game newer than `now - RECENT_WINDOW_MS`, newest-first, capped at `LIST_LIMIT`.

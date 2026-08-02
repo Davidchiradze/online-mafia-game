@@ -4,7 +4,7 @@
  * The edges below are transcribed from the `End…` / `Start…` phase-button
  * components under `src/components/gameSession/phaseButtonsForHost/`, where the
  * "next phase" is today a hardcoded `GAME_PHASES[n]` literal
- * (docs/game-types.md §1).
+ * (docs/engine/variant-architecture.md §1).
  * This is the pure spec that `definition.nextPhase` reproduces; it is pinned by
  * `tests/game/phaseTransitionGraph.test.ts` (same expected values).
  *

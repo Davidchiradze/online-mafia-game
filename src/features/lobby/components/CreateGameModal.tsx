@@ -207,7 +207,7 @@ export default function CreateGameModal(props: Props) {
               {GAME_TYPES.filter(
                 // sports_mafia is hidden for now (pre-deploy) — not offered as a
                 // creatable option. city_mafia stays hidden until it has a
-                // ruleset. See docs/sports-mafia.md.
+                // ruleset. See docs/variants/sports.md.
                 (gt) => gt !== "city_mafia",
               ).map((gt) => (
                 <option key={gt} value={gt} className="bg-[#0f0f1a]">

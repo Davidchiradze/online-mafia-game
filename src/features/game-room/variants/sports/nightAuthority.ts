@@ -1,5 +1,5 @@
 /**
- * Sports night-action authority (docs/sports-mafia.md §5).
+ * Sports night-action authority (docs/variants/sports.md §5).
  *
  * Unlike Japanese's single kill authority, EVERY living mafia (DON + each alive
  * MAFIA) may pick a target during `mafia_chooses_target` — each privately (§5.4).

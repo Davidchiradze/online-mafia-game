@@ -9,7 +9,7 @@ import type { GridPosition } from "@/features/game-room/variants/core/types";
  * `gridPositionForSeat` was a hardcoded switch in `useSeatShuffleAnimation` —
  * P4-T5 only moved it into `JAPANESE_SEAT_LAYOUT.positionForSeat` (imports-only,
  * same values). The Sports block pins the NEW 10-ring, so the variant geometry
- * is a visible, tested diff (docs/game-types.md §6).
+ * is a visible, tested diff (docs/engine/variant-architecture.md §6).
  */
 
 // ---------------------------------------------------------------------------

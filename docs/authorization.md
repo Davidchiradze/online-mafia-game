@@ -15,7 +15,7 @@ word "role":
 | Concept | Lives in | Example values | This doc? |
 |---|---|---|---|
 | **Access role** (this doc) | Convex `profiles.role` | `user`, `moderator`, `admin` | ✅ |
-| In-game role | `gamePlayerRoles.role` | `DON`, `MAFIA`, `DOCTOR` | ❌ (see [game-design.md](./game-design.md)) |
+| In-game role | `gamePlayerRoles.role` | `DON`, `MAFIA`, `DOCTOR` | ❌ (see [game-design.md](./variants/japanese/rules.md)) |
 | PHP account role | MySQL `accounts` | billing/account type | ❌ never synced into Convex |
 
 The PHP account role is **not** synced into Convex (the sync in
@@ -155,7 +155,7 @@ export const assignRole = mutation({
   `setBanned` (`USER_BAN`).
 - `convex/admin/games.ts` — `forceEndGame` (`GAME_FORCE_END`); `refundGame` is an
   **`action`** (it calls the external PHP refund endpoint per
-  [payments-php-contract.ka.md](./payments-php-contract.ka.md)). An action can't read
+  [proposals/payments-php-contract.ka.md](./proposals/payments-php-contract.ka.md)). An action can't read
   the DB directly, so it authorizes via a permission-checking query/helper, then calls
   PHP with `adminAccountId` for audit (`GAME_REFUND`).
 - `convex/admin/gameLogs.ts` — `listAllGameLogs` (`GAME_VIEW_ALL`, the archive
@@ -176,7 +176,7 @@ Three layers, only the last is authoritative:
 
 | Layer | File | Gate | Authoritative? |
 |---|---|---|---|
-| Middleware (edge) | `src/middleware.ts`, `src/middlewares/*` | authenticated vs. public | no |
+| Middleware (edge) | `src/middleware.ts`, `src/features/auth/middleware/*` | authenticated vs. public | no |
 | `/admin` layout | `src/app/admin/layout.tsx` | redirect if missing `admin_panel.access` | no (UX) |
 | Convex functions | `convex/admin/*`, `requirePermission` | per-permission | **yes** |
 
@@ -190,7 +190,7 @@ data loads**: every admin query/mutation enforces `requirePermission`.
 
 **Middleware** stays as-is (the existing chain
 `publicPageMiddleware → jwtCookieMiddleware → bridgeRedirectMiddleware` already
-gates `/admin` as authenticated-only). The only change: `src/middlewares/constants.ts`
+gates `/admin` as authenticated-only). The only change: `src/features/auth/middleware/constants.ts`
 re-exports `PUBLIC_PATH_PREFIXES` / `AUTH_ERROR_PATH` from `@convex/lib/access`, so the
 route policy lives in one place and never drifts.
 

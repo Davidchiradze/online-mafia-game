@@ -14,7 +14,7 @@
 ### Backend
 
 - **Database & Server Functions**: Convex (document DB + mutations/queries)
-- **Authentication**: Convex Auth (`@convex-dev/auth` with Password + Resend OTP)
+- **Authentication**: custom JWT bridge to an external PHP service (`convex/lib/auth.ts`; **not** `@convex-dev/auth` — see ADR-006, superseded)
 - **Real-time**: Convex reactive queries (guaranteed consistency)
 - **Video/Audio**: LiveKit (WebRTC via LiveKit Server SDK)
 - **Webhooks**: Next.js API Routes (LiveKit webhooks)
@@ -40,7 +40,7 @@
 
 - All game logic and state transitions (mutations)
 - Database reads with access control (queries)
-- Authentication via `getAuthUserId(ctx)`
+- Authentication via `getAuthenticatedUser(ctx)`
 - Role-based data filtering
 - External API calls via `internalAction` (LiveKit token generation)
 
@@ -52,40 +52,36 @@
 
 ### Data Flow
 
+The reactive loop is the thing to internalise: a client never re-fetches. It
+subscribes, and Convex re-runs the affected queries when the data they read
+changes.
+
+```mermaid
+flowchart TD
+    B["Browser (React)"] -->|useMutation| M["Convex mutation<br/>server-side, atomic"]
+    M -->|"getAuthenticatedUser<br/>requirePermission / requireFeature"| A{authorized?}
+    A -->|no| E["ConvexError({ code })<br/>client maps code to errors.CODE"]
+    A -->|yes| DB[("Convex DB")]
+    DB -->|"Convex re-runs every query<br/>that read the changed data"| Q["useQuery on every<br/>subscribed client"]
+    Q --> B
+
+    B <-->|"WebRTC media only"| LK["LiveKit"]
+    M -.->|internalAction| LK
+    LK -.->|"webhook (returns 200 even on error)"| WH["convex/games/core/webhookHandler.ts"]
+
+    MW["src/middleware.ts"] -->|"JWT cookie, route gating"| B
+    MW <-->|"external auth bridge"| PHP["PHP service"]
 ```
-┌─────────────┐
-│   Browser    │
-│   (React)    │
-└──────┬───────┘
-       │
-       │ 1. User Action (e.g., vote, start phase)
-       │    calls useMutation(api.gameSessions.start)
-       │
-       ▼
-┌──────────────────┐
-│  Convex Mutation  │
-│  (server-side)    │
-└──────┬───────────┘
-       │
-       │ 2. Validate auth + permissions, write to DB
-       │    (atomic transaction)
-       │
-       ▼
-┌──────────────────┐
-│    Convex DB     │
-│ (document store)  │
-└──────┬───────────┘
-       │
-       │ 3. Convex detects which queries read
-       │    the changed data, re-runs them
-       │
-       ▼
-┌──────────────────────────┐
-│  All subscribed clients  │
-│  useQuery auto-updates   │
-│  (guaranteed delivery)   │
-└──────────────────────────┘
-```
+
+Three things this encodes that are easy to get wrong:
+
+- **No manual subscriptions and no `useEffect` for data.** `useQuery` *is* the
+  subscription; Convex decides what to re-run.
+- **Authorization is server-side and authoritative.** Route gating in middleware
+  and the `/admin` layout is UX; the Convex check is the real one.
+- **The LiveKit webhook returns 200 even when it fails** — a break there is
+  invisible. It is one of the paths `tests/convex/apiIntegrity.test.ts` exists to
+  protect.
 
 ## Directory Structure
 
@@ -155,7 +151,7 @@ All game state changes go through Convex mutations:
 export const start = mutation({
   args: { gameId: v.id("games") },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await getAuthenticatedUser(ctx);
     if (!userId) throw new Error("Not authenticated");
     // Validate, update database
   },
@@ -189,7 +185,7 @@ const gameId: Id<"games"> = ...;
 Filter sensitive data in Convex queries (server-side):
 
 ```typescript
-// convex/gamePlayerRoles.ts - getFiltered query
+// convex/games/core/roles.ts - getFiltered query
 // Returns roles filtered by team visibility
 // Host sees all, teammates see each other, others see null
 ```
@@ -206,7 +202,7 @@ Filter sensitive data in Convex queries (server-side):
 1. User signs up/signs in via Convex Auth (Password + Resend OTP)
 2. Profile created in `profiles` table linked to `users` table
 3. `convexAuthNextjsMiddleware` protects routes in `middleware.ts`
-4. Convex functions authenticate via `getAuthUserId(ctx)`
+4. Convex functions authenticate via `getAuthenticatedUser(ctx)`
 
 ## Deployment
 

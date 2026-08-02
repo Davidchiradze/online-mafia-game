@@ -1,5 +1,5 @@
 /**
- * Japanese night-action authority (docs/game-design.md).
+ * Japanese night-action authority (docs/variants/japanese/rules.md).
  *
  * A pure extraction of the logic that used to live inline in
  * `useNightActionAuthority`: a SINGLE kill authority per team —

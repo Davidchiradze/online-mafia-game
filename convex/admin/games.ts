@@ -98,7 +98,7 @@ export const forceEndGame = mutation({
  * Refund a game's buy-in (admin, money-sensitive). Requires GAME_REFUND.
  *
  * This is an `action` because it must call the external PHP refund endpoint
- * (see docs/payments-php-contract.ka.md). The PHP endpoint is built but its
+ * (see docs/proposals/payments-php-contract.ka.md). The PHP endpoint is built but its
  * trigger ships later, so this action is intentionally inert for now: it
  * authorizes the caller (so the permission wiring is real and tested) and then
  * stops short of any money movement. Wire the signed HTTP call where marked.

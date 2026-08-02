@@ -68,7 +68,7 @@ export function useSpeakingProgress(
   /**
    * Overrides the phase's default length for this speaker only — used by the
    * Sports final-day carve-out, where a 3rd-foul-banned player gets a 30s day
-   * speech instead of the phase's 60s (docs/sports-mafia.md §4.2).
+   * speech instead of the phase's 60s (docs/variants/sports.md §4.2).
    */
   durationOverrideMs?: number | null,
 ): number {

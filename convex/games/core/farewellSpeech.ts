@@ -34,7 +34,7 @@ function shuffleArray<T>(array: T[]): T[] {
 /**
  * Seats of living players in the mafia faction, per the variant's own
  * `roleToFaction`. Used by the Sports `unanimous-vote` night model to decide
- * whether every living mafia submitted a selection (docs/sports-mafia.md §5.2).
+ * whether every living mafia submitted a selection (docs/variants/sports.md §5.2).
  */
 async function getLivingMafiaSeats(
   db: DatabaseReader,
@@ -61,7 +61,7 @@ async function getLivingMafiaSeats(
 
 /**
  * Dead SEATED players — the Sports best-move eligibility input
- * (docs/sports-mafia.md §6.1 condition 3).
+ * (docs/variants/sports.md §6.1 condition 3).
  *
  * Counted at the moment the night resolves, this IS the day-1 elimination count:
  * the night's victim is still `isAlive: true` here (they only flip in
@@ -157,7 +157,7 @@ export const startFarewellSpeech = mutation({
     if (!nightSession) throw new ConvexError("Night phase session not found");
 
     // Resolve the night to killed seats via the variant's night model
-    // (docs/game-types.md §2.3). For Japanese this reproduces the previous
+    // (docs/engine/variant-architecture.md §2.3). For Japanese this reproduces the previous
     // inline logic verbatim (mafia first, then a distinct yakuza target, each
     // suppressed if it equals the healed seat).
     const game = await ctx.db.get(gameId);
@@ -192,7 +192,7 @@ export const startFarewellSpeech = mutation({
 
     const randomizedOrder = shuffleArray(killedPlayers);
 
-    // Sports best move (docs/sports-mafia.md §6): the FIRST night's victim names
+    // Sports best move (docs/variants/sports.md §6): the FIRST night's victim names
     // 3 suspects before the farewell. A third destination on the branch this
     // mutation already has — `speakingOrder` is set either way, so advancing
     // `best_move → farewell_speech` later is a bare `gamePhase` patch and the
