@@ -1,0 +1,13 @@
+# Merged on top of .gitignore (which graphify already respects), so node_modules,
+# .next/ and coverage/ are handled. These are the repo-specific exclusions.
+
+# Convex codegen. Committed, so .gitignore does not cover it, but its edges
+# describe the code generator rather than our design.
+convex/_generated/
+
+# Next.js ambient types — committed only so CI can resolve static image imports.
+next-env.d.ts
+
+# Checked-in test snapshots and baselines: large, mechanical, and meaningless as
+# graph nodes. The tests that consume them are indexed.
+**/__snapshots__/
