@@ -15,8 +15,8 @@
 
 import { SPEAKING_STATE } from "@/shared/lib/constants/game";
 import type { PhaseControlsMap } from "@/features/game-room/variants/core/types";
-import StartPickingRolesButton from "@/features/game-room/components/phase-controls/StartPickingRolesButton";
-import ConfirmRolesButton from "@/features/game-room/components/phase-controls/ConfirmRolesButton";
+import SessionStartedPanel from "@/features/game-room/components/phase-controls/SessionStartedPanel";
+import PickingRolesPanel from "@/features/game-room/components/phase-controls/PickingRolesPanel";
 import PhaseAdvanceButton from "@/features/game-room/components/phase-controls/PhaseAdvanceButton";
 import SportsMafiaTargetControls from "@/features/game-room/components/phase-controls/SportsMafiaTargetControls";
 import BestMoveControls from "@/features/game-room/components/phase-controls/BestMoveControls";
@@ -37,11 +37,13 @@ function isSpeakingComplete(
 }
 
 export const SPORTS_PHASE_CONTROLS: PhaseControlsMap = {
+  // Pre-game states render the full host panel (it owns the whole centre cell,
+  // phase title included) — see HOST_PANEL_PHASES in lib/hostPanel.ts.
   game_session_started: ({ gameSessionState }) => (
-    <StartPickingRolesButton gameSessionState={gameSessionState} />
+    <SessionStartedPanel gameSessionState={gameSessionState} />
   ),
   picking_roles: ({ gameSessionState }) => (
-    <ConfirmRolesButton gameSessionState={gameSessionState} />
+    <PickingRolesPanel gameSessionState={gameSessionState} />
   ),
   mafia_meet: ({ gameSessionState }) => (
     <PhaseAdvanceButton
