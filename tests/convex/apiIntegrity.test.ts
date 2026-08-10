@@ -16,7 +16,7 @@
  * Three concerns, one shared module import:
  *   1. refs integrity   — every raw path resolves, and its declared kind is right
  *   2. _generated drift — `api.d.ts` matches the bundler's real module set
- *   3. inventory snapshot — signature-level pin on all 137 functions
+ *   3. inventory snapshot — signature-level pin on all 139 functions
  */
 
 import { describe, expect, it } from "vitest";
@@ -370,8 +370,8 @@ describe("_generated drift", () => {
     ).toEqual({ missingFromGenerated: [], staleInGenerated: [] });
   });
 
-  it("has 81 modules in the bundler set", () => {
-    expect(convexModulePaths().length).toBe(81);
+  it("has 84 modules in the bundler set", () => {
+    expect(convexModulePaths().length).toBe(84);
   });
 
   it("never lets convex/games acquire a nested convex.config.ts", () => {
@@ -394,9 +394,9 @@ describe("function inventory", () => {
     expect(importErrors).toEqual([]);
   });
 
-  it("has 137 registered functions", async () => {
+  it("has 139 registered functions", async () => {
     const { functions } = await inventoryPromise;
-    expect(functions.length).toBe(137);
+    expect(functions.length).toBe(139);
   });
 
   it("matches the signature snapshot", async () => {

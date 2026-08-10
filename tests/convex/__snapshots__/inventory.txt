@@ -111,6 +111,8 @@ query | public | games/sports/nightPhase:getHostSelections | eddbc4df9e94 | 7423
 query | public | games/sports/nightPhase:getMySelection | eddbc4df9e94 | 74234e98afe7
 mutation | public | games/sports/nightPhase:selectMafiaTarget | 621801e94ba0 | 74234e98afe7
 mutation | public | games/sports/nightPhase:startMafiaTargetWindow | eddbc4df9e94 | 74234e98afe7
+query | internal | integrations/playerStats:byAccountIds | 06a0f03bbe49 | 74234e98afe7
+httpAction | public | integrations/playerStats:handleGetPlayerStats | - | -
 mutation | public | lobby/games:create | 0c7b5579adad | 74234e98afe7
 query | public | lobby/games:getById | eddbc4df9e94 | 74234e98afe7
 query | public | lobby/games:list | 5151b7eb8536 | 74234e98afe7

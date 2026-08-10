@@ -107,6 +107,46 @@ describe("magic paths", () => {
     ).toBe(true);
   });
 
+  it("keeps the Convex HTTP router at convex/http.ts with a default export", () => {
+    // Convex discovers the HTTP router at exactly `convex/http.ts` and nowhere
+    // else. Rename the file, or drop the DEFAULT export, and every route it
+    // declares stops existing — `convex deploy` succeeds, `tsc` is silent, and
+    // the only symptom is mafia.ge's stats integration getting a 404 body it
+    // will most likely log and ignore.
+    const routerPath = p("convex/http.ts");
+    expect(existsSync(routerPath), "the Convex HTTP router must sit at convex/http.ts").toBe(
+      true,
+    );
+
+    const source = readFileSync(routerPath, "utf8");
+    expect(
+      /export default \w+/.test(source),
+      "convex/http.ts must default-export the router — a named export registers no routes",
+    ).toBe(true);
+
+    // Each route's handler must be a real export of the module it comes from.
+    // `httpRouter().route({ handler })` takes any value; a typo'd or deleted
+    // handler import is the other way these routes vanish quietly.
+    const handlers = [...source.matchAll(/handler:\s*(\w+)\s*,?\s*\}/g)].map((m) => m[1]);
+    expect(handlers.length, "expected at least one routed handler").toBeGreaterThan(0);
+
+    for (const handler of handlers) {
+      const importMatch = source.match(
+        new RegExp(`import\\s*\\{[^}]*\\b${handler}\\b[^}]*\\}\\s*from\\s*"(\\.[^"]+)"`),
+      );
+      expect(importMatch, `convex/http.ts routes ${handler} but does not import it`).not.toBeNull();
+
+      const modulePath = join(p("convex"), `${importMatch![1]}.ts`);
+      expect(existsSync(modulePath), `${handler} imported from a file that does not exist`).toBe(
+        true,
+      );
+      expect(
+        new RegExp(`export const ${handler}\\b`).test(readFileSync(modulePath, "utf8")),
+        `${modulePath} no longer exports ${handler} — its route is dead`,
+      ).toBe(true);
+    }
+  });
+
   it("resolves every public/ string URL referenced from src", () => {
     // These are runtime string URLs (audio playback, images). Nothing typechecks
     // them; a wrong path is a silent no-op sound or a broken image.
