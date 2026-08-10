@@ -9,6 +9,7 @@ The folder a doc lives in is a contract:
 | `docs/` | cross-cutting — true regardless of game variant |
 | `docs/engine/` | shared game engine. A test forbids naming a role, phase or seat count that only some variants have |
 | `docs/variants/<id>/` | one variant's rules. Registering a variant fails the build until its doc exists |
+| `docs/integrations/` | written to be **handed to another team**. The audience is outside this repo, so it describes a contract, never our internals |
 | `docs/generated/` | derived from code. **Never hand-edit** — run `npm run docs:generate` |
 | `docs/archive/` | frozen at the date in the filename. Historical, deliberately not current |
 | `docs/proposals/` | designed, **not built**. Do not assume any of it exists |
@@ -36,6 +37,7 @@ The folder a doc lives in is a contract:
 | how to test, and what a snapshot means | [testing.md](./testing.md) | — |
 | why something is the way it is | [decisions.md](./decisions.md) | how it currently works |
 | the LiveKit server | [livekit-server.md](./livekit-server.md) | client-side media code |
+| the stats API mafia.ge calls | [public-api.md](./public-api.md) | the PHP side's own code — hand them [integrations/mafia-ge-player-stats.ka.md](./integrations/mafia-ge-player-stats.ka.md) |
 
 ## Before you code
 
