@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useTranslations } from "next-intl";
-import RoleCard from "@/components/gameSession/cardPicking/RoleCard";
+import RoleCard from "@/features/game-room/components/card-picking/RoleCard";
 
 /**
  * Dev-only preview for the card-picking board.

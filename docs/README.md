@@ -1,78 +1,55 @@
-# Online Mafia Game - Documentation
+# Documentation
 
-> **Always read this documentation before implementing features or fixing bugs.**
+Routing table. Find your question, read that one file.
 
-This documentation describes the architecture, patterns, and conventions used in the Online Mafia Game codebase. All AI agents and developers should consult these docs before making changes.
+The folder a doc lives in is a contract:
 
-## Quick Start
+| Folder | Means |
+| --- | --- |
+| `docs/` | cross-cutting — true regardless of game variant |
+| `docs/engine/` | shared game engine. A test forbids naming a role, phase or seat count that only some variants have |
+| `docs/variants/<id>/` | one variant's rules. Registering a variant fails the build until its doc exists |
+| `docs/integrations/` | written to be **handed to another team**. The audience is outside this repo, so it describes a contract, never our internals |
+| `docs/generated/` | derived from code. **Never hand-edit** — run `npm run docs:generate` |
+| `docs/archive/` | frozen at the date in the filename. Historical, deliberately not current |
+| `docs/proposals/` | designed, **not built**. Do not assume any of it exists |
 
-1. **New to the codebase?** Start with [architecture.md](./architecture.md) for an overview
-2. **Implementing a feature?** Check [frontend.md](./frontend.md) and [backend.md](./backend.md)
-3. **Working with real-time updates?** Read [realtime.md](./realtime.md)
-4. **Understanding game logic?** See [game-design.md](./game-design.md)
-   - **Adding / changing a game variant?** Read [game-types.md](./game-types.md)
-     (multi-variant architecture) and [sports-mafia.md](./sports-mafia.md).
-5. **Adding roles, permissions, or the admin panel?** Read [authorization.md](./authorization.md)
-6. **Gating features by paid subscription?** Read [subscriptions.md](./subscriptions.md)
-7. **Writing or running tests?** See [testing.md](./testing.md)
-8. **Making architectural decisions?** Review [decisions.md](./decisions.md)
+## I need to…
 
-## Documentation Structure
+| …know | Read | What it will **not** tell you |
+| --- | --- | --- |
+| roles, decks, phase order, win outcomes | **[generated/game-spec.md](./generated/game-spec.md)** | *why* any rule is the way it is |
+| how a game ends, and when the check runs | [engine/win-check-seam.md](./engine/win-check-seam.md) | which faction wins — that is per-variant |
+| the Japanese rules | [variants/japanese/rules.md](./variants/japanese/rules.md), [win-conditions.md](./variants/japanese/win-conditions.md) | anything about Sports |
+| the Sports rules | [variants/sports.md](./variants/sports.md) | the Japanese baseline it diffs against |
+| how to add or change a variant | [engine/variant-architecture.md](./engine/variant-architecture.md) | current values — those are generated |
+| the stack and how data flows | [architecture.md](./architecture.md) | any game rule |
+| Convex patterns, mutations, queries | [backend.md](./backend.md) | React conventions |
+| React and UI conventions | [frontend.md](./frontend.md) | where files go — that is [AGENTS.md](../AGENTS.md) |
+| real-time subscriptions | [realtime.md](./realtime.md) | LiveKit media |
+| timer and countdown math | [server-time.md](./server-time.md) | phase durations — generated |
+| who may do what (staff, admin) | [authorization.md](./authorization.md) | paid-feature gating |
+| paid-tier gating | [subscriptions.md](./subscriptions.md) | staff permissions |
+| ELO and levels | [ranking-system.md](./ranking-system.md) | Sports payouts — it is unrated by design |
+| the admin panel and analytics | [admin-dashboard.md](./admin-dashboard.md) | — |
+| global chat and presence | [community-chat.md](./community-chat.md) | per-game notifications |
+| per-game notifications | [game-broadcasts.md](./game-broadcasts.md) | global chat |
+| how to test, and what a snapshot means | [testing.md](./testing.md) | — |
+| why something is the way it is | [decisions.md](./decisions.md) | how it currently works |
+| the LiveKit server | [livekit-server.md](./livekit-server.md) | client-side media code |
+| the stats API mafia.ge calls | [public-api.md](./public-api.md) | the PHP side's own code — hand them [integrations/mafia-ge-player-stats.ka.md](./integrations/mafia-ge-player-stats.ka.md) |
 
-- **[architecture.md](./architecture.md)** - Stack overview, system boundaries, data flow
-- **[realtime.md](./realtime.md)** - Convex reactive queries (real-time updates)
-- **[game-design.md](./game-design.md)** - Mafia game rules, phases, role visibility (Japanese variant)
-- **[game-end-conditions.md](./game-end-conditions.md)** - Auto win-detection rules (when a game ends automatically)
-- **[game-types.md](./game-types.md)** - Multi-variant architecture: the `GameDefinition` registry, shared-core vs per-variant split, and the phased refactor plan for supporting more than one variant
-- **[sports-mafia.md](./sports-mafia.md)** - Sports Mafia ruleset spec (10 players, 2 factions), defined as a diff from Japanese
-- **[frontend.md](./frontend.md)** - React conventions, component patterns, UI guidelines
-- **[backend.md](./backend.md)** - Convex mutations, queries, database patterns
-- **[authorization.md](./authorization.md)** - Access roles (admin/moderator), permissions, `/admin` route gating
-- **[subscriptions.md](./subscriptions.md)** - Subscription tiers, feature entitlements, and gating create/join/spectate + the game route
-- **[community-chat.md](./community-chat.md)** - Global community chat channel + online sidebar (subscription-gated, soft-delete moderation, daily prune)
-- **[game-broadcasts.md](./game-broadcasts.md)** - Per-game notification channel (staff broadcasts + reusable system pushes) delivered as one-time toasts to players + spectators
-- **[admin-dashboard.md](./admin-dashboard.md)** - Admin panel routes + the analytics dashboard (KPIs, leaderboards, charts, presence)
-- **[ranking-system.md](./ranking-system.md)** - Player ELO rating + FACEIT-style Levels 1-10 (faction-calibrated payouts, level badges, leaderboards, backfill)
-- **[server-time.md](./server-time.md)** - Server-corrected client clock (use `useServerTime()` for any timer math involving a server timestamp)
-- **[testing.md](./testing.md)** - Vitest setup, pure-logic unit tests, testing tiers, CI, and the game-types refactor regression oracle
-- **[decisions.md](./decisions.md)** - Architectural Decision Records (ADRs)
-- **[livekit-server.md](./livekit-server.md)** - Self-hosted LiveKit server (VPS setup, monitoring, maintenance)
+## Before you code
 
-## Core Principles
+1. **[AGENTS.md](../AGENTS.md)** is the entry point — game model card, where
+   files go, and the rules that are easiest to get wrong.
+2. Read the one doc above that matches your question. Do not read them all.
+3. Use `Doc<"tableName">` / `Id<"tableName">` from `convex/_generated/dataModel`.
+   Do not invent types.
+4. Gate: `npm run lint && npm run typecheck && npm test`.
 
-1. **Server-side authority**: All game logic runs in Convex mutations (server-side functions)
-2. **Reactive real-time**: Convex `useQuery` auto-syncs UI with database -- guaranteed consistency
-3. **Type safety**: Use `Doc<"tableName">` from `convex/_generated/dataModel` for all types
-4. **Component composition**: Break down UIs into small, reusable components
-5. **Custom hooks**: Extract data fetching and side effects into hooks under `src/hooks`
-6. **Role-based visibility**: Game phase and role determine what players can see (video/UI)
+## When a doc and the code disagree
 
-## Technology Stack
-
-- **Framework**: Next.js 15 (App Router)
-- **Database & Backend**: Convex (document DB + server functions)
-- **Authentication**: Convex Auth (`@convex-dev/auth` with Password + Resend OTP)
-- **Real-time**: Convex reactive queries (`useQuery` auto-updates)
-- **Video/Audio**: LiveKit (WebRTC)
-- **Styling**: TailwindCSS + shadcn/ui
-- **Validation**: Zod (client-side), Convex validators (server-side)
-- **Language**: TypeScript (strict mode)
-
-## Key Files to Know
-
-- `convex/schema.ts` - Database schema (all tables, indexes, types)
-- `convex/_generated/dataModel.d.ts` - Auto-generated types (`Doc<>`, `Id<>`)
-- `convex/_generated/api.d.ts` - Auto-generated API (`api.games.create`, etc.)
-- `src/lib/constants/game.ts` - Game phases, roles, statuses
-- `src/lib/game/visibility.ts` - Role-based visibility logic
-- `src/lib/context/gameRoomContext.tsx` - Central game room React context
-- `src/components/providers/ConvexClientProvider.tsx` - Convex client provider
-
-## Before You Code
-
-1. Read the relevant documentation file
-2. Check existing patterns in similar features
-3. Use `Doc<"tableName">` types, don't create new ones
-4. Run `npx tsc` after changes to catch type errors
-5. Run `npm test` (add/adjust unit tests when changing pure game logic) — see [testing.md](./testing.md)
-6. Follow component and hook patterns from existing code
+The code wins, and the generated spec wins over prose. Fix the doc in the same
+commit — `tests/structure/docLinks.test.ts` will already have told you if a doc
+names a file that does not exist.

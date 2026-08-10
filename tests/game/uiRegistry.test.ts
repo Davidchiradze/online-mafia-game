@@ -1,16 +1,17 @@
 import { describe, it, expect } from "vitest";
-import { getUiRuleset } from "@/game/registry";
-import { JAPANESE_UI_RULESET } from "@/game/japanese/ruleset";
-import { SPORTS_UI_RULESET } from "@/game/sports/ruleset";
-import { advanceUpdates } from "@/game/japanese/phaseFlow";
-import { sportsAdvanceUpdates } from "@/game/sports/phaseFlow";
+import { getUiRuleset } from "@/features/game-room/variants/registry";
+import { JAPANESE_UI_RULESET } from "@/features/game-room/variants/japanese/ruleset";
+import { SPORTS_UI_RULESET } from "@/features/game-room/variants/sports/ruleset";
+import { advanceUpdates } from "@/features/game-room/variants/japanese/phaseFlow";
+import { sportsAdvanceUpdates } from "@/features/game-room/variants/sports/phaseFlow";
 import {
   canSeeParticipant,
   getAwakeRoles,
   isNightActivityPhase,
   getVisibilityState,
   getVisibilityStateWithDeath,
-} from "@/lib/game/visibility";
+  VisibilityState,
+} from "@/shared/lib/game/visibility";
 
 /**
  * CHARACTERIZATION TEST — the frontend UI ruleset registry (P1-T8).
@@ -90,6 +91,7 @@ describe("phaseControls maps", () => {
       "mafia_chooses_target",
       "don_checks_for_detective",
       "detective_checks_for_mafia",
+      "best_move",
       "farewell_speech",
       "repeat",
       "end_game",
@@ -176,6 +178,57 @@ describe("SPORTS_UI_RULESET", () => {
     expect(sportsAdvanceUpdates("don_meet")).toEqual({
       gamePhase: "phase_transition",
       nextPhase: "detective_meet",
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Best move (docs/variants/sports.md §6)
+  // -------------------------------------------------------------------------
+
+  it("advances best_move straight to the farewell — NO sleep buffer", () => {
+    // It is already dawn and everyone is awake, so parking in the neutral
+    // "everyone asleep" buffer would be wrong. This edge is also the host's
+    // always-enabled Skip (§6.3) — the deadlock guard.
+    expect(sportsAdvanceUpdates("best_move")).toEqual({
+      gamePhase: "farewell_speech",
+    });
+  });
+
+  // During best_move EVERYONE sleeps — including the killed player who is
+  // picking. Only the host sees the players. Same shape as mafia_chooses_target:
+  // the actor's buttons render above the covers.
+  describe("best_move visibility (§6.6)", () => {
+    const { visibility } = SPORTS_UI_RULESET;
+
+    it("keeps every player asleep — only the host sees", () => {
+      for (const role of ["DON", "MAFIA", "DETECTIVE", "CITIZEN"] as const) {
+        expect(
+          visibility.canSeeParticipant(role, "DON", "best_move", false, false),
+        ).toBe(false);
+      }
+      expect(
+        visibility.canSeeParticipant(null, "DON", "best_move", true, false),
+      ).toBe(true);
+    });
+
+    it("behaves as a night phase with nobody awake by role", () => {
+      expect(visibility.isNightActivityPhase("best_move")).toBe(true);
+      expect(visibility.getAwakeRoles("best_move")).toEqual([]);
+    });
+
+    it("shows the host the sleeping table, and covers it for players", () => {
+      expect(
+        visibility.getVisibilityState(null, "CITIZEN", "best_move", true, false),
+      ).toBe(VisibilityState.DIMMED);
+      expect(
+        visibility.getVisibilityState(
+          "CITIZEN",
+          "DON",
+          "best_move",
+          false,
+          false,
+        ),
+      ).toBe(VisibilityState.COVERED);
     });
   });
 });

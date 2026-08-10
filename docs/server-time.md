@@ -3,10 +3,10 @@
 ## TL;DR
 
 Never compute elapsed time as `Date.now() - serverTimestamp` on the
-client. Use `useServerTime()` from `src/lib/time/serverTime.ts` instead.
+client. Use `useServerTime()` from `src/shared/lib/time/serverTime.ts` instead.
 
 ```ts
-import { useServerTime } from "@/lib/time/serverTime";
+import { useServerTime } from "@/shared/lib/time/serverTime";
 
 const getServerTime = useServerTime();
 
@@ -18,7 +18,7 @@ const tick = () => {
 ## The bug we are preventing
 
 Convex mutations write absolute server timestamps. For example
-`convex/game/voting.ts` does:
+`convex/games/core/voting.ts` does:
 
 ```ts
 await ctx.db.patch(id, { votingStartedAt: new Date().toISOString() });
@@ -84,7 +84,7 @@ offset stays constant — sufficient because device clocks are typically
 
 ## Public API
 
-`src/lib/time/serverTime.ts`:
+`src/shared/lib/time/serverTime.ts`:
 
 | Symbol | When to use |
 |---|---|
@@ -92,7 +92,7 @@ offset stays constant — sufficient because device clocks are typically
 | `useServerTimeOffset(): number` | Rare. When you need the raw offset as a number to pass through props or pure functions. |
 | `ServerTimeContext` | Internal — exported only for the provider. |
 
-`src/components/providers/ServerTimeProvider.tsx`:
+`src/providers/ServerTimeProvider.tsx`:
 
 | Symbol | Where |
 |---|---|
@@ -108,9 +108,9 @@ offset stays constant — sufficient because device clocks are typically
    — that brings the device clock back through the side door.
 3. Do **not** call `Date.now()` or `new Date()` for timer math in
    files under:
-   - `src/hooks/**`
-   - `src/components/**`
-   - `src/lib/game/**` (and other shared timer helpers)
+   - `src/features/**/hooks/**`
+   - `src/features/**/components/**`
+   - `src/shared/lib/game/**` (and other shared timer helpers)
 
    Exceptions:
    - Pure interval-based countdowns that only subtract local
@@ -125,7 +125,7 @@ offset stays constant — sufficient because device clocks are typically
 ## Example: pure helper + hook
 
 ```ts
-// src/lib/game/speakingOrder.ts (pure)
+// src/shared/lib/game/speakingOrder.ts (pure)
 export function calculateRemainingTime(
   speakerStartedAt: string | Date,
   maxSpeakingTimeMs: number,
@@ -137,9 +137,9 @@ export function calculateRemainingTime(
 ```
 
 ```ts
-// src/hooks/game/useSpeakingState.ts (consumer)
-import { useServerTime } from "@/lib/time/serverTime";
-import { calculateRemainingTime } from "@/lib/game/speakingOrder";
+// src/features/game-room/hooks/game/useSpeakingState.ts (consumer)
+import { useServerTime } from "@/shared/lib/time/serverTime";
+import { calculateRemainingTime } from "@/shared/lib/game/speakingOrder";
 
 export function useSpeakingProgress(/* ... */) {
   const getServerTime = useServerTime();
@@ -162,8 +162,8 @@ export function useSpeakingProgress(/* ... */) {
 ## Server-side timestamps are unaffected
 
 Convex mutations like `new Date().toISOString()` in
-`convex/game/voting.ts`, `convex/game/dayPhase.ts`,
-`convex/game/farewellSpeech.ts` run on Convex's NTP-synced hosts and
+`convex/games/core/voting.ts`, `convex/games/core/dayPhase.ts`,
+`convex/games/core/farewellSpeech.ts` run on Convex's NTP-synced hosts and
 are correct. Do not change them.
 
 ## Future extensions (not implemented yet)

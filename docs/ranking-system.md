@@ -17,9 +17,10 @@ Give players a persistent skill rating that is **fair regardless of which role
 the shuffle deals them**. The game has three factions with different sizes and
 different win probabilities, so a naive "+25 win / −25 loss" system would:
 
-1. Bleed the average player's rating (the average player wins only ~33.5% of
-   games in a 3-faction format), and
-2. Make Mafia seats strictly more profitable than Yakuza seats.
+1. Bleed the average player's rating (in Japanese's 3-faction format the
+   average player wins only ~33.5% of games), and
+2. Make some faction's seats strictly more profitable than another's —
+   in Japanese, Mafia over Yakuza.
 
 The fix: point payouts **calibrated to each faction's real win rate** — so the
 expected rating change for an average player is ~zero in every role — plus a
@@ -47,7 +48,12 @@ its own ELO calculation**. Nothing about a rating is global:
   model for players, like FACEIT); a future variant may override them in its
   config if its rating scale differs.
 
-## 2. Production data (calibration source)
+## 2. Production data (calibration source) — `japanese_mafia`
+
+> Every number in this section and in §3 is **Japanese-specific**: it is
+> derived from Japanese games and calibrates the Japanese E-table. The
+> *method* generalizes; the values do not. A second rated variant gets its
+> own snapshot and its own table (§9).
 
 Snapshot from production as of **2026-07** (280 archived games, 269 decided):
 
@@ -66,6 +72,10 @@ Average per-player win rate (weighted by faction size): **~33.5%**.
 > per-role adjustment is needed or wanted.
 
 ## 3. Rating formula
+
+> Shape is shared; the constants below are the **Japanese** calibration
+> (see §2). `RATING_CONFIG` is keyed by `gameType`, and a variant absent
+> from it is unrated rather than rated with someone else's numbers.
 
 Two parts: a **faction-calibrated base** (expected-score ELO, K = 80 — the
 K = 40 ratios scaled 2×, see below) plus a
@@ -202,8 +212,8 @@ Rating is bucketed into **10 levels** using the official FACEIT ELO brackets:
 | **10** | 2001+       | Red         |
 
 - Levels are **derived on read from rating** — never stored. Single pure
-  function (`getLevelForRating`) in `src/lib/ranking/levels.ts`, brackets in
-  `src/lib/constants/ranking.ts`.
+  function (`getLevelForRating`) in `src/shared/lib/ranking/levels.ts`, brackets in
+  `src/shared/lib/constants/ranking.ts`.
 - Bounds are inclusive: rating `750` is Level 2, `751` is Level 3.
 - The rating floor (`100`) equals Level 1's lower bound, so a level always
   exists for any rating.
@@ -226,14 +236,14 @@ We render our **own** badge set — one visual per level, FACEIT-inspired
 
 - **One React SVG component**, not 10 static image files:
   `<LevelBadge level={1..10} size="sm" | "md" | "lg" />` in
-  `src/components/ranking/LevelBadge.tsx`. SVG keeps badges crisp at every
+  `src/shared/ui/LevelBadge.tsx`. SVG keeps badges crisp at every
   size, themeable, and adding a level-11 rebracket later is a constants change.
 - **Geometry**: circular ring gauge with a gap at the bottom (like a car
   dial). The arc sweep is proportional to the level — `level / 10` of the
   ring — so higher levels visibly "fill up". Rounded line caps. Level number
   centered, bold, on a dark inner disc (`zinc-800/900`) so badges sit well on
   the app's dark theme.
-- **Colors** (Tailwind 400-series, matching `src/lib/constants/factions.ts`
+- **Colors** (Tailwind 400-series, matching `src/shared/lib/constants/factions.ts`
   hues):
 
   | Levels | Arc color                  | Rationale                          |
@@ -249,7 +259,7 @@ We render our **own** badge set — one visual per level, FACEIT-inspired
   with ELO number + progress-to-next-level bar beneath).
 - **Tooltip** (where hover exists): exact ELO, level range, progress to next
   level (e.g. `1134 ELO — Level 4 · 66 to Level 5`).
-- All level→color/bracket mappings live in `src/lib/constants/ranking.ts`
+- All level→color/bracket mappings live in `src/shared/lib/constants/ranking.ts`
   next to the brackets — the badge component contains **no magic numbers**.
 
 ### Where badges appear
@@ -318,13 +328,13 @@ rate, so the E values are good but not gospel.
 | # | Piece | Where | Notes |
 | - | ----- | ----- | ----- |
 | 1 | `RATING_CONFIG: Record<gameType, { start, floor, K, deltas, tableAdjustment: { divisor: 20, cap: 16 } }>` — one entry per **rated** game type (today: `japanese_mafia` only) | `convex/lib/constants.ts` | Server-only — clients never compute deltas (they read stored ones). A game type absent from the record is unrated. |
-| 2 | `RANK_LEVELS` brackets + colors, `getLevelForRating()`, `getLevelProgress()` | `src/lib/constants/ranking.ts`, `src/lib/ranking/levels.ts` | Client-only, pure functions (same spirit as `visibility.ts`). Shared across game types by default (§1). |
+| 2 | `RANK_LEVELS` brackets + colors, `getLevelForRating()`, `getLevelProgress()` | `src/shared/lib/constants/ranking.ts`, `src/shared/lib/ranking/levels.ts` | Client-only, pure functions (same spirit as `visibility.ts`). Shared across game types by default (§1). |
 | 3 | New `playerRatings` table: `{ playerId, gameType, rating, peakRating }`; indexes `by_playerId_gameType` + `by_gameType_rating`; register in `convex/schema.ts` | `convex/tables/playerRatings.ts` | One row per player per rated game type, created lazily on first rated game. Missing row ⇒ read as the default `1000` / Level 4 (no "unranked" state, §4). |
 | 4 | Schema: `ratingDelta` + `ratingAfter` + `tableAvgRating` (`v.optional(v.number())`) on `gameLogPlayers`; optional `by_finishedAt` index for season sums | `convex/tables/gameLogPlayers.ts` | Denormalized for match-history cards — no parent join. `tableAvgRating` lets the card explain the delta ("table avg 1140"). |
 | 5 | Apply payouts inside `archiveGameLog` | `convex/lib/games.ts` | Same mutation that updates `playerStats` ⇒ atomic with the archive. Look up `RATING_CONFIG[gameType]` — missing ⇒ skip rating entirely. Read all role-holders' pre-game ratings (missing row ⇒ 1000), compute `T` once, then per player `base + b`; skip host; clip at floor; record the clipped delta. |
 | 6 | Backfill migration (§8) | `convex/migrations/` (internal mutation) | One-time; **global chronological replay** by `finishedAt` (order-dependent, §8); idempotent guard (skip rows that already have `ratingDelta`). |
-| 7 | `<LevelBadge />` (§6) | `src/components/ranking/LevelBadge.tsx` | Single SVG component, `sm/md/lg`. |
-| 8 | Leaderboard page + profile rating block + delta on match-history card | `src/app` / `src/components` | Leaderboard reads `playerRatings` via `by_gameType_rating`, scoped to one game type (single board today; game-type tabs when a second rated variant ships). Season view via `ratingDelta` sums. |
+| 7 | `<LevelBadge />` (§6) | `src/shared/ui/LevelBadge.tsx` | Single SVG component, `sm/md/lg`. |
+| 8 | Leaderboard page + profile rating block + delta on match-history card | `src/app` / `src/features` | Leaderboard reads `playerRatings` via `by_gameType_rating`, scoped to one game type (single board today; game-type tabs when a second rated variant ships). Season view via `ratingDelta` sums. |
 
 Run `npx tsc` after each schema/step change, per repo convention.
 

@@ -5,13 +5,13 @@ import {
   type WinContext,
   type GameOutcome,
   type WinMethod,
-} from "@convex/lib/winConditions";
+} from "@convex/games/core/winConditions";
 
 /**
  * CHARACTERIZATION TEST — Japanese win conditions (regression oracle).
  *
  * Pins the CURRENT behavior of `decideWinner` / `describeWin` / `winMethodLabel`
- * so the game-types refactor (docs/game-types.md) can prove the Japanese game is
+ * so the game-types refactor (docs/engine/variant-architecture.md) can prove the Japanese game is
  * unchanged as this logic moves into `convex/games/japanese/winConditions.ts`.
  * Only the import path above should change during the refactor — never the
  * assertions. If an assertion must change to stay green, that is a behavior

@@ -1,12 +1,12 @@
 import { describe, it, expect } from "vitest";
 import { getGameDefinition } from "@convex/games/registry";
 import { SPORTS_DEFINITION } from "@convex/games/sports/definition";
-import type { WinContext } from "@convex/lib/winConditions";
+import type { WinContext } from "@convex/games/core/winConditions";
 
 /**
  * CHARACTERIZATION TEST — the Sports Mafia `GameDefinition` (Phase 2, data only).
  *
- * Validates the definition against the ruleset spec in docs/sports-mafia.md:
+ * Validates the definition against the ruleset spec in docs/variants/sports.md:
  * roles/deck/factions (§2), the phase graph (§3), the parity `decideWinner`
  * worked-examples table (§6), and the unanimous-vote night resolution (§5.2).
  * These are the tables the implementation must reproduce — assertions are the
@@ -63,6 +63,7 @@ describe("SPORTS_DEFINITION — roles, deck, factions (§2)", () => {
       hasRightHandPromotion: false,
       firstDaySingleNomineeSkipsToNight: true,
       thirdFoulSpeakingBan: true,
+      hasBestMove: true,
     });
   });
 });

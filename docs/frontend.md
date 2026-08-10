@@ -40,7 +40,9 @@ export default function MyComponent({ gameId }: { gameId: Id<"games"> }) {
 
 ### Custom Hooks
 
-**Location**: `src/hooks/`
+**Location**: hooks live with the feature that owns them —
+`src/features/<feature>/hooks/` (e.g. `src/features/game-room/hooks/game/`).
+Generic, cross-feature hooks go in `src/shared/hooks/`.
 
 **Purpose**: Extract reusable logic, data fetching, side effects
 
@@ -77,31 +79,33 @@ export function useGameSession(gameId: Id<"games">) {
 
 ### Component Organization
 
+Components are grouped feature-first. Cross-feature primitives live in
+`src/shared/ui/`; everything else lives under the owning feature.
+
 ```
-src/components/
-├── providers/       # ConvexClientProvider
-├── ui/              # Reusable UI primitives (buttons, modals, etc.)
-├── game/            # Game-specific components
-├── gameSession/     # Phase-specific host controls
-├── auth/            # Authentication components
-├── liveKit/         # LiveKit video components
-├── participant/     # Participant video/state components
-├── lobby/           # Lobby components
-├── host-controls/   # Host-only UI
-├── modals/          # Modal dialogs
-└── video/           # Video-related components
+src/
+├── providers/                       # App-level providers (ConvexClientProvider, …)
+├── shared/ui/                       # Reusable UI primitives + icons/
+└── features/
+    ├── game-room/components/        # room/phase/actions/voting/participant/host/livekit/…
+    ├── lobby/components/            # Lobby UI + room cards
+    ├── auth/components/             # Auth screens + guards
+    ├── admin/                       # Admin panel + dashboard/
+    ├── headquarters/                # Authed shell + community chat
+    ├── subscriptions/components/    # Billing page
+    └── landing/components/          # Marketing landing page
 ```
 
 ### UI Components (shadcn/ui)
 
-Located in `src/components/ui/`:
+Located in `src/shared/ui/`:
 
 - `Modal.tsx` - Modal dialog
 - `Drawer.tsx` - Side drawer
 - `LoadingSpinner.tsx` - Loading indicator
-- `Tooltip.tsx` - Tooltip component
-- `PopupMenu.tsx` - Popup menu
-- `ReadyButton.tsx` - Ready button component
+- `ClickableTooltip.tsx` - Tooltip component
+- `AnimatedModal.tsx` / `FlipCard.tsx` - Animated primitives
+- `UserAvatar.tsx` / `LevelBadge.tsx` - Avatar + rank badge
 
 **Usage**: Import and use these primitives, don't recreate them.
 
@@ -134,7 +138,7 @@ Use React Context for shared state within a feature:
 const { gameId, userId, isHost, gameSessionState } = useGameRoom();
 ```
 
-**Location**: `src/lib/context/`
+**Location**: `src/features/game-room/context/`
 
 ### No Global Store
 
@@ -274,18 +278,18 @@ export function StartGameButton({ gameId }: { gameId: Id<"games"> }) {
 
 ### Utility Functions
 
-**Location**: `src/lib/utils/`
+**Location**: `src/shared/lib/utils/`
 
 **Pattern**: Named exports, pure functions
 
 ```typescript
-// src/lib/utils/date.ts
+// src/shared/lib/utils/date.ts
 export function formatDate(date: Date): string {
   // Implementation
 }
 ```
 
-**DON'T**: Define helper functions inside React components. Extract them to `src/lib/utils/`.
+**DON'T**: Define helper functions inside React components. Extract them to `src/shared/lib/utils/`.
 
 ## TypeScript
 
@@ -327,10 +331,10 @@ export function MyComponent({ gameId, userId, onComplete }: MyComponentProps) {
 
 ### Sign In / Sign Up
 
-Use `useAuthActions()` from `@convex-dev/auth/react`:
+Auth is a JWT bridge to an external PHP service, **not** `@convex-dev/auth` (see ADR-006, superseded). `useAuthActions` is not used anywhere in this codebase. Sign-in flows go through the bridge:
 
 ```typescript
-import { useAuthActions } from "@convex-dev/auth/react";
+import { useAuthBridge } from "@/features/auth/lib/authBridgeContext";
 
 const { signIn, signOut } = useAuthActions();
 ```
@@ -371,11 +375,11 @@ const HeavyComponent = dynamic(() => import("./HeavyComponent"), {
 
 Any UI that subtracts a server-issued timestamp from "now" (voting
 countdowns, speaker progress bar, farewell speech timer, etc.) MUST go
-through `useServerTime()` from `@/lib/time/serverTime` instead of
+through `useServerTime()` from `@/shared/lib/time/serverTime` instead of
 `Date.now()` / `new Date()`.
 
 ```typescript
-import { useServerTime } from "@/lib/time/serverTime";
+import { useServerTime } from "@/shared/lib/time/serverTime";
 
 const getServerTime = useServerTime();
 

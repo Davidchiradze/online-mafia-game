@@ -20,7 +20,7 @@ from the **access-role axis** (`user / moderator / admin` — see
 |---|---|---|---|
 | **Subscription tier** (this doc) | `profiles.subscription.packageId` | what paid features are unlocked | ✅ |
 | **Access role** | `profiles.role` | staff capabilities (admin panel, moderation) | [authorization.md](./authorization.md) |
-| In-game role | `gamePlayerRoles.role` | DON/MAFIA/DOCTOR | [game-design.md](./game-design.md) |
+| In-game role | `gamePlayerRoles.role` | DON/MAFIA/DOCTOR | [game-design.md](./variants/japanese/rules.md) |
 
 The single bridge between the two axes is the **staff override**: moderators and
 admins are granted the highest tier's features regardless of whether they hold a
@@ -140,9 +140,9 @@ functions start with `requirePermission`:
 | Entry mutation | File | Gate |
 |---|---|---|
 | Create game | `convex/lobby/games.ts` → `create` | `PLAY_GAME` |
-| Join / rejoin | `convex/game/players.ts` → `join` | `PLAY_GAME` |
+| Join / rejoin | `convex/games/core/players.ts` → `join` | `PLAY_GAME` |
 | Auto join-request (fired on page load) | `convex/lobby/joinRequests.ts` → `checkOrRequest`, `request` | `PLAY_GAME` |
-| Spectate | `convex/game/spectators.ts` → `join` | `SPECTATE_GAME` |
+| Spectate | `convex/games/core/spectators.ts` → `join` | `SPECTATE_GAME` |
 
 A non-subscriber cannot create a join request, join, or spectate even if they
 bypass the client (disabled JS, scripted calls). They never get a LiveKit token,
@@ -162,7 +162,7 @@ children in a redirecting guard:
 </AuthGate>
 ```
 
-`SubscriptionRouteGuard` ([src/components/auth/SubscriptionRouteGuard.tsx](../src/components/auth/SubscriptionRouteGuard.tsx))
+`SubscriptionRouteGuard` ([src/features/auth/components/SubscriptionRouteGuard.tsx](../src/features/auth/components/SubscriptionRouteGuard.tsx))
 is the subscription-axis sibling of `PermissionGuard`: while the profile loads it
 shows a spinner; if the user holds none of `anyOf` it fires an error toast
 ("An active subscription is required to access that page.") **once** (a ref guards
@@ -174,7 +174,7 @@ non-subscribers.
 
 ## Frontend usage
 
-### `useEntitlements()` — `src/hooks/auth/useEntitlements.ts`
+### `useEntitlements()` — `src/features/auth/hooks/useEntitlements.ts`
 
 Subscription-axis sibling of `useAccess()`. Built on the reactive
 `api.auth.profiles.currentProfile` query:
@@ -184,9 +184,9 @@ const { isLoading, tier, isSubscribed, features, has } = useEntitlements();
 {has(FEATURES.PLAY_GAME) && <CreateButton />}
 ```
 
-Exported through the `src/hooks/auth/index.ts` barrel.
+Lives with the auth feature under `src/features/auth/hooks/`.
 
-### `SubscriptionGuard` — `src/components/auth/SubscriptionGuard.tsx`
+### `SubscriptionGuard` — `src/features/auth/components/SubscriptionGuard.tsx`
 
 Inline guard (unlike the redirecting route guard): renders `children` when the
 user has the feature, otherwise a `fallback` (defaults to `SubscriptionUpsell`, a
@@ -194,26 +194,26 @@ link to `/subscriptions`). Also exports `SUBSCRIPTIONS_PATH`.
 
 ### UI gating of controls
 
-- **Create** — `src/components/lobby/LobbyContent.tsx`: the create button is
+- **Create** — `src/features/lobby/components/LobbyContent.tsx`: the create button is
   wrapped in `<SubscriptionGuard feature={PLAY_GAME}>`; non-subscribers see an
   upsell button instead.
-- **Join / rejoin / spectate** — `src/components/game/GameRoomRow.tsx`: derives
+- **Join / rejoin / spectate** — `src/features/lobby/components/room-card/RoomCard.tsx`: derives
   `canPlay` / `canSpectate` from the same profile query; locked controls show a
   lock icon and redirect to `/subscriptions` on click.
-- **Spectator prompt** — `src/components/game/SpectatorJoinPrompt.tsx`: the
+- **Spectator prompt** — `src/features/game-room/components/room/SpectatorJoinPrompt.tsx`: the
   page-level safety net for direct URLs shows a "subscription required" card with
   a *View plans* button.
 
 ### Subscriptions / billing page
 
-`src/components/dashboard/subscriptions/SubscriptionsContent.tsx` derives the
+`src/features/subscriptions/components/SubscriptionsContent.tsx` derives the
 active package from the **real** `profile.subscription` (never static config). A
 package shows as "Purchased" only when `subscription.active === true`. The numeric
 `packageId` (1/2/3) is mapped to the config package id
 (`basic`/`standard`/`premium`) via `packageConfigIdForTier()` in
-[src/lib/constants/subscriptions.ts](../src/lib/constants/subscriptions.ts) — the
+[src/features/subscriptions/lib/subscriptions.ts](../src/features/subscriptions/lib/subscriptions.ts) — the
 single place the two id schemes are bridged. The package catalog (prices, labels,
-i18n keys) lives in `src/config/subscriptions.json`.
+i18n keys) lives in `src/features/subscriptions/lib/subscriptions.json`.
 
 ## Internationalization
 
@@ -241,13 +241,13 @@ Strings use **next-intl**. Subscription gate strings live under
 |---|---|---|
 | `convex/lib/entitlements.ts` | new | Source of truth: tiers, FEATURES, TIER_FEATURES, resolvers, staff override |
 | `convex/lib/auth.ts` | edit | `requireFeature(ctx, feature)` |
-| `convex/lobby/games.ts`, `convex/game/players.ts`, `convex/game/spectators.ts`, `convex/lobby/joinRequests.ts` | edit | `requireFeature` at gameplay entry points |
-| `src/hooks/auth/useEntitlements.ts` (+ `index.ts`) | new | `useEntitlements()` |
-| `src/components/auth/SubscriptionGuard.tsx` | new | Inline guard + `SubscriptionUpsell` + `SUBSCRIPTIONS_PATH` |
-| `src/components/auth/SubscriptionRouteGuard.tsx` | new | Redirecting route guard (game room) |
+| `convex/lobby/games.ts`, `convex/games/core/players.ts`, `convex/games/core/spectators.ts`, `convex/lobby/joinRequests.ts` | edit | `requireFeature` at gameplay entry points |
+| `src/features/auth/hooks/useEntitlements.ts` | new | `useEntitlements()` |
+| `src/features/auth/components/SubscriptionGuard.tsx` | new | Inline guard + `SubscriptionUpsell` + `SUBSCRIPTIONS_PATH` |
+| `src/features/auth/components/SubscriptionRouteGuard.tsx` | new | Redirecting route guard (game room) |
 | `src/app/game/layout.tsx` | edit | Wraps the game route in the route guard |
-| `src/components/lobby/LobbyContent.tsx`, `src/components/game/GameRoomRow.tsx`, `src/components/game/SpectatorJoinPrompt.tsx` | edit | UI gating of create/join/spectate |
-| `src/components/dashboard/subscriptions/SubscriptionsContent.tsx`, `src/lib/constants/subscriptions.ts`, `src/config/subscriptions.json` | edit | Billing page reads real subscription; `packageConfigIdForTier()` |
+| `src/features/lobby/components/LobbyContent.tsx`, `src/features/lobby/components/room-card/RoomCard.tsx`, `src/features/game-room/components/room/SpectatorJoinPrompt.tsx` | edit | UI gating of create/join/spectate |
+| `src/features/subscriptions/components/SubscriptionsContent.tsx`, `src/features/subscriptions/lib/subscriptions.ts`, `src/features/subscriptions/lib/subscriptions.json` | edit | Billing page reads real subscription; `packageConfigIdForTier()` |
 | `messages/en.json`, `messages/ka.json` | edit | `subscriptions.gate`, `errors.SUBSCRIPTION_REQUIRED` |
 
 ## Verification

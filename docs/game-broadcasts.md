@@ -47,7 +47,7 @@ Tunables live in `convex/lib/constants.ts → GAME_BROADCAST`:
 `deleteGameAndRelations` cascades the rows away when the game is deleted. There is
 no separate prune job — broadcasts live and die with their game.
 
-## Backend — `convex/game/broadcasts.ts`
+## Backend — `convex/games/core/broadcasts.ts`
 
 One private `insertBroadcast` helper is the single source of truth for game
 existence and text validation (`GAME_NOT_FOUND` / `BROADCAST_EMPTY` /
@@ -60,7 +60,7 @@ existence and text validation (`GAME_NOT_FOUND` / `BROADCAST_EMPTY` /
   **system** producer. No auth, no sender. Call it from other Convex functions,
   crons, or `ctx.scheduler` via `internal.game.broadcasts.push` to emit news or
   automated notifications. Mirrors the internal-only pattern used by the
-  `*Internal` mutations in `convex/game/*`.
+  `*Internal` mutations in `convex/games/core/*`.
 - **`recent`** (query, `{ gameId }`) — any authenticated user (all lobby members
   receive room notifications regardless of subscription tier). Returns rows for the
   game newer than `now - RECENT_WINDOW_MS`, newest-first, capped at `LIST_LIMIT`.
@@ -84,20 +84,20 @@ Client-facing refs (`send`, `recent`) are in `convex/refs/game.ts → gameBroadc
 
 ### Receiving — `useGameBroadcasts` (the listener)
 
-`src/hooks/game/useGameBroadcasts.tsx` subscribes to `gameBroadcasts.recent` and
-turns each **new** row into a toast (`src/lib/utils/toast.tsx`). It tracks shown
+`src/features/game-room/hooks/game/useGameBroadcasts.tsx` subscribes to `gameBroadcasts.recent` and
+turns each **new** row into a toast (`src/shared/lib/utils/toast.tsx`). It tracks shown
 ids in a `useRef<Set>`; on first load it adopts the current window as already-seen
 so joining mid-game never replays the backlog — the same skip-first-render approach
 as `useFoulNotification`. Presentation switches on `kind` (staff messages show the
 sender label, news shows its title). Toasts auto-close after 8s.
 
 The hook is called directly in the two components that render a room —
-`src/components/liveKit/LiveKitTestComponent.tsx` (players) and
-`src/components/game/SpectatorView.tsx` (spectators). These views are mutually
+`src/features/game-room/components/livekit/LiveKitTestComponent.tsx` (players) and
+`src/features/game-room/components/room/SpectatorView.tsx` (spectators). These views are mutually
 exclusive per client, so exactly one instance runs — no duplicate toasts. It is
 **not** mounted in `gameRoomContext` (nothing in the context consumes it).
 
-### Sending — the staff tool (`src/components/game/staff-tools/`)
+### Sending — the staff tool (`src/features/game-room/components/staff-tools/`)
 
 The floating staff toolbar is a folder of single-responsibility components:
 

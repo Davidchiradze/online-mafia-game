@@ -98,13 +98,13 @@ export const gameLogs = {
       gameType?: GameType;
     },
     PaginationResult<GameLogRow>
-  >("game/gameLogs:listMyGameLogs"),
+  >("games/core/gameLogs:listMyGameLogs"),
   getOne: makeFunctionReference<
     "query",
     { gameLogId: Id<"gameLogs"> },
     GameLogDetail
-  >("game/gameLogs:getGameLog"),
+  >("games/core/gameLogs:getGameLog"),
   myStats: makeFunctionReference<"query", Record<string, never>, PlayerStats>(
-    "game/gameLogs:getMyStats",
+    "games/core/gameLogs:getMyStats",
   ),
 };

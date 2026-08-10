@@ -103,7 +103,7 @@ Tunables live in `convex/lib/constants.ts → COMMUNITY_CHAT`:
 
 ## Frontend
 
-- `src/components/dashboard/community-chat/FloatingChatWidget.tsx` — the floating
+- `src/features/headquarters/community-chat/FloatingChatWidget.tsx` — the floating
   widget. A red FAB fixed bottom-right (`z-40`) shows the live `unreadCount`
   badge; clicking it toggles a bottom-right panel (compact, or expanded with the
   online list). Open/expanded state persists in `localStorage`. The heavy `list`

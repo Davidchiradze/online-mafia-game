@@ -8,7 +8,7 @@ import {
   enterNightPhase,
   enterDayPhase,
   enterVotingPhase,
-} from "../lib/phaseTransitions";
+} from "../games/core/phaseTransitions";
 import { recordWinnerIfDecided } from "../lib/games";
 import { JAPANESE_MAFIA_ROLE_DISTRIBUTION } from "../lib/constants";
 import { SPORTS_MAFIA_ROLE_DISTRIBUTION } from "../games/sports/roles";
@@ -22,7 +22,7 @@ import { SPORTS_MAFIA_ROLE_DISTRIBUTION } from "../games/sports/roles";
  * edge-runtime environment (see the docblock above), which convex-test requires.
  *
  * These pin the behavior that the game-types refactor makes variant-specific
- * (docs/game-types.md §2.3 night model, §1 win detection & phase transitions):
+ * (docs/engine/variant-architecture.md §2.3 night model, §1 win detection & phase transitions):
  * night kill authority, night kill resolution, and the enter*Phase transitions
  * with their embedded win check. As the logic moves into
  * convex/games/japanese/*, only imports/api paths change — not the assertions.
@@ -30,7 +30,7 @@ import { SPORTS_MAFIA_ROLE_DISTRIBUTION } from "../games/sports/roles";
 
 // Glob the whole convex/ tree from this subdirectory. convex-test derives the
 // module root from the "_generated" key, so the "../" prefix is stripped and
-// api paths (e.g. api.game.nightPhase) resolve correctly.
+// api paths (e.g. api.games.core.nightPhase) resolve correctly.
 const modules = import.meta.glob("../**/*.*s");
 
 type SeatSpec = { seat: number; role: string; alive?: boolean };
@@ -55,6 +55,8 @@ async function seedGame(
     phase?: string;
     currentNightNumber?: number;
     gameType?: "japanese_mafia" | "sports_mafia" | "city_mafia";
+    /** Pre-staged farewell speaking order (best_move enters with it already set). */
+    speakingOrder?: number[];
     players: SeatSpec[];
     night?: {
       mafiaTarget?: number;
@@ -63,6 +65,8 @@ async function seedGame(
       mafiaTargetSelections?: { mafiaSeat: number; targetSeat: number }[];
       mafiaTargetWindowActive?: boolean;
       mafiaTargetWindowStartedAt?: string;
+      bestMoveSeat?: number;
+      bestMoveSuspects?: number[];
     };
   },
 ): Promise<Seeded> {
@@ -90,7 +94,7 @@ async function seedGame(
       isFinished: false,
       currentNightNumber: opts.currentNightNumber ?? 1,
       nominatedPlayers: [],
-      speakingOrder: [],
+      speakingOrder: opts.speakingOrder ?? [],
     });
 
     const byRole: Seeded["byRole"] = {};
@@ -177,12 +181,12 @@ describe("night kill authority", () => {
     });
     const asDon = await t
       .withIdentity({ subject: s.byRole.DON.accountId })
-      .query(api.game.nightPhase.checkMafiaAuthority, { gameId: s.gameId });
+      .query(api.games.core.nightPhase.checkMafiaAuthority, { gameId: s.gameId });
     expect(asDon).toEqual({ hasAuthority: true, role: "DON" });
 
     const asMafia = await t
       .withIdentity({ subject: s.byRole.MAFIA.accountId })
-      .query(api.game.nightPhase.checkMafiaAuthority, { gameId: s.gameId });
+      .query(api.games.core.nightPhase.checkMafiaAuthority, { gameId: s.gameId });
     expect(asMafia).toEqual({ hasAuthority: false, role: "DON" });
   });
 
@@ -197,7 +201,7 @@ describe("night kill authority", () => {
     });
     const asRh = await t
       .withIdentity({ subject: s.byRole.MAFIA_RIGHT_HAND.accountId })
-      .query(api.game.nightPhase.checkMafiaAuthority, { gameId: s.gameId });
+      .query(api.games.core.nightPhase.checkMafiaAuthority, { gameId: s.gameId });
     expect(asRh).toEqual({ hasAuthority: true, role: "MAFIA_RIGHT_HAND" });
   });
 
@@ -212,7 +216,7 @@ describe("night kill authority", () => {
     });
     const asMafia = await t
       .withIdentity({ subject: s.byRole.MAFIA.accountId })
-      .query(api.game.nightPhase.checkMafiaAuthority, { gameId: s.gameId });
+      .query(api.games.core.nightPhase.checkMafiaAuthority, { gameId: s.gameId });
     expect(asMafia).toEqual({ hasAuthority: true, role: "MAFIA" });
   });
 
@@ -226,12 +230,12 @@ describe("night kill authority", () => {
     });
     const asShogun = await t
       .withIdentity({ subject: s.byRole.SHOGUN.accountId })
-      .query(api.game.nightPhase.checkYakuzaAuthority, { gameId: s.gameId });
+      .query(api.games.core.nightPhase.checkYakuzaAuthority, { gameId: s.gameId });
     expect(asShogun).toEqual({ hasAuthority: true, role: "SHOGUN" });
 
     const asYakuza = await t
       .withIdentity({ subject: s.byRole.YAKUZA.accountId })
-      .query(api.game.nightPhase.checkYakuzaAuthority, { gameId: s.gameId });
+      .query(api.games.core.nightPhase.checkYakuzaAuthority, { gameId: s.gameId });
     expect(asYakuza).toEqual({ hasAuthority: false, role: "SHOGUN" });
   });
 
@@ -245,7 +249,7 @@ describe("night kill authority", () => {
     });
     const asYakuza = await t
       .withIdentity({ subject: s.byRole.YAKUZA.accountId })
-      .query(api.game.nightPhase.checkYakuzaAuthority, { gameId: s.gameId });
+      .query(api.games.core.nightPhase.checkYakuzaAuthority, { gameId: s.gameId });
     expect(asYakuza).toEqual({ hasAuthority: true, role: "YAKUZA" });
   });
 
@@ -259,7 +263,7 @@ describe("night kill authority", () => {
     });
     const asShogun = await t
       .withIdentity({ subject: s.byRole.SHOGUN.accountId })
-      .query(api.game.nightPhase.checkYakuzaAuthority, { gameId: s.gameId });
+      .query(api.games.core.nightPhase.checkYakuzaAuthority, { gameId: s.gameId });
     expect(asShogun).toEqual({ hasAuthority: false, role: null });
   });
 
@@ -273,7 +277,7 @@ describe("night kill authority", () => {
     });
     const asDoctor = await t
       .withIdentity({ subject: s.byRole.DOCTOR.accountId })
-      .query(api.game.nightPhase.checkDoctorAuthority, { gameId: s.gameId });
+      .query(api.games.core.nightPhase.checkDoctorAuthority, { gameId: s.gameId });
     expect(asDoctor.hasAuthority).toBe(true);
     expect(asDoctor.role).toBe("DOCTOR");
   });
@@ -287,7 +291,7 @@ describe("night kill resolution (startFarewellSpeech)", () => {
   const callStart = (t: TestConvex<typeof schema>, s: Seeded) =>
     t
       .withIdentity({ subject: s.hostAccountId })
-      .mutation(api.game.farewellSpeech.startFarewellSpeech, {
+      .mutation(api.games.core.farewellSpeech.startFarewellSpeech, {
         gameId: s.gameId,
       });
 
@@ -374,7 +378,7 @@ describe("night kill resolution (startFarewellSpeech)", () => {
     await expect(
       t
         .withIdentity({ subject: s.byRole.DON.accountId })
-        .mutation(api.game.farewellSpeech.startFarewellSpeech, {
+        .mutation(api.games.core.farewellSpeech.startFarewellSpeech, {
           gameId: s.gameId,
         }),
     ).rejects.toThrow();
@@ -482,7 +486,7 @@ describe("phase transitions + win check", () => {
 
     await t
       .withIdentity({ subject: s.hostAccountId })
-      .mutation(api.game.dayPhase.enterIntroductionPhase, { gameId: s.gameId });
+      .mutation(api.games.core.dayPhase.enterIntroductionPhase, { gameId: s.gameId });
 
     const session = await getSession(t, s.gameId);
     expect(session?.gamePhase).toBe("introduction_phase");
@@ -513,7 +517,7 @@ describe("phase transitions + win check", () => {
 
     await t
       .withIdentity({ subject: s.hostAccountId })
-      .mutation(api.game.dayPhase.enterDayPhase, { gameId: s.gameId });
+      .mutation(api.games.core.dayPhase.enterDayPhase, { gameId: s.gameId });
 
     const session = await getSession(t, s.gameId);
     expect(session?.gamePhase).toBe("day_phase");
@@ -623,7 +627,7 @@ describe("role deal (assignRandomRoles)", () => {
 
     await t
       .withIdentity({ subject: s.hostAccountId })
-      .mutation(api.game.sessions.assignRandomRoles, { gameId: s.gameId });
+      .mutation(api.games.core.sessions.assignRandomRoles, { gameId: s.gameId });
 
     const dealt = await t.run(async (ctx) =>
       (
@@ -648,7 +652,7 @@ describe("role deal (assignRandomRoles)", () => {
     await expect(
       t
         .withIdentity({ subject: s.bySeat[1].accountId })
-        .mutation(api.game.sessions.assignRandomRoles, { gameId: s.gameId }),
+        .mutation(api.games.core.sessions.assignRandomRoles, { gameId: s.gameId }),
     ).rejects.toThrow();
   });
 });
@@ -670,7 +674,7 @@ describe("right-hand promotion (promoteToRightHand)", () => {
 
     await t
       .withIdentity({ subject: s.byRole.DON.accountId })
-      .mutation(api.game.roles.promoteToRightHand, {
+      .mutation(api.games.core.roles.promoteToRightHand, {
         gameId: s.gameId,
         targetPlayerId: s.bySeat[2].playerId,
       });
@@ -695,7 +699,7 @@ describe("right-hand promotion (promoteToRightHand)", () => {
     await expect(
       t
         .withIdentity({ subject: s.bySeat[2].accountId })
-        .mutation(api.game.roles.promoteToRightHand, {
+        .mutation(api.games.core.roles.promoteToRightHand, {
           gameId: s.gameId,
           targetPlayerId: s.bySeat[3].playerId,
         }),
@@ -711,7 +715,7 @@ describe("right-hand promotion (promoteToRightHand)", () => {
     await expect(
       t
         .withIdentity({ subject: s.byRole.DON.accountId })
-        .mutation(api.game.roles.promoteToRightHand, {
+        .mutation(api.games.core.roles.promoteToRightHand, {
           gameId: s.gameId,
           targetPlayerId: s.bySeat[4].playerId, // DETECTIVE
         }),
@@ -731,7 +735,7 @@ describe("right-hand promotion (promoteToRightHand)", () => {
     await expect(
       t
         .withIdentity({ subject: s.byRole.DON.accountId })
-        .mutation(api.game.roles.promoteToRightHand, {
+        .mutation(api.games.core.roles.promoteToRightHand, {
           gameId: s.gameId,
           targetPlayerId: s.bySeat[2].playerId,
         }),
@@ -747,7 +751,7 @@ describe("right-hand promotion (promoteToRightHand)", () => {
     await expect(
       t
         .withIdentity({ subject: s.byRole.DON.accountId })
-        .mutation(api.game.roles.promoteToRightHand, {
+        .mutation(api.games.core.roles.promoteToRightHand, {
           gameId: s.gameId,
           targetPlayerId: s.bySeat[2].playerId,
         }),
@@ -759,7 +763,7 @@ describe("right-hand promotion (promoteToRightHand)", () => {
 // G1 — Voting mechanics (SHARED engine; relocated to core/ in Phase 1).
 // Pins the vote window, per-round casting, auto-vote on the last candidate,
 // results tally, tie-break detection, and the both-leave threshold — the flow
-// docs/game-types.md §4 keeps shared while Phase 3 layers the day-1
+// docs/engine/variant-architecture.md §4 keeps shared while Phase 3 layers the day-1
 // single-nominee rule on top as a definition flag. Scheduler *timing*
 // (endVoteWindowInternal firing after VOTE_WINDOW_MS) is infra, not game logic,
 // and is out of scope; the window state changes are pinned directly.
@@ -803,7 +807,7 @@ async function createVotingSession(
 ) {
   return await t
     .withIdentity({ subject: s.hostAccountId })
-    .mutation(api.game.voting.createSession, { gameId: s.gameId, candidates });
+    .mutation(api.games.core.voting.createSession, { gameId: s.gameId, candidates });
 }
 
 describe("voting — window state", () => {
@@ -814,7 +818,7 @@ describe("voting — window state", () => {
 
     await t
       .withIdentity({ subject: s.hostAccountId })
-      .mutation(api.game.voting.startVoteWindow, { gameId: s.gameId });
+      .mutation(api.games.core.voting.startVoteWindow, { gameId: s.gameId });
 
     const active = await getVotingSession(t, s.gameId);
     expect(active?.votingActive).toBe(true);
@@ -823,7 +827,7 @@ describe("voting — window state", () => {
     await expect(
       t
         .withIdentity({ subject: s.hostAccountId })
-        .mutation(api.game.voting.startVoteWindow, { gameId: s.gameId }),
+        .mutation(api.games.core.voting.startVoteWindow, { gameId: s.gameId }),
     ).rejects.toThrow();
   });
 
@@ -833,17 +837,17 @@ describe("voting — window state", () => {
     await createVotingSession(t, s, [2, 5]);
     await t
       .withIdentity({ subject: s.hostAccountId })
-      .mutation(api.game.voting.startVoteWindow, { gameId: s.gameId });
+      .mutation(api.games.core.voting.startVoteWindow, { gameId: s.gameId });
 
     await t
       .withIdentity({ subject: s.hostAccountId })
-      .mutation(api.game.voting.endVoteWindow, { gameId: s.gameId });
+      .mutation(api.games.core.voting.endVoteWindow, { gameId: s.gameId });
     expect((await getVotingSession(t, s.gameId))?.votingActive).toBe(false);
 
     await expect(
       t
         .withIdentity({ subject: s.hostAccountId })
-        .mutation(api.game.voting.endVoteWindow, { gameId: s.gameId }),
+        .mutation(api.games.core.voting.endVoteWindow, { gameId: s.gameId }),
     ).rejects.toThrow();
   });
 });
@@ -856,7 +860,7 @@ describe("voting — casting votes", () => {
 
     await t
       .withIdentity({ subject: s.bySeat[1].accountId })
-      .mutation(api.game.voting.castVote, { gameId: s.gameId });
+      .mutation(api.games.core.voting.castVote, { gameId: s.gameId });
 
     const votes = await getVoteRows(t, vsId);
     expect(votes).toHaveLength(1);
@@ -874,12 +878,12 @@ describe("voting — casting votes", () => {
     await createVotingSession(t, s, [2, 5]);
     await t
       .withIdentity({ subject: s.bySeat[1].accountId })
-      .mutation(api.game.voting.castVote, { gameId: s.gameId });
+      .mutation(api.games.core.voting.castVote, { gameId: s.gameId });
 
     await expect(
       t
         .withIdentity({ subject: s.bySeat[1].accountId })
-        .mutation(api.game.voting.castVote, { gameId: s.gameId }),
+        .mutation(api.games.core.voting.castVote, { gameId: s.gameId }),
     ).rejects.toThrow();
   });
 
@@ -898,7 +902,7 @@ describe("voting — casting votes", () => {
     await expect(
       t
         .withIdentity({ subject: s.bySeat[1].accountId })
-        .mutation(api.game.voting.castVote, { gameId: s.gameId }),
+        .mutation(api.games.core.voting.castVote, { gameId: s.gameId }),
     ).rejects.toThrow();
   });
 });
@@ -912,11 +916,11 @@ describe("voting — advanceCandidate auto-votes on the last candidate", () => {
     // Seat 1 votes for candidate 2 (the current candidate at index 0).
     await t
       .withIdentity({ subject: s.bySeat[1].accountId })
-      .mutation(api.game.voting.castVote, { gameId: s.gameId });
+      .mutation(api.games.core.voting.castVote, { gameId: s.gameId });
 
     const res = await t
       .withIdentity({ subject: s.hostAccountId })
-      .mutation(api.game.voting.advanceCandidate, { gameId: s.gameId });
+      .mutation(api.games.core.voting.advanceCandidate, { gameId: s.gameId });
     expect(res).toEqual({ allDone: false });
     expect((await getVotingSession(t, s.gameId))?.currentCandidateIndex).toBe(1);
 
@@ -946,7 +950,7 @@ describe("voting — advanceCandidate auto-votes on the last candidate", () => {
 
     const res = await t
       .withIdentity({ subject: s.hostAccountId })
-      .mutation(api.game.voting.advanceCandidate, { gameId: s.gameId });
+      .mutation(api.games.core.voting.advanceCandidate, { gameId: s.gameId });
     expect(res).toEqual({ allDone: true });
   });
 
@@ -956,12 +960,12 @@ describe("voting — advanceCandidate auto-votes on the last candidate", () => {
     await createVotingSession(t, s, [2, 5]);
     await t
       .withIdentity({ subject: s.hostAccountId })
-      .mutation(api.game.voting.startVoteWindow, { gameId: s.gameId });
+      .mutation(api.games.core.voting.startVoteWindow, { gameId: s.gameId });
 
     await expect(
       t
         .withIdentity({ subject: s.hostAccountId })
-        .mutation(api.game.voting.advanceCandidate, { gameId: s.gameId }),
+        .mutation(api.games.core.voting.advanceCandidate, { gameId: s.gameId }),
     ).rejects.toThrow();
   });
 });
@@ -1002,7 +1006,7 @@ describe("voting — processResults tally", () => {
 
     const res = await t
       .withIdentity({ subject: s.hostAccountId })
-      .mutation(api.game.voting.processResults, { gameId: s.gameId });
+      .mutation(api.games.core.voting.processResults, { gameId: s.gameId });
     expect(res).toEqual({ result: "winner", winner: 2 });
   });
 
@@ -1017,7 +1021,7 @@ describe("voting — processResults tally", () => {
 
     const res = await t
       .withIdentity({ subject: s.hostAccountId })
-      .mutation(api.game.voting.processResults, { gameId: s.gameId });
+      .mutation(api.games.core.voting.processResults, { gameId: s.gameId });
     expect(res.result).toBe("tie");
     expect(new Set((res as { tiedCandidates: number[] }).tiedCandidates)).toEqual(
       new Set([2, 5]),
@@ -1036,7 +1040,7 @@ describe("voting — processResults tally", () => {
 
     const res = await t
       .withIdentity({ subject: s.hostAccountId })
-      .mutation(api.game.voting.processResults, { gameId: s.gameId });
+      .mutation(api.games.core.voting.processResults, { gameId: s.gameId });
     // Both-leave rows don't count toward any candidate → 2 wins with 1 vote.
     expect(res).toEqual({ result: "winner", winner: 2 });
   });
@@ -1050,7 +1054,7 @@ describe("voting — tie-break vs both-leave", () => {
 
     const res = await t
       .withIdentity({ subject: s.hostAccountId })
-      .mutation(api.game.voting.startTieBreak, {
+      .mutation(api.games.core.voting.startTieBreak, {
         gameId: s.gameId,
         tiedCandidates: [2, 5],
       });
@@ -1073,14 +1077,14 @@ describe("voting — tie-break vs both-leave", () => {
     await createVotingSession(t, s, [2, 5]);
     await t
       .withIdentity({ subject: s.hostAccountId })
-      .mutation(api.game.voting.startTieBreak, {
+      .mutation(api.games.core.voting.startTieBreak, {
         gameId: s.gameId,
         tiedCandidates: [2, 5],
       });
 
     const res = await t
       .withIdentity({ subject: s.hostAccountId })
-      .mutation(api.game.voting.startTieBreak, {
+      .mutation(api.games.core.voting.startTieBreak, {
         gameId: s.gameId,
         tiedCandidates: [2, 5],
       });
@@ -1119,7 +1123,7 @@ describe("voting — processBothLeaveResult threshold (>50%)", () => {
 
     const res = await t
       .withIdentity({ subject: s.hostAccountId })
-      .mutation(api.game.voting.processBothLeaveResult, { gameId: s.gameId });
+      .mutation(api.games.core.voting.processBothLeaveResult, { gameId: s.gameId });
     expect(res).toMatchObject({ allLeave: true, voteCount: 3, totalVoters: 4 });
   });
 
@@ -1134,7 +1138,7 @@ describe("voting — processBothLeaveResult threshold (>50%)", () => {
 
     const res = await t
       .withIdentity({ subject: s.hostAccountId })
-      .mutation(api.game.voting.processBothLeaveResult, { gameId: s.gameId });
+      .mutation(api.games.core.voting.processBothLeaveResult, { gameId: s.gameId });
     expect(res).toMatchObject({ allLeave: false, voteCount: 2, totalVoters: 4 });
   });
 });
@@ -1191,7 +1195,7 @@ describe("card-picking — start", () => {
 
     await t
       .withIdentity({ subject: s.hostAccountId })
-      .mutation(api.game.cardPicking.start, { gameId: s.gameId });
+      .mutation(api.games.core.cardPicking.start, { gameId: s.gameId });
 
     const cs = await getCardSession(t, s.gameId);
     expect(cs?.pickOrder).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
@@ -1211,7 +1215,7 @@ describe("card-picking — start", () => {
     const s = await seedGame(t, { phase: "night_phase", players: PICK_ROSTER });
     await t
       .withIdentity({ subject: s.hostAccountId })
-      .mutation(api.game.cardPicking.start, { gameId: s.gameId });
+      .mutation(api.games.core.cardPicking.start, { gameId: s.gameId });
 
     const cs = await getCardSession(t, s.gameId);
     expect(cs?.deck).toHaveLength(3);
@@ -1235,7 +1239,7 @@ describe("card-picking — start", () => {
 
     await t
       .withIdentity({ subject: s.hostAccountId })
-      .mutation(api.game.cardPicking.start, { gameId: s.gameId });
+      .mutation(api.games.core.cardPicking.start, { gameId: s.gameId });
 
     const cs = await getCardSession(t, s.gameId);
     expect(cs?.pickOrder).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
@@ -1255,10 +1259,10 @@ describe("card-picking — start", () => {
     const s = await seedGame(t, { phase: "night_phase", players: PICK_ROSTER });
     const first = await t
       .withIdentity({ subject: s.hostAccountId })
-      .mutation(api.game.cardPicking.start, { gameId: s.gameId });
+      .mutation(api.games.core.cardPicking.start, { gameId: s.gameId });
     const second = await t
       .withIdentity({ subject: s.hostAccountId })
-      .mutation(api.game.cardPicking.start, { gameId: s.gameId });
+      .mutation(api.games.core.cardPicking.start, { gameId: s.gameId });
     expect(second).toBe(first);
   });
 
@@ -1268,7 +1272,7 @@ describe("card-picking — start", () => {
     await expect(
       t
         .withIdentity({ subject: s.bySeat[1].accountId })
-        .mutation(api.game.cardPicking.start, { gameId: s.gameId }),
+        .mutation(api.games.core.cardPicking.start, { gameId: s.gameId }),
     ).rejects.toThrow();
   });
 });
@@ -1279,14 +1283,14 @@ describe("card-picking — pickCard turn contract", () => {
     const s = await seedGame(t, { phase: "night_phase", players: PICK_ROSTER });
     await t
       .withIdentity({ subject: s.hostAccountId })
-      .mutation(api.game.cardPicking.start, { gameId: s.gameId });
+      .mutation(api.games.core.cardPicking.start, { gameId: s.gameId });
 
     const before = await getCardSession(t, s.gameId);
     const card1Role = before!.deck.find((c) => c.cardId === "card_1")!.role;
 
     await t
       .withIdentity({ subject: s.bySeat[1].accountId })
-      .mutation(api.game.cardPicking.pickCard, {
+      .mutation(api.games.core.cardPicking.pickCard, {
         gameId: s.gameId,
         cardId: "card_1",
       });
@@ -1304,13 +1308,13 @@ describe("card-picking — pickCard turn contract", () => {
     const s = await seedGame(t, { phase: "night_phase", players: PICK_ROSTER });
     await t
       .withIdentity({ subject: s.hostAccountId })
-      .mutation(api.game.cardPicking.start, { gameId: s.gameId });
+      .mutation(api.games.core.cardPicking.start, { gameId: s.gameId });
 
     // Seat 2 is not first in the pick order.
     await expect(
       t
         .withIdentity({ subject: s.bySeat[2].accountId })
-        .mutation(api.game.cardPicking.pickCard, {
+        .mutation(api.games.core.cardPicking.pickCard, {
           gameId: s.gameId,
           cardId: "card_1",
         }),
@@ -1319,7 +1323,7 @@ describe("card-picking — pickCard turn contract", () => {
     // Seat 1 claims card_1.
     await t
       .withIdentity({ subject: s.bySeat[1].accountId })
-      .mutation(api.game.cardPicking.pickCard, {
+      .mutation(api.games.core.cardPicking.pickCard, {
         gameId: s.gameId,
         cardId: "card_1",
       });
@@ -1328,7 +1332,7 @@ describe("card-picking — pickCard turn contract", () => {
     await expect(
       t
         .withIdentity({ subject: s.bySeat[2].accountId })
-        .mutation(api.game.cardPicking.pickCard, {
+        .mutation(api.games.core.cardPicking.pickCard, {
           gameId: s.gameId,
           cardId: "card_1",
         }),
@@ -1338,7 +1342,7 @@ describe("card-picking — pickCard turn contract", () => {
     await expect(
       t
         .withIdentity({ subject: s.bySeat[2].accountId })
-        .mutation(api.game.cardPicking.pickCard, {
+        .mutation(api.games.core.cardPicking.pickCard, {
           gameId: s.gameId,
           cardId: "card_999",
         }),
@@ -1350,12 +1354,12 @@ describe("card-picking — pickCard turn contract", () => {
     const s = await seedGame(t, { phase: "night_phase", players: PICK_ROSTER });
     await t
       .withIdentity({ subject: s.hostAccountId })
-      .mutation(api.game.cardPicking.start, { gameId: s.gameId });
+      .mutation(api.games.core.cardPicking.start, { gameId: s.gameId });
 
     for (const seat of [1, 2, 3]) {
       await t
         .withIdentity({ subject: s.bySeat[seat].accountId })
-        .mutation(api.game.cardPicking.pickCard, {
+        .mutation(api.games.core.cardPicking.pickCard, {
           gameId: s.gameId,
           cardId: `card_${seat}`,
         });
@@ -1366,7 +1370,7 @@ describe("card-picking — pickCard turn contract", () => {
     await expect(
       t
         .withIdentity({ subject: s.bySeat[1].accountId })
-        .mutation(api.game.cardPicking.pickCard, {
+        .mutation(api.games.core.cardPicking.pickCard, {
           gameId: s.gameId,
           cardId: "card_1",
         }),
@@ -1380,9 +1384,9 @@ describe("card-picking — expireTurnInternal watchdog", () => {
     const s = await seedGame(t, { phase: "night_phase", players: PICK_ROSTER });
     await t
       .withIdentity({ subject: s.hostAccountId })
-      .mutation(api.game.cardPicking.start, { gameId: s.gameId });
+      .mutation(api.games.core.cardPicking.start, { gameId: s.gameId });
 
-    await t.mutation(internal.game.cardPicking.expireTurnInternal, {
+    await t.mutation(internal.games.core.cardPicking.expireTurnInternal, {
       gameId: s.gameId,
       expectedPickIndex: 0,
     });
@@ -1400,17 +1404,17 @@ describe("card-picking — expireTurnInternal watchdog", () => {
     const s = await seedGame(t, { phase: "night_phase", players: PICK_ROSTER });
     await t
       .withIdentity({ subject: s.hostAccountId })
-      .mutation(api.game.cardPicking.start, { gameId: s.gameId });
+      .mutation(api.games.core.cardPicking.start, { gameId: s.gameId });
     // Seat 1 picks → index advances to 1.
     await t
       .withIdentity({ subject: s.bySeat[1].accountId })
-      .mutation(api.game.cardPicking.pickCard, {
+      .mutation(api.games.core.cardPicking.pickCard, {
         gameId: s.gameId,
         cardId: "card_1",
       });
 
     // A watchdog scheduled for index 0 fires late — must do nothing.
-    await t.mutation(internal.game.cardPicking.expireTurnInternal, {
+    await t.mutation(internal.games.core.cardPicking.expireTurnInternal, {
       gameId: s.gameId,
       expectedPickIndex: 0,
     });
@@ -1421,7 +1425,7 @@ describe("card-picking — expireTurnInternal watchdog", () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, { phase: "night_phase", players: PICK_ROSTER });
     await expect(
-      t.mutation(internal.game.cardPicking.expireTurnInternal, {
+      t.mutation(internal.games.core.cardPicking.expireTurnInternal, {
         gameId: s.gameId,
         expectedPickIndex: 0,
       }),
@@ -1435,17 +1439,17 @@ describe("card-picking — getState role visibility", () => {
     const s = await seedGame(t, { phase: "night_phase", players: PICK_ROSTER });
     await t
       .withIdentity({ subject: s.hostAccountId })
-      .mutation(api.game.cardPicking.start, { gameId: s.gameId });
+      .mutation(api.games.core.cardPicking.start, { gameId: s.gameId });
     await t
       .withIdentity({ subject: s.bySeat[1].accountId })
-      .mutation(api.game.cardPicking.pickCard, {
+      .mutation(api.games.core.cardPicking.pickCard, {
         gameId: s.gameId,
         cardId: "card_1",
       });
 
     const asClaimer = await t
       .withIdentity({ subject: s.bySeat[1].accountId })
-      .query(api.game.cardPicking.getState, { gameId: s.gameId });
+      .query(api.games.core.cardPicking.getState, { gameId: s.gameId });
     const claimerCard1 = asClaimer!.cards.find((c) => c.cardId === "card_1")!;
     expect(claimerCard1.claimed).toBe(true);
     expect(claimerCard1.role).not.toBeNull(); // claimer sees own role
@@ -1453,7 +1457,7 @@ describe("card-picking — getState role visibility", () => {
 
     const asOther = await t
       .withIdentity({ subject: s.bySeat[2].accountId })
-      .query(api.game.cardPicking.getState, { gameId: s.gameId });
+      .query(api.games.core.cardPicking.getState, { gameId: s.gameId });
     expect(
       asOther!.cards.find((c) => c.cardId === "card_1")!.role,
     ).toBeNull(); // non-claimer cannot see the claimed role
@@ -1461,7 +1465,7 @@ describe("card-picking — getState role visibility", () => {
 
     const asHost = await t
       .withIdentity({ subject: s.hostAccountId })
-      .query(api.game.cardPicking.getState, { gameId: s.gameId });
+      .query(api.games.core.cardPicking.getState, { gameId: s.gameId });
     expect(asHost!.cards.every((c) => c.role !== null)).toBe(true); // host sees all
   });
 });
@@ -1510,7 +1514,7 @@ async function setFouls(
 const giveFoul = (t: TestConvex<typeof schema>, s: Seeded, seatNumber: number) =>
   t
     .withIdentity({ subject: s.hostAccountId })
-    .mutation(api.game.dayPhase.giveFoul, { gameId: s.gameId, seatNumber });
+    .mutation(api.games.core.dayPhase.giveFoul, { gameId: s.gameId, seatNumber });
 
 describe("fouls — giveFoul", () => {
   it("increments the count without eliminating for fouls 1–3", async () => {
@@ -1593,13 +1597,13 @@ describe("fouls — giveFoul", () => {
     await expect(
       t
         .withIdentity({ subject: s.bySeat[1].accountId })
-        .mutation(api.game.dayPhase.giveFoul, { gameId: s.gameId, seatNumber: 8 }),
+        .mutation(api.games.core.dayPhase.giveFoul, { gameId: s.gameId, seatNumber: 8 }),
     ).rejects.toThrow();
   });
 });
 
 // ===========================================================================
-// P3-T2 — Sports unanimous-vote night (docs/sports-mafia.md §5).
+// P3-T2 — Sports unanimous-vote night (docs/variants/sports.md §5).
 // The window lifecycle + per-mafia private selection (`sportsNightPhase.ts`),
 // and the dawn resolution wired through the SHARED `startFarewellSpeech` (which
 // branches on `definition.night.kind`). The Japanese single-authority path is
@@ -1635,14 +1639,14 @@ function getNightRow(
 const openWindow = (t: TestConvex<typeof schema>, s: Seeded) =>
   t
     .withIdentity({ subject: s.hostAccountId })
-    .mutation(api.game.sportsNightPhase.startMafiaTargetWindow, {
+    .mutation(api.games.sports.nightPhase.startMafiaTargetWindow, {
       gameId: s.gameId,
     });
 
 const select = (t: TestConvex<typeof schema>, s: Seeded, seat: number, target: number) =>
   t
     .withIdentity({ subject: s.bySeat[seat].accountId })
-    .mutation(api.game.sportsNightPhase.selectMafiaTarget, {
+    .mutation(api.games.sports.nightPhase.selectMafiaTarget, {
       gameId: s.gameId,
       targetSeatNumber: target,
     });
@@ -1729,13 +1733,13 @@ describe("sports night — kill-selection window & selections", () => {
 
     const mineDon = await t
       .withIdentity({ subject: s.bySeat[1].accountId })
-      .query(api.game.sportsNightPhase.getMySelection, { gameId: s.gameId });
+      .query(api.games.sports.nightPhase.getMySelection, { gameId: s.gameId });
     const mineMafia2 = await t
       .withIdentity({ subject: s.bySeat[2].accountId })
-      .query(api.game.sportsNightPhase.getMySelection, { gameId: s.gameId });
+      .query(api.games.sports.nightPhase.getMySelection, { gameId: s.gameId });
     const mineMafia3 = await t
       .withIdentity({ subject: s.bySeat[3].accountId })
-      .query(api.game.sportsNightPhase.getMySelection, { gameId: s.gameId });
+      .query(api.games.sports.nightPhase.getMySelection, { gameId: s.gameId });
 
     expect(mineDon).toBe(5); // sees own
     expect(mineMafia2).toBe(6); // sees own, NOT the Don's 5
@@ -1755,7 +1759,7 @@ describe("sports night — kill-selection window & selections", () => {
 
     const hostView = await t
       .withIdentity({ subject: s.hostAccountId })
-      .query(api.game.sportsNightPhase.getHostSelections, { gameId: s.gameId });
+      .query(api.games.sports.nightPhase.getHostSelections, { gameId: s.gameId });
 
     // One row per living mafia, seat-ordered; pending mafia → targetSeat null.
     expect(hostView).toEqual([
@@ -1767,7 +1771,7 @@ describe("sports night — kill-selection window & selections", () => {
     // A non-host (even a mafia) gets nothing — the summary is host-only.
     const mafiaView = await t
       .withIdentity({ subject: s.bySeat[1].accountId })
-      .query(api.game.sportsNightPhase.getHostSelections, { gameId: s.gameId });
+      .query(api.games.sports.nightPhase.getHostSelections, { gameId: s.gameId });
     expect(mafiaView).toEqual([]);
   });
 
@@ -1781,7 +1785,7 @@ describe("sports night — kill-selection window & selections", () => {
     await openWindow(t, s);
 
     await t.mutation(
-      internal.game.sportsNightPhase.closeMafiaTargetWindowInternal,
+      internal.games.sports.nightPhase.closeMafiaTargetWindowInternal,
       { gameId: s.gameId },
     );
     expect((await getNightRow(t, s.gameId))?.mafiaTargetWindowActive).toBe(false);
@@ -1792,7 +1796,7 @@ describe("sports night — dawn resolution via startFarewellSpeech", () => {
   const startFarewell = (t: TestConvex<typeof schema>, s: Seeded) =>
     t
       .withIdentity({ subject: s.hostAccountId })
-      .mutation(api.game.farewellSpeech.startFarewellSpeech, {
+      .mutation(api.games.core.farewellSpeech.startFarewellSpeech, {
         gameId: s.gameId,
       });
 
@@ -1801,6 +1805,9 @@ describe("sports night — dawn resolution via startFarewellSpeech", () => {
     const s = await seedGame(t, {
       gameType: "sports_mafia",
       phase: "detective_checks_for_mafia",
+      // Night 2 so this stays a pure KILL-RESOLUTION test: a night-1 kill now
+      // routes to `best_move` first (§6), which the best-move block below covers.
+      currentNightNumber: 2,
       players: SPORTS_NIGHT_ROSTER,
       night: {
         mafiaTargetSelections: [
@@ -1864,6 +1871,8 @@ describe("sports night — dawn resolution via startFarewellSpeech", () => {
     const s = await seedGame(t, {
       gameType: "sports_mafia",
       phase: "detective_checks_for_mafia",
+      // Night 2 — see the note above; night 1 routes through `best_move`.
+      currentNightNumber: 2,
       players: [
         { seat: 1, role: "DON" },
         { seat: 2, role: "CITIZEN" },
@@ -1879,6 +1888,319 @@ describe("sports night — dawn resolution via startFarewellSpeech", () => {
     const session = await getSession(t, s.gameId);
     expect(session?.gamePhase).toBe("farewell_speech");
     expect(session?.speakingOrder).toEqual([5]);
+  });
+});
+
+// ===========================================================================
+// Best move (docs/variants/sports.md §6) — dawn ROUTING + the victim's picks.
+//
+// Two halves:
+//  - routing: which of the three dawn destinations the night-1 resolution picks
+//    (day_phase / best_move / farewell_speech), per the §6.1 eligibility rules;
+//  - picks: `toggleSuspect` authority, toggling, the 3-pick lock, and the host's
+//    always-available skip (the §6.3 deadlock guard).
+// ===========================================================================
+
+describe("best move — dawn routing (§6.1)", () => {
+  const startFarewell = (t: TestConvex<typeof schema>, s: Seeded) =>
+    t
+      .withIdentity({ subject: s.hostAccountId })
+      .mutation(api.games.core.farewellSpeech.startFarewellSpeech, {
+        gameId: s.gameId,
+      });
+
+  const UNANIMOUS_ON_5 = [
+    { mafiaSeat: 1, targetSeat: 5 },
+    { mafiaSeat: 2, targetSeat: 5 },
+    { mafiaSeat: 3, targetSeat: 5 },
+  ];
+
+  it("GRANTS the best move when nobody was eliminated on day 1", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      gameType: "sports_mafia",
+      phase: "detective_checks_for_mafia",
+      players: SPORTS_NIGHT_ROSTER, // all alive → 0 day-1 eliminations
+      night: { mafiaTargetSelections: UNANIMOUS_ON_5 },
+    });
+
+    const res = await startFarewell(t, s);
+    expect(res).toEqual({ skipToDay: false, bestMove: true });
+
+    const session = await getSession(t, s.gameId);
+    expect(session?.gamePhase).toBe("best_move");
+    // The farewell speaker is already staged, so advancing later is a bare
+    // gamePhase patch and the farewell flow needs no rework.
+    expect(session?.speakingOrder).toEqual([5]);
+    // Stamped explicitly — the 30s countdown reads it (this mutation patches the
+    // session directly rather than through sessions:update).
+    expect(session?.phaseStartedAt).toBeTypeOf("number");
+
+    const night = await getNightRow(t, s.gameId);
+    expect(night?.bestMoveSeat).toBe(5);
+    expect(night?.bestMoveSuspects).toEqual([]);
+  });
+
+  it("GRANTS the best move when exactly one player left on day 1", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      gameType: "sports_mafia",
+      phase: "detective_checks_for_mafia",
+      players: [
+        ...SPORTS_NIGHT_ROSTER.filter((p) => p.seat !== 7),
+        { seat: 7, role: "CITIZEN", alive: false }, // voted out on day 1
+      ],
+      night: { mafiaTargetSelections: UNANIMOUS_ON_5 },
+    });
+
+    const res = await startFarewell(t, s);
+    expect(res).toEqual({ skipToDay: false, bestMove: true });
+    expect((await getSession(t, s.gameId))?.gamePhase).toBe("best_move");
+    expect((await getNightRow(t, s.gameId))?.bestMoveSeat).toBe(5);
+  });
+
+  it("VOIDS the best move when two players left on day 1", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      gameType: "sports_mafia",
+      phase: "detective_checks_for_mafia",
+      players: [
+        ...SPORTS_NIGHT_ROSTER.filter((p) => p.seat !== 6 && p.seat !== 7),
+        { seat: 6, role: "CITIZEN", alive: false }, // both-leave tie-break, or
+        { seat: 7, role: "CITIZEN", alive: false }, // a vote-out + foul elimination
+      ],
+      night: { mafiaTargetSelections: UNANIMOUS_ON_5 },
+    });
+
+    const res = await startFarewell(t, s);
+    expect(res).toEqual({ skipToDay: false });
+
+    const session = await getSession(t, s.gameId);
+    expect(session?.gamePhase).toBe("farewell_speech");
+    expect(session?.speakingOrder).toEqual([5]);
+    expect((await getNightRow(t, s.gameId))?.bestMoveSeat).toBeUndefined();
+  });
+
+  it("grants NO best move on night 2 — first night only", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      gameType: "sports_mafia",
+      phase: "detective_checks_for_mafia",
+      currentNightNumber: 2,
+      players: SPORTS_NIGHT_ROSTER,
+      night: { mafiaTargetSelections: UNANIMOUS_ON_5 },
+    });
+
+    const res = await startFarewell(t, s);
+    expect(res).toEqual({ skipToDay: false });
+    expect((await getSession(t, s.gameId))?.gamePhase).toBe("farewell_speech");
+    expect(
+      (await getNightRow(t, s.gameId, 2))?.bestMoveSeat,
+    ).toBeUndefined();
+  });
+
+  it("grants NO best move when the night produced no kill", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      gameType: "sports_mafia",
+      phase: "detective_checks_for_mafia",
+      players: SPORTS_NIGHT_ROSTER,
+      night: {
+        mafiaTargetSelections: [
+          { mafiaSeat: 1, targetSeat: 5 },
+          { mafiaSeat: 2, targetSeat: 5 },
+          { mafiaSeat: 3, targetSeat: 6 }, // disagreement → no kill
+        ],
+      },
+    });
+
+    const res = await startFarewell(t, s);
+    expect(res).toEqual({ skipToDay: true });
+    expect((await getSession(t, s.gameId))?.gamePhase).toBe("day_phase");
+    expect((await getNightRow(t, s.gameId))?.bestMoveSeat).toBeUndefined();
+  });
+
+  it("never grants a best move in a Japanese game (flag is off)", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      phase: "doctor_heals_player",
+      players: WIN_SAFE_ROSTER,
+      night: { mafiaTarget: 8 },
+    });
+
+    const res = await startFarewell(t, s);
+    expect(res).toEqual({ skipToDay: false });
+    expect((await getSession(t, s.gameId))?.gamePhase).toBe("farewell_speech");
+    expect((await getNightRow(t, s.gameId))?.bestMoveSeat).toBeUndefined();
+  });
+});
+
+describe("best move — the victim's picks (§6.2)", () => {
+  /** A game parked in `best_move` with seat 5 granted the best move. */
+  const seedBestMove = (
+    t: TestConvex<typeof schema>,
+    suspects: number[] = [],
+  ) =>
+    seedGame(t, {
+      gameType: "sports_mafia",
+      phase: "best_move",
+      // Staged by the dawn resolution before it routed here, so the farewell can
+      // run straight after (or after a skip).
+      speakingOrder: [5],
+      players: [
+        ...SPORTS_NIGHT_ROSTER.filter((p) => p.seat !== 7),
+        { seat: 7, role: "CITIZEN", alive: false }, // day-1 vote-out
+      ],
+      night: { bestMoveSeat: 5, bestMoveSuspects: suspects },
+    });
+
+  const toggle = (
+    t: TestConvex<typeof schema>,
+    s: Seeded,
+    actorSeat: number,
+    seatNumber: number,
+  ) =>
+    t
+      .withIdentity({ subject: s.bySeat[actorSeat].accountId })
+      .mutation(api.games.core.bestMove.toggleSuspect, {
+        gameId: s.gameId,
+        seatNumber,
+      });
+
+  it("records picks in order and LOCKS at three", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedBestMove(t);
+
+    await toggle(t, s, 5, 1);
+    await toggle(t, s, 5, 4);
+    await toggle(t, s, 5, 6);
+    expect((await getNightRow(t, s.gameId))?.bestMoveSuspects).toEqual([
+      1, 4, 6,
+    ]);
+
+    // A 4th pick is rejected — three marked IS the confirmation.
+    await expect(toggle(t, s, 5, 2)).rejects.toThrow();
+    expect((await getNightRow(t, s.gameId))?.bestMoveSuspects).toEqual([
+      1, 4, 6,
+    ]);
+  });
+
+  it("un-marks a pick while below the cap (mis-tap recovery)", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedBestMove(t, [1, 4]);
+
+    await toggle(t, s, 5, 4);
+    expect((await getNightRow(t, s.gameId))?.bestMoveSuspects).toEqual([1]);
+
+    // ...and the freed slot can be re-used.
+    await toggle(t, s, 5, 6);
+    expect((await getNightRow(t, s.gameId))?.bestMoveSuspects).toEqual([1, 6]);
+  });
+
+  it("un-marks a pick even once the set is full", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedBestMove(t, [1, 4, 6]);
+
+    await toggle(t, s, 5, 4);
+    expect((await getNightRow(t, s.gameId))?.bestMoveSuspects).toEqual([1, 6]);
+  });
+
+  it("allows naming a player who died on day 1", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedBestMove(t);
+
+    // Seat 7 was voted out on day 1 — a legitimate suspect, they can be mafia.
+    await toggle(t, s, 5, 7);
+    expect((await getNightRow(t, s.gameId))?.bestMoveSuspects).toEqual([7]);
+  });
+
+  it("rejects a caller who is not the victim", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedBestMove(t);
+
+    await expect(toggle(t, s, 1, 4)).rejects.toThrow();
+    await expect(toggle(t, s, 6, 4)).rejects.toThrow();
+    expect((await getNightRow(t, s.gameId))?.bestMoveSuspects).toEqual([]);
+  });
+
+  it("rejects the host picking on the victim's behalf", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedBestMove(t);
+
+    await expect(
+      t
+        .withIdentity({ subject: s.hostAccountId })
+        .mutation(api.games.core.bestMove.toggleSuspect, {
+          gameId: s.gameId,
+          seatNumber: 4,
+        }),
+    ).rejects.toThrow();
+  });
+
+  it("rejects the victim naming themselves", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedBestMove(t);
+
+    await expect(toggle(t, s, 5, 5)).rejects.toThrow();
+  });
+
+  it("rejects picks outside the best_move phase", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      gameType: "sports_mafia",
+      phase: "farewell_speech",
+      players: SPORTS_NIGHT_ROSTER,
+      night: { bestMoveSeat: 5, bestMoveSuspects: [] },
+    });
+
+    await expect(toggle(t, s, 5, 4)).rejects.toThrow();
+  });
+
+  it("rejects picks when no best move was granted this night", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      gameType: "sports_mafia",
+      phase: "best_move",
+      players: SPORTS_NIGHT_ROSTER,
+      night: {}, // no bestMoveSeat
+    });
+
+    await expect(toggle(t, s, 5, 4)).rejects.toThrow();
+  });
+
+  // -------------------------------------------------------------------------
+  // The deadlock guard (§6.3): the host's advance is ALWAYS available, so an
+  // AFK or disconnected victim can never stall the game.
+  // -------------------------------------------------------------------------
+
+  it("lets the host skip a PARTIAL best move into a working farewell", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedBestMove(t);
+    await toggle(t, s, 5, 1); // ...then the victim disconnects at 1/3
+
+    // What PhaseAdvanceButton sends for `sportsAdvanceUpdates("best_move")`.
+    await t
+      .withIdentity({ subject: s.hostAccountId })
+      .mutation(api.games.core.sessions.update, {
+        sessionId: (await getSession(t, s.gameId))!._id,
+        updates: { gamePhase: "farewell_speech" },
+      });
+
+    const session = await getSession(t, s.gameId);
+    expect(session?.gamePhase).toBe("farewell_speech");
+    // The staged speaker survived the skip, so the farewell still runs.
+    expect(session?.speakingOrder).toEqual([5]);
+
+    // The partial set is kept as-is (it simply scores nothing).
+    expect((await getNightRow(t, s.gameId))?.bestMoveSuspects).toEqual([1]);
+
+    // And the farewell proceeds normally for the victim.
+    await t
+      .withIdentity({ subject: s.hostAccountId })
+      .mutation(api.games.core.farewellSpeech.grantFarewellTime, {
+        gameId: s.gameId,
+      });
+    expect((await getSession(t, s.gameId))?.currentSpeakerIndex).toBe(5);
   });
 });
 
@@ -1957,7 +2279,7 @@ describe("sports win detection (recordWinnerIfDecided → definition)", () => {
 });
 
 // ===========================================================================
-// P3-T4 — Sports single-nominee day rule (docs/sports-mafia.md §4.1), gated on
+// P3-T4 — Sports single-nominee day rule (docs/variants/sports.md §4.1), gated on
 // `flags.firstDaySingleNomineeSkipsToNight`:
 //   • Day 1 (night 0), one nominee → NO elimination, skip voting → night.
 //   • Day 2+ (night ≥ 1), one nominee → eliminated without a vote → farewell →
@@ -1983,7 +2305,7 @@ async function setNominated(
 const startNominated = (t: TestConvex<typeof schema>, s: Seeded) =>
   t
     .withIdentity({ subject: s.hostAccountId })
-    .mutation(api.game.dayPhase.startNominatedPlayersSpeaking, {
+    .mutation(api.games.core.dayPhase.startNominatedPlayersSpeaking, {
       gameId: s.gameId,
     });
 
@@ -2042,13 +2364,13 @@ describe("sports single-nominee day rule (startNominatedPlayersSpeaking)", () =>
     // Drive the farewell to completion: the eliminated player speaks, dies, and
     // (nominatedPlayers non-empty) the game advances to night.
     const asHost = t.withIdentity({ subject: s.hostAccountId });
-    await asHost.mutation(api.game.farewellSpeech.grantFarewellTime, {
+    await asHost.mutation(api.games.core.farewellSpeech.grantFarewellTime, {
       gameId: s.gameId,
     });
-    await asHost.mutation(api.game.farewellSpeech.markDeadAndAdvance, {
+    await asHost.mutation(api.games.core.farewellSpeech.markDeadAndAdvance, {
       gameId: s.gameId,
     });
-    await asHost.mutation(api.game.farewellSpeech.advanceFromFarewell, {
+    await asHost.mutation(api.games.core.farewellSpeech.advanceFromFarewell, {
       gameId: s.gameId,
     });
 
@@ -2092,7 +2414,7 @@ describe("sports single-nominee day rule (startNominatedPlayersSpeaking)", () =>
 });
 
 // ===========================================================================
-// P3-T3 — Sports 3rd-foul speaking ban (docs/sports-mafia.md §4.2), gated on
+// P3-T3 — Sports 3rd-foul speaking ban (docs/variants/sports.md §4.2), gated on
 // `flags.thirdFoulSpeakingBan`. `giveFoul` stamps `foulSpeakingBanRound` on the
 // 3rd foul; `startDaySpeaking` drops a player muted for the current round from
 // the day speaking order — unless it is the final day phase (≤ 4 alive), where
@@ -2119,7 +2441,7 @@ async function setBanRound(
 const startDaySpeaking = (t: TestConvex<typeof schema>, s: Seeded) =>
   t
     .withIdentity({ subject: s.hostAccountId })
-    .mutation(api.game.dayPhase.startDaySpeaking, { gameId: s.gameId });
+    .mutation(api.games.core.dayPhase.startDaySpeaking, { gameId: s.gameId });
 
 describe("sports 3rd-foul speaking ban", () => {
   it("stamps foulSpeakingBanRound on the 3rd foul (next day round)", async () => {

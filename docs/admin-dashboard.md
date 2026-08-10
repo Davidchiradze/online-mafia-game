@@ -21,7 +21,7 @@ It has four routes, all wrapped by a shared shell:
 
 The layout (`src/app/admin/layout.tsx`) wraps all of them in
 `<PermissionGuard permission={ADMIN_PANEL_ACCESS}>` then `AdminShell`. The shell
-(`src/components/admin/AdminShell.tsx`) provides the sticky frosted-glass header,
+(`src/features/admin/components/AdminShell.tsx`) provides the sticky frosted-glass header,
 the top nav, the ambient glow backdrop, and the `max-w-7xl` content frame.
 
 ### Archive row actions
@@ -90,7 +90,7 @@ write-path logic**:
   with no decided games is `0%`.
 - **`topPlayers` by `winRate`** requires ≥3 decided games to rank, so a lone
   1-0 player can't top a seasoned 80% one; ties break by volume.
-- **Win-method label** is derived via `winMethodLabel` (`convex/lib/winConditions.ts`),
+- **Win-method label** is derived via `winMethodLabel` (`convex/games/core/winConditions.ts`),
   never stored — wording can change without migration.
 
 ### Performance — compute-on-read
@@ -105,7 +105,7 @@ modest tables). It is the documented trade-off, not an oversight. If
 `playerStats` already uses. Each query in `stats.ts` carries a `// PERF:` note
 marking this.
 
-## Frontend — `src/components/admin/dashboard/`
+## Frontend — `src/features/admin/dashboard/`
 
 ### Design language — "Elevated Dark"
 
@@ -124,7 +124,7 @@ accents. The shared pieces live in two files:
   "Mafia Right Hand", crash-safe vs. any unmapped role string).
 
 Faction colors are centralized separately in
-**`src/lib/constants/factions.ts`** (`FACTION_HEX` for Recharts, `FACTION_TEXT` /
+**`src/shared/lib/constants/factions.ts`** (`FACTION_HEX` for Recharts, `FACTION_TEXT` /
 `FACTION_BADGE` for markup; mafia = red, citizens = emerald, yakuza = violet).
 
 ### Charts — Recharts via `ChartFrame`
@@ -138,8 +138,8 @@ needs a **single child element**, so `ChartFrame` casts `children` to one
 
 ### Component conventions
 
-- Reuse `UserAvatar` and `LoadingSpinner` (`src/components/ui/`); reuse
-  `getRoleDisplayConfig` / `getRoleEmoji` (`src/lib/utils/roleDisplay.ts`) for
+- Reuse `UserAvatar` and `LoadingSpinner` (`src/shared/ui/`); reuse
+  `getRoleDisplayConfig` / `getRoleEmoji` (`src/shared/lib/utils/roleDisplay.ts`) for
   role emoji + color.
 - Long lists scroll **inside** the card (e.g. the leaderboard caps at
   `max-h-80 overflow-y-auto`) so a widget never stretches the page.
@@ -163,7 +163,7 @@ through next-intl's path lookup). Never hard-code user-facing strings.
 
 1. Add a `requirePermission`-gated query to `convex/admin/stats.ts` (add a
    `// PERF:` note if it scans a table).
-2. Build the component in `src/components/admin/dashboard/` using
+2. Build the component in `src/features/admin/dashboard/` using
    `DashboardCard` + an accent from `theme.ts`; for a chart, wrap it in
    `ChartFrame`.
 3. Add its strings to `admin.dashboard.*` in **both** locale files.

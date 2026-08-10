@@ -15,7 +15,7 @@ word "role":
 | Concept | Lives in | Example values | This doc? |
 |---|---|---|---|
 | **Access role** (this doc) | Convex `profiles.role` | `user`, `moderator`, `admin` | ✅ |
-| In-game role | `gamePlayerRoles.role` | `DON`, `MAFIA`, `DOCTOR` | ❌ (see [game-design.md](./game-design.md)) |
+| In-game role | `gamePlayerRoles.role` | `DON`, `MAFIA`, `DOCTOR` | ❌ (see [game-design.md](./variants/japanese/rules.md)) |
 | PHP account role | MySQL `accounts` | billing/account type | ❌ never synced into Convex |
 
 The PHP account role is **not** synced into Convex (the sync in
@@ -104,7 +104,7 @@ The module exports:
   `isPublicPath(pathname)`, `requiredPermissionForPath(pathname)`.
 
 Style follows the existing constants modules (`convex/lib/constants.ts`,
-`src/lib/constants/game.ts`): `as const`, union literals, `Record<…>` maps.
+`src/shared/lib/constants/game.ts`): `as const`, union literals, `Record<…>` maps.
 
 ## Backend enforcement (authoritative)
 
@@ -155,7 +155,7 @@ export const assignRole = mutation({
   `setBanned` (`USER_BAN`).
 - `convex/admin/games.ts` — `forceEndGame` (`GAME_FORCE_END`); `refundGame` is an
   **`action`** (it calls the external PHP refund endpoint per
-  [payments-php-contract.ka.md](./payments-php-contract.ka.md)). An action can't read
+  [proposals/payments-php-contract.ka.md](./proposals/payments-php-contract.ka.md)). An action can't read
   the DB directly, so it authorizes via a permission-checking query/helper, then calls
   PHP with `adminAccountId` for audit (`GAME_REFUND`).
 - `convex/admin/gameLogs.ts` — `listAllGameLogs` (`GAME_VIEW_ALL`, the archive
@@ -176,7 +176,7 @@ Three layers, only the last is authoritative:
 
 | Layer | File | Gate | Authoritative? |
 |---|---|---|---|
-| Middleware (edge) | `src/middleware.ts`, `src/middlewares/*` | authenticated vs. public | no |
+| Middleware (edge) | `src/middleware.ts`, `src/features/auth/middleware/*` | authenticated vs. public | no |
 | `/admin` layout | `src/app/admin/layout.tsx` | redirect if missing `admin_panel.access` | no (UX) |
 | Convex functions | `convex/admin/*`, `requirePermission` | per-permission | **yes** |
 
@@ -190,13 +190,13 @@ data loads**: every admin query/mutation enforces `requirePermission`.
 
 **Middleware** stays as-is (the existing chain
 `publicPageMiddleware → jwtCookieMiddleware → bridgeRedirectMiddleware` already
-gates `/admin` as authenticated-only). The only change: `src/middlewares/constants.ts`
+gates `/admin` as authenticated-only). The only change: `src/features/auth/middleware/constants.ts`
 re-exports `PUBLIC_PATH_PREFIXES` / `AUTH_ERROR_PATH` from `@convex/lib/access`, so the
 route policy lives in one place and never drifts.
 
 ## Frontend usage
 
-### `useAccess()` hook — `src/hooks/auth/useAccess.ts` (new)
+### `useAccess()` hook — `src/features/auth/hooks/useAccess.ts` (new)
 
 Built on the existing profile query, derives permissions via the shared map:
 
@@ -214,10 +214,9 @@ export function useAccess() {
 }
 ```
 
-Export through a `src/hooks/auth/index.ts` barrel and add `export * from "./auth"`
-to `src/hooks/index.ts`.
+Lives with the auth feature under `src/features/auth/hooks/`.
 
-### `PermissionGuard` — `src/components/auth/PermissionGuard.tsx` (new)
+### `PermissionGuard` — `src/features/auth/components/PermissionGuard.tsx` (new)
 
 Client guard used by the `/admin` layout: loading → `LoadingSpinner`; missing
 permission → `router.replace`; else render children. **UX only, not security.**
@@ -236,7 +235,7 @@ const { can } = useAccess();
 - `src/app/admin/` (new): `layout.tsx` (wraps children in
   `<PermissionGuard permission={ADMIN_PANEL_ACCESS}>`), `page.tsx` (dashboard),
   `users/page.tsx`, `games/page.tsx`.
-- `src/components/admin/` (new): `UserTable`, `RoleSelect`, `AuditLogList`, etc.,
+- `src/features/admin/components/` (new): `UserTable`, `RoleSelect`, `AuditLogList`, etc.,
   following the feature-folder convention ([ADR-007](./decisions.md)).
 
 ## Internationalization
@@ -274,10 +273,10 @@ table, find your row, set `role: "admin"`. No code path needed.
 | `convex/tables/adminAuditLog.ts` | new | Audit table (register in `convex/schema.ts`) |
 | `convex/tables/profiles.ts` | edit | Typed `role`, `bannedAt`, `banReason` |
 | `convex/migrations.ts` | new | One-time clear of stale `role` strings |
-| `src/middlewares/constants.ts` | edit | Re-export route policy from `@convex/lib/access` |
-| `src/hooks/auth/useAccess.ts` (+ `index.ts`) | new | `useAccess()` |
-| `src/components/auth/PermissionGuard.tsx` | new | Client guard |
-| `src/components/admin/*` | new folder | Admin UI components |
+| `src/features/auth/middleware/constants.ts` | edit | Re-export route policy from `@convex/lib/access` |
+| `src/features/auth/hooks/useAccess.ts` | new | `useAccess()` |
+| `src/features/auth/components/PermissionGuard.tsx` | new | Client guard |
+| `src/features/admin/components/*` | new folder | Admin UI components |
 | `src/app/admin/*` | new folder | `/admin` route, layout, sections |
 | `messages/en.json`, `messages/ka.json` | edit | `admin` i18n namespace |
 

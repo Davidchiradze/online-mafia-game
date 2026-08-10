@@ -2,13 +2,13 @@ import { describe, it, expect } from "vitest";
 import {
   computeSpeakingOrder,
   getNextSpeaker,
-} from "@convex/lib/speakingOrder";
+} from "@convex/games/core/speakingOrder";
 
 /**
  * CHARACTERIZATION TEST — day-phase speaking order (regression oracle).
  *
  * Seat indexes are 1-based, dead players are skipped, order is circular.
- * This logic is SHARED (variant-agnostic) per docs/game-types.md §4, so it
+ * This logic is SHARED (variant-agnostic) per docs/engine/variant-architecture.md §4, so it
  * should survive the refactor untouched — these tests guard that.
  */
 

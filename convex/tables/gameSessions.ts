@@ -26,7 +26,7 @@ export const gameSessions = defineTable({
   // left alive). "no_contest" pauses the game on the winner banner like a
   // faction win, but is logged as `winner: null` (no contest) with no ELO
   // change — the same terminal outcome as an admin force-end. See
-  // docs/game-end-conditions.md.
+  // docs/engine/win-check-seam.md.
   winner: v.optional(
     v.union(
       v.literal("mafia"),

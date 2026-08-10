@@ -1,5 +1,5 @@
 /**
- * The Japanese Mafia game definition (docs/game-types.md §2.1).
+ * The Japanese Mafia game definition (docs/engine/variant-architecture.md §2.1).
  *
  * This assembles the definition from the variant's own modules where they have
  * been relocated (`./winConditions`, `./nightModel`, `./phases`) and from the
@@ -68,5 +68,6 @@ export const JAPANESE_DEFINITION: GameDefinition = {
     hasRightHandPromotion: true,
     firstDaySingleNomineeSkipsToNight: false,
     thirdFoulSpeakingBan: false,
+    hasBestMove: false,
   },
 };

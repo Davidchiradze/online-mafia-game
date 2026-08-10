@@ -1,5 +1,5 @@
 /**
- * Japanese Mafia win conditions (docs/game-end-conditions.md §7).
+ * Japanese Mafia win conditions (docs/variants/japanese/win-conditions.md §7).
  *
  * `describeWin` is a pure function (no DB access) implementing the decision
  * algorithm: it inspects the roles of the *alive* players and returns a

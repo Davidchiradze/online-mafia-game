@@ -9,13 +9,13 @@ import {
 } from "@convex/lib/constants";
 import { roleToFaction, type Faction } from "@convex/lib/roles";
 import { decideWinner } from "@convex/games/japanese/winConditions";
-import type { WinContext } from "@convex/lib/winConditions";
-import { JAPANESE_MAFIA_ROLES } from "@/lib/constants/game";
+import type { WinContext } from "@convex/games/core/winConditions";
+import { JAPANESE_MAFIA_ROLES } from "@/shared/lib/constants/game";
 
 /**
  * EQUIVALENCE / CHARACTERIZATION TEST — the Japanese `GameDefinition`.
  *
- * Phase 1 introduces the Game Definition registry (docs/game-types.md §2) as an
+ * Phase 1 introduces the Game Definition registry (docs/engine/variant-architecture.md §2) as an
  * abstraction that WRAPS the current Japanese modules. This test proves the
  * assembled definition is a faithful mirror of today's constants and pure
  * functions, so wiring the engine to `getGameDefinition(...)` cannot silently
@@ -85,6 +85,7 @@ describe("JAPANESE_DEFINITION — data mirrors the legacy constants", () => {
       hasRightHandPromotion: true,
       firstDaySingleNomineeSkipsToNight: false,
       thirdFoulSpeakingBan: false,
+      hasBestMove: false,
     });
   });
 });

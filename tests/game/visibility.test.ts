@@ -8,15 +8,15 @@ import {
   VisibilityState,
   type GamePhase,
   type Role,
-} from "@/lib/game/visibility";
-import { GAME_PHASES } from "@/lib/constants/game";
+} from "@/shared/lib/game/visibility";
+import { GAME_PHASES } from "@/shared/lib/constants/game";
 
 /**
  * CHARACTERIZATION TEST — Japanese role/phase visibility (regression oracle).
  *
  * Pins who can see whom, which roles are awake, and which phases are "night".
  * During the refactor this becomes the variant's `VisibilityRuleset`
- * (docs/game-types.md §2.4); the Japanese answers must not change.
+ * (docs/engine/variant-architecture.md §2.4); the Japanese answers must not change.
  */
 
 const ALL_ROLES: Role[] = [

@@ -114,7 +114,11 @@ const game = useQuery(api.games.getById, { gameId });
 ### 4. Night Phase Session
 
 **Query**: `api.nightPhaseSessions.getCurrent`
-**Returns**: Current night session (mafia target, yakuza target, healed player)
+**Returns**: the current night session. Its **shape is variant-dependent** —
+the row carries the union of every variant's fields and each variant populates
+only its own. Japanese uses the single-authority scalars; Sports adds the
+per-player selection array and the best-move fields. See
+`convex/tables/nightPhaseSessions.ts` for the authoritative field list.
 
 ```typescript
 const nightSession = useQuery(
@@ -123,7 +127,14 @@ const nightSession = useQuery(
 );
 ```
 
-**When to use**: During night phases to show target selections to team members.
+**When to use**: during night phases, to render whatever the resolved ruleset
+says this viewer may see.
+
+> ⚠️ Target visibility is **not** universal. Under a `single-authority` night
+> model a team shares one visible target; under `unanimous-vote` each player
+> sees **only their own** pick, and revealing the others would leak the vote.
+> Never assume either — branch on the ruleset's night model, never on `gameType`
+> ([engine/variant-architecture.md](./engine/variant-architecture.md) §2.3).
 
 ### 5. Player Roles (filtered by visibility)
 

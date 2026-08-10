@@ -1,4 +1,4 @@
-import HeadquartersWrapper from "@/components/dashboard/HeadquartersWrapper";
+import HeadquartersWrapper from "@/features/headquarters/components/HeadquartersWrapper";
 
 export default function LobbyLayout({
   children,

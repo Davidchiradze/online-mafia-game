@@ -1,5 +1,5 @@
 /**
- * The Sports Mafia game definition (docs/sports-mafia.md).
+ * The Sports Mafia game definition (docs/variants/sports.md).
  *
  * Phase 2 authors this as pure DATA — roles, deck, factions, phase graph, the
  * parity `decideWinner`, the unanimous-vote night model, and flags. Nothing is
@@ -47,5 +47,6 @@ export const SPORTS_DEFINITION: GameDefinition = {
     hasRightHandPromotion: false,
     firstDaySingleNomineeSkipsToNight: true,
     thirdFoulSpeakingBan: true,
+    hasBestMove: true,
   },
 };

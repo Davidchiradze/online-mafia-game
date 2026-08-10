@@ -1,4 +1,4 @@
-import SubscriptionsContent from "@/components/dashboard/subscriptions/SubscriptionsContent";
+import SubscriptionsContent from "@/features/subscriptions/components/SubscriptionsContent";
 
 export default function SubscriptionsPage() {
   return <SubscriptionsContent />;

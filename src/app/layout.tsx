@@ -4,16 +4,16 @@ import localFont from "next/font/local";
 import Script from "next/script";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
-import AudioUnlockBootstrap from "@/components/providers/AudioUnlockBootstrap";
-import ConvexClientProvider from "@/components/providers/ConvexClientProvider";
-import ProfileSyncBootstrap from "@/components/providers/ProfileSyncBootstrap";
-import PresenceBootstrap from "@/components/providers/PresenceBootstrap";
-import VerificationGate from "@/components/providers/VerificationGate";
-import ServerTimeProvider from "@/components/providers/ServerTimeProvider";
-import { ThemeProvider } from "@/components/theme-provider/theme-provider";
+import AudioUnlockBootstrap from "@/providers/AudioUnlockBootstrap";
+import ConvexClientProvider from "@/providers/ConvexClientProvider";
+import ProfileSyncBootstrap from "@/providers/ProfileSyncBootstrap";
+import PresenceBootstrap from "@/providers/PresenceBootstrap";
+import VerificationGate from "@/providers/VerificationGate";
+import ServerTimeProvider from "@/providers/ServerTimeProvider";
+import { ThemeProvider } from "@/providers/theme-provider";
 import { ToastContainer } from "react-toastify";
 import "./globals.css";
-import "@/styles/game.css";
+import "@/features/game-room/styles/game.css";
 
 const inter = Inter({
   variable: "--font-inter",

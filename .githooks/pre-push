@@ -13,7 +13,36 @@ set -e
 echo "pre-push ▸ typecheck (tsc --noEmit)…"
 npm run --silent typecheck
 
+# Errors only. The convention backlog surfaces as warnings and is ratcheted by
+# tests/structure/conventions.test.ts in the run below.
+echo "pre-push ▸ lint (eslint)…"
+npm run --silent lint
+
 echo "pre-push ▸ unit tests (vitest)…"
 npm test
+
+# Convex codegen drift check.
+#
+# WHY: convex/_generated is committed and tsconfig sets skipLibCheck:true, so a
+# moved Convex module leaves api.d.ts importing a path that no longer exists —
+# and `tsc` stays GREEN (verified: exit 0). Regenerating here catches it locally.
+#
+# `convex codegen` needs deployment credentials and performs a network push, so
+# it cannot run in CI and is skipped unless CONVEX_DEPLOYMENT is set. The
+# offline equivalent (the `_generated` drift assertion in
+# tests/convex/apiIntegrity.test.ts) runs unconditionally via `npm test` above.
+#
+# ⚠️ DEV DEPLOYMENT ONLY — never point CONVEX_DEPLOYMENT at prod for this.
+if [ -n "$CONVEX_DEPLOYMENT" ]; then
+  echo "pre-push ▸ convex codegen drift ($CONVEX_DEPLOYMENT)…"
+  if ! npm run --silent codegen:check; then
+    echo ""
+    echo "pre-push ✖ convex/_generated is stale."
+    echo "          Run 'npm run codegen' and commit the result."
+    exit 1
+  fi
+else
+  echo "pre-push ▸ skipping codegen drift check (CONVEX_DEPLOYMENT not set)"
+fi
 
 echo "pre-push ▸ all checks passed ✔"

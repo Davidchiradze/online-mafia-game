@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { JAPANESE_SEAT_LAYOUT } from "@/game/japanese/seatLayout";
-import { SPORTS_SEAT_LAYOUT } from "@/game/sports/seatLayout";
-import type { GridPosition } from "@/game/core/types";
+import { JAPANESE_SEAT_LAYOUT } from "@/features/game-room/variants/japanese/seatLayout";
+import { SPORTS_SEAT_LAYOUT } from "@/features/game-room/variants/sports/seatLayout";
+import type { GridPosition } from "@/features/game-room/variants/core/types";
 
 /**
  * CHARACTERIZATION TEST — the participant-circle ring geometry (oracle gap G4,
@@ -9,7 +9,7 @@ import type { GridPosition } from "@/game/core/types";
  * `gridPositionForSeat` was a hardcoded switch in `useSeatShuffleAnimation` —
  * P4-T5 only moved it into `JAPANESE_SEAT_LAYOUT.positionForSeat` (imports-only,
  * same values). The Sports block pins the NEW 10-ring, so the variant geometry
- * is a visible, tested diff (docs/game-types.md §6).
+ * is a visible, tested diff (docs/engine/variant-architecture.md §6).
  */
 
 // ---------------------------------------------------------------------------

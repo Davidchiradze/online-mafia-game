@@ -3,7 +3,7 @@ import { query } from "../_generated/server";
 import { requirePermission } from "../lib/auth";
 import { PERMISSIONS } from "../lib/access";
 import { isSubscriptionActiveByDate } from "../lib/entitlements";
-import { winMethodLabel } from "../lib/winConditions";
+import { winMethodLabel } from "../games/core/winConditions";
 
 /* ============================================================================
  * ADMIN DASHBOARD ANALYTICS

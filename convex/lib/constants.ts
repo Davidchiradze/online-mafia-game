@@ -80,13 +80,25 @@ export const CARD_PICK = {
 
 export const SPORTS = {
   /**
-   * Sports mafia kill-selection window (docs/sports-mafia.md §5.3): buttons
+   * Sports mafia kill-selection window (docs/variants/sports.md §5.3): buttons
    * enable on phase entry and disable after 5s. The scheduler only CLOSES the
    * window (flips a boolean) — it does NOT advance the phase; the host advances
    * manually. Mirrors the voting-window shape.
    */
   MAFIA_TARGET_WINDOW_MS: 5 * 1000,
   MAFIA_TARGET_WINDOW_SECONDS: 5,
+  /**
+   * Sports "best move" (docs/variants/sports.md §6): the first-night victim names
+   * exactly this many suspects. Reaching the cap LOCKS the set — that is the
+   * phase's completion signal (there is no confirm button).
+   */
+  BEST_MOVE_SUSPECT_COUNT: 3,
+  /**
+   * Visual-only countdown for the best move. Nothing auto-advances at 0 — the
+   * host still advances (and may skip early if the victim is AFK, §6.3).
+   */
+  BEST_MOVE_WINDOW_MS: 30 * 1000,
+  BEST_MOVE_WINDOW_SECONDS: 30,
 } as const;
 
 export const PRESENCE = {

@@ -1,5 +1,5 @@
 /**
- * Sports Mafia win conditions (docs/sports-mafia.md §6). Two factions →
+ * Sports Mafia win conditions (docs/variants/sports.md §6). Two factions →
  * a simple parity rule, with no context sensitivity (the `beforeNight` /
  * `beforeDay` distinction is irrelevant; the signature keeps `context` only for
  * interface compatibility with `GameDefinition.decideWinner`).
@@ -18,7 +18,7 @@ const MAFIA_ROLES: ReadonlySet<string> = new Set(["DON", "MAFIA"]);
 
 /**
  * Structured endgame snapshot for Sports. Two factions → `yakuzaAlive` /
- * `shogunAlive` are always false (docs/sports-mafia.md §7) and there is no
+ * `shogunAlive` are always false (docs/variants/sports.md §7) and there is no
  * headline `decidedRole`. `context` is ignored (parity is boundary-independent).
  */
 export function describeSportsWin(

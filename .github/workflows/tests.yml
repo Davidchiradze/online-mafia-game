@@ -29,5 +29,11 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      # Fails on errors only. Warnings are the tracked convention backlog —
+      # tests/structure/conventions.test.ts owns that ratchet, so warning here
+      # would duplicate it and go red on day one. See eslint.config.mjs.
+      - name: Lint
+        run: npm run lint
+
       - name: Unit tests
         run: npm test

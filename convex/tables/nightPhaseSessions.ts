@@ -8,7 +8,7 @@ export const nightPhaseSessions = defineTable({
   mafiaTarget: v.optional(v.number()),
   yakuzaTarget: v.optional(v.number()),
   healedPlayer: v.optional(v.number()),
-  // Sports `unanimous-vote` night (docs/sports-mafia.md §5). Additive + optional
+  // Sports `unanimous-vote` night (docs/variants/sports.md §5). Additive + optional
   // so existing Japanese rows validate unchanged; only Sports games populate them.
   // Per-mafia private selections recorded during the 5s kill window.
   mafiaTargetSelections: v.optional(
@@ -18,6 +18,15 @@ export const nightPhaseSessions = defineTable({
   mafiaTargetWindowStartedAt: v.optional(v.string()),
   // Flipped false by the scheduler at +5s; the server rejects late selections.
   mafiaTargetWindowActive: v.optional(v.boolean()),
+  // Sports "best move" (docs/variants/sports.md §6). Granted at dawn of night 1
+  // only, when the mafia killed exactly one player AND at most one player was
+  // eliminated on day 1. Additive + optional, so Japanese rows (and Sports
+  // nights that grant no best move) validate unchanged.
+  // The seat granted the best move — set iff the best move was granted.
+  bestMoveSeat: v.optional(v.number()),
+  // The 0-3 seats they named, in pick order. Completion is DERIVED
+  // (`length === 3`) — there is no separate lock flag to keep in sync.
+  bestMoveSuspects: v.optional(v.array(v.number())),
 })
   .index("by_gameId", ["gameId"])
   .index("by_gameId_nightNumber", ["gameId", "nightNumber"]);
