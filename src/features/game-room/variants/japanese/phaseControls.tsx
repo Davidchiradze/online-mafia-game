@@ -8,13 +8,14 @@
  * ruleset's map instead of branching on the Japanese phase order.
  */
 
-import { SPEAKING_STATE } from "@/shared/lib/constants/game";
 import type { PhaseControlsMap } from "@/features/game-room/variants/core/types";
 import SessionStartedPanel from "@/features/game-room/components/phase-controls/SessionStartedPanel";
 import PickingRolesPanel from "@/features/game-room/components/phase-controls/PickingRolesPanel";
+import IntroductionPanel from "@/features/game-room/components/phase-controls/IntroductionPanel";
+import DayPhasePanel from "@/features/game-room/components/phase-controls/DayPhasePanel";
+import NominatedSpeakingPanel from "@/features/game-room/components/phase-controls/NominatedSpeakingPanel";
 import EndDonChooseRightHandButton from "@/features/game-room/components/phase-controls/EndDonChooseRightHandButton";
 import PhaseAdvanceButton from "@/features/game-room/components/phase-controls/PhaseAdvanceButton";
-import StartNightPhaseButton from "@/features/game-room/components/phase-controls/StartNightPhaseButton";
 import EndMafiaTargetButton from "@/features/game-room/components/phase-controls/EndMafiaTargetButton";
 import EndYakuzaTargetButton from "@/features/game-room/components/phase-controls/EndYakuzaTargetButton";
 import EndDoctorHealButton from "@/features/game-room/components/phase-controls/EndDoctorHealButton";
@@ -22,21 +23,14 @@ import FarewellSpeechControls from "@/features/game-room/components/phase-contro
 import VotingPhaseControls from "@/features/game-room/components/voting/VotingPhaseControls";
 import ContinueNextRoundButton from "@/features/game-room/components/phase-controls/ContinueNextRoundButton";
 import EndGameControls from "@/features/game-room/components/phase-controls/EndGameControls";
-import DayPhaseSpeakingControls from "@/features/game-room/components/phase-controls/DayPhaseSpeakingControls";
-import StartNominatedPlayersSpeakButton from "@/features/game-room/components/phase-controls/StartNominatedPlayersSpeakButton";
-import StartVotingButton from "@/features/game-room/components/phase-controls/StartVotingButton";
-import NominatedPlayersSpeakingControls from "@/features/game-room/components/phase-controls/NominatedPlayersSpeakingControls";
 import StartNextPhaseButton from "@/features/game-room/components/phase-controls/StartNextPhaseButton";
 
-function isSpeakingComplete(
-  currentSpeakerIndex: number | null | undefined,
-): boolean {
-  return SPEAKING_STATE.isCompleted(currentSpeakerIndex ?? null);
-}
-
 export const JAPANESE_PHASE_CONTROLS: PhaseControlsMap = {
-  // Pre-game states render the full host panel (it owns the whole centre cell,
-  // phase title included) — see HOST_PANEL_PHASES in lib/hostPanel.ts.
+  // Pre-game and speaking states render the full host panel (it owns the whole
+  // centre cell, phase title included) — see HOST_PANEL_PHASES in
+  // lib/hostPanel.ts. Their internal branching (run in progress vs complete,
+  // foul elimination, no nominees) moved INTO the panels, so the map entry is
+  // a plain lookup again.
   game_session_started: ({ gameSessionState }) => (
     <SessionStartedPanel gameSessionState={gameSessionState} />
   ),
@@ -74,15 +68,9 @@ export const JAPANESE_PHASE_CONTROLS: PhaseControlsMap = {
       labelKey="endMeeting"
     />
   ),
-  introduction_phase: ({ gameId, gameSessionState }) =>
-    isSpeakingComplete(gameSessionState.currentSpeakerIndex) ? (
-      <StartNightPhaseButton gameSessionState={gameSessionState} />
-    ) : (
-      <DayPhaseSpeakingControls
-        gameId={gameId}
-        gameSessionState={gameSessionState}
-      />
-    ),
+  introduction_phase: ({ gameId, gameSessionState }) => (
+    <IntroductionPanel gameId={gameId} gameSessionState={gameSessionState} />
+  ),
   night_phase: ({ gameSessionState }) => (
     <PhaseAdvanceButton
       gameSessionState={gameSessionState}
@@ -97,7 +85,7 @@ export const JAPANESE_PHASE_CONTROLS: PhaseControlsMap = {
     <PhaseAdvanceButton
       gameSessionState={gameSessionState}
       sourcePhase="don_checks_for_detective"
-      labelKey="endDonCheck"
+      labelKey="finish"
       variant="primary"
     />
   ),
@@ -116,7 +104,7 @@ export const JAPANESE_PHASE_CONTROLS: PhaseControlsMap = {
     <PhaseAdvanceButton
       gameSessionState={gameSessionState}
       sourcePhase="detective_checks_for_mafia"
-      labelKey="endDetectiveCheck"
+      labelKey="finish"
       variant="primary"
     />
   ),
@@ -124,23 +112,14 @@ export const JAPANESE_PHASE_CONTROLS: PhaseControlsMap = {
   farewell_speech: ({ gameSessionState }) => (
     <FarewellSpeechControls gameSessionState={gameSessionState} />
   ),
-  day_phase: ({ gameId, gameSessionState }) => {
-    if (isSpeakingComplete(gameSessionState.currentSpeakerIndex)) {
-      return gameSessionState.withoutSelfJustification ? (
-        <StartVotingButton gameSessionState={gameSessionState} />
-      ) : (
-        <StartNominatedPlayersSpeakButton gameSessionState={gameSessionState} />
-      );
-    }
-    return (
-      <DayPhaseSpeakingControls
-        gameId={gameId}
-        gameSessionState={gameSessionState}
-      />
-    );
-  },
-  nominated_players_speak: ({ gameSessionState }) => (
-    <NominatedPlayersSpeakingControls gameSessionState={gameSessionState} />
+  day_phase: ({ gameId, gameSessionState }) => (
+    <DayPhasePanel gameId={gameId} gameSessionState={gameSessionState} />
+  ),
+  nominated_players_speak: ({ gameId, gameSessionState }) => (
+    <NominatedSpeakingPanel
+      gameId={gameId}
+      gameSessionState={gameSessionState}
+    />
   ),
   voting: () => <VotingPhaseControls />,
   repeat: ({ gameSessionState }) => (

@@ -10,7 +10,9 @@ import PhaseButton from "@/features/game-room/components/ui/PhaseButton";
 import { useNightPhaseReadiness } from "@/features/game-room/hooks/game/useNightPhaseReadiness";
 
 type EndYakuzaTargetButtonProps = {
-  gameSessionState: NonNullable<ReturnType<typeof useGameRoom>["gameSessionState"]>;
+  gameSessionState: NonNullable<
+    ReturnType<typeof useGameRoom>["gameSessionState"]
+  >;
 };
 
 /**
@@ -42,7 +44,7 @@ const EndYakuzaTargetButton = ({
       onClick={handleEndYakuzaTarget}
       isLoading={isLoading}
       disabled={!canEndYakuzaPhase}
-      label={canEndYakuzaPhase ? t("endYakuzaPhase") : t("waitingForYakuza")}
+      label={canEndYakuzaPhase ? t("finish") : t("waitingForYakuza")}
       variant="danger"
     />
   );

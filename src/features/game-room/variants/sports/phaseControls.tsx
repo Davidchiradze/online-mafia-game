@@ -13,10 +13,11 @@
  * controls.
  */
 
-import { SPEAKING_STATE } from "@/shared/lib/constants/game";
 import type { PhaseControlsMap } from "@/features/game-room/variants/core/types";
 import SessionStartedPanel from "@/features/game-room/components/phase-controls/SessionStartedPanel";
 import PickingRolesPanel from "@/features/game-room/components/phase-controls/PickingRolesPanel";
+import DayPhasePanel from "@/features/game-room/components/phase-controls/DayPhasePanel";
+import NominatedSpeakingPanel from "@/features/game-room/components/phase-controls/NominatedSpeakingPanel";
 import PhaseAdvanceButton from "@/features/game-room/components/phase-controls/PhaseAdvanceButton";
 import SportsMafiaTargetControls from "@/features/game-room/components/phase-controls/SportsMafiaTargetControls";
 import BestMoveControls from "@/features/game-room/components/phase-controls/BestMoveControls";
@@ -24,21 +25,13 @@ import FarewellSpeechControls from "@/features/game-room/components/phase-contro
 import VotingPhaseControls from "@/features/game-room/components/voting/VotingPhaseControls";
 import ContinueNextRoundButton from "@/features/game-room/components/phase-controls/ContinueNextRoundButton";
 import EndGameControls from "@/features/game-room/components/phase-controls/EndGameControls";
-import DayPhaseSpeakingControls from "@/features/game-room/components/phase-controls/DayPhaseSpeakingControls";
-import StartNominatedPlayersSpeakButton from "@/features/game-room/components/phase-controls/StartNominatedPlayersSpeakButton";
-import StartVotingButton from "@/features/game-room/components/phase-controls/StartVotingButton";
-import NominatedPlayersSpeakingControls from "@/features/game-room/components/phase-controls/NominatedPlayersSpeakingControls";
 import StartNextPhaseButton from "@/features/game-room/components/phase-controls/StartNextPhaseButton";
 
-function isSpeakingComplete(
-  currentSpeakerIndex: number | null | undefined,
-): boolean {
-  return SPEAKING_STATE.isCompleted(currentSpeakerIndex ?? null);
-}
-
 export const SPORTS_PHASE_CONTROLS: PhaseControlsMap = {
-  // Pre-game states render the full host panel (it owns the whole centre cell,
-  // phase title included) — see HOST_PANEL_PHASES in lib/hostPanel.ts.
+  // Pre-game and speaking states render the full host panel (it owns the whole
+  // centre cell, phase title included) — see HOST_PANEL_PHASES in
+  // lib/hostPanel.ts. Sports has no introduction phase, so it registers only
+  // the day and self-justification panels.
   game_session_started: ({ gameSessionState }) => (
     <SessionStartedPanel gameSessionState={gameSessionState} />
   ),
@@ -66,23 +59,14 @@ export const SPORTS_PHASE_CONTROLS: PhaseControlsMap = {
       labelKey="endMeeting"
     />
   ),
-  day_phase: ({ gameId, gameSessionState }) => {
-    if (isSpeakingComplete(gameSessionState.currentSpeakerIndex)) {
-      return gameSessionState.withoutSelfJustification ? (
-        <StartVotingButton gameSessionState={gameSessionState} />
-      ) : (
-        <StartNominatedPlayersSpeakButton gameSessionState={gameSessionState} />
-      );
-    }
-    return (
-      <DayPhaseSpeakingControls
-        gameId={gameId}
-        gameSessionState={gameSessionState}
-      />
-    );
-  },
-  nominated_players_speak: ({ gameSessionState }) => (
-    <NominatedPlayersSpeakingControls gameSessionState={gameSessionState} />
+  day_phase: ({ gameId, gameSessionState }) => (
+    <DayPhasePanel gameId={gameId} gameSessionState={gameSessionState} />
+  ),
+  nominated_players_speak: ({ gameId, gameSessionState }) => (
+    <NominatedSpeakingPanel
+      gameId={gameId}
+      gameSessionState={gameSessionState}
+    />
   ),
   voting: () => <VotingPhaseControls />,
   night_phase: ({ gameSessionState }) => (
@@ -101,7 +85,7 @@ export const SPORTS_PHASE_CONTROLS: PhaseControlsMap = {
     <PhaseAdvanceButton
       gameSessionState={gameSessionState}
       sourcePhase="don_checks_for_detective"
-      labelKey="endDonCheck"
+      labelKey="finish"
       variant="primary"
     />
   ),
@@ -109,7 +93,7 @@ export const SPORTS_PHASE_CONTROLS: PhaseControlsMap = {
     <PhaseAdvanceButton
       gameSessionState={gameSessionState}
       sourcePhase="detective_checks_for_mafia"
-      labelKey="endDetectiveCheck"
+      labelKey="finish"
       variant="primary"
     />
   ),

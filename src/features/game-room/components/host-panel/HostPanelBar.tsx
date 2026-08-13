@@ -3,7 +3,10 @@
 import { useState } from "react";
 import { ChevronUp } from "lucide-react";
 import { useTranslations } from "next-intl";
-import type { HostPanelDescriptor } from "@/features/game-room/lib/hostPanel";
+import {
+  hostPanelHasCollapsedData,
+  type HostPanelDescriptor,
+} from "@/features/game-room/lib/hostPanel";
 import HostPanelEyebrow from "./HostPanelEyebrow";
 import HostPanelTitle from "./HostPanelTitle";
 import HostPanelDataLine from "./HostPanelDataLine";
@@ -24,6 +27,9 @@ type HostPanelBarProps = {
 export default function HostPanelBar({ descriptor }: HostPanelBarProps) {
   const t = useTranslations("game.host");
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  // The chevron costs ~36px of a row that is already short on width, so it is
+  // only rendered when the sheet would actually show more than the bar does.
+  const canExpand = hostPanelHasCollapsedData(descriptor);
 
   return (
     <>
@@ -38,17 +44,19 @@ export default function HostPanelBar({ descriptor }: HostPanelBarProps) {
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
           <HostPanelActions actions={descriptor.actions} />
-          <button
-            type="button"
-            onClick={() => {
-              setIsSheetOpen(true);
-            }}
-            aria-label={t("expandControls")}
-            title={t("expandControls")}
-            className="host-panel__disclosure"
-          >
-            <ChevronUp className="h-4 w-4" />
-          </button>
+          {canExpand && (
+            <button
+              type="button"
+              onClick={() => {
+                setIsSheetOpen(true);
+              }}
+              aria-label={t("expandControls")}
+              title={t("expandControls")}
+              className="host-panel__disclosure"
+            >
+              <ChevronUp className="h-4 w-4" />
+            </button>
+          )}
         </div>
       </div>
 

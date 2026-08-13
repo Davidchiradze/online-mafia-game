@@ -6,7 +6,6 @@ component-file-length | src/features/game-room/components/participant/MafiaKillC
 component-file-length | src/features/game-room/components/participant/ParticipantComponent.tsx
 component-file-length | src/features/game-room/components/participant/player-states/DeadCover.tsx
 component-file-length | src/features/game-room/components/phase-controls/FarewellSpeechControls.tsx
-component-file-length | src/features/game-room/components/phase-controls/NominatedPlayersSpeakingControls.tsx
 component-file-length | src/features/game-room/components/phase/PhaseTitle.tsx
 component-file-length | src/features/game-room/components/room/GameRoomHeader.tsx
 component-file-length | src/features/game-room/components/room/SpectatorJoinPrompt.tsx

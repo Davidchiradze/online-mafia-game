@@ -9,7 +9,9 @@ import { advanceUpdates } from "@/features/game-room/variants/japanese/phaseFlow
 import PhaseButton from "@/features/game-room/components/ui/PhaseButton";
 
 type EndDonChooseRightHandButtonProps = {
-  gameSessionState: NonNullable<ReturnType<typeof useGameRoom>["gameSessionState"]>;
+  gameSessionState: NonNullable<
+    ReturnType<typeof useGameRoom>["gameSessionState"]
+  >;
 };
 
 /**
@@ -57,7 +59,7 @@ const EndDonChooseRightHandButton = ({
       onClick={handleEndDonChoice}
       isLoading={isLoading}
       disabled={!canConfirm}
-      label={canConfirm ? t("confirm") : t("waitingForDonPick")}
+      label={canConfirm ? t("confirm") : t("finish")}
       title={canConfirm ? undefined : t("donNotPromotedRightHand")}
       variant="success"
     />

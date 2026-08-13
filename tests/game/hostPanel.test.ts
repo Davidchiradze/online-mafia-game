@@ -15,12 +15,15 @@ import {
   HOST_PANEL_COLLAPSED_CHIP_LIMIT,
   HOST_PANEL_PHASES,
   hostPanelCollapsedChips,
+  hostPanelHasCollapsedData,
   orderedSeatChips,
   resolveHostPanelLayout,
   type HostPanelDescriptor,
 } from "@/features/game-room/lib/hostPanel";
 import { JAPANESE_PHASE_CONTROLS } from "@/features/game-room/variants/japanese/phaseControls";
 import { SPORTS_PHASE_CONTROLS } from "@/features/game-room/variants/sports/phaseControls";
+import { JAPANESE_PHASES } from "@convex/games/japanese/phases";
+import { SPORTS_PHASES } from "@convex/games/sports/phases";
 
 describe("resolveHostPanelLayout", () => {
   it("gives a desktop centre cell the full three-zone panel", () => {
@@ -35,13 +38,23 @@ describe("resolveHostPanelLayout", () => {
     expect(resolveHostPanelLayout({ width: 340, height: 150 })).toBe("compact");
     // Narrow: a chip run cannot wrap into 180px without stacking one per row.
     expect(resolveHostPanelLayout({ width: 180, height: 400 })).toBe("compact");
+    // Still stackable at 104px — the action scales down and the title fits.
+    expect(resolveHostPanelLayout({ width: 390, height: 104 })).toBe("compact");
   });
 
-  it("docks to a bar only when the cell is short AND wide enough for one row", () => {
-    expect(resolveHostPanelLayout({ width: 390, height: 104 })).toBe("bar");
-    // Short but too narrow to put a 44px action beside the identity: the bar
-    // would overlap, so compact (which stacks them) is the safe band.
-    expect(resolveHostPanelLayout({ width: 240, height: 104 })).toBe("compact");
+  it("docks a landscape phone's merged centre to a bar", () => {
+    // THE regression. An iPhone 12 Pro in landscape gives the Japanese merged
+    // centre a controls half of roughly 250×71. Stacking there spends every
+    // pixel on the action's touch floor and clips the phase title out of the
+    // data zone, which is exactly what shipped before this band existed.
+    expect(resolveHostPanelLayout({ width: 250, height: 71 })).toBe("bar");
+    expect(resolveHostPanelLayout({ width: 390, height: 88 })).toBe("bar");
+  });
+
+  it("keeps stacking when a short cell is too narrow for a bar", () => {
+    // Under ~224px there is no identity column left once the action and its
+    // disclosure are placed, so side-by-side is worse than a cramped stack.
+    expect(resolveHostPanelLayout({ width: 200, height: 71 })).toBe("compact");
   });
 
   it("keeps the bands ordered so every size resolves", () => {
@@ -102,14 +115,85 @@ describe("hostPanelCollapsedChips", () => {
   });
 });
 
+describe("hostPanelHasCollapsedData", () => {
+  const base: HostPanelDescriptor = {
+    eyebrow: "Day 2",
+    title: "Day",
+    actions: [],
+  };
+
+  it("is false when the bar already shows everything", () => {
+    // No chevron then — it would cost a seventh of a landscape row to open a
+    // sheet showing the same two facts.
+    expect(
+      hostPanelHasCollapsedData({ ...base, status: "4 of 10 spoken" }),
+    ).toBe(false);
+    // Two speaker pills fold into two chips — both survive the collapse.
+    expect(
+      hostPanelHasCollapsedData({
+        ...base,
+        speakers: [
+          { role: "now", label: "Speaking", seat: 4 },
+          { role: "next", label: "Next up", seat: 5 },
+        ],
+        status: "4 of 10 spoken",
+      }),
+    ).toBe(false);
+  });
+
+  it("is true when the collapse dropped something", () => {
+    expect(
+      hostPanelHasCollapsedData({
+        ...base,
+        chips: orderedSeatChips([1, 2, 3, 4, 5, 6], 2),
+      }),
+    ).toBe(true);
+    expect(
+      hostPanelHasCollapsedData({ ...base, progress: { value: 3, total: 8 } }),
+    ).toBe(true);
+    expect(
+      hostPanelHasCollapsedData({
+        ...base,
+        nominated: { label: "Nominated", seats: [4, 9] },
+      }),
+    ).toBe(true);
+    // The one line shows the note, so the status under it is lost.
+    expect(
+      hostPanelHasCollapsedData({
+        ...base,
+        note: { text: "Out on fouls", tone: "amber" },
+        status: "Speaker may finish",
+      }),
+    ).toBe(true);
+  });
+});
+
 describe("HOST_PANEL_PHASES", () => {
-  it("only names phases BOTH variants have", () => {
-    // The set is read by the variant-agnostic `GamePhaseControls`. A phase only
-    // one variant registers would make the other fall through to the legacy
-    // stack and stack a duplicate `<PhaseTitle>` above the panel's own title.
+  const VARIANTS = [
+    ["japanese", new Set<string>(JAPANESE_PHASES), JAPANESE_PHASE_CONTROLS],
+    ["sports", new Set<string>(SPORTS_PHASES), SPORTS_PHASE_CONTROLS],
+  ] as const;
+
+  it("is registered by every variant that actually has the phase", () => {
+    // The set is read by the variant-agnostic `GamePhaseControls`: a listed
+    // phase renders bare, with no `<PhaseTitle>` above it. Listing a phase a
+    // variant HAS but does not register drops that variant into the legacy
+    // branch and renders "Unknown phase" where the controls should be.
+    //
+    // Not registering a phase a variant does not have is fine and expected —
+    // Sports has no introduction phase.
+    for (const [name, phases, controls] of VARIANTS) {
+      for (const phase of HOST_PANEL_PHASES) {
+        if (!phases.has(phase)) continue;
+        expect(controls[phase], `${name}: ${phase}`).toBeTypeOf("function");
+      }
+    }
+  });
+
+  it("is not a set of phases no variant has", () => {
     for (const phase of HOST_PANEL_PHASES) {
-      expect(JAPANESE_PHASE_CONTROLS[phase], phase).toBeTypeOf("function");
-      expect(SPORTS_PHASE_CONTROLS[phase], phase).toBeTypeOf("function");
+      const owners = VARIANTS.filter(([, phases]) => phases.has(phase));
+      expect(owners.length, phase).toBeGreaterThan(0);
     }
   });
 });

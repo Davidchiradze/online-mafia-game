@@ -1,0 +1,90 @@
+/* Game UI — the phase action button.
+
+   `.phase-btn` is the standalone button used by the not-yet-migrated per-phase
+   control stacks; `.phase-btn-<variant>` is JUST the colour, and the host panel
+   reuses those variant classes with its own container-query sizing
+   (`.host-panel__action` in host-panel.css). Keep the palette here so both
+   surfaces stay one design. */
+
+@reference "tailwindcss";
+
+.phase-btn {
+  @apply w-full px-6 py-3 rounded-xl cursor-pointer text-white border-2
+         transition duration-200 flex items-center justify-center gap-2
+         disabled:cursor-not-allowed disabled:opacity-50;
+  font-family: var(--font-orbitron), var(--font-noto-georgian), sans-serif;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.phase-btn:not(:disabled):hover {
+  transform: scale(1.02);
+}
+
+.phase-btn:not(:disabled):active {
+  transform: scale(0.98);
+}
+
+@media (max-height: 900px) {
+  .phase-btn {
+    @apply px-5 py-2.5 text-[0.8rem];
+  }
+}
+
+@media (max-height: 760px) {
+  .phase-btn {
+    @apply px-4 py-2 text-xs;
+  }
+}
+
+/* ── Variants: colour only, shared with the host panel ───────────────────── */
+
+.phase-btn-primary {
+  background: linear-gradient(135deg, rgba(59,130,246,0.3) 0%, rgba(37,99,235,0.35) 100%);
+  border-color: rgba(59,130,246,0.5);
+  box-shadow: 0 0 20px rgba(59,130,246,0.3);
+}
+
+.phase-btn-primary:not(:disabled):hover {
+  box-shadow: 0 0 30px rgba(59,130,246,0.5);
+}
+
+.phase-btn-success {
+  background: linear-gradient(135deg, rgba(52,211,153,0.3) 0%, rgba(16,185,129,0.35) 100%);
+  border-color: rgba(52,211,153,0.5);
+  box-shadow: 0 0 20px rgba(52,211,153,0.3);
+}
+
+.phase-btn-success:not(:disabled):hover {
+  box-shadow: 0 0 30px rgba(52,211,153,0.5);
+}
+
+.phase-btn-warning {
+  background: linear-gradient(135deg, rgba(245,158,11,0.3) 0%, rgba(217,119,6,0.35) 100%);
+  border-color: rgba(245,158,11,0.5);
+  box-shadow: 0 0 20px rgba(245,158,11,0.3);
+}
+
+.phase-btn-warning:not(:disabled):hover {
+  box-shadow: 0 0 30px rgba(245,158,11,0.5);
+}
+
+.phase-btn-danger {
+  background: linear-gradient(135deg, rgba(220,38,38,0.3) 0%, rgba(185,28,28,0.35) 100%);
+  border-color: rgba(220,38,38,0.5);
+  box-shadow: 0 0 20px rgba(220,38,38,0.3);
+}
+
+.phase-btn-danger:not(:disabled):hover {
+  box-shadow: 0 0 30px rgba(220,38,38,0.5);
+}
+
+.phase-btn-secondary {
+  background: linear-gradient(135deg, rgba(100,116,139,0.3) 0%, rgba(71,85,105,0.35) 100%);
+  border-color: rgba(100,116,139,0.5);
+  box-shadow: 0 0 20px rgba(100,116,139,0.3);
+}
+
+.phase-btn-secondary:not(:disabled):hover {
+  box-shadow: 0 0 30px rgba(100,116,139,0.5);
+}

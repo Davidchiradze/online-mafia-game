@@ -45,7 +45,7 @@ const EndDoctorHealButton = () => {
       onClick={handleEndDoctorHeal}
       isLoading={isLoading}
       disabled={!canEndDoctorPhase}
-      label={canEndDoctorPhase ? t("endDoctorPhase") : t("waitingForDoctor")}
+      label={canEndDoctorPhase ? t("finish") : t("waitingForDoctor")}
       variant="success"
     />
   );
