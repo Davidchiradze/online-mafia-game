@@ -599,6 +599,8 @@
       "speakingOrderLabel": "სიტყვის რიგი",
       "nomineeSpeaking": "#{seat} საუბრობს · {position}/{total}",
       "nomineeNext": "შემდეგი: #{seat}",
+      "nightCounter": "ღამე {night}",
+      "mafiaPickedCount": "{total}-დან {picked}-მა აირჩია",
       "startGameTitle": "თამაშის დაწყება",
       "selfJustificationQuestion": "როგორ განიხილონ ნომინირებული მოთამაშეები კენჭისყრამდე?",
       "withSelfJustification": "თავის მართლებით",

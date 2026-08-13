@@ -176,6 +176,35 @@ export type HostPanelSpeaker = {
 export type HostPanelNoteTone = "amber" | "rose" | "emerald";
 export type HostPanelNote = { text: string; tone: HostPanelNoteTone };
 
+/**
+ * The night summary — what the night has recorded so far, one pill per acting
+ * role or per mafia. Rose is the mafia kill, violet the yakuza, emerald the
+ * doctor's heal, slate a slot nobody has filled yet.
+ *
+ * Data, not a component, because the two variants record completely different
+ * things: Japanese has three single-authority scalars (M / Y / H), Sports has
+ * one private pick per living mafia. Both resolve to label→value pills, so the
+ * panel renders them identically and only `ruleset.useNightSummary` differs.
+ */
+export type HostPanelMetaTone = "rose" | "violet" | "emerald" | "slate";
+
+export type HostPanelMeta = {
+  /** Stable across renders — used as the React key. */
+  id: string;
+  label: string;
+  /** Already formatted for display ("#7", "—"). */
+  value: string;
+  tone: HostPanelMetaTone;
+  /** The role currently choosing: the pill glows. */
+  isActive?: boolean;
+  /**
+   * Draw a crosshair between label and value. Sports' per-mafia pills pair two
+   * seat numbers, and without it "#2 #7" reads as two seats rather than
+   * "#2 is killing #7".
+   */
+  icon?: "target";
+};
+
 export type HostPanelDescriptor = {
   /** Small uppercase kicker above the title ("Pre-game", "Day 2"). */
   eyebrow: string;
@@ -187,6 +216,7 @@ export type HostPanelDescriptor = {
   note?: HostPanelNote;
   chipsLabel?: string;
   chips?: readonly SeatChip[];
+  meta?: readonly HostPanelMeta[];
   /** One line of prose, max. Anything longer belongs in its own pill. */
   status?: string;
   progress?: HostPanelProgress;
@@ -265,6 +295,11 @@ export function hostPanelHasCollapsedData(
     return true;
   }
   if (descriptor.progress) return true;
+  // NOT meta: the night summary renders inline on the collapsed line, sized to
+  // fit and scrolling sideways when it cannot. Counting it here would spend the
+  // chevron's ~36px on the very column the pills need — the sheet would show
+  // what the bar was only failing to fit because of the chevron.
+  //
   // The capsule carries a label the bare chips lose.
   if ((descriptor.nominated?.seats.length ?? 0) > 0) return true;
   // The single line shows the note, so the status underneath it is dropped.
@@ -286,9 +321,26 @@ export function hostPanelHasCollapsedData(
  * states move onto the panel, and disappears once it covers all of them.
  */
 export const HOST_PANEL_PHASES: ReadonlySet<string> = new Set<string>([
+  // Pre-game
   GAME_PHASES[0], // game_session_started
   GAME_PHASES[1], // picking_roles
+  // Speaking
   GAME_PHASES[7], // introduction_phase
   GAME_PHASES[16], // day_phase
   GAME_PHASES[17], // nominated_players_speak
+  // Night — meetings, actions and the neutral buffer between them
+  GAME_PHASES[2], // mafia_meet
+  GAME_PHASES[3], // don_chooses_right_hand
+  GAME_PHASES[4], // yakuda_shogun_meet
+  GAME_PHASES[5], // detective_meet
+  GAME_PHASES[6], // doctor_meet
+  GAME_PHASES[8], // night_phase
+  GAME_PHASES[9], // mafia_chooses_target
+  GAME_PHASES[10], // don_checks_for_detective
+  GAME_PHASES[11], // right_hand_checks_for_yakuza
+  GAME_PHASES[12], // yakuza_and_shogun_chooses_target
+  GAME_PHASES[13], // detective_checks_for_mafia
+  GAME_PHASES[14], // doctor_heals_player
+  GAME_PHASES[21], // phase_transition
+  GAME_PHASES[22], // don_meet (Sports)
 ]);

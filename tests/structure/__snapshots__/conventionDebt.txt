@@ -24,9 +24,7 @@ component-file-pascalcase | src/features/auth/lib/authBridgeContext.tsx
 component-file-pascalcase | src/features/game-room/context/gameRoomContext.tsx
 component-file-pascalcase | src/features/game-room/hooks/game/useGameBroadcasts.tsx
 component-file-pascalcase | src/features/game-room/hooks/game/useJoinRequestNotification.tsx
-component-file-pascalcase | src/features/game-room/variants/japanese/nightActionsDisplay.tsx
 component-file-pascalcase | src/features/game-room/variants/japanese/phaseControls.tsx
-component-file-pascalcase | src/features/game-room/variants/sports/nightActionsDisplay.tsx
 component-file-pascalcase | src/features/game-room/variants/sports/phaseControls.tsx
 component-file-pascalcase | src/features/headquarters/hooks/useMyJoinRequestNotifications.tsx
 component-file-pascalcase | src/providers/theme-provider.tsx
@@ -72,8 +70,6 @@ one-component-per-file | src/features/game-room/components/room/SpectatorJoinPro
 one-component-per-file | src/features/game-room/components/room/SpectatorView.tsx
 one-component-per-file | src/features/game-room/components/room/WaitingRoom.tsx
 one-component-per-file | src/features/game-room/context/gameRoomContext.tsx
-one-component-per-file | src/features/game-room/variants/japanese/nightActionsDisplay.tsx
-one-component-per-file | src/features/game-room/variants/sports/nightActionsDisplay.tsx
 one-component-per-file | src/features/headquarters/community-chat/FloatingChatWidget.tsx
 one-component-per-file | src/features/headquarters/components/HeadquartersWrapper.tsx
 one-component-per-file | src/features/headquarters/components/NavigationSidebar.tsx

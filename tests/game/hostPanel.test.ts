@@ -139,6 +139,20 @@ describe("hostPanelHasCollapsedData", () => {
         status: "4 of 10 spoken",
       }),
     ).toBe(false);
+
+    // The night summary renders inline on the collapsed line now. Charging the
+    // chevron's ~36px for it would take the width the pills need to fit.
+    expect(
+      hostPanelHasCollapsedData({
+        ...base,
+        meta: [
+          { id: "m", label: "M", value: "#7", tone: "rose" },
+          { id: "y", label: "Y", value: "—", tone: "violet" },
+          { id: "h", label: "H", value: "#7", tone: "emerald" },
+        ],
+        status: "Don awake",
+      }),
+    ).toBe(false);
   });
 
   it("is true when the collapse dropped something", () => {

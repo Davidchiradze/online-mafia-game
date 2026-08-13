@@ -149,6 +149,95 @@
   gap: clamp(3px, 1.2cqw, 9px);
 }
 
+/* ── Night summary pills ─────────────────────────────────────────────────────
+   What the night has recorded so far: label → value, one pill per acting role
+   (Japanese M/Y/H) or per living mafia (Sports' private picks). `--active` is
+   the role currently choosing; the tones match the night-action palette in
+   badges.css so the panel and the participant grid agree on what rose means. */
+
+.host-panel__meta {
+  @apply flex max-w-full flex-wrap justify-center;
+  gap: clamp(3px, 1.2cqw, 8px);
+}
+
+.host-panel__meta-pill {
+  @apply flex items-center rounded-full border;
+  gap: clamp(2px, 0.7cqw, 5px);
+  padding: clamp(1px, 0.9cqh, 5px) clamp(4px, 1.4cqw, 10px);
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.host-panel__meta-label {
+  @apply font-bold;
+  font-size: clamp(6px, calc(2cqh + 0.7cqw), 10px);
+  letter-spacing: 0.1em;
+  color: #94a3b8;
+}
+
+.host-panel__meta-value {
+  @apply font-extrabold;
+  font-size: clamp(7px, calc(2.4cqh + 0.85cqw), 12px);
+  color: #f1f5f9;
+}
+
+.host-panel__meta-icon {
+  @apply shrink-0;
+  width: clamp(7px, calc(2.4cqh + 0.85cqw), 13px);
+  height: clamp(7px, calc(2.4cqh + 0.85cqw), 13px);
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.host-panel__meta-pill--rose {
+  background: rgba(244, 63, 94, 0.15);
+  border-color: rgba(244, 63, 94, 0.35);
+}
+
+.host-panel__meta-pill--rose .host-panel__meta-label,
+.host-panel__meta-pill--rose .host-panel__meta-icon {
+  color: #fda4af;
+}
+
+.host-panel__meta-pill--violet {
+  background: rgba(139, 92, 246, 0.15);
+  border-color: rgba(139, 92, 246, 0.35);
+}
+
+.host-panel__meta-pill--violet .host-panel__meta-label {
+  color: #c4b5fd;
+}
+
+.host-panel__meta-pill--emerald {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: rgba(52, 211, 153, 0.35);
+}
+
+.host-panel__meta-pill--emerald .host-panel__meta-label {
+  color: #6ee7b7;
+}
+
+/* Whose turn is open right now. Deliberately a glow rather than a different
+   hue: the hue already means "which role", and overloading it would lose that. */
+.host-panel__meta-pill--active {
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.14);
+  border-width: 1.5px;
+}
+
+.host-panel__meta-pill--rose.host-panel__meta-pill--active {
+  border-color: rgba(244, 63, 94, 0.75);
+  box-shadow: 0 0 14px rgba(244, 63, 94, 0.4);
+}
+
+.host-panel__meta-pill--violet.host-panel__meta-pill--active {
+  border-color: rgba(139, 92, 246, 0.75);
+  box-shadow: 0 0 14px rgba(139, 92, 246, 0.4);
+}
+
+.host-panel__meta-pill--emerald.host-panel__meta-pill--active {
+  border-color: rgba(52, 211, 153, 0.75);
+  box-shadow: 0 0 14px rgba(52, 211, 153, 0.4);
+}
+
 /* ── Status line and progress ────────────────────────────────────────────── */
 
 .host-panel__status {

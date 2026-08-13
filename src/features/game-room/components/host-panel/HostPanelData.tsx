@@ -3,6 +3,7 @@ import HostPanelNominated from "./HostPanelNominated";
 import HostPanelSpeakers from "./HostPanelSpeakers";
 import HostPanelNote from "./HostPanelNote";
 import SeatChipRow from "./SeatChipRow";
+import HostPanelMeta from "./HostPanelMeta";
 import HostPanelProgress from "./HostPanelProgress";
 
 type HostPanelDataProps = {
@@ -20,8 +21,16 @@ type HostPanelDataProps = {
  * same place every time.
  */
 export default function HostPanelData({ descriptor }: HostPanelDataProps) {
-  const { chips, chipsLabel, nominated, note, progress, speakers, status } =
-    descriptor;
+  const {
+    chips,
+    chipsLabel,
+    meta,
+    nominated,
+    note,
+    progress,
+    speakers,
+    status,
+  } = descriptor;
 
   return (
     <div className="host-panel__data">
@@ -29,6 +38,7 @@ export default function HostPanelData({ descriptor }: HostPanelDataProps) {
       {speakers && <HostPanelSpeakers speakers={speakers} />}
       {note && <HostPanelNote note={note} />}
       {chips && <SeatChipRow label={chipsLabel} chips={chips} />}
+      {meta && <HostPanelMeta meta={meta} />}
       {progress && <HostPanelProgress progress={progress} />}
       {status && <span className="host-panel__status">{status}</span>}
     </div>

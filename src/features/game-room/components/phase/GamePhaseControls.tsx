@@ -1,6 +1,5 @@
 import React from "react";
 import StartGamePanel from "@/features/game-room/components/phase-controls/StartGamePanel";
-import NightActionsDisplay from "./NightActionsDisplay";
 import PhaseTitle from "@/features/game-room/components/phase/PhaseTitle";
 import WinnerBanner from "@/features/game-room/components/host/WinnerBanner";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
@@ -22,8 +21,8 @@ import { HOST_PANEL_PHASES } from "@/features/game-room/lib/hostPanel";
  *    owns the WHOLE cell, phase title included. This component adds nothing
  *    around it — a padded wrapper would break the panel's own type scale, and
  *    a `<PhaseTitle>` above it would duplicate the panel's own.
- *  - Everything else still gets the legacy padded column: night-actions strip,
- *    phase title, then the phase's controls.
+ *  - Everything else still gets the legacy padded column: phase title, then
+ *    the phase's controls.
  */
 const GamePhaseControls = () => {
   const { gameSessionState, gameId, ruleset } = useGameRoom();
@@ -64,7 +63,6 @@ const GamePhaseControls = () => {
 
   return (
     <div className={`${CENTER_PANEL_STACK_CLASS} justify-between`}>
-      <NightActionsDisplay />
       <PhaseTitle gameSessionState={gameSessionState} isHost />
       {renderControls ? (
         renderControls({ gameId, gameSessionState })

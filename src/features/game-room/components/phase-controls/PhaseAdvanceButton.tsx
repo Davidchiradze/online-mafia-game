@@ -20,9 +20,12 @@ type PhaseAdvanceButtonProps = {
 
 /**
  * Generic host-advance button: applies `ruleset.advanceUpdates(sourcePhase)` to
- * the session, so the destination comes from the RESOLVED variant's graph rather
- * than a hardcoded literal. Used by variants (e.g. Sports) whose per-phase
- * advance target differs from Japanese; Japanese keeps its dedicated buttons.
+ * the session, so the destination comes from the RESOLVED variant's graph
+ * rather than a hardcoded literal.
+ *
+ * Only `best_move` still uses this. Every night phase moved to
+ * `NightPhasePanel`, which does the same advance inside the host panel; this
+ * goes away when best move follows.
  */
 const PhaseAdvanceButton = ({
   gameSessionState,
@@ -51,7 +54,12 @@ const PhaseAdvanceButton = ({
   };
 
   return (
-    <PhaseButton onClick={handleAdvance} isLoading={isLoading} label={t(labelKey)} variant={variant} />
+    <PhaseButton
+      onClick={handleAdvance}
+      isLoading={isLoading}
+      label={t(labelKey)}
+      variant={variant}
+    />
   );
 };
 

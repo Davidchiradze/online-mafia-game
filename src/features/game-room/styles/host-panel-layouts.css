@@ -27,6 +27,32 @@
   overflow-wrap: anywhere;
 }
 
+/* The seats and the night summary, on one scrolling rail.
+   `min-width: 0` is what lets it shrink inside the wrapping line instead of
+   forcing the status text off the panel. The pills below are sized so the
+   common cases fit outright — three Japanese M/Y/H pills sit inside a bar's
+   identity column — and the rail only ever scrolls for the cases that cannot,
+   such as Sports' one pill per living mafia. The scrollbar is hidden because
+   at this size it would cover the pills; a half-visible pill at the edge is
+   the affordance instead. */
+.host-panel__line-run {
+  @apply flex min-w-0 max-w-full items-center;
+  gap: 3px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.host-panel__line-run::-webkit-scrollbar {
+  display: none;
+}
+
+/* Never let a pill shrink into unreadability — the rail scrolls instead. */
+.host-panel__line-run > * {
+  flex: none;
+}
+
 /* ── Compact composition ─────────────────────────────────────────────────────
    Under ~170px, scaling alone cannot fit a chip label, a chip run, a countdown
    and a status line into the hole that is left. So the data zone renders ONE
@@ -82,6 +108,27 @@
   font-size: clamp(8px, 7cqh, 10px);
 }
 
+/* Tight enough that the whole night summary fits the collapsed line rather
+   than needing a scroll: three M/Y/H pills come to roughly 105px. */
+.host-panel--compact .host-panel__meta-pill {
+  gap: 3px;
+  padding: 1px 5px;
+}
+
+.host-panel--compact .host-panel__meta-label {
+  font-size: clamp(7px, 6cqh, 9px);
+  letter-spacing: 0.04em;
+}
+
+.host-panel--compact .host-panel__meta-value {
+  font-size: clamp(8px, 7cqh, 11px);
+}
+
+.host-panel--compact .host-panel__meta-icon {
+  width: clamp(8px, 7cqh, 11px);
+  height: clamp(8px, 7cqh, 11px);
+}
+
 /* ── Bar composition ─────────────────────────────────────────────────────────
    One row: identity on the left, a 44px action and the disclosure chevron on
    the right. Type is fixed here — there is no vertical room left to scale
@@ -93,7 +140,7 @@
   gap: 9px;
   padding: 7px 10px;
   box-sizing: border-box;
-  overflow: hidden;
+  overflow: auto;
 }
 
 .host-panel--bar .host-panel__eyebrow-row {
@@ -133,6 +180,35 @@
   width: 16px;
   height: 16px;
   font-size: 8px;
+}
+
+/* A bar's identity column is around 100px wide on a landscape phone. At these
+   sizes an M/Y/H pill is ~30px, so all three fit; Sports' wider `#2 ⌖ #7`
+   pills do not, and the rail scrolls. */
+.host-panel--bar .host-panel__meta-pill {
+  gap: 2px;
+  padding: 1px 4px;
+}
+
+.host-panel--bar .host-panel__meta-label {
+  font-size: 7px;
+  letter-spacing: 0.02em;
+}
+
+.host-panel--bar .host-panel__meta-value {
+  font-size: 9px;
+}
+
+.host-panel--bar .host-panel__meta-icon {
+  width: 8px;
+  height: 8px;
+}
+
+/* The glow is the only thing marking whose turn is open, and at 16px of pill
+   height the border alone does not read. Keep it, but tighten it so three
+   adjacent pills do not bleed into one another. */
+.host-panel--bar .host-panel__meta-pill--active {
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.16);
 }
 
 .host-panel--bar .host-panel__actions {
