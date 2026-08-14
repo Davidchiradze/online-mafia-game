@@ -22,7 +22,7 @@ import SportsMafiaTargetPanel from "@/features/game-room/components/phase-contro
 import PhaseTransitionPanel from "@/features/game-room/components/phase-controls/PhaseTransitionPanel";
 import BestMovePanel from "@/features/game-room/components/phase-controls/BestMovePanel";
 import FarewellSpeechPanel from "@/features/game-room/components/phase-controls/FarewellSpeechPanel";
-import VotingPhaseControls from "@/features/game-room/components/voting/VotingPhaseControls";
+import VotingPanel from "@/features/game-room/components/phase-controls/VotingPanel";
 import ContinueNextRoundButton from "@/features/game-room/components/phase-controls/ContinueNextRoundButton";
 import EndGameControls from "@/features/game-room/components/phase-controls/EndGameControls";
 
@@ -68,7 +68,9 @@ export const SPORTS_PHASE_CONTROLS: PhaseControlsMap = {
       gameSessionState={gameSessionState}
     />
   ),
-  voting: () => <VotingPhaseControls />,
+  voting: ({ gameSessionState }) => (
+    <VotingPanel gameSessionState={gameSessionState} />
+  ),
 
   // ── Night actions ────────────────────────────────────────────────────────
   night_phase: ({ gameSessionState }) => (

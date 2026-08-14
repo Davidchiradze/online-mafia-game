@@ -117,7 +117,7 @@ export function useSpeakingRunControls(
 
   const status =
     run.mode === "completed"
-      ? t("allSpokenCount", { total: run.total })
+      ? t("allSpokenCount")
       : run.mode === "not-started"
         ? t("waitingToStart")
         : "";

@@ -29,7 +29,8 @@
       "Bash(python3 *)",
       "Bash(npx *)",
       "Bash(graphify *)",
-      "Read(//Users/david/Desktop/Online mafia bag/mafia-php/controllers/**)"
+      "Read(//Users/david/Desktop/Online mafia bag/mafia-php/controllers/**)",
+      "Bash(node .claude/hooks/i18n-parity.mjs)"
     ],
     "deny": [
       "Bash(rm -rf *)",

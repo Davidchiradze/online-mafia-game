@@ -22,7 +22,7 @@ import NightPhasePanel from "@/features/game-room/components/phase-controls/Nigh
 import DonRightHandPanel from "@/features/game-room/components/phase-controls/DonRightHandPanel";
 import PhaseTransitionPanel from "@/features/game-room/components/phase-controls/PhaseTransitionPanel";
 import FarewellSpeechPanel from "@/features/game-room/components/phase-controls/FarewellSpeechPanel";
-import VotingPhaseControls from "@/features/game-room/components/voting/VotingPhaseControls";
+import VotingPanel from "@/features/game-room/components/phase-controls/VotingPanel";
 import ContinueNextRoundButton from "@/features/game-room/components/phase-controls/ContinueNextRoundButton";
 import EndGameControls from "@/features/game-room/components/phase-controls/EndGameControls";
 
@@ -152,8 +152,12 @@ export const JAPANESE_PHASE_CONTROLS: PhaseControlsMap = {
     <FarewellSpeechPanel gameSessionState={gameSessionState} />
   ),
 
+  // ── The vote ─────────────────────────────────────────────────────────────
+  voting: ({ gameSessionState }) => (
+    <VotingPanel gameSessionState={gameSessionState} />
+  ),
+
   // ── Not yet on the panel ─────────────────────────────────────────────────
-  voting: () => <VotingPhaseControls />,
   repeat: ({ gameSessionState }) => (
     <ContinueNextRoundButton gameSessionState={gameSessionState} />
   ),

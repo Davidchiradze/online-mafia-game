@@ -9,8 +9,6 @@ component-file-length | src/features/game-room/components/phase/PhaseTitle.tsx
 component-file-length | src/features/game-room/components/room/GameRoomHeader.tsx
 component-file-length | src/features/game-room/components/room/SpectatorJoinPrompt.tsx
 component-file-length | src/features/game-room/components/room/WaitingRoom.tsx
-component-file-length | src/features/game-room/components/voting/BothLeaveVoteControls.tsx
-component-file-length | src/features/game-room/components/voting/RegularVotingControls.tsx
 component-file-length | src/features/game-room/context/gameRoomContext.tsx
 component-file-length | src/features/headquarters/leaderboard/LeaderboardContent.tsx
 component-file-length | src/features/headquarters/match-history/RolePerformanceGrid.tsx
@@ -28,7 +26,6 @@ component-file-pascalcase | src/features/game-room/variants/sports/phaseControls
 component-file-pascalcase | src/features/headquarters/hooks/useMyJoinRequestNotifications.tsx
 component-file-pascalcase | src/providers/theme-provider.tsx
 component-file-pascalcase | src/shared/lib/utils/toast.tsx
-hooks-live-in-hooks-dir | src/features/game-room/components/voting/useVotingTimer.ts
 hooks-live-in-hooks-dir | src/features/game-room/context/useGameRoomConnection.ts
 hooks-live-in-hooks-dir | src/features/headquarters/community-chat/useCommunityChat.ts
 hooks-live-in-hooks-dir | src/shared/lib/game/useRoleLabel.ts
@@ -49,7 +46,6 @@ no-inline-svg | src/shared/ui/LevelBadge.tsx
 no-logic-modules-in-components-dir | src/features/game-room/components/card-picking/cardImages.ts
 no-logic-modules-in-components-dir | src/features/game-room/components/participant/media-controls/toggle-styles.ts
 no-logic-modules-in-components-dir | src/features/game-room/components/participant/player-states/constants.ts
-no-logic-modules-in-components-dir | src/features/game-room/components/voting/useVotingTimer.ts
 no-logic-modules-in-components-dir | src/features/lobby/components/room-card/helpers.ts
 one-component-per-file | src/app/admin/page.tsx
 one-component-per-file | src/features/admin/components/UsersTable.tsx
