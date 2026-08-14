@@ -211,10 +211,12 @@ export const nominatePlayer = mutation({
       );
     }
 
-    const current = session.nominatedPlayers ?? [];
-    const newNominations = current.includes(seatNumber)
-      ? current.filter((s) => s !== seatNumber)
-      : [...current, seatNumber];
+    // Set-based rather than push/filter: the list is the voting candidate
+    // list (`enterVotingPhase`) and the self-justification speaking order, and
+    // a seat appearing twice there would give it two turns and two ballots.
+    const current = new Set(session.nominatedPlayers ?? []);
+    if (!current.delete(seatNumber)) current.add(seatNumber);
+    const newNominations = [...current];
 
     await ctx.db.patch(session._id, { nominatedPlayers: newNominations });
   },

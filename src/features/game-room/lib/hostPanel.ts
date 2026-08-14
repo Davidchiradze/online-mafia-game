@@ -242,12 +242,31 @@ export function hostPanelCompactLine(
 export const HOST_PANEL_COLLAPSED_CHIP_LIMIT = 4;
 
 /**
- * Every seat the collapsed line could show, in priority order: nominated seats
+ * Nominated seats with repeats removed, order kept.
+ *
+ * `nominatePlayer` is a toggle, so the stored list should never hold a seat
+ * twice — but this is the one list that renders beside a run containing the
+ * same seats, and a repeat there produces two nodes claiming the same seat.
+ * Rendering each seat once is cheaper than trusting every writer.
+ */
+export function hostPanelNominatedSeats(
+  nominated: HostPanelNominated | undefined,
+): number[] {
+  return [...new Set(nominated?.seats ?? [])];
+}
+
+/**
+ * Every seat the BAR's one row could show, in priority order: nominated seats
  * first (who is up for the vote), then the speaker pills flattened to chips,
  * then whatever ordered run the panel was showing.
+ *
+ * Only the bar flattens like this — it is a single 71px-tall row with the
+ * action beside it, and its chevron opens the full panel in a sheet. The
+ * compact composition keeps the blocks apart instead; see
+ * `hostPanelRunChips`.
  */
 function collapsibleChips(descriptor: HostPanelDescriptor): SeatChip[] {
-  const nominated = (descriptor.nominated?.seats ?? []).map(
+  const nominated = hostPanelNominatedSeats(descriptor.nominated).map(
     (seat): SeatChip => ({ seat, tone: "nominated" }),
   );
   const speakers = (descriptor.speakers ?? []).map(
@@ -260,16 +279,13 @@ function collapsibleChips(descriptor: HostPanelDescriptor): SeatChip[] {
 }
 
 /**
- * The chips that survive the collapse — a window CENTRED on the active chip,
- * not the first N. A 12-seat run truncated from the front stops showing the
- * seat that is actually on the clock the moment the run passes seat 4, which
- * is the one fact the collapsed line exists to carry.
+ * Trim a chip run to the limit — a window CENTRED on the active chip, not the
+ * first N. A 12-seat run truncated from the front stops showing the seat that
+ * is actually on the clock the moment the run passes seat 4, which is the one
+ * fact a collapsed line exists to carry.
  */
-export function hostPanelCollapsedChips(
-  descriptor: HostPanelDescriptor,
-): SeatChip[] {
-  const chips = collapsibleChips(descriptor);
-  if (chips.length <= HOST_PANEL_COLLAPSED_CHIP_LIMIT) return chips;
+function windowedChips(chips: readonly SeatChip[]): SeatChip[] {
+  if (chips.length <= HOST_PANEL_COLLAPSED_CHIP_LIMIT) return [...chips];
 
   const active = chips.findIndex((chip) => chip.tone === "active");
   if (active < 0) return chips.slice(0, HOST_PANEL_COLLAPSED_CHIP_LIMIT);
@@ -279,6 +295,28 @@ export function hostPanelCollapsedChips(
     chips.length - HOST_PANEL_COLLAPSED_CHIP_LIMIT,
   );
   return chips.slice(start, start + HOST_PANEL_COLLAPSED_CHIP_LIMIT);
+}
+
+/** The chips that survive the bar's collapse to one flattened row. */
+export function hostPanelCollapsedChips(
+  descriptor: HostPanelDescriptor,
+): SeatChip[] {
+  return windowedChips(collapsibleChips(descriptor));
+}
+
+/**
+ * The ordered run alone, trimmed to fit — what the COMPACT composition shows
+ * as a chip run.
+ *
+ * Nominated seats and the now/next speakers are deliberately absent: compact
+ * renders those as their own capsule and pills, exactly as the full panel
+ * does. Folding them in here is what made a nominated seat and the seat
+ * holding the floor render as one undifferentiated row of dots.
+ */
+export function hostPanelRunChips(
+  descriptor: HostPanelDescriptor,
+): SeatChip[] {
+  return windowedChips(descriptor.chips ?? []);
 }
 
 /**

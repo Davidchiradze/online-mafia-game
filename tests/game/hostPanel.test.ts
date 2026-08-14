@@ -16,6 +16,8 @@ import {
   HOST_PANEL_PHASES,
   hostPanelCollapsedChips,
   hostPanelHasCollapsedData,
+  hostPanelNominatedSeats,
+  hostPanelRunChips,
   orderedSeatChips,
   resolveHostPanelLayout,
   type HostPanelDescriptor,
@@ -112,6 +114,56 @@ describe("hostPanelCollapsedChips", () => {
       expect(chips).toHaveLength(HOST_PANEL_COLLAPSED_CHIP_LIMIT);
       expect(twelveSeats).toEqual(expect.arrayContaining(chips.map((c) => c.seat)));
     }
+  });
+});
+
+describe("hostPanelRunChips", () => {
+  // What the COMPACT composition shows. Nominated seats and the speakers are
+  // absent by design: they render as their own capsule and pills there, the
+  // same way the full panel shows them.
+  const dayRun: HostPanelDescriptor = {
+    eyebrow: "Day 3",
+    title: "Day phase",
+    nominated: { label: "Nominated", seats: [4, 9] },
+    speakers: [
+      { role: "now", label: "Speaking", seat: 4 },
+      { role: "next", label: "Next up", seat: 1 },
+    ],
+    actions: [],
+  };
+
+  it("leaves the nominated seats and the speakers to their own blocks", () => {
+    // THE regression: on a phone these three all landed in one run of dots,
+    // and seat 4 — nominated AND holding the floor — appeared in it twice.
+    expect(hostPanelRunChips(dayRun)).toEqual([]);
+  });
+
+  it("still windows a long ordered run onto the active seat", () => {
+    const chips = hostPanelRunChips({
+      ...dayRun,
+      chips: orderedSeatChips([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], 9),
+    });
+    expect(chips).toHaveLength(HOST_PANEL_COLLAPSED_CHIP_LIMIT);
+    expect(chips.some((chip) => chip.tone === "active")).toBe(true);
+  });
+});
+
+describe("hostPanelNominatedSeats", () => {
+  it("renders a seat once however many times it was written", () => {
+    expect(
+      hostPanelNominatedSeats({ label: "Nominated", seats: [4, 1, 4, 4] }),
+    ).toEqual([4, 1]);
+    expect(hostPanelNominatedSeats(undefined)).toEqual([]);
+  });
+
+  it("keeps the bar's flattened row free of repeats too", () => {
+    const chips = hostPanelCollapsedChips({
+      eyebrow: "Day 3",
+      title: "Day phase",
+      nominated: { label: "Nominated", seats: [4, 4] },
+      actions: [],
+    });
+    expect(chips).toEqual([{ seat: 4, tone: "nominated" }]);
   });
 });
 

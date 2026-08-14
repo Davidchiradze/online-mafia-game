@@ -12,8 +12,11 @@
    A standing fact for the whole day, so a capsule of its own rather than
    another chip run that could be mistaken for the speaking order. */
 
+/* Wraps rather than overflows: a narrow cell late in a day can be holding six
+   nominated seats, and `.host-panel__data` hides its horizontal overflow — the
+   capsule would silently lose its last seats off the right edge. */
 .host-panel__nominated {
-  @apply flex max-w-full items-center rounded-full border;
+  @apply flex max-w-full flex-wrap items-center justify-center rounded-full border;
   gap: clamp(4px, 1.6cqw, 11px);
   padding: clamp(2px, 1cqh, 6px) clamp(5px, 1.8cqw, 10px) clamp(2px, 1cqh, 6px)
     clamp(6px, 2cqw, 12px);
@@ -29,7 +32,7 @@
 }
 
 .host-panel__nominated-seats {
-  @apply flex;
+  @apply flex flex-wrap justify-center;
   gap: clamp(3px, 1cqw, 6px);
 }
 
