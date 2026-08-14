@@ -21,7 +21,7 @@ import NominatedSpeakingPanel from "@/features/game-room/components/phase-contro
 import NightPhasePanel from "@/features/game-room/components/phase-controls/NightPhasePanel";
 import DonRightHandPanel from "@/features/game-room/components/phase-controls/DonRightHandPanel";
 import PhaseTransitionPanel from "@/features/game-room/components/phase-controls/PhaseTransitionPanel";
-import FarewellSpeechControls from "@/features/game-room/components/phase-controls/FarewellSpeechControls";
+import FarewellSpeechPanel from "@/features/game-room/components/phase-controls/FarewellSpeechPanel";
 import VotingPhaseControls from "@/features/game-room/components/voting/VotingPhaseControls";
 import ContinueNextRoundButton from "@/features/game-room/components/phase-controls/ContinueNextRoundButton";
 import EndGameControls from "@/features/game-room/components/phase-controls/EndGameControls";
@@ -147,10 +147,12 @@ export const JAPANESE_PHASE_CONTROLS: PhaseControlsMap = {
     <PhaseTransitionPanel gameSessionState={gameSessionState} />
   ),
 
-  // ── Not yet on the panel ─────────────────────────────────────────────────
+  // ── Dawn ─────────────────────────────────────────────────────────────────
   farewell_speech: ({ gameSessionState }) => (
-    <FarewellSpeechControls gameSessionState={gameSessionState} />
+    <FarewellSpeechPanel gameSessionState={gameSessionState} />
   ),
+
+  // ── Not yet on the panel ─────────────────────────────────────────────────
   voting: () => <VotingPhaseControls />,
   repeat: ({ gameSessionState }) => (
     <ContinueNextRoundButton gameSessionState={gameSessionState} />

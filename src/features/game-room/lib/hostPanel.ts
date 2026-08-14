@@ -343,4 +343,7 @@ export const HOST_PANEL_PHASES: ReadonlySet<string> = new Set<string>([
   GAME_PHASES[14], // doctor_heals_player
   GAME_PHASES[21], // phase_transition
   GAME_PHASES[22], // don_meet (Sports)
+  // Dawn — what the night cost, and the goodbye that follows it
+  GAME_PHASES[23], // best_move (Sports)
+  GAME_PHASES[15], // farewell_speech
 ]);

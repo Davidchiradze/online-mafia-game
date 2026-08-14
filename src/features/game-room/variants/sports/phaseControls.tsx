@@ -20,8 +20,8 @@ import NominatedSpeakingPanel from "@/features/game-room/components/phase-contro
 import NightPhasePanel from "@/features/game-room/components/phase-controls/NightPhasePanel";
 import SportsMafiaTargetPanel from "@/features/game-room/components/phase-controls/SportsMafiaTargetPanel";
 import PhaseTransitionPanel from "@/features/game-room/components/phase-controls/PhaseTransitionPanel";
-import BestMoveControls from "@/features/game-room/components/phase-controls/BestMoveControls";
-import FarewellSpeechControls from "@/features/game-room/components/phase-controls/FarewellSpeechControls";
+import BestMovePanel from "@/features/game-room/components/phase-controls/BestMovePanel";
+import FarewellSpeechPanel from "@/features/game-room/components/phase-controls/FarewellSpeechPanel";
 import VotingPhaseControls from "@/features/game-room/components/voting/VotingPhaseControls";
 import ContinueNextRoundButton from "@/features/game-room/components/phase-controls/ContinueNextRoundButton";
 import EndGameControls from "@/features/game-room/components/phase-controls/EndGameControls";
@@ -104,16 +104,18 @@ export const SPORTS_PHASE_CONTROLS: PhaseControlsMap = {
     <PhaseTransitionPanel gameSessionState={gameSessionState} />
   ),
 
-  // ── Not yet on the panel ─────────────────────────────────────────────────
+  // ── Dawn ─────────────────────────────────────────────────────────────────
   // Best move (§6): entered from the dawn resolution when the night-1 kill
   // qualifies. The advance here is always enabled and doubles as "Skip Best
   // Move", so an AFK/disconnected victim can never deadlock the game (§6.3).
   best_move: ({ gameSessionState }) => (
-    <BestMoveControls gameSessionState={gameSessionState} />
+    <BestMovePanel gameSessionState={gameSessionState} />
   ),
   farewell_speech: ({ gameSessionState }) => (
-    <FarewellSpeechControls gameSessionState={gameSessionState} />
+    <FarewellSpeechPanel gameSessionState={gameSessionState} />
   ),
+
+  // ── Not yet on the panel ─────────────────────────────────────────────────
   repeat: ({ gameSessionState }) => (
     <ContinueNextRoundButton gameSessionState={gameSessionState} />
   ),
