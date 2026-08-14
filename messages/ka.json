@@ -739,13 +739,12 @@
     },
     "finishGame": {
       "buttonLabel": "თამაშის დასრულება",
-      "ariaLabel": "თამაშის დასრულება",
       "modalTitle": "თამაშის დასრულება?",
       "finishing": "სრულდება…",
       "finish": "დასრულება",
       "camerasWillTurnOn": "ყველას კამერა ჩაირთვება",
       "rolesWillBeRevealed": "ყველა როლი გაიხსნება",
-      "roomWillBeDeleted": "ოთახი 2 წუთში წაიშლება"
+      "roomWillBeDeleted": "ოთახი {seconds} წამში წაიშლება"
     },
     "joinRequests": {
       "drawerTitle": "შესვლის მოთხოვნები",

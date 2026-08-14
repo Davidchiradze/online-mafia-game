@@ -24,7 +24,7 @@ import BestMovePanel from "@/features/game-room/components/phase-controls/BestMo
 import FarewellSpeechPanel from "@/features/game-room/components/phase-controls/FarewellSpeechPanel";
 import VotingPanel from "@/features/game-room/components/phase-controls/VotingPanel";
 import ContinueNextRoundButton from "@/features/game-room/components/phase-controls/ContinueNextRoundButton";
-import EndGameControls from "@/features/game-room/components/phase-controls/EndGameControls";
+import EndGamePanel from "@/features/game-room/components/phase-controls/EndGamePanel";
 
 export const SPORTS_PHASE_CONTROLS: PhaseControlsMap = {
   // ── Pre-game ─────────────────────────────────────────────────────────────
@@ -117,9 +117,13 @@ export const SPORTS_PHASE_CONTROLS: PhaseControlsMap = {
     <FarewellSpeechPanel gameSessionState={gameSessionState} />
   ),
 
+  // ── Game over ────────────────────────────────────────────────────────────
+  // See the Japanese map: the live end screen is the `endGameState` guard in
+  // `GamePhaseControls`, and this entry is the outcome-less fallback.
+  end_game: () => <EndGamePanel state={{ kind: "finished", outcome: null }} />,
+
   // ── Not yet on the panel ─────────────────────────────────────────────────
   repeat: ({ gameSessionState }) => (
     <ContinueNextRoundButton gameSessionState={gameSessionState} />
   ),
-  end_game: () => <EndGameControls />,
 };

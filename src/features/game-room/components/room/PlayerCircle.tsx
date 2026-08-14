@@ -70,7 +70,7 @@ export default function PlayerCircle({
   ) : (
     <div className={`${CENTER_PANEL_STACK_CLASS} justify-center`}>
       {gameSessionState?.isFinished ? (
-        <WinnerBanner gameId={gameId} winner={gameSessionState.winner ?? null} />
+        <WinnerBanner winner={gameSessionState.winner ?? null} />
       ) : (
         <>
           {gameSessionState && (

@@ -739,13 +739,12 @@
     },
     "finishGame": {
       "buttonLabel": "Finish Game",
-      "ariaLabel": "Finish game",
       "modalTitle": "Finish Game?",
       "finishing": "Finishing…",
       "finish": "Finish",
       "camerasWillTurnOn": "Everyone's cameras will turn on",
       "rolesWillBeRevealed": "All roles will be revealed",
-      "roomWillBeDeleted": "The room will be deleted in 2 minutes"
+      "roomWillBeDeleted": "The room will be deleted in {seconds} seconds"
     },
     "joinRequests": {
       "drawerTitle": "Join Requests",

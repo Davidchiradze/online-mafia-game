@@ -386,4 +386,8 @@ export const HOST_PANEL_PHASES: ReadonlySet<string> = new Set<string>([
   GAME_PHASES[15], // farewell_speech
   // The vote
   GAME_PHASES[18], // voting
+  // Game over. The live end screen is the `endGameState` guard in
+  // `GamePhaseControls`, which bypasses this map entirely; the phase is listed
+  // so its fallback entry renders bare like every other panel.
+  GAME_PHASES[20], // end_game
 ]);

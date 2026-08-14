@@ -1,8 +1,9 @@
 import React from "react";
 import StartGamePanel from "@/features/game-room/components/phase-controls/StartGamePanel";
+import EndGamePanel from "@/features/game-room/components/phase-controls/EndGamePanel";
 import PhaseTitle from "@/features/game-room/components/phase/PhaseTitle";
-import WinnerBanner from "@/features/game-room/components/host/WinnerBanner";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
+import { endGameState } from "@/features/game-room/lib/endGame";
 import { CENTER_PANEL_STACK_CLASS } from "@/features/game-room/lib/centerPanel";
 import { HOST_PANEL_PHASES } from "@/features/game-room/lib/hostPanel";
 
@@ -30,28 +31,15 @@ const GamePhaseControls = () => {
     return <StartGamePanel />;
   }
 
-  // A faction has been auto-decided: show the win banner. While the game is not
-  // finished yet, include the host's "Finish Game" button to confirm the end.
-  if (gameSessionState.winner) {
-    return (
-      <div className={`${CENTER_PANEL_STACK_CLASS} justify-center`}>
-        <WinnerBanner
-          gameId={gameId}
-          winner={gameSessionState.winner}
-          canFinish={!gameSessionState.isFinished}
-        />
-      </div>
-    );
-  }
-
-  // The game was finished with no decided winner (e.g. an admin force-ended it):
-  // show the "No Contest" end state instead of stale live-phase controls.
-  if (gameSessionState.isFinished) {
-    return (
-      <div className={`${CENTER_PANEL_STACK_CLASS} justify-center`}>
-        <WinnerBanner gameId={gameId} winner={null} />
-      </div>
-    );
+  // An outcome has been decided or committed — including a force-end, which
+  // records no winner at all. Either way the phase the session still names is
+  // stale, so the end screen wins over the phase map.
+  const ending = endGameState(
+    gameSessionState.winner,
+    gameSessionState.isFinished,
+  );
+  if (ending) {
+    return <EndGamePanel state={ending} />;
   }
 
   const currentPhase = gameSessionState.gamePhase;

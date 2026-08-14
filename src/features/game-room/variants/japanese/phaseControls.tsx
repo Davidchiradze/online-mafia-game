@@ -24,7 +24,7 @@ import PhaseTransitionPanel from "@/features/game-room/components/phase-controls
 import FarewellSpeechPanel from "@/features/game-room/components/phase-controls/FarewellSpeechPanel";
 import VotingPanel from "@/features/game-room/components/phase-controls/VotingPanel";
 import ContinueNextRoundButton from "@/features/game-room/components/phase-controls/ContinueNextRoundButton";
-import EndGameControls from "@/features/game-room/components/phase-controls/EndGameControls";
+import EndGamePanel from "@/features/game-room/components/phase-controls/EndGamePanel";
 
 export const JAPANESE_PHASE_CONTROLS: PhaseControlsMap = {
   // ── Pre-game ─────────────────────────────────────────────────────────────
@@ -157,9 +157,16 @@ export const JAPANESE_PHASE_CONTROLS: PhaseControlsMap = {
     <VotingPanel gameSessionState={gameSessionState} />
   ),
 
+  // ── Game over ────────────────────────────────────────────────────────────
+  // The real end screen is the `endGameState` guard in `GamePhaseControls`: an
+  // outcome is decided by the `winner` field, not by reaching a phase. This
+  // entry only fires if a session somehow lands on `end_game` with no outcome
+  // recorded at all, where there is nothing to confirm and the only thing the
+  // panel can honestly offer is the way out.
+  end_game: () => <EndGamePanel state={{ kind: "finished", outcome: null }} />,
+
   // ── Not yet on the panel ─────────────────────────────────────────────────
   repeat: ({ gameSessionState }) => (
     <ContinueNextRoundButton gameSessionState={gameSessionState} />
   ),
-  end_game: () => <EndGameControls />,
 };

@@ -59,7 +59,7 @@ type ConvexGameSession = {
   withoutSelfJustification?: boolean;
   phaseStartedAt?: number;
   finishedAt?: number;
-  winner?: "mafia" | "yakuza" | "citizens";
+  winner?: "mafia" | "yakuza" | "citizens" | "no_contest";
 };
 
 type ConvexNightPhaseSession = {

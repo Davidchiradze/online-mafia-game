@@ -1,7 +1,6 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import FinishGameButton from "./FinishGameButton";
 import { GAME_CLEANUP } from "@convex/lib/constants";
 import { useCountdown } from "@/features/game-room/hooks/game/useCountdown";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
@@ -10,15 +9,12 @@ type Winner = "mafia" | "yakuza" | "citizens";
 type Outcome = Winner | "no_contest";
 
 type WinnerBannerProps = {
-  gameId: string;
   /**
    * Decided winning faction, `"no_contest"` for a total mutual elimination
-   * (nobody left alive, still host-confirmable), or `null` when the game was
-   * already finished with no winner (e.g. an admin force-end).
+   * (nobody left alive), or `null` when the game was finished with no winner
+   * at all (e.g. an admin force-end).
    */
   winner: Outcome | null;
-  /** When true, show the host's "Finish Game" button (pending-win state). */
-  canFinish?: boolean;
 };
 
 const WINNER_ACCENT: Record<Winner, string> = {
@@ -28,18 +24,15 @@ const WINNER_ACCENT: Record<Winner, string> = {
 };
 
 /**
- * Banner shown when a game ends. The host sees it while a win is pending
- * (`canFinish`) with a "Finish Game" button to confirm the end; everyone sees
- * the title-only version once the game is finished. Both `"no_contest"` (a total
- * mutual elimination, still host-confirmable) and `null` (a game already
- * finished with no winner, e.g. an admin force-end) show the same "No Contest"
- * end state instead of a faction win.
+ * The end screen everyone EXCEPT the host sees.
+ *
+ * Read-only by construction: the host's version is `EndGamePanel`, which is
+ * the same information plus the two things only a host can do (confirm the
+ * end, leave for the lobby). Both `"no_contest"` (total mutual elimination)
+ * and `null` (finished with no winner at all, e.g. an admin force-end) show
+ * the same "No Contest" state rather than a faction win.
  */
-export default function WinnerBanner({
-  gameId,
-  winner,
-  canFinish = false,
-}: WinnerBannerProps) {
+export default function WinnerBanner({ winner }: WinnerBannerProps) {
   const t = useTranslations("game.winnerBanner");
   const { gameSessionState } = useGameRoom();
 
@@ -75,8 +68,6 @@ export default function WinnerBanner({
             : t("noContest")}
         </h2>
       </div>
-
-      {canFinish && winner && <FinishGameButton gameId={gameId} />}
 
       {finishedAt != null && (
         <p className="font-orbitron text-[11px] uppercase tracking-[0.2em] text-slate-400">
