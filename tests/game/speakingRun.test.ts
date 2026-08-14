@@ -87,11 +87,14 @@ describe("speakingRunChips", () => {
   const tones = (value: number | null) =>
     speakingRunChips(speakingRun(ORDER, value)).map((c) => c.tone);
 
-  it("marks exactly one seat active and one next while speaking", () => {
-    expect(tones(7)).toEqual(["done", "active", "next", "idle"]);
+  it("marks the live speaker and nothing else while it speaks", () => {
+    // No amber beside the emerald: the seat on deck is not a decision until
+    // the speech ends, and a second highlight competes with the one the host
+    // is acting on. The run itself already says who follows.
+    expect(tones(7)).toEqual(["done", "active", "idle", "idle"]);
   });
 
-  it("promotes the follower to next while paused", () => {
+  it("promotes the follower to next once the speech ends", () => {
     expect(tones(SPEAKING_STATE.toPausedValue(7))).toEqual([
       "done",
       "done",

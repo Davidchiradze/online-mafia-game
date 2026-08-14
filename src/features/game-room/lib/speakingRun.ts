@@ -103,11 +103,19 @@ export function speakingRun(
  * The whole run as seat chips — used where the order is short enough to show
  * in full (self-justification is two or three seats). A day or introduction
  * run is ten to twelve seats and shows now/next pills instead.
+ *
+ * "Next" is marked only while NOBODY holds the floor. A speaker on the clock
+ * is the one thing the host is acting on, and a second highlighted seat beside
+ * them competes with it for no gain — the run is right there, so who follows
+ * is the next un-greyed chip. Once the speech ends the amber comes back, and
+ * it is then the only cue for who the host is about to start.
  */
 export function speakingRunChips(run: SpeakingRun): SeatChip[] {
   return run.order.map((seat, index) => {
     if (seat === run.activeSeat) return { seat, tone: "active" };
-    if (seat === run.nextSeat) return { seat, tone: "next" };
+    if (run.activeSeat === null && seat === run.nextSeat) {
+      return { seat, tone: "next" };
+    }
     return { seat, tone: index < run.position ? "done" : "idle" };
   });
 }

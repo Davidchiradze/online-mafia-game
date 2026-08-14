@@ -100,20 +100,16 @@ export function useSpeakingRunControls(
     [gameId, isLoading],
   );
 
-  const speakers: HostPanelDescriptor["speakers"] = [
-    ...(run.activeSeat !== null
-      ? [
-          {
-            role: "now" as const,
-            label: t("speakingNow"),
-            seat: run.activeSeat,
-          },
-        ]
-      : []),
-    ...(run.nextSeat !== null
-      ? [{ role: "next" as const, label: t("nextUp"), seat: run.nextSeat }]
-      : []),
-  ];
+  // Now and next are never both shown: while a seat holds the floor it is the
+  // only thing the host is acting on, and the seat on deck only becomes a
+  // decision once that speech ends. Showing both split the panel's largest
+  // number in two and made the live speaker harder to read at a glance.
+  const speakers: HostPanelDescriptor["speakers"] =
+    run.activeSeat !== null
+      ? [{ role: "now", label: t("speakingNow"), seat: run.activeSeat }]
+      : run.nextSeat !== null
+        ? [{ role: "next", label: t("nextUp"), seat: run.nextSeat }]
+        : [];
 
   const status =
     run.mode === "completed"
