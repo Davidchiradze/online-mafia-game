@@ -59,7 +59,6 @@ one-component-per-file | src/features/game-room/components/livekit/LiveKitTestCo
 one-component-per-file | src/features/game-room/components/participant/BestMoveIndicator.tsx
 one-component-per-file | src/features/game-room/components/participant/MafiaKillControl.tsx
 one-component-per-file | src/features/game-room/components/phase/PhaseCountdown.tsx
-one-component-per-file | src/features/game-room/components/phase/VotingDisplay.tsx
 one-component-per-file | src/features/game-room/components/room/GameRoomHeader.tsx
 one-component-per-file | src/features/game-room/components/room/SpectatorJoinPrompt.tsx
 one-component-per-file | src/features/game-room/components/room/SpectatorView.tsx

@@ -809,6 +809,9 @@
     },
     "phaseTimer": {
       "seconds": "{seconds} წამი"
+    },
+    "player": {
+      "waitingForHost": "ჰოსტის მოლოდინში"
     }
   },
   "errors": {

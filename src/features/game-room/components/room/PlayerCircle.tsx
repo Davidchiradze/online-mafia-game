@@ -5,12 +5,9 @@ import { motion } from "motion/react";
 import ParticipantComponent from "@/features/game-room/components/participant/ParticipantComponent";
 import GamePhaseControls from "@/features/game-room/components/phase/GamePhaseControls";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
-import VotingDisplay from "@/features/game-room/components/phase/VotingDisplay";
+import PlayerPanel from "@/features/game-room/components/player-panel/PlayerPanel";
 import { EmptySeat } from "@/features/game-room/components/participant/player-states";
-import PhaseTitle from "@/features/game-room/components/phase/PhaseTitle";
-import WinnerBanner from "@/features/game-room/components/host/WinnerBanner";
 import { useSeatShuffleAnimation } from "@/features/game-room/hooks/game";
-import { CENTER_PANEL_STACK_CLASS } from "@/features/game-room/lib/centerPanel";
 import RingCenter from "./RingCenter";
 
 const SHUFFLE_TRANSITION_SECONDS = 2.5;
@@ -62,25 +59,10 @@ export default function PlayerCircle({
     </div>
   );
 
-  // The cell is handed over bare: the host panel is a size container and its
-  // own padding is part of its type scale, so it cannot sit inside a `p-3`.
-  // Everything that is not the panel opts back into the padded column itself.
-  const controls = isHost ? (
-    <GamePhaseControls />
-  ) : (
-    <div className={`${CENTER_PANEL_STACK_CLASS} justify-center`}>
-      {gameSessionState?.isFinished ? (
-        <WinnerBanner winner={gameSessionState.winner ?? null} />
-      ) : (
-        <>
-          {gameSessionState && (
-            <PhaseTitle gameSessionState={gameSessionState} />
-          )}
-          {gameSessionState?.gamePhase === "voting" && <VotingDisplay />}
-        </>
-      )}
-    </div>
-  );
+  // The cell is handed over bare in both cases: the panel is a size container
+  // and its own padding is part of its type scale, so it cannot sit inside a
+  // `p-3`. Host and player run the same shell — only the descriptor differs.
+  const controls = isHost ? <GamePhaseControls /> : <PlayerPanel />;
 
   return (
     <div

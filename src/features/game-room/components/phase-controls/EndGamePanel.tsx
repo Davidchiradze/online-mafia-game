@@ -8,7 +8,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import { useTranslations } from "next-intl";
 import { GAME_CLEANUP } from "@convex/lib/constants";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
-import { useHostPanelTimer } from "@/features/game-room/hooks/game/useHostPanelTimer";
+import { useCountdown } from "@/features/game-room/hooks/game/useCountdown";
 import HostPanel from "@/features/game-room/components/host-panel/HostPanel";
 import type {
   EndGameOutcome,
@@ -45,10 +45,13 @@ export default function EndGamePanel({ state }: EndGamePanelProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const finishGame = useMutation(gameSessions.finishGame);
 
-  // Runs only once the end is committed — `finishedAt` is what the scheduled
-  // cleanup counts from, so the pill and the deletion agree by construction.
-  const timer = useHostPanelTimer(
-    gameSessionState?.finishedAt ?? null,
+  // Counts only once the end is committed — `finishedAt` is what the scheduled
+  // cleanup counts from, so the sentence and the deletion agree by construction.
+  // A bare countdown pill would not say WHAT is expiring, and on this screen
+  // that is the only thing worth saying, so it goes in words.
+  const finishedAt = gameSessionState?.finishedAt ?? null;
+  const { secondsLeft, isExpired } = useCountdown(
+    finishedAt,
     GAME_CLEANUP.DELAY_MS,
   );
 
@@ -103,7 +106,10 @@ export default function EndGamePanel({ state }: EndGamePanelProps) {
   const descriptor: HostPanelDescriptor = {
     eyebrow: t("gameOver"),
     title,
-    timer,
+    status:
+      finishedAt != null
+        ? t("roomClosing", { seconds: isExpired ? 0 : secondsLeft })
+        : undefined,
     actions: [action],
   };
 

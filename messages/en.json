@@ -809,6 +809,9 @@
     },
     "phaseTimer": {
       "seconds": "{seconds}s"
+    },
+    "player": {
+      "waitingForHost": "Waiting for the host"
     }
   },
   "errors": {
