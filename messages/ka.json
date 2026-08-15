@@ -198,7 +198,12 @@
     "authIssueTitle": "გაიარეთ  ავტორიზაცია",
     "authIssueTitleHighlight": "Mafia.ge -ზე",
     "authIssueBody": " ",
-    "signInOnSite": "შესვლა"
+    "signInOnSite": "შესვლა",
+    "signInToPlay": "შესვლა თამაშისთვის",
+    "guestJoinTitle": "შესვლა თამაშისთვის",
+    "guestJoinBody": "მაგიდასთან დასასხდომად საჭიროა mafia.ge-ის ანგარიში. გაიარეთ ავტორიზაცია და პირდაპირ დაგაბრუნებთ ლობიში.",
+    "guestSpectateTitle": "შესვლა სანახავად",
+    "guestSpectateBody": "მიმდინარე თამაშის სანახავად საჭიროა mafia.ge-ის ანგარიში. გაიარეთ ავტორიზაცია და პირდაპირ დაგაბრუნებთ ლობიში."
   },
   "notVerified": {
     "badge": "ანგარიში არ არის ვერიფიცირებული",

@@ -10,9 +10,11 @@ import {
   useRef,
   useState,
 } from "react";
+import { isGuestViewablePath } from "@convex/lib/access";
 import {
   AUTH_TOKEN_ENDPOINT,
   AUTH_TOKEN_REFRESH_ENDPOINT,
+  LOGOUT_ENDPOINT,
 } from "@/features/auth/lib/constants";
 
 const TOKEN_ENDPOINT = AUTH_TOKEN_ENDPOINT;
@@ -52,9 +54,13 @@ async function fetchTokenFromEndpoint(): Promise<string | null> {
 
 /**
  * Re-validates the PHP session and mints a fresh JWT. Returns the new
- * token on success. On failure (expired session, server error) the
- * endpoint clears the auth cookie and signals logout — we immediately
- * redirect to the logout route so the user doesn't sit in a broken state.
+ * token on success. On failure (expired/invalid session, PHP unreachable)
+ * the endpoint clears the auth cookie and this resolves to `null` — the
+ * server doesn't know what page the caller is on, so the decision of what
+ * happens next lives here: on a guest-viewable page, dropping the token is
+ * enough (the app settles into guest state in place, no navigation);
+ * anywhere else the session is genuinely dead, so we redirect to logout
+ * rather than leave the page stuck half-authenticated.
  */
 async function refreshTokenFromEndpoint(): Promise<string | null> {
   try {
@@ -63,22 +69,17 @@ async function refreshTokenFromEndpoint(): Promise<string | null> {
       credentials: "include",
       cache: "no-store",
     });
-
-    const data = (await res.json()) as {
-      token: string | null;
-      logout?: boolean;
-    };
-
-    if (data.logout) {
-      window.location.replace("/api/auth/logout");
-      return null;
+    const { token } = (await res.json()) as { token: string | null };
+    if (token) return token;
+    if (!isGuestViewablePath(window.location.pathname)) {
+      window.location.replace(LOGOUT_ENDPOINT);
     }
-
-    if (!res.ok) return null;
-    return data.token ?? null;
+    return null;
   } catch (err) {
     console.error("[auth] token refresh failed", err);
-    window.location.replace("/api/auth/logout");
+    if (!isGuestViewablePath(window.location.pathname)) {
+      window.location.replace(LOGOUT_ENDPOINT);
+    }
     return null;
   }
 }

@@ -198,7 +198,12 @@
     "authIssueTitle": "Authentication",
     "authIssueTitleHighlight": "Issue",
     "authIssueBody": "We couldn't verify your identity for this session. To enter the family's headquarters, please sign in again on mafia.ge.",
-    "signInOnSite": "Sign In on mafia.ge"
+    "signInOnSite": "Sign In on mafia.ge",
+    "signInToPlay": "Sign in to play",
+    "guestJoinTitle": "Sign in to join",
+    "guestJoinBody": "Taking a seat at a table needs a mafia.ge account. Sign in and we'll bring you straight back to the lobby.",
+    "guestSpectateTitle": "Sign in to watch",
+    "guestSpectateBody": "Watching a live game needs a mafia.ge account. Sign in and we'll bring you straight back to the lobby."
   },
   "notVerified": {
     "badge": "Account Not Verified",

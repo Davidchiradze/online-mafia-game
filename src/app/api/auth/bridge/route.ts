@@ -65,6 +65,16 @@ export async function GET(req: NextRequest) {
     return res;
   } catch (err) {
     console.error("[auth/bridge] failed to bridge session", err);
+    // PHP being unreachable/erroring is not the same as PHP saying "invalid
+    // session" (the !user branch above), but a hard bounce to mafia.ge on a
+    // guest-viewable page during a PHP outage is a dead end — degrade to
+    // guest there too, same as an explicit invalid-session response would.
+    if (isGuestViewablePath(destination)) {
+      const res = NextResponse.redirect(new URL(destination, req.nextUrl.origin));
+      setBridgeAttemptCookie(res);
+      clearAuthCookie(res);
+      return res;
+    }
     const res = NextResponse.redirect(phpLoginUrl(destination));
     clearAuthCookie(res);
     return res;
