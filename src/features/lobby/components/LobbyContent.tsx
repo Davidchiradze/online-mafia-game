@@ -80,22 +80,7 @@ export default function LobbyContent({ games }: Props) {
               {t("gameLobbySubtitle")}
             </p>
           </div>
-
-          <div className="flex flex-wrap items-center gap-3.5">
-            <StreakFlame streak={myStats?.currentStreak ?? 0} />
-            <RatingCard stats={myStats} />
-          </div>
         </div>
-
-        {/* Featured YouTube banner */}
-        <FeatureBanner
-          videoId="y7t8PA8nh38"
-          badge={t("featureBadge")}
-          source={t("featureSource")}
-          title={t("featureTitle")}
-          blurb={t("featureBlurb")}
-          ctaLabel={t("featureCta")}
-        />
 
         {/* <LobbyStats stats={myStats} /> */}
 
@@ -121,38 +106,6 @@ export default function LobbyContent({ games }: Props) {
               {filtered.length}
             </span>
           </div>
-
-          {/* Search + status filter — the `filtered` list already honours these.
-              Uncomment to expose the controls in the rooms toolbar. */}
-          {/* <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-600" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={t("searchRoomsPlaceholder")}
-              className="w-full rounded-xl border border-white/[0.08] bg-white/[0.05] py-2.5 pl-11 pr-4 font-sans text-sm text-white placeholder-gray-600 transition focus:border-red-500/40 focus:outline-none focus:ring-1 focus:ring-red-500/20"
-            />
-          </div> */}
-
-          {/* <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="cursor-pointer appearance-none rounded-xl border border-white/[0.08] bg-white/[0.05] px-4 py-2.5 font-sans text-sm text-white transition focus:border-red-500/40 focus:outline-none"
-          >
-            <option value="all" className="bg-[#0a0a12]">
-              {t("statusAll")}
-            </option>
-            <option value="not_started" className="bg-[#0a0a12]">
-              {t("statusNotStarted")}
-            </option>
-            <option value="playing" className="bg-[#0a0a12]">
-              {t("statusPlaying")}
-            </option>
-            <option value="finished" className="bg-[#0a0a12]">
-              {t("statusFinished")}
-            </option>
-          </select> */}
 
           <SubscriptionGuard
             feature={FEATURES.PLAY_GAME}
@@ -199,6 +152,21 @@ export default function LobbyContent({ games }: Props) {
             ))}
           </div>
         )}
+
+        {/* <div className="flex flex-wrap items-center gap-3.5">
+          <StreakFlame streak={myStats?.currentStreak ?? 0} />
+          <RatingCard stats={myStats} />
+        </div> */}
+
+        {/* Featured YouTube banner */}
+        <FeatureBanner
+          videoId="y7t8PA8nh38"
+          badge={t("featureBadge")}
+          source={t("featureSource")}
+          title={t("featureTitle")}
+          blurb={t("featureBlurb")}
+          ctaLabel={t("featureCta")}
+        />
       </div>
 
       <CreateGameModal

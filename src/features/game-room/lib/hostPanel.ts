@@ -19,6 +19,7 @@
  */
 
 import { GAME_PHASES } from "@/shared/lib/constants/game";
+import type { Faction } from "@/shared/lib/constants/factions";
 
 // ---------------------------------------------------------------------------
 // Composition bands
@@ -154,7 +155,17 @@ export type HostPanelProgress = { value: number; total: number };
  * confused, and it leads the chip run when the panel collapses — on a bar the
  * host needs who is up for the vote before who is speaking.
  */
-export type HostPanelNominated = { label: string; seats: readonly number[] };
+export type HostPanelNominated = {
+  label: string;
+  seats: readonly number[];
+  /**
+   * Render the seat pills before the label instead of after. The host's
+   * "NOMINATED" heading reads right leading a list of seats; the player's
+   * "against nominee #" reads right the other way round, with the seat the
+   * vote is against read out before the phrase that names it.
+   */
+  seatsFirst?: boolean;
+};
 
 /**
  * Who holds the floor and who follows. During a day or introduction run those
@@ -205,10 +216,22 @@ export type HostPanelMeta = {
   icon?: "target";
 };
 
+/**
+ * The emphasised tail of a title — currently only the winning faction on the
+ * end screen. The prefix ("Winner") stays in `title`; this is the half that
+ * carries the faction hue, so the two stop reading as one flat string.
+ */
+export type HostPanelTitleAccent = {
+  text: string;
+  tone: Faction;
+};
+
 export type HostPanelDescriptor = {
   /** Small uppercase kicker above the title ("Pre-game", "Day 2"). */
   eyebrow: string;
   title: string;
+  /** Rendered after `title`, in the faction's colour. */
+  titleAccent?: HostPanelTitleAccent;
   /** Countdown pill beside the eyebrow. */
   timer?: { label: string; isUrgent: boolean };
   nominated?: HostPanelNominated;

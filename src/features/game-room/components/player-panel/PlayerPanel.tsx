@@ -32,7 +32,7 @@ export default function PlayerPanel() {
       <HostPanel
         descriptor={{
           eyebrow: tHost("preGame"),
-          title: t("waitingForHost"),
+          title: t("waitingToStart"),
           actions: [],
         }}
       />
@@ -49,7 +49,10 @@ export default function PlayerPanel() {
 
   // Until the voting session's first round trip lands there is nothing to vote
   // on, and the read-only phase panel is the honest thing to show.
-  if (gameSessionState.gamePhase === GAME_PHASES[18] /* voting */ && votingSession) {
+  if (
+    gameSessionState.gamePhase === GAME_PHASES[18] /* voting */ &&
+    votingSession
+  ) {
     return <PlayerVotingPanel />;
   }
 

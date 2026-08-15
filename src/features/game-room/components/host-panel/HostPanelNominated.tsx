@@ -21,16 +21,24 @@ export default function HostPanelNominated({
   const seats = hostPanelNominatedSeats(nominated);
   if (seats.length === 0) return null;
 
+  const label = (
+    <span key="label" className="host-panel__nominated-label">
+      {nominated.label}
+    </span>
+  );
+  const seatPills = (
+    <div key="seats" className="host-panel__nominated-seats">
+      {seats.map((seat) => (
+        <span key={seat} className="host-panel__nominated-seat">
+          {seat}
+        </span>
+      ))}
+    </div>
+  );
+
   return (
     <div className="host-panel__nominated">
-      <span className="host-panel__nominated-label">{nominated.label}</span>
-      <div className="host-panel__nominated-seats">
-        {seats.map((seat) => (
-          <span key={seat} className="host-panel__nominated-seat">
-            {seat}
-          </span>
-        ))}
-      </div>
+      {nominated.seatsFirst ? [seatPills, label] : [label, seatPills]}
     </div>
   );
 }

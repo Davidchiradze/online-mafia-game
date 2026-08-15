@@ -30,7 +30,8 @@
       "Bash(npx *)",
       "Bash(graphify *)",
       "Read(//Users/david/Desktop/Online mafia bag/mafia-php/controllers/**)",
-      "Bash(node .claude/hooks/i18n-parity.mjs)"
+      "Bash(node .claude/hooks/i18n-parity.mjs)",
+      "Bash(git stash *)"
     ],
     "deny": [
       "Bash(rm -rf *)",

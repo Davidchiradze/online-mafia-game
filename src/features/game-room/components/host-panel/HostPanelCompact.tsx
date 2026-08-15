@@ -20,7 +20,10 @@ export default function HostPanelCompact({
     <div className="host-panel__stack">
       <HostPanelEyebrow eyebrow={descriptor.eyebrow} timer={descriptor.timer} />
       <div className="host-panel__data">
-        <HostPanelTitle title={descriptor.title} />
+        <HostPanelTitle
+          title={descriptor.title}
+          accent={descriptor.titleAccent}
+        />
         <HostPanelCompactData descriptor={descriptor} />
       </div>
       <HostPanelActions actions={descriptor.actions} />

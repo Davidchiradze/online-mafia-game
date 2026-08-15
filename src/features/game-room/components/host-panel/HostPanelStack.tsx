@@ -20,7 +20,10 @@ export default function HostPanelStack({ descriptor }: HostPanelStackProps) {
           eyebrow={descriptor.eyebrow}
           timer={descriptor.timer}
         />
-        <HostPanelTitle title={descriptor.title} />
+        <HostPanelTitle
+          title={descriptor.title}
+          accent={descriptor.titleAccent}
+        />
       </div>
       <HostPanelData descriptor={descriptor} />
       <HostPanelActions actions={descriptor.actions} />

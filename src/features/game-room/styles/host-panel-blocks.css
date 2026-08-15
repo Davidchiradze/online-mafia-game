@@ -16,16 +16,17 @@
    nominated seats, and `.host-panel__data` hides its horizontal overflow — the
    capsule would silently lose its last seats off the right edge. */
 .host-panel__nominated {
-  @apply flex max-w-full flex-wrap items-center justify-center rounded-full border;
+  @apply flex max-w-full flex-wrap items-center justify-center border;
   gap: clamp(4px, 1.6cqw, 11px);
   padding: clamp(2px, 1cqh, 6px) clamp(5px, 1.8cqw, 10px) clamp(2px, 1cqh, 6px)
     clamp(6px, 2cqw, 12px);
   background: linear-gradient(135deg, rgba(244,63,94,0.14) 0%, rgba(225,29,72,0.08) 100%);
   border-color: rgba(244, 63, 94, 0.34);
+  border-radius: 5px;
 }
 
 .host-panel__nominated-label {
-  @apply font-bold whitespace-nowrap uppercase;
+  @apply min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-bold uppercase;
   font-size: clamp(6px, calc(1.9cqh + 0.7cqw), 10px);
   letter-spacing: 0.18em;
   color: #fda4af;

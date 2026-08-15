@@ -25,12 +25,12 @@ export default function HostPanelActionButton({
     <button
       type="button"
       onClick={action.onClick}
-      title={action.title}
+      title={action.title ?? action.label}
       disabled={disabled || isLoading || isMountDisabled}
       className={`host-panel__action phase-btn-${action.variant}`}
     >
       {isLoading && <span className="spinner spinner-sm" />}
-      <span>{action.label}</span>
+      <span className="host-panel__action-label">{action.label}</span>
     </button>
   );
 }

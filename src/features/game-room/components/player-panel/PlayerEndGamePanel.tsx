@@ -43,12 +43,16 @@ export default function PlayerEndGamePanel({
     no_contest: t("noContest"),
   };
 
+  // The faction is the headline, so it is split off the prefix and coloured
+  // rather than concatenated into one flat string.
+  const isDecided = outcome !== null && outcome !== "no_contest";
+
   const descriptor: HostPanelDescriptor = {
     eyebrow: t("gameOver"),
-    title:
-      outcome === null || outcome === "no_contest"
-        ? t("noContest")
-        : `${OUTCOME_LABELS[outcome]} — ${t("winSuffix")}`,
+    title: isDecided ? t("winSuffix") : t("noContest"),
+    titleAccent: isDecided
+      ? { text: OUTCOME_LABELS[outcome], tone: outcome }
+      : undefined,
     status:
       finishedAt != null
         ? t("roomClosing", { seconds: isExpired ? 0 : secondsLeft })

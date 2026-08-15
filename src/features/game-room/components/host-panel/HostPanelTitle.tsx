@@ -1,5 +1,9 @@
+import type { HostPanelTitleAccent } from "@/features/game-room/lib/hostPanel";
+
 type HostPanelTitleProps = {
   title: string;
+  /** Faction-coloured tail, e.g. the winner on the end screen. */
+  accent?: HostPanelTitleAccent;
 };
 
 /**
@@ -7,7 +11,21 @@ type HostPanelTitleProps = {
  * 38px in a desktop centre cell, 12px in a dock — so it never needs a variant
  * or a breakpoint, and it wraps rather than truncating (Georgian runs long
  * enough that ellipsising would eat the phase name itself).
+ *
+ * The accent inherits that same size and weight: only hue separates it from
+ * the prefix, so "Winner Mafia" stays one headline rather than two.
  */
-export default function HostPanelTitle({ title }: HostPanelTitleProps) {
-  return <h3 className="host-panel__title">{title}</h3>;
+export default function HostPanelTitle({ title, accent }: HostPanelTitleProps) {
+  return (
+    <h3 className="host-panel__title">
+      {title}
+      {accent && (
+        <span
+          className={`host-panel__title-accent host-panel__title-accent--${accent.tone}`}
+        >
+          {accent.text}
+        </span>
+      )}
+    </h3>
+  );
 }

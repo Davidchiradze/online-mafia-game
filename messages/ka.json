@@ -557,7 +557,7 @@
       "nextSpeaker": "შემდეგი მოსაუბრე",
       "finished": "დასრულებულია",
       "noNominatedPlayersSpeaking": "დასახელებული მოთამაშეები არ საუბრობენ",
-      "readyToPlay": "მზადაა სათამაშოდ",
+      "readyToPlay": "ყველა მზადაა",
       "allPlayersReady": "ყველა მოთამაშე მზადაა",
       "waitingForPlayers": "ელოდება მოთამაშეებს",
       "waitingToJoin": "დაელოდეთ მოთამაშეებს",
@@ -727,7 +727,7 @@
       "shouldAllLeave": "უნდა დატოვოს ყველა კანდიდატურამ ?",
       "waitingForResults": "შედეგების მოლოდინი...",
       "lastCandidate": "ბოლო კანდიდატი",
-      "voteAgainst": "ხმა საწინააღმდეგოდ",
+      "voteAgainst": "ნომრის წინააღმდეგ",
       "voted": "ხმა მიეცა",
       "autoVoted": "ავტო-ხმა",
       "waitForHost": "დაელოდე ჰოსტს...",
@@ -811,7 +811,7 @@
       "seconds": "{seconds} წამი"
     },
     "player": {
-      "waitingForHost": "ჰოსტის მოლოდინში"
+      "waitingToStart": "ველოდებით მოთამაშეებს"
     }
   },
   "errors": {

@@ -727,7 +727,7 @@
       "shouldAllLeave": "Should all {count} leave?",
       "waitingForResults": "Waiting for results...",
       "lastCandidate": "Last Candidate",
-      "voteAgainst": "Vote against",
+      "voteAgainst": "Against nominee",
       "voted": "Voted",
       "autoVoted": "Auto-voted",
       "waitForHost": "Wait for host...",
@@ -811,7 +811,7 @@
       "seconds": "{seconds}s"
     },
     "player": {
-      "waitingForHost": "Waiting for the host"
+      "waitingToStart": "Waiting for players"
     }
   },
   "errors": {

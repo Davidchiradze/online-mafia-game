@@ -64,30 +64,50 @@ export default function PlayerVotingPanel() {
     votedCount: 0,
   });
 
-  // Dead players still watch the vote — it is public — they just cannot cast.
+  const isAutoVoted = round.isFinalCandidate && !isBothLeaveMode;
+  // The exact gap between windows: nothing decided yet (not auto-voted, no
+  // queue result pending) and the host hasn't opened this one yet.
+  const isPreVoteWait =
+    !hasVoted && !round.isQueueComplete && !isAutoVoted && !isVotingActive;
+
+  // Dead players still watch the vote — it is public — they just cannot cast,
+  // so they get the status line below instead of either button.
   const action: HostPanelAction | null =
-    isDead || hasVoted || !isVotingActive
+    isDead || hasVoted || round.isQueueComplete || isAutoVoted
       ? null
-      : {
-          id: `player-vote-${String(round.currentIndex)}`,
-          label: isBothLeaveMode
-            ? t("voteYes", { seconds: timeLeft })
-            : t("voteNow", { seconds: timeLeft }),
-          variant: isBothLeaveMode ? "danger" : "success",
-          onClick: () => void submitVote(),
-          disabled: !isEnabled,
-          isLoading: isSubmitting,
-        };
+      : isVotingActive
+        ? {
+            id: `player-vote-${String(round.currentIndex)}`,
+            label: isBothLeaveMode
+              ? t("voteYes", { seconds: timeLeft })
+              : t("voteNow", { seconds: timeLeft }),
+            variant: isBothLeaveMode ? "danger" : "success",
+            onClick: () => void submitVote(),
+            disabled: !isEnabled,
+            isLoading: isSubmitting,
+          }
+        : {
+            // Same slot, disabled: the host hasn't opened the window yet. It
+            // becomes the live vote button above in place the moment they do,
+            // rather than a status line a player could miss entirely.
+            id: "player-vote-waiting",
+            label: t("waitForHost"),
+            variant: "secondary",
+            onClick: () => {},
+            disabled: true,
+          };
 
   const status = hasVoted
     ? t("voted")
     : round.isQueueComplete
       ? t("waitingForResults")
-      : round.isFinalCandidate && !isBothLeaveMode
+      : isAutoVoted
         ? t("autoVoted")
-        : isVotingActive
-          ? undefined
-          : t("waitForHost");
+        : isPreVoteWait && isDead
+          // The only case with neither button: a dead player before the
+          // window opens still needs to be told what is happening.
+          ? t("waitForHost")
+          : undefined;
 
   const onTheBlock = isBothLeaveMode
     ? round.candidates
@@ -111,6 +131,9 @@ export default function PlayerVotingPanel() {
               ? t("lastCandidate")
               : t("voteAgainst"),
             seats: onTheBlock,
+            // The seat being voted against is the fact that matters; the
+            // phrase names it, so it reads best right after the number.
+            seatsFirst: true,
           }
         : undefined,
     note: isBothLeaveMode

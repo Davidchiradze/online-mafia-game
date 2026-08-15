@@ -39,7 +39,10 @@ export default function HostPanelBar({ descriptor }: HostPanelBarProps) {
             eyebrow={descriptor.eyebrow}
             timer={descriptor.timer}
           />
-          <HostPanelTitle title={descriptor.title} />
+          <HostPanelTitle
+            title={descriptor.title}
+            accent={descriptor.titleAccent}
+          />
           <HostPanelDataLine descriptor={descriptor} />
         </div>
         <div className="flex shrink-0 items-center gap-1.5">

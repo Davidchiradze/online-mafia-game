@@ -79,6 +79,32 @@
   overflow-wrap: anywhere;
 }
 
+/* The winning faction, inside the end-screen title. It inherits the title's
+   clamp and weight on purpose — hue and glow are the only difference, so
+   "WINNER MAFIA" still reads as one headline instead of two. Hues match
+   `FACTION_TEXT` in shared/lib/constants/factions.ts, so a faction is the same
+   colour here, on an admin chart and on a role badge. */
+.host-panel__title-accent {
+  margin-inline-start: 0.35em;
+  text-shadow: 0 0 clamp(6px, 3cqh, 20px) currentColor;
+  /* Inherits `overflow-wrap: anywhere` from `.host-panel__title` on purpose —
+     on a compact mobile cell the faction word is the tallest thing in the
+     identity zone, and refusing to break it pushes the title past the data
+     zone's height and gets it clipped. Same trade the title already makes. */
+}
+
+.host-panel__title-accent--mafia {
+  @apply text-red-400;
+}
+
+.host-panel__title-accent--citizens {
+  @apply text-emerald-400;
+}
+
+.host-panel__title-accent--yakuza {
+  @apply text-violet-400;
+}
+
 /* ── Zone 2: data ────────────────────────────────────────────────────────── */
 
 /* The only zone allowed to scroll, and only after everything in it has already
@@ -116,8 +142,16 @@
   font-size: clamp(8px, calc(3.2cqh + 1.1cqw), 15px);
   line-height: 1.15;
   letter-spacing: 0.06em;
-  text-wrap: balance;
-  overflow-wrap: anywhere;
+  overflow: hidden;
+}
+
+/* One line, never a mid-word break. Georgian action labels are single long
+   words ("დასრულება"), so the old `overflow-wrap: anywhere` split them across
+   two lines on a narrow cell instead of just letting the clamp shrink the
+   type. Ellipsis is the last resort — `title` on the button still carries the
+   full label. */
+.host-panel__action-label {
+  @apply min-w-0 overflow-hidden text-ellipsis whitespace-nowrap;
 }
 
 .host-panel__action:not(:disabled):hover {
