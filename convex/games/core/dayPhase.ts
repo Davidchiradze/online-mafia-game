@@ -17,10 +17,7 @@ import { SPEAKING_STATE, FOULS } from "../../lib/constants";
 import { getNextSpeaker } from "./speakingOrder";
 import { getGameDefinition } from "../registry";
 import { isFirstDayRound } from "./dayRound";
-import {
-  THIRD_FOUL_BAN_COUNT,
-  foulSpeakingBanRound,
-} from "./fouls";
+import { THIRD_FOUL_BAN_COUNT, foulSpeakingBanRound } from "./fouls";
 import type { Id } from "../../_generated/dataModel";
 import type { DatabaseReader } from "../../_generated/server";
 
@@ -289,11 +286,17 @@ export const startNominatedPlayersSpeaking = mutation({
       return;
     }
 
+    // Entered QUEUED, not running — the host reads out the order before the
+    // first nominee's 30s starts. Setting the cursor here would open their mic
+    // in the same click (`useSpeakingAutoMute` unmutes on
+    // `currentSpeakerIndex === mySeat`). `advanceNominatedSpeaker` is the Start,
+    // and it is the same state a tie-break arrives in (`voting:startTieBreak`),
+    // so the phase behaves identically however it was reached.
     await ctx.db.patch(session._id, {
       gamePhase: "nominated_players_speak",
       speakingOrder: nominatedPlayers,
-      currentSpeakerIndex: nominatedPlayers[0],
-      speakerStartedAt: new Date().toISOString(),
+      currentSpeakerIndex: undefined,
+      speakerStartedAt: undefined,
     });
   },
 });

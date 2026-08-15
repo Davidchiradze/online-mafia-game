@@ -29,7 +29,11 @@ type DayPhaseDonePanelProps = {
  *     mutation for both outcomes — it skips the speeches itself when the game
  *     was started without self-justification, or when a lone nominee makes
  *     them pointless — so only the LABEL changes between "start voting" and
- *     "start self-justification".
+ *     "go to self-justification".
+ *
+ * That label is "go to", not "start", on purpose: the mutation enters the phase
+ * with nobody on the clock, and the host opens the first mouth from the panel
+ * there. Only the voting branch actually starts what it names.
  */
 export default function DayPhaseDonePanel({
   gameId,
@@ -101,7 +105,7 @@ export default function DayPhaseDonePanel({
       actions: [
         {
           id: "to-nominated",
-          label: skipsSpeeches ? t("startVoting") : t("startSelfJustification"),
+          label: skipsSpeeches ? t("startVoting") : t("goToSelfJustification"),
           variant: "warning",
           onClick: () => void callMutation(startNominatedSpeaking),
           isLoading,

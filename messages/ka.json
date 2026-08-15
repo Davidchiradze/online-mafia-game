@@ -572,7 +572,7 @@
       "noVotingThisRound": "ამ რაუნდში კენჭისყრა არ ჩატარდება",
       "noPlayersNominated": "მოთამაშეები დასახელებული არ არიან",
       "startVoting": "კენჭისყრის დაწყება",
-      "startSelfJustification": "თავის მართლების დაწყება",
+      "goToSelfJustification": "თავის მართლებაზე გადასვლა",
       "startingVoting": "იწყება…",
       "startVotingPhase": "კენჭისყრის ფაზის დაწყება",
       "pickRoles": "როლების არჩევა",

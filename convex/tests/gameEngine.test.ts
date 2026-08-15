@@ -2417,7 +2417,16 @@ describe("sports single-nominee day rule (startNominatedPlayersSpeaking)", () =>
     const session = await getSession(t, s.gameId);
     expect(session?.gamePhase).toBe("nominated_players_speak");
     expect(session?.speakingOrder).toEqual([4, 5]);
-    expect(session?.currentSpeakerIndex).toBe(4);
+    // Queued, not running — the host's Start opens the first mouth.
+    expect(session?.currentSpeakerIndex).toBeUndefined();
+    expect(session?.speakerStartedAt).toBeUndefined();
+
+    await t
+      .withIdentity({ subject: s.hostAccountId })
+      .mutation(api.games.core.dayPhase.advanceNominatedSpeaker, {
+        gameId: s.gameId,
+      });
+    expect((await getSession(t, s.gameId))?.currentSpeakerIndex).toBe(4);
   });
 
   it("Japanese: a single nominee still goes to voting (flag off, unchanged)", async () => {
