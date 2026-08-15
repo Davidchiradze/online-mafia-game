@@ -1,7 +1,5 @@
 "use client";
 
-import { useQuery } from "convex/react";
-import { api } from "@convex/_generated/api";
 import {
   getActiveTier,
   getFeatures,
@@ -10,6 +8,7 @@ import {
   type Feature,
   type SubscriptionTier,
 } from "@convex/lib/entitlements";
+import { useViewer } from "@/features/auth/hooks/useViewer";
 
 /**
  * Current user's subscription tier + unlocked features, derived from the
@@ -17,14 +16,17 @@ import {
  * always happens server-side via `requireFeature` in Convex functions.
  *
  * Sibling of `useAccess()` (access roles); this is the subscription axis.
+ * `isLoading` covers the `syncing` window too (see `useViewer`), so a
+ * just-authenticated subscriber isn't briefly treated as unsubscribed before
+ * their profile row lands.
  */
 export function useEntitlements() {
-  const profile = useQuery(api.auth.profiles.currentProfile);
+  const viewer = useViewer();
 
-  const isLoading = profile === undefined;
+  const isLoading = viewer.isLoading;
   const input = {
-    role: profile?.role ?? null,
-    subscription: profile?.subscription ?? null,
+    role: viewer.profile?.role ?? null,
+    subscription: viewer.profile?.subscription ?? null,
   };
 
   return {

@@ -2,13 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
-import { authProfiles } from "@convex/refs/lobby";
 import { FEATURES, hasFeature } from "@convex/lib/entitlements";
 import { PERMISSIONS, roleHasPermission } from "@convex/lib/access";
 import { Lock, Users } from "lucide-react";
 import { SUBSCRIPTIONS_PATH } from "@/features/auth/components/SubscriptionGuard";
+import { useViewer } from "@/features/auth/hooks/useViewer";
 import { LobbyGame } from "@/features/lobby/components/LobbyContent";
 import { LobbyConfirmModal } from "@/features/lobby/components/LobbyConfirmModal";
 import { buildSeatRing, MODE_TINT, MODE_TINT_FALLBACK } from "./helpers";
@@ -27,7 +26,7 @@ export default function RoomCard({ room, onNavigate }: Props) {
   const router = useRouter();
   const [showJoinConfirm, setShowJoinConfirm] = useState(false);
 
-  const currentProfile = useQuery(authProfiles.currentProfile);
+  const { profile: currentProfile } = useViewer();
   const isPlayer =
     !!currentProfile &&
     room.players.some((p) => p.playerId === currentProfile._id);

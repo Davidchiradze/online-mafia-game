@@ -1,10 +1,9 @@
 "use client";
 
-import { api } from "@convex/_generated/api";
-import { useQuery } from "convex/react";
 import { Coins, Menu } from "lucide-react";
 import UserAvatar from "@/shared/ui/UserAvatar";
 import LanguageSwitcher from "@/shared/ui/LanguageSwitcher";
+import { useViewer } from "@/features/auth/hooks/useViewer";
 
 type AuthorizedHeaderProps = {
   onOpenMobileMenu: () => void;
@@ -13,7 +12,7 @@ type AuthorizedHeaderProps = {
 export default function AuthorizedHeader({
   onOpenMobileMenu,
 }: AuthorizedHeaderProps) {
-  const profile = useQuery(api.auth.profiles.currentProfile);
+  const { profile } = useViewer();
   return (
     <header className="flex h-[72px] shrink-0 items-center justify-between border-b border-white/5 bg-black/30 px-4 transition-colors sm:px-6 lg:px-8">
       <div className="flex items-center">
