@@ -1,3 +1,4 @@
+/  [error]  ← src/app/error.tsx
 /  [layout]  ← src/app/(headquarters)/layout.tsx
 /  [layout]  ← src/app/layout.tsx
 /  [loading]  ← src/app/loading.tsx

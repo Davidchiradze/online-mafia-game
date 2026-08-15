@@ -190,7 +190,8 @@
     "confirm": "Confirm",
     "save": "Save",
     "close": "Close",
-    "avatar": "Avatar"
+    "avatar": "Avatar",
+    "checkingAccess": "Checking access…"
   },
   "auth": {
     "accessDenied": "Access Denied",
@@ -841,5 +842,11 @@
     "FORBIDDEN": "You do not have permission to do that.",
     "BROADCAST_EMPTY": "Message cannot be empty.",
     "BROADCAST_TOO_LONG": "Your message is too long."
+  },
+  "errorBoundary": {
+    "title": "Something went wrong",
+    "body": "We hit an unexpected error. Try again, or head back to the lobby.",
+    "retry": "Try again",
+    "home": "Back to lobby"
   }
 }
