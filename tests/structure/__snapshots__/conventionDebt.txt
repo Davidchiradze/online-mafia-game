@@ -13,7 +13,6 @@ component-file-length | src/features/game-room/context/gameRoomContext.tsx
 component-file-length | src/features/headquarters/leaderboard/LeaderboardContent.tsx
 component-file-length | src/features/headquarters/match-history/RolePerformanceGrid.tsx
 component-file-length | src/features/lobby/components/CreateGameModal.tsx
-component-file-length | src/features/lobby/components/LobbyContent.tsx
 component-file-length | src/features/lobby/components/room-card/TableStage.tsx
 component-file-length | src/features/subscriptions/components/SubscriptionsContent.tsx
 component-file-pascalcase | src/features/admin/dashboard/primitives.tsx
