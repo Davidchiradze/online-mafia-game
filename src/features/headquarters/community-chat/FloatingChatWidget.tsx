@@ -8,6 +8,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { FEATURES } from "@convex/lib/entitlements";
 import { useEntitlements } from "@/features/auth/hooks/useEntitlements";
+import { useViewer } from "@/features/auth/hooks/useViewer";
 import { cn } from "@/shared/lib/cn";
 import { useCommunityChat } from "./useCommunityChat";
 import { MessageList } from "./MessageList";
@@ -28,9 +29,16 @@ function readBool(key: string): boolean {
  * channel (replaces the old `/community-chat` page). Subscription-gated: nothing
  * renders for non-subscribers, so the gated `unreadCount`/`list` queries are
  * only ever called by `WidgetInner` once access is confirmed.
+ *
+ * The caller (`HeadquartersWrapper`) already only mounts this for a member,
+ * but the guest check here is explicit rather than relied on by accident of
+ * `has()` returning false for a guest — `unreadCount` calls `requireFeature`
+ * and throws if it ever fires without one.
  */
 export default function FloatingChatWidget() {
+  const viewer = useViewer();
   const { isLoading, has } = useEntitlements();
+  if (viewer.isGuest) return null;
   if (isLoading || !has(FEATURES.COMMUNITY_CHAT)) return null;
   return <WidgetInner />;
 }

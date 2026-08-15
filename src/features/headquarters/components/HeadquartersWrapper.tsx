@@ -3,7 +3,10 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
+import { isGuestViewablePath } from "@convex/lib/access";
 import { SignedInGuard } from "@/features/auth/components/SignedInGuard";
+import { ViewerGate } from "@/features/auth/components/ViewerGate";
+import { useViewer } from "@/features/auth/hooks/useViewer";
 import AuthorizedHeader from "@/features/headquarters/components/AuthorizedHeader";
 import NavigationSidebar from "@/features/headquarters/components/NavigationSidebar";
 import FloatingChatWidget from "@/features/headquarters/community-chat/FloatingChatWidget";
@@ -14,9 +17,9 @@ type HeadquartersWrapperProps = {
 };
 
 /**
- * Runs the join-request listener. Mounted INSIDE the `SignedInGuard` so its
- * query (`myActiveRequests` → `getAuthenticatedUser`) never fires during the
- * auth bootstrap window, where it would throw "Not authenticated".
+ * Runs the join-request listener. Mounted only for a settled member so its
+ * query (`myActiveRequests` → `getAuthenticatedUser`) never fires for a guest
+ * or during the auth bootstrap window, where it would throw.
  */
 function JoinRequestNotifier() {
   useMyJoinRequestNotifications();
@@ -27,6 +30,11 @@ export default function HeadquartersWrapper({
   children,
 }: HeadquartersWrapperProps) {
   const pathname = usePathname();
+  const viewer = useViewer();
+  // /lobby and /leaderboard render read-only for a guest; every other route in
+  // this shell (match history, subscriptions) stays members-only. Derived from
+  // the same list the edge middleware uses, so the two can never disagree.
+  const guestViewable = isGuestViewablePath(pathname);
   const [isSidebarHovered, setIsSidebarHovered] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -92,15 +100,22 @@ export default function HeadquartersWrapper({
         <AuthorizedHeader onOpenMobileMenu={() => setIsMobileMenuOpen(true)} />
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-black/20 shadow-[-10px_-10px_30px_rgba(0,0,0,0.5)] md:rounded-tl-3xl md:border-l md:border-t md:border-white/10">
           <div className="h-full">
-            <SignedInGuard>
-              <JoinRequestNotifier />
-              {children}
-            </SignedInGuard>
+            {guestViewable ? (
+              <ViewerGate>
+                {viewer.isMember && <JoinRequestNotifier />}
+                {children}
+              </ViewerGate>
+            ) : (
+              <SignedInGuard>
+                {viewer.isMember && <JoinRequestNotifier />}
+                {children}
+              </SignedInGuard>
+            )}
           </div>
         </main>
       </div>
 
-      <FloatingChatWidget />
+      {viewer.isMember && <FloatingChatWidget />}
     </div>
   );
 }
