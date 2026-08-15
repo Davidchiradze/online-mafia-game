@@ -80,12 +80,14 @@
 }
 
 /* The winning faction, inside the end-screen title. It inherits the title's
-   clamp and weight on purpose — hue and glow are the only difference, so
-   "WINNER MAFIA" still reads as one headline instead of two. Hues match
-   `FACTION_TEXT` in shared/lib/constants/factions.ts, so a faction is the same
-   colour here, on an admin chart and on a role badge. */
+   clamp and weight on purpose — hue and glow are the only difference. It's
+   forced onto its own line rather than flowing after the prefix: a
+   multi-word faction name (e.g. Georgian yakuza) could otherwise wrap
+   mid-phrase, splitting one word across the prefix's line and its own. Hues
+   match `FACTION_TEXT` in shared/lib/constants/factions.ts, so a faction is
+   the same colour here, on an admin chart and on a role badge. */
 .host-panel__title-accent {
-  margin-inline-start: 0.35em;
+  display: block;
   text-shadow: 0 0 clamp(6px, 3cqh, 20px) currentColor;
   /* Inherits `overflow-wrap: anywhere` from `.host-panel__title` on purpose —
      on a compact mobile cell the faction word is the tallest thing in the

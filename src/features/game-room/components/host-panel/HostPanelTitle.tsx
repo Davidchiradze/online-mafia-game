@@ -12,8 +12,9 @@ type HostPanelTitleProps = {
  * or a breakpoint, and it wraps rather than truncating (Georgian runs long
  * enough that ellipsising would eat the phase name itself).
  *
- * The accent inherits that same size and weight: only hue separates it from
- * the prefix, so "Winner Mafia" stays one headline rather than two.
+ * The accent inherits that same size and weight — only hue separates it from
+ * the prefix — but renders on its own line (see `.host-panel__title-accent`
+ * in host-panel.css), so a multi-word faction name never wraps mid-phrase.
  */
 export default function HostPanelTitle({ title, accent }: HostPanelTitleProps) {
   return (

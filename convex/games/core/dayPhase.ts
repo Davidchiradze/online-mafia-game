@@ -322,7 +322,7 @@ export const advanceNominatedSpeaker = mutation({
     const speakingOrder = session.speakingOrder ?? [];
     const currentSpeaker = session.currentSpeakerIndex ?? null;
 
-    if (currentSpeaker === null || speakingOrder.length === 0) {
+    if (speakingOrder.length === 0) {
       throw new ConvexError("No active speaking session");
     }
 
@@ -331,11 +331,20 @@ export const advanceNominatedSpeaker = mutation({
       players.filter((p) => p.isAlive).map((p) => p.seatNumber),
     );
 
-    const lastSpeaker = SPEAKING_STATE.isPaused(currentSpeaker)
-      ? SPEAKING_STATE.getLastSpeakerFromPaused(currentSpeaker)
-      : currentSpeaker;
-
-    const nextSpeaker = getNextSpeaker(lastSpeaker, speakingOrder, aliveSeats);
+    // An unset cursor means the phase was entered QUEUED rather than running —
+    // that is how `voting:startTieBreak` arrives, so the host can announce the
+    // tied seats before a mic opens. This click is then the Start, and it hands
+    // the floor to the first still-living seat instead of advancing past one.
+    const nextSpeaker =
+      currentSpeaker === null
+        ? (speakingOrder.find((seat) => aliveSeats.has(seat)) ?? null)
+        : getNextSpeaker(
+            SPEAKING_STATE.isPaused(currentSpeaker)
+              ? SPEAKING_STATE.getLastSpeakerFromPaused(currentSpeaker)
+              : currentSpeaker,
+            speakingOrder,
+            aliveSeats,
+          );
 
     if (nextSpeaker === null) {
       const nominatedPlayers = session.nominatedPlayers ?? [];

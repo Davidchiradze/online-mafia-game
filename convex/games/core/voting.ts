@@ -423,7 +423,14 @@ export const startTieBreak = mutation({
       votingStartedAt: undefined,
     });
 
-    // Update game session for tie-break justification
+    // Re-open self-justification for the tied seats — QUEUED, not running.
+    // Tallying a tie is an announcement first: the host has to name the tied
+    // seats before anyone defends themselves. Setting the cursor here would put
+    // the first seat on the clock in the same click, opening their mic
+    // (`useSpeakingAutoMute` unmutes on `currentSpeakerIndex === mySeat`) and
+    // burning their 30s while the host is still speaking. Leaving it unset
+    // mirrors `startVotingFarewell`; the host's Start —
+    // `dayPhase:advanceNominatedSpeaker` — opens the first mouth.
     const gameSession = await ctx.db
       .query("gameSessions")
       .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
@@ -433,8 +440,8 @@ export const startTieBreak = mutation({
       await ctx.db.patch(gameSession._id, {
         gamePhase: "nominated_players_speak",
         speakingOrder: tiedCandidates,
-        currentSpeakerIndex: tiedCandidates[0],
-        speakerStartedAt: new Date().toISOString(),
+        currentSpeakerIndex: undefined,
+        speakerStartedAt: undefined,
       });
     }
 

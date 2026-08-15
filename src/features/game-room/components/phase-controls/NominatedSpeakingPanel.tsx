@@ -76,9 +76,12 @@ export default function NominatedSpeakingPanel({
   });
   const title = tPhases("nominated_players_speak");
 
-  // The server sets the cursor on phase entry, so "not started" here means the
-  // phase was entered with nothing to run. Nothing to do but say so.
-  if (run.mode === "not-started") {
+  // An EMPTY order is the only real dead end — the phase was entered with
+  // nobody to run. A "not-started" run that still has seats in it is the queued
+  // state a tie-break arrives in (`voting:startTieBreak` deliberately leaves the
+  // cursor unset so the host can announce the tied seats), and it falls through
+  // to the Start button below.
+  if (run.total === 0) {
     return (
       <HostPanel
         descriptor={{
