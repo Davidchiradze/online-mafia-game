@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
-import AuthGate from "@/features/headquarters/components/AuthGate";
+import { SignedInGuard } from "@/features/auth/components/SignedInGuard";
 import AuthorizedHeader from "@/features/headquarters/components/AuthorizedHeader";
 import NavigationSidebar from "@/features/headquarters/components/NavigationSidebar";
 import FloatingChatWidget from "@/features/headquarters/community-chat/FloatingChatWidget";
@@ -14,9 +14,9 @@ type HeadquartersWrapperProps = {
 };
 
 /**
- * Runs the join-request listener. Mounted INSIDE the `AuthGate` so its query
- * (`myActiveRequests` → `getAuthenticatedUser`) never fires during the auth
- * bootstrap window, where it would throw "Not authenticated".
+ * Runs the join-request listener. Mounted INSIDE the `SignedInGuard` so its
+ * query (`myActiveRequests` → `getAuthenticatedUser`) never fires during the
+ * auth bootstrap window, where it would throw "Not authenticated".
  */
 function JoinRequestNotifier() {
   useMyJoinRequestNotifications();
@@ -92,10 +92,10 @@ export default function HeadquartersWrapper({
         <AuthorizedHeader onOpenMobileMenu={() => setIsMobileMenuOpen(true)} />
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-black/20 shadow-[-10px_-10px_30px_rgba(0,0,0,0.5)] md:rounded-tl-3xl md:border-l md:border-t md:border-white/10">
           <div className="h-full">
-            <AuthGate>
+            <SignedInGuard>
               <JoinRequestNotifier />
               {children}
-            </AuthGate>
+            </SignedInGuard>
           </div>
         </main>
       </div>
