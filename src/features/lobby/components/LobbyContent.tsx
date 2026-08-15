@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useQuery } from "convex/react";
 import { gameLogs as historyRefs } from "@convex/refs/history";
-import { Doc } from "@convex/_generated/dataModel";
+import type { LobbyGameSummary } from "@convex/refs/lobby";
 import RoomCard from "@/features/lobby/components/room-card/RoomCard";
 import CreateGameModal from "@/features/lobby/components/CreateGameModal";
 import { Plus, Search, SearchX } from "lucide-react";
@@ -21,12 +21,7 @@ import {
 import { FEATURES } from "@convex/lib/entitlements";
 import { RatingCard } from "@/features/headquarters/match-history/StatsHeader";
 
-export type LobbyGame = Doc<"games"> & {
-  players: (Doc<"gamePlayers"> & { avatar?: string })[];
-  spectators: (Doc<"gameSpectators"> & { avatar?: string })[];
-  /** Live table average ELO (non-host roster). Undefined when unrated or only the host has joined. */
-  tableAvgRating?: number;
-};
+export type LobbyGame = LobbyGameSummary;
 
 type Props = {
   games: LobbyGame[];

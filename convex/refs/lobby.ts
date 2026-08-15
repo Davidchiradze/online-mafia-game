@@ -43,6 +43,14 @@ type GameWithRelations = {
   tableAvgRating?: number;
 };
 
+/**
+ * `lobby/games:list`'s return shape. That query is anonymous-readable (see
+ * `GUEST_VIEWABLE_PATHS` in `convex/lib/access.ts`), so its handler projects
+ * an explicit field list instead of spreading the game doc — `code` is
+ * deliberately excluded. `getById` still returns the full `GameWithRelations`.
+ */
+export type LobbyGameSummary = Omit<GameWithRelations, "code">;
+
 type Profile = {
   _id: Id<"profiles">;
   _creationTime: number;
@@ -161,7 +169,7 @@ export const hostTransfer = {
 };
 
 export const lobbyGames = {
-  list: makeFunctionReference<"query", Record<string, never>, GameWithRelations[]>(
+  list: makeFunctionReference<"query", Record<string, never>, LobbyGameSummary[]>(
     "lobby/games:list",
   ),
   getById: makeFunctionReference<"query", { gameId: Id<"games"> }, GameWithRelations | null>(
