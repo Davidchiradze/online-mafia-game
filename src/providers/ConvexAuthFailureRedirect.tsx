@@ -14,9 +14,9 @@ import { LOGOUT_ENDPOINT } from "@/features/auth/lib/constants";
  *
  * When that combination is observed we navigate to `/api/auth/logout`,
  * which clears `cnvx-auth` (and best-effort the PHP session cookie) and
- * 302s to `PHP_LOGIN_REDIRECT_URL`. Without this, a stale/bad JWT would
- * leave the app stuck in an unauthenticated state with no UI affordance
- * to recover.
+ * 302s to mafia.ge's login page (`phpLoginUrl`). Without this, a stale/bad
+ * JWT would leave the app stuck in an unauthenticated state with no UI
+ * affordance to recover.
  *
  * Mounted as a sibling under `<ConvexProviderWithAuth>` (so
  * `useConvexAuth` is available) and inside `<AuthBridgeProvider>` (so

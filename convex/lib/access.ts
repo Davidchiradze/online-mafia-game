@@ -138,6 +138,28 @@ export const PUBLIC_PATH_PREFIXES = [
   NOT_VERIFIED_PATH,
 ] as const;
 
+/**
+ * Product pages an unauthenticated visitor may READ.
+ *
+ * NOT the same thing as `PUBLIC_PATH_PREFIXES`. A public path short-circuits
+ * the whole middleware chain (`publicPageMiddleware` returns `stop: true`),
+ * which also skips the PHP→Convex bridge — a logged-in mafia.ge user arriving
+ * with a `PHPSESSID` but no `cnvx-auth` cookie would then render as a guest
+ * permanently. Guest-viewable paths still run the bridge; they only change
+ * its terminal verdict from "redirect to `AUTH_ERROR_PATH`" to "let the
+ * request through".
+ *
+ * Matched exact-or-subpath (same shape as `PROTECTED_ROUTE_RULES`), so `"/"`
+ * means the root only and never every path.
+ */
+export const GUEST_VIEWABLE_PATHS = ["/", "/lobby", "/leaderboard"] as const;
+
+export function isGuestViewablePath(pathname: string): boolean {
+  return GUEST_VIEWABLE_PATHS.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`),
+  );
+}
+
 /** Routes that require a permission beyond just being authenticated. */
 export const PROTECTED_ROUTE_RULES: ReadonlyArray<{
   prefix: string;
