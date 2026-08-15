@@ -16,6 +16,7 @@ import type {
   Role,
   VisibilityState,
 } from "@/shared/lib/game/visibility";
+import type { HostPanelMeta } from "@/features/game-room/lib/hostPanel";
 import type { PhaseAdvanceUpdates } from "@/features/game-room/variants/japanese/phaseFlow";
 import type { GameSessionState } from "@/features/game-room/context/gameRoomContext";
 
@@ -67,13 +68,18 @@ export type PhaseControlsContext = {
 export type PhaseControlRenderer = (ctx: PhaseControlsContext) => ReactNode;
 
 /**
- * Renders the host-only night-actions summary — the compact "who targeted whom"
- * strip shown above the host controls during night phases. Japanese shows the
- * single-authority scalars (M/Y/H); Sports shows one pill per living mafia's
- * private pick (resolved from the host-only `getHostSelections`). Each variant's
- * renderer reads what it needs from `useGameRoom()`, so it takes no props.
+ * The host-only night summary — "who targeted whom" — as DATA for the host
+ * panel's data zone, not as markup.
+ *
+ * Japanese returns the single-authority scalars (M / Y / H) derived from the
+ * night session; Sports returns one pill per living mafia's private pick,
+ * resolved from the host-only `getHostSelections`. Both read what they need
+ * from `useGameRoom()`, so neither takes arguments.
+ *
+ * A HOOK rather than a pure selector because Sports needs a Convex query. Call
+ * it unconditionally at the top of a component, like any other hook.
  */
-export type NightActionsRenderer = () => ReactNode;
+export type NightSummaryHook = () => readonly HostPanelMeta[];
 
 /**
  * A variant's phase id → host-controls renderer map (docs/engine/variant-architecture.md §2.2,
@@ -162,8 +168,8 @@ export interface UiRuleset {
   advanceUpdates: (phase: string) => PhaseAdvanceUpdates;
   /** Phase id → host-controls renderer (replaces the positional switch). */
   phaseControls: PhaseControlsMap;
-  /** Host-only night-actions summary strip (variant kill model). */
-  nightActionsDisplay: NightActionsRenderer;
+  /** Host-only night summary pills (variant kill model). A hook — see above. */
+  useNightSummary: NightSummaryHook;
   /** Pure: who may take a night action this phase (variant kill model). */
   nightAuthority: (input: NightAuthorityInput) => NightActionAuthority;
   /** Participant-circle ring geometry (12-ring Japanese, 10-ring Sports). */

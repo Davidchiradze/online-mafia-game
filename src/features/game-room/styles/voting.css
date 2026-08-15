@@ -1,0 +1,30 @@
+/* Game UI — voting surfaces.
+
+   Candidate badges, the both-leave header and the results placeholder. Colour
+   only: layout comes from the components in components/voting/. */
+
+.candidate-badge-red {
+  background: linear-gradient(135deg, rgba(220,38,38,0.2) 0%, rgba(185,28,28,0.25) 100%);
+  border-color: rgba(220,38,38,0.4);
+}
+
+.candidate-badge-amber {
+  background: linear-gradient(135deg, rgba(245,158,11,0.2) 0%, rgba(217,119,6,0.25) 100%);
+  border-color: rgba(245,158,11,0.4);
+}
+
+.candidate-dot {
+  background: linear-gradient(135deg, rgba(220,38,38,0.3) 0%, rgba(185,28,28,0.35) 100%);
+  border-color: rgba(220,38,38,0.7);
+  box-shadow: 0 0 12px rgba(220,38,38,0.4);
+}
+
+.both-leave-header {
+  background: linear-gradient(135deg, rgba(245,158,11,0.2) 0%, rgba(217,119,6,0.25) 100%);
+  border-color: rgba(245,158,11,0.5);
+}
+
+.results-waiting {
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.1);
+}

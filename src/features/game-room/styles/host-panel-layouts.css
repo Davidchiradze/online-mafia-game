@@ -1,0 +1,293 @@
+/* Game UI — host controls panel: the collapsed compositions.
+
+   Two overrides of the shell in host-panel.css, plus the sheet. Which one
+   applies is decided by `resolveHostPanelLayout` from the panel's measured box
+   (lib/hostPanel.ts) — these sheets never decide, they only size.
+
+   Everything here is a descendant selector on `.host-panel--compact` /
+   `.host-panel--bar`, so it outranks the base rules on specificity and the
+   import order of these files does not matter. */
+
+@reference "tailwindcss";
+
+/* ── The collapsed data line ────────────────────────────────────────────────
+   Shared by both compositions: a short chip run plus the ONE string that
+   matters most. Base geometry here; per-composition sizing further down. */
+
+.host-panel__line {
+  @apply flex w-full min-w-0 flex-wrap items-center justify-center;
+  gap: 2px 6px;
+}
+
+.host-panel__line-text {
+  @apply min-w-0 font-bold uppercase;
+  line-height: 1.2;
+  letter-spacing: 0.09em;
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+}
+
+/* The seats and the night summary, on one scrolling rail.
+   `min-width: 0` is what lets it shrink inside the wrapping line instead of
+   forcing the status text off the panel. The pills below are sized so the
+   common cases fit outright — three Japanese M/Y/H pills sit inside a bar's
+   identity column — and the rail only ever scrolls for the cases that cannot,
+   such as Sports' one pill per living mafia. The scrollbar is hidden because
+   at this size it would cover the pills; a half-visible pill at the edge is
+   the affordance instead. */
+.host-panel__line-run {
+  @apply flex min-w-0 max-w-full items-center;
+  gap: 3px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.host-panel__line-run::-webkit-scrollbar {
+  display: none;
+}
+
+/* Never let a pill shrink into unreadability — the rail scrolls instead. */
+.host-panel__line-run > * {
+  flex: none;
+}
+
+/* ── Compact composition ─────────────────────────────────────────────────────
+   Under ~170px, scaling alone cannot fit a chip label, a chip run, a countdown
+   and a status line into the hole that is left. So the data zone renders ONE
+   line — the title, then the chips plus whichever single string matters most.
+   Nothing is clipped because nothing extra is rendered. */
+
+.host-panel--compact .host-panel__stack {
+  gap: clamp(2px, 2.4cqh, 6px);
+  padding: clamp(4px, 4cqh, 9px) clamp(6px, 3cqw, 12px);
+}
+
+.host-panel--compact .host-panel__eyebrow {
+  font-size: clamp(7px, 6cqh, 9px);
+  letter-spacing: 0.12em;
+}
+
+.host-panel--compact .host-panel__timer {
+  padding: 1px 7px;
+  font-size: clamp(8px, 6.5cqh, 10px);
+}
+
+.host-panel--compact .host-panel__title {
+  font-size: clamp(11px, 10.5cqh, 19px);
+  line-height: 1.06;
+  letter-spacing: 0.01em;
+}
+
+.host-panel--compact .host-panel__data {
+  gap: clamp(3px, 2.4cqh, 6px);
+}
+
+/* 44px is the floor wherever it fits, but a fixed 44px in a 100px cell is 44%
+   of the panel spent on one control — it pushed the title out of the data zone
+   entirely on a landscape phone. Scale it down with the cell and stop at 36px;
+   below that the cell is short enough that `resolveHostPanelLayout` has already
+   sent it to the bar, where the action sits BESIDE the content instead. */
+.host-panel--compact .host-panel__action {
+  min-height: clamp(36px, 30cqh, 44px);
+  padding: 0 12px;
+  border-radius: 11px;
+  font-size: 10px;
+  line-height: 1.12;
+  letter-spacing: 0.04em;
+}
+
+.host-panel--compact .host-panel__line-text {
+  font-size: clamp(8px, 8cqh, 11px);
+}
+
+/* Compact keeps the nominated capsule and the now/next pills as blocks — they
+   sit side by side when the cell is wide enough and wrap onto their own rows
+   when it is not, so the two never merge into one run of dots. The gap between
+   blocks is deliberately wider than the gap inside one. */
+.host-panel--compact .host-panel__line {
+  gap: 3px 9px;
+}
+
+.host-panel--compact .host-panel__nominated {
+  gap: 5px;
+  padding: 2px 6px;
+}
+
+.host-panel--compact .host-panel__nominated-label {
+  font-size: clamp(6px, 5cqh, 8px);
+  letter-spacing: 0.1em;
+}
+
+.host-panel--compact .host-panel__nominated-seats {
+  gap: 3px;
+}
+
+.host-panel--compact .host-panel__nominated-seat {
+  min-width: clamp(14px, 13cqh, 19px);
+  height: clamp(14px, 13cqh, 19px);
+  padding: 0 3px;
+  font-size: clamp(8px, 6.5cqh, 11px);
+}
+
+.host-panel--compact .host-panel__speakers {
+  gap: 5px;
+}
+
+.host-panel--compact .host-panel__speaker {
+  gap: 4px;
+  padding: 1px 7px;
+}
+
+.host-panel--compact .host-panel__speaker-label {
+  font-size: clamp(6px, 5cqh, 8px);
+  letter-spacing: 0.08em;
+}
+
+.host-panel--compact .host-panel__speaker-seat {
+  font-size: clamp(10px, 9cqh, 14px);
+}
+
+.host-panel--compact .seat-chip {
+  width: clamp(15px, 14cqh, 20px);
+  height: clamp(15px, 14cqh, 20px);
+  font-size: clamp(8px, 7cqh, 10px);
+}
+
+/* Tight enough that the whole night summary fits the collapsed line rather
+   than needing a scroll: three M/Y/H pills come to roughly 105px. */
+.host-panel--compact .host-panel__meta-pill {
+  gap: 3px;
+  padding: 1px 5px;
+}
+
+.host-panel--compact .host-panel__meta-label {
+  font-size: clamp(7px, 6cqh, 9px);
+  letter-spacing: 0.04em;
+}
+
+.host-panel--compact .host-panel__meta-value {
+  font-size: clamp(8px, 7cqh, 11px);
+}
+
+.host-panel--compact .host-panel__meta-icon {
+  width: clamp(8px, 7cqh, 11px);
+  height: clamp(8px, 7cqh, 11px);
+}
+
+/* ── Bar composition ─────────────────────────────────────────────────────────
+   One row: identity on the left, a 44px action and the disclosure chevron on
+   the right. Type is fixed here — there is no vertical room left to scale
+   into, and the sheet the chevron opens is where the full panel lives. */
+
+.host-panel--bar .host-panel__bar {
+  @apply grid h-full items-center;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 9px;
+  padding: 7px 10px;
+  box-sizing: border-box;
+  overflow: auto;
+}
+
+.host-panel--bar .host-panel__eyebrow-row {
+  @apply flex-wrap justify-start;
+  gap: 2px 6px;
+}
+
+.host-panel--bar .host-panel__eyebrow {
+  font-size: 8px;
+  letter-spacing: 0.14em;
+}
+
+.host-panel--bar .host-panel__timer {
+  padding: 1px 6px;
+  font-size: 8px;
+}
+
+.host-panel--bar .host-panel__title {
+  font-size: 12px;
+  line-height: 1.1;
+  letter-spacing: 0.01em;
+  text-align: left;
+}
+
+.host-panel--bar .host-panel__line {
+  @apply justify-start;
+  gap: 2px 5px;
+}
+
+.host-panel--bar .host-panel__line-text {
+  @apply font-semibold;
+  font-size: 8px;
+  letter-spacing: 0.06em;
+}
+
+.host-panel--bar .seat-chip {
+  width: 16px;
+  height: 16px;
+  font-size: 8px;
+}
+
+/* A bar's identity column is around 100px wide on a landscape phone. At these
+   sizes an M/Y/H pill is ~30px, so all three fit; Sports' wider `#2 ⌖ #7`
+   pills do not, and the rail scrolls. */
+.host-panel--bar .host-panel__meta-pill {
+  gap: 2px;
+  padding: 1px 4px;
+}
+
+.host-panel--bar .host-panel__meta-label {
+  font-size: 7px;
+  letter-spacing: 0.02em;
+}
+
+.host-panel--bar .host-panel__meta-value {
+  font-size: 9px;
+}
+
+.host-panel--bar .host-panel__meta-icon {
+  width: 8px;
+  height: 8px;
+}
+
+/* The glow is the only thing marking whose turn is open, and at 16px of pill
+   height the border alone does not read. Keep it, but tighten it so three
+   adjacent pills do not bleed into one another. */
+.host-panel--bar .host-panel__meta-pill--active {
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.16);
+}
+
+.host-panel--bar .host-panel__actions {
+  @apply shrink-0 items-center;
+  gap: 6px;
+}
+
+/* Fluid, not a fixed 118px: on a 250px landscape cell a third of the row is
+   all the action can have before the identity column stops holding a wrapped
+   Georgian phase title. Height keeps the full 44px floor — there is vertical
+   room in a bar, it is horizontal room that is scarce. */
+.host-panel--bar .host-panel__action {
+  @apply flex-none;
+  width: clamp(76px, 32cqw, 118px);
+  min-height: 44px;
+  padding: 0 clamp(6px, 2.5cqw, 12px);
+  border-radius: 11px;
+  font-size: 9px;
+  line-height: 1.12;
+  letter-spacing: 0.03em;
+}
+
+.host-panel__disclosure {
+  @apply flex shrink-0 cursor-pointer items-center justify-center rounded-[11px] border border-white/15 bg-white/5 text-slate-400 transition hover:bg-white/10;
+  width: 30px;
+  min-height: 44px;
+}
+
+/* The sheet the bar's chevron opens: the full panel, docked to the bottom of
+   the viewport so it overlays the ring instead of reflowing a tile mid-action.
+   Pairs with `.center-panel` for its surface. */
+.host-panel-sheet {
+  @apply fixed inset-x-0 bottom-0 z-40 border-t;
+  height: min(290px, 60dvh);
+}

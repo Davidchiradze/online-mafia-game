@@ -11,13 +11,13 @@ import { advanceUpdates } from "./phaseFlow";
 import { JAPANESE_PHASE_CONTROLS } from "./phaseControls";
 import { japaneseNightAuthority } from "./nightAuthority";
 import { JAPANESE_SEAT_LAYOUT } from "./seatLayout";
-import JapaneseNightActionsDisplay from "./nightActionsDisplay";
+import { useJapaneseNightSummary } from "./nightSummary";
 
 export const JAPANESE_UI_RULESET: UiRuleset = {
   visibility: JAPANESE_VISIBILITY,
   advanceUpdates,
   phaseControls: JAPANESE_PHASE_CONTROLS,
-  nightActionsDisplay: JapaneseNightActionsDisplay,
+  useNightSummary: useJapaneseNightSummary,
   nightAuthority: japaneseNightAuthority,
   seatLayout: JAPANESE_SEAT_LAYOUT,
   mafiaNightModel: "single-authority",

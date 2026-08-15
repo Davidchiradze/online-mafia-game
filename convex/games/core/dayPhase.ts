@@ -17,10 +17,7 @@ import { SPEAKING_STATE, FOULS } from "../../lib/constants";
 import { getNextSpeaker } from "./speakingOrder";
 import { getGameDefinition } from "../registry";
 import { isFirstDayRound } from "./dayRound";
-import {
-  THIRD_FOUL_BAN_COUNT,
-  foulSpeakingBanRound,
-} from "./fouls";
+import { THIRD_FOUL_BAN_COUNT, foulSpeakingBanRound } from "./fouls";
 import type { Id } from "../../_generated/dataModel";
 import type { DatabaseReader } from "../../_generated/server";
 
@@ -211,10 +208,12 @@ export const nominatePlayer = mutation({
       );
     }
 
-    const current = session.nominatedPlayers ?? [];
-    const newNominations = current.includes(seatNumber)
-      ? current.filter((s) => s !== seatNumber)
-      : [...current, seatNumber];
+    // Set-based rather than push/filter: the list is the voting candidate
+    // list (`enterVotingPhase`) and the self-justification speaking order, and
+    // a seat appearing twice there would give it two turns and two ballots.
+    const current = new Set(session.nominatedPlayers ?? []);
+    if (!current.delete(seatNumber)) current.add(seatNumber);
+    const newNominations = [...current];
 
     await ctx.db.patch(session._id, { nominatedPlayers: newNominations });
   },
@@ -287,11 +286,17 @@ export const startNominatedPlayersSpeaking = mutation({
       return;
     }
 
+    // Entered QUEUED, not running — the host reads out the order before the
+    // first nominee's 30s starts. Setting the cursor here would open their mic
+    // in the same click (`useSpeakingAutoMute` unmutes on
+    // `currentSpeakerIndex === mySeat`). `advanceNominatedSpeaker` is the Start,
+    // and it is the same state a tie-break arrives in (`voting:startTieBreak`),
+    // so the phase behaves identically however it was reached.
     await ctx.db.patch(session._id, {
       gamePhase: "nominated_players_speak",
       speakingOrder: nominatedPlayers,
-      currentSpeakerIndex: nominatedPlayers[0],
-      speakerStartedAt: new Date().toISOString(),
+      currentSpeakerIndex: undefined,
+      speakerStartedAt: undefined,
     });
   },
 });
@@ -320,7 +325,7 @@ export const advanceNominatedSpeaker = mutation({
     const speakingOrder = session.speakingOrder ?? [];
     const currentSpeaker = session.currentSpeakerIndex ?? null;
 
-    if (currentSpeaker === null || speakingOrder.length === 0) {
+    if (speakingOrder.length === 0) {
       throw new ConvexError("No active speaking session");
     }
 
@@ -329,11 +334,20 @@ export const advanceNominatedSpeaker = mutation({
       players.filter((p) => p.isAlive).map((p) => p.seatNumber),
     );
 
-    const lastSpeaker = SPEAKING_STATE.isPaused(currentSpeaker)
-      ? SPEAKING_STATE.getLastSpeakerFromPaused(currentSpeaker)
-      : currentSpeaker;
-
-    const nextSpeaker = getNextSpeaker(lastSpeaker, speakingOrder, aliveSeats);
+    // An unset cursor means the phase was entered QUEUED rather than running —
+    // that is how `voting:startTieBreak` arrives, so the host can announce the
+    // tied seats before a mic opens. This click is then the Start, and it hands
+    // the floor to the first still-living seat instead of advancing past one.
+    const nextSpeaker =
+      currentSpeaker === null
+        ? (speakingOrder.find((seat) => aliveSeats.has(seat)) ?? null)
+        : getNextSpeaker(
+            SPEAKING_STATE.isPaused(currentSpeaker)
+              ? SPEAKING_STATE.getLastSpeakerFromPaused(currentSpeaker)
+              : currentSpeaker,
+            speakingOrder,
+            aliveSeats,
+          );
 
     if (nextSpeaker === null) {
       const nominatedPlayers = session.nominatedPlayers ?? [];

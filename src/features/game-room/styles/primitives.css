@@ -1,0 +1,52 @@
+/* Game UI — shared primitives.
+   The low-level pieces every other sheet in here builds on: the two font
+   stacks, the drawer surface, and the inline spinner. Nothing game-specific. */
+
+@reference "tailwindcss";
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Typography
+
+   Every stack ends in Noto Georgian: `ka` is the default locale and neither
+   Orbitron nor Inter carries Georgian glyphs, so without the fallback the
+   whole UI silently swaps to a system face mid-sentence.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.font-orbitron {
+  font-family: var(--font-orbitron), var(--font-noto-georgian), sans-serif;
+}
+
+.font-inter {
+  font-family: var(--font-inter), var(--font-noto-georgian), sans-serif;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Dark Panel (Drawer / Sidebar dark variant)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.dark-panel {
+  background: linear-gradient(175deg, rgba(14,14,24,0.98) 0%, rgba(8,8,16,0.99) 100%);
+  box-shadow: 0 24px 64px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Spinner
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.spinner {
+  @apply border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0;
+}
+
+.spinner-sm {
+  @apply w-3.5 h-3.5;
+}
+
+.spinner-md {
+  @apply w-4 h-4;
+}
+
+@media (max-height: 760px) {
+  .spinner-md {
+    @apply w-3.5 h-3.5;
+  }
+}

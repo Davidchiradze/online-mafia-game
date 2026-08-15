@@ -1069,6 +1069,29 @@ describe("voting — tie-break vs both-leave", () => {
     const gs = await getSession(t, s.gameId);
     expect(gs?.gamePhase).toBe("nominated_players_speak");
     expect(gs?.speakingOrder).toEqual([2, 5]);
+    // QUEUED, not running: tallying a tie is an announcement, so no mic opens
+    // and no clock runs until the host clicks Start.
+    expect(gs?.currentSpeakerIndex).toBeUndefined();
+    expect(gs?.speakerStartedAt).toBeUndefined();
+  });
+
+  it("the host's Start hands the floor to the first tied seat", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, { phase: "voting", players: VOTE_ROSTER });
+    await createVotingSession(t, s, [2, 5]);
+
+    const asHost = t.withIdentity({ subject: s.hostAccountId });
+    await asHost.mutation(api.games.core.voting.startTieBreak, {
+      gameId: s.gameId,
+      tiedCandidates: [2, 5],
+    });
+    await asHost.mutation(api.games.core.dayPhase.advanceNominatedSpeaker, {
+      gameId: s.gameId,
+    });
+
+    const gs = await getSession(t, s.gameId);
+    expect(gs?.currentSpeakerIndex).toBe(2);
+    expect(gs?.speakerStartedAt).toBeDefined();
   });
 
   it("a repeated tie on the same seats escalates to a both-leave vote", async () => {
@@ -2394,7 +2417,16 @@ describe("sports single-nominee day rule (startNominatedPlayersSpeaking)", () =>
     const session = await getSession(t, s.gameId);
     expect(session?.gamePhase).toBe("nominated_players_speak");
     expect(session?.speakingOrder).toEqual([4, 5]);
-    expect(session?.currentSpeakerIndex).toBe(4);
+    // Queued, not running — the host's Start opens the first mouth.
+    expect(session?.currentSpeakerIndex).toBeUndefined();
+    expect(session?.speakerStartedAt).toBeUndefined();
+
+    await t
+      .withIdentity({ subject: s.hostAccountId })
+      .mutation(api.games.core.dayPhase.advanceNominatedSpeaker, {
+        gameId: s.gameId,
+      });
+    expect((await getSession(t, s.gameId))?.currentSpeakerIndex).toBe(4);
   });
 
   it("Japanese: a single nominee still goes to voting (flag off, unchanged)", async () => {

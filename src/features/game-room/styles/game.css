@@ -1,338 +1,36 @@
-/* Game UI Styles - Shared across game components */
-@reference "tailwindcss";
+/* Game UI styles — entry point.
+ *
+ * Imported once, from `src/app/layout.tsx`. Everything is a plain global class
+ * (not a CSS module) because these are shared vocabularies: a `.phase-btn-*`
+ * colour is used by both the standalone button and the host panel, a
+ * `.badge-timer` by both a participant tile and the panel's countdown pill.
+ *
+ * Import order is the cascade. It matters in exactly one place — the sheet
+ * pairs `.host-panel-sheet` with `.center-panel`, and they have equal
+ * specificity — so keep grid before host-panel. Everything else is either
+ * disjoint or separated by specificity.
+ *
+ * Any sheet that uses `@apply` must declare `@reference "tailwindcss";` of its
+ * own; Tailwind v4 resolves utilities per file, not per bundle.
+ */
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   Typography
-   ═══════════════════════════════════════════════════════════════════════════ */
+/* Font stacks, drawer surface, spinner. */
+@import "./primitives.css";
 
-.font-orbitron {
-  font-family: var(--font-orbitron), var(--font-noto-georgian), sans-serif;
-}
+/* The phase action button and its colour variants (shared with the panel). */
+@import "./phase-button.css";
 
-.font-inter {
-  font-family: var(--font-inter), var(--font-noto-georgian), sans-serif;
-}
+/* Status badges and the host's night-action pills. */
+@import "./badges.css";
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   Phase Button Variants
-   ═══════════════════════════════════════════════════════════════════════════ */
+/* Ring sizing, LiveKit video fit, centre-cell chrome. */
+@import "./game-grid.css";
 
-.phase-btn {
-  @apply w-full px-6 py-3 rounded-xl cursor-pointer text-white border-2 
-         transition duration-200 flex items-center justify-center gap-2
-         disabled:cursor-not-allowed disabled:opacity-50;
-  font-family: var(--font-orbitron), var(--font-noto-georgian), sans-serif;
-  font-weight: 700;
-  font-size: 0.85rem;
-}
+/* Host controls panel: container and three zones, then the data-zone blocks,
+   then the compact/bar overrides. See host-panel.css for the whole story. */
+@import "./host-panel.css";
+@import "./host-panel-blocks.css";
+@import "./host-panel-layouts.css";
 
-.phase-btn:not(:disabled):hover {
-  transform: scale(1.02);
-}
-
-.phase-btn:not(:disabled):active {
-  transform: scale(0.98);
-}
-
-@media (max-height: 900px) {
-  .phase-btn {
-    @apply px-5 py-2.5 text-[0.8rem];
-  }
-}
-
-@media (max-height: 760px) {
-  .phase-btn {
-    @apply px-4 py-2 text-xs;
-  }
-}
-
-.phase-btn-primary {
-  background: linear-gradient(135deg, rgba(59,130,246,0.3) 0%, rgba(37,99,235,0.35) 100%);
-  border-color: rgba(59,130,246,0.5);
-  box-shadow: 0 0 20px rgba(59,130,246,0.3);
-}
-
-.phase-btn-primary:not(:disabled):hover {
-  box-shadow: 0 0 30px rgba(59,130,246,0.5);
-}
-
-.phase-btn-success {
-  background: linear-gradient(135deg, rgba(52,211,153,0.3) 0%, rgba(16,185,129,0.35) 100%);
-  border-color: rgba(52,211,153,0.5);
-  box-shadow: 0 0 20px rgba(52,211,153,0.3);
-}
-
-.phase-btn-success:not(:disabled):hover {
-  box-shadow: 0 0 30px rgba(52,211,153,0.5);
-}
-
-.phase-btn-warning {
-  background: linear-gradient(135deg, rgba(245,158,11,0.3) 0%, rgba(217,119,6,0.35) 100%);
-  border-color: rgba(245,158,11,0.5);
-  box-shadow: 0 0 20px rgba(245,158,11,0.3);
-}
-
-.phase-btn-warning:not(:disabled):hover {
-  box-shadow: 0 0 30px rgba(245,158,11,0.5);
-}
-
-.phase-btn-danger {
-  background: linear-gradient(135deg, rgba(220,38,38,0.3) 0%, rgba(185,28,28,0.35) 100%);
-  border-color: rgba(220,38,38,0.5);
-  box-shadow: 0 0 20px rgba(220,38,38,0.3);
-}
-
-.phase-btn-danger:not(:disabled):hover {
-  box-shadow: 0 0 30px rgba(220,38,38,0.5);
-}
-
-.phase-btn-secondary {
-  background: linear-gradient(135deg, rgba(100,116,139,0.3) 0%, rgba(71,85,105,0.35) 100%);
-  border-color: rgba(100,116,139,0.5);
-  box-shadow: 0 0 20px rgba(100,116,139,0.3);
-}
-
-.phase-btn-secondary:not(:disabled):hover {
-  box-shadow: 0 0 30px rgba(100,116,139,0.5);
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   Badges & Pills
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-.badge {
-  @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium;
-  font-family: var(--font-inter), var(--font-noto-georgian), sans-serif;
-}
-
-.badge-speaker-active {
-  @apply bg-gradient-to-r from-emerald-500/20 to-emerald-600/20 
-         border border-emerald-500/40 text-emerald-400;
-  box-shadow: 0 0 8px rgba(16, 185, 129, 0.15);
-}
-
-.badge-speaker-paused {
-  @apply bg-gradient-to-r from-amber-500/20 to-amber-600/20 
-         border border-amber-500/40 text-amber-400;
-  box-shadow: 0 0 8px rgba(245, 158, 11, 0.15);
-}
-
-.badge-nominated {
-  @apply bg-gradient-to-r from-rose-500/20 to-red-600/20 
-         border border-rose-500/40 text-rose-400;
-  box-shadow: 0 0 8px rgba(244, 63, 94, 0.15);
-}
-
-.badge-timer {
-  @apply bg-gradient-to-r from-sky-500/20 to-blue-600/20
-         border border-sky-500/40 text-sky-300;
-  box-shadow: 0 0 8px rgba(56, 189, 248, 0.15);
-}
-
-.badge-timer-urgent {
-  @apply bg-gradient-to-r from-red-500/25 to-red-600/25
-         border border-red-500/50 text-red-300;
-  box-shadow: 0 0 10px rgba(239, 68, 68, 0.25);
-  animation: timer-pulse 1s ease-in-out infinite;
-}
-
-@keyframes timer-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
-}
-
-.badge-voted {
-  background: linear-gradient(135deg, rgba(52,211,153,0.15) 0%, rgba(16,185,129,0.2) 100%);
-  border: 1px solid rgba(52,211,153,0.35);
-  @apply px-4 py-2 rounded-lg text-emerald-300 font-semibold;
-}
-
-.badge-auto-voted {
-  background: linear-gradient(135deg, rgba(245,158,11,0.15) 0%, rgba(217,119,6,0.2) 100%);
-  border: 1px solid rgba(245,158,11,0.35);
-  @apply px-4 py-2 rounded-lg text-amber-300 font-semibold;
-}
-
-.badge-waiting {
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.1);
-  @apply px-4 py-2 rounded-lg text-white/40;
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   Night Action Pills
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-.night-action-pill {
-  @apply px-3 py-1.5 rounded-full border transition;
-}
-
-/* Rose (Mafia) */
-.night-action-pill-rose-active {
-  background: linear-gradient(135deg, rgba(244,63,94,0.3) 0%, rgba(225,29,72,0.35) 100%);
-  border-color: rgba(244,63,94,0.5);
-  box-shadow: 0 0 15px rgba(244,63,94,0.4);
-}
-
-.night-action-pill-rose-value {
-  background: rgba(244,63,94,0.15);
-  border-color: rgba(244,63,94,0.3);
-}
-
-/* Violet (Yakuza) */
-.night-action-pill-violet-active {
-  background: linear-gradient(135deg, rgba(139,92,246,0.3) 0%, rgba(124,58,237,0.35) 100%);
-  border-color: rgba(139,92,246,0.5);
-  box-shadow: 0 0 15px rgba(139,92,246,0.4);
-}
-
-.night-action-pill-violet-value {
-  background: rgba(139,92,246,0.15);
-  border-color: rgba(139,92,246,0.3);
-}
-
-/* Emerald (Doctor) */
-.night-action-pill-emerald-active {
-  background: linear-gradient(135deg, rgba(52,211,153,0.3) 0%, rgba(16,185,129,0.35) 100%);
-  border-color: rgba(52,211,153,0.5);
-  box-shadow: 0 0 15px rgba(52,211,153,0.4);
-}
-
-.night-action-pill-emerald-value {
-  background: rgba(52,211,153,0.15);
-  border-color: rgba(52,211,153,0.3);
-}
-
-.night-action-pill-empty {
-  background: rgba(255,255,255,0.04);
-  border-color: rgba(255,255,255,0.1);
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   Game Grid – landscape / short-viewport constraint
-   When height is the bottleneck (e.g. mobile landscape), cap the grid width
-   so tiles keep a reasonable aspect ratio instead of stretching too wide.
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-.game-grid-container {
-  margin: 0 auto;
-  padding: 15px;
-}
-
-@media (orientation: landscape) and (min-width: 600px) {
-  .game-grid-container {
-    max-width: calc(100dvh * 1.6);
-  }
-}
-@media (orientation: portrait) and (max-width: 600px) {
-  .game-grid-container {
-    padding:5px;
-  }
-}
-
-/* Portrait only: a "wide" ring (more columns than rows, e.g. Sports' 4×3)
-   doesn't need the full height, so cap it to ~65% and let the flex parent center
-   it as a compact block. A square ring (Japanese 4×4) is unaffected. The doubled
-   class beats Tailwind's `.h-full` on the same element. */
-@media (orientation: portrait) {
-  .game-grid-container.game-grid-container--wide {
-    height: 65%;
-  }
-}
-
-@media (orientation: landscape) and (max-height: 500px) {
-  .game-grid-container {
-    max-width: calc(100dvh * 1.6);
-  }
-}
-
-@media (orientation: landscape) and (max-height: 400px) {
-  .game-grid-container {
-    max-width: calc(100dvh * 1.4);
-  }
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   Participant video — show the WHOLE camera frame (no crop)
-   LiveKit defaults landscape camera feeds to `object-fit: cover`, cropping them
-   to fill the tile. Force `contain` so the full frame is always visible; the
-   leftover space is the tile's own dark background (letterbox). Portrait feeds
-   already default to contain. Applies to every tile — Sports and Japanese, and
-   the host. The extra `[data-lk-theme]` scope beats LiveKit's own specificity.
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-[data-lk-theme] .lk-participant-media-video,
-[data-lk-theme] .lk-participant-media-video[data-lk-orientation="landscape"] {
-  object-fit: contain;
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   Center Panel (PlayerCircle)
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-.center-panel {
-  background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
-  border-color: rgba(255,255,255,0.1);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255,255,255,0.1);
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   Voting Components
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-.candidate-badge-red {
-  background: linear-gradient(135deg, rgba(220,38,38,0.2) 0%, rgba(185,28,28,0.25) 100%);
-  border-color: rgba(220,38,38,0.4);
-}
-
-.candidate-badge-amber {
-  background: linear-gradient(135deg, rgba(245,158,11,0.2) 0%, rgba(217,119,6,0.25) 100%);
-  border-color: rgba(245,158,11,0.4);
-}
-
-.candidate-dot {
-  background: linear-gradient(135deg, rgba(220,38,38,0.3) 0%, rgba(185,28,28,0.35) 100%);
-  border-color: rgba(220,38,38,0.7);
-  box-shadow: 0 0 12px rgba(220,38,38,0.4);
-}
-
-.both-leave-header {
-  background: linear-gradient(135deg, rgba(245,158,11,0.2) 0%, rgba(217,119,6,0.25) 100%);
-  border-color: rgba(245,158,11,0.5);
-}
-
-.results-waiting {
-  background: rgba(255,255,255,0.04);
-  border-color: rgba(255,255,255,0.1);
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   Dark Panel (Drawer / Sidebar dark variant)
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-.dark-panel {
-  background: linear-gradient(175deg, rgba(14,14,24,0.98) 0%, rgba(8,8,16,0.99) 100%);
-  box-shadow: 0 24px 64px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.06);
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   Spinner
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-.spinner {
-  @apply border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0;
-}
-
-.spinner-sm {
-  @apply w-3.5 h-3.5;
-}
-
-.spinner-md {
-  @apply w-4 h-4;
-}
-
-@media (max-height: 760px) {
-  .spinner-md {
-    @apply w-3.5 h-3.5;
-  }
-}
+/* Candidate badges, both-leave header, results placeholder. */
+@import "./voting.css";
