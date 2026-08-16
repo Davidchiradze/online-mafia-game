@@ -1,18 +1,30 @@
 "use client";
 
+import { useState } from "react";
 import { useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { Trophy } from "lucide-react";
 import { leaderboard } from "@convex/refs/leaderboard";
 import { useViewer } from "@/features/auth/hooks/useViewer";
+import {
+  DEFAULT_RATED_GAME_TYPE,
+  type RatedGameType,
+} from "@/shared/lib/ranking/ratedVariants";
+import RatedVariantTabs from "../components/RatedVariantTabs";
 import PodiumCard from "./PodiumCard";
 import RankedRow from "./RankedRow";
 import LeaderboardSkeleton from "./LeaderboardSkeleton";
 
 /**
- * All-time ELO leaderboard for japanese_mafia (see /docs/ranking-system.md).
+ * All-time ELO leaderboard, one board per rated variant
+ * (see /docs/ranking-system.md §12). Every column — rating, record, streaks,
+ * top role — belongs to the selected ladder; nothing here is cross-variant.
  * Rows come pre-sorted from the `by_gameType_rating` index; players with no
- * rated games are deliberately absent from the board.
+ * rated games in that variant are deliberately absent from its board.
+ *
+ * The selection is local state, NOT a URL param: the repo has no
+ * `useSearchParams` call site, and adding one without a `<Suspense>` boundary
+ * fails `next build`. Shareable per-ladder links would need that boundary first.
  *
  * Layout: a gold/silver/bronze podium for the top 3 (medal-colored frames,
  * level-colored stats), followed by scannable ranked rows in the match-history
@@ -21,10 +33,11 @@ import LeaderboardSkeleton from "./LeaderboardSkeleton";
  */
 export default function LeaderboardContent() {
   const t = useTranslations("leaderboard");
-  const rows = useQuery(leaderboard.list, {
-    gameType: "japanese_mafia",
-    limit: 50,
-  });
+  const tg = useTranslations("game");
+  const [gameType, setGameType] = useState<RatedGameType>(
+    DEFAULT_RATED_GAME_TYPE,
+  );
+  const rows = useQuery(leaderboard.list, { gameType, limit: 50 });
   const { profile } = useViewer();
   const myId = profile?._id ?? null;
 
@@ -41,13 +54,22 @@ export default function LeaderboardContent() {
         <p className="max-w-xl font-inter text-sm text-zinc-400 sm:text-base">
           {t("pageSubtitle")}
         </p>
+        <RatedVariantTabs
+          value={gameType}
+          onChange={setGameType}
+          className="mt-5"
+        />
       </div>
 
       {rows === undefined ? (
         <LeaderboardSkeleton />
       ) : rows.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-white/10 bg-[#13131a]/60 p-12 text-center font-inter text-zinc-400">
-          {t("empty")}
+          {/* Names the ladder: a newly rated variant's board is empty on day
+              one, and the generic copy would read as a broken page. */}
+          {t("emptyForMode", {
+            mode: tg(`gameTypes.${gameType}` as Parameters<typeof tg>[0]),
+          })}
         </div>
       ) : (
         <>

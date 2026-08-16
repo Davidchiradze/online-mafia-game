@@ -16,13 +16,17 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { existsSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { join, relative } from "node:path";
 
 import { getGameDefinition } from "@convex/games/registry";
 import { BACKFILL_POLICY, RATING_CONFIG } from "@convex/lib/constants";
 import { roleToFaction } from "@convex/lib/roles";
 import { GAME_TYPES } from "@/shared/lib/constants/game";
+import {
+  DEFAULT_RATED_GAME_TYPE,
+  RATED_GAME_TYPES,
+} from "@/shared/lib/ranking/ratedVariants";
 
 const REPO_ROOT = new URL("../../", import.meta.url).pathname;
 const p = (rel: string) => join(REPO_ROOT, rel);
@@ -137,6 +141,27 @@ describe("rated variants", () => {
     ).toEqual([]);
   });
 
+  it("offers the client exactly the variants the backend rates", () => {
+    // The tabs render `RATED_GAME_TYPES`. If it drifted from `RATING_CONFIG` a
+    // viewer could select a board the backend never writes to, which looks
+    // exactly like "nobody has played yet" — a wrong answer indistinguishable
+    // from a right one.
+    expect([...RATED_GAME_TYPES].sort()).toEqual(rated.map((v) => v.id).sort());
+  });
+
+  it("defaults to a ladder that is not empty", () => {
+    // ORDER, not membership. `RATED_GAME_TYPES` follows registration order and
+    // `DEFAULT_RATED_GAME_TYPE` is its first entry, so a reordering of the
+    // registry silently changes which board every surface opens on. Sports has
+    // no backfill (/docs/variants/sports/rating.md §5) — defaulting to it would
+    // greet everyone with an empty leaderboard and a 1000 ELO on their profile.
+    expect(
+      DEFAULT_RATED_GAME_TYPE,
+      "the default ladder changed — confirm the new default has an existing archive, or players will land on an empty board",
+    ).toBe("japanese_mafia");
+    expect(RATED_GAME_TYPES[0]).toBe(DEFAULT_RATED_GAME_TYPE);
+  });
+
   it("documents every rated variant's calibration", () => {
     // /docs/ranking-system.md §13 step 8: this doc owns the mechanism, the
     // variant owns its numbers. A rated variant with no rating doc means the
@@ -166,5 +191,63 @@ describe("backfill policy", () => {
       .map(([id]) => `${id} → policy "replay" but no RATING_CONFIG entry to replay it with`);
 
     expect(impossible, "a backfill policy references a variant that is not rated").toEqual([]);
+  });
+});
+
+/** Every .ts/.tsx file under a directory, recursively. */
+function sourceFiles(dir: string): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) return sourceFiles(full);
+    return /\.tsx?$/.test(entry.name) ? [full] : [];
+  });
+}
+
+describe("ladder surfaces pick a variant, never name one", () => {
+  /**
+   * The surfaces that render per-variant rating data. Both had a hardcoded
+   * `"japanese_mafia"` before the ladders were split, and both would keep
+   * working — showing one variant's numbers under another's tab — if one came
+   * back. That is the regression this guards.
+   */
+  const SURFACES = [
+    "src/features/headquarters/leaderboard",
+    "src/features/headquarters/match-history",
+  ];
+
+  /**
+   * Files allowed to name a variant, each with the reason. Deliberately empty:
+   * a ladder surface resolves its variant from `RATED_GAME_TYPES` or receives
+   * it as a prop. An entry here is a claim that some surface genuinely needs to
+   * know which game it is showing — worth arguing for in review.
+   */
+  const ALLOWLIST: Record<string, string> = {};
+
+  const offenders = SURFACES.flatMap((surface) =>
+    sourceFiles(p(surface)).flatMap((file) => {
+      const rel = relative(REPO_ROOT, file);
+      if (rel in ALLOWLIST) return [];
+      const text = readFileSync(file, "utf8");
+      return GAME_TYPES.filter((id) => text.includes(id)).map(
+        (id) => `${rel} → names "${id}"`,
+      );
+    }),
+  );
+
+  it("resolves the variant from RATED_GAME_TYPES, never a literal", () => {
+    // Comments count. A docblock naming one variant is how the last hardcode
+    // outlived the code that justified it.
+    expect(
+      offenders,
+      "a ladder surface names a game variant — read it from RATED_GAME_TYPES or take it as a prop (/docs/ranking-system.md §13)",
+    ).toEqual([]);
+  });
+
+  it("keeps no stale allowlist entries", () => {
+    // An allowlist that outlives its reason silently re-opens the hole.
+    const stale = Object.keys(ALLOWLIST).filter(
+      (rel) => !existsSync(p(rel)) || !GAME_TYPES.some((id) => readFileSync(p(rel), "utf8").includes(id)),
+    );
+    expect(stale, "an allowlisted file no longer names a variant — drop the entry").toEqual([]);
   });
 });

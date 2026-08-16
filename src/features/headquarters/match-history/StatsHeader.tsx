@@ -48,8 +48,9 @@ export default function StatsHeader({ stats }: Props) {
 }
 
 /**
- * Current ELO + level badge + progress toward the next level (japanese_mafia
- * ladder, see /docs/ranking-system.md). Players with no rated games show the
+ * Current ELO + level badge + progress toward the next level, for whichever
+ * ladder produced `stats` — the query is scoped to one variant upstream
+ * (/docs/ranking-system.md §12). Players with no rated games in it show the
  * 1000 default — never "unranked".
  */
 export function RatingCard({ stats }: Props) {
