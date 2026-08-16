@@ -199,14 +199,86 @@ Filter sensitive data in Convex queries (server-side):
 
 ## Authentication Flow
 
-1. User signs up/signs in via Convex Auth (Password + Resend OTP)
-2. Profile created in `profiles` table linked to `users` table
-3. `convexAuthNextjsMiddleware` protects routes in `middleware.ts`
-4. Convex functions authenticate via `getAuthenticatedUser(ctx)`
+Identity is owned by the external PHP service (mafia.ge). This app has **no**
+password/OTP login of its own, no `@convex-dev/auth`, and no `getAuthUserId` —
+it bridges an existing PHP session into a Convex JWT.
+
+### Signed-in path
+
+1. **Detect.** `src/middleware.ts` composes
+   `publicPageMiddleware → jwtCookieMiddleware → bridgeRedirectMiddleware`
+   (first `stop` wins). A request already carrying the httpOnly `cnvx-auth`
+   cookie passes straight through.
+2. **Bridge.** A request with a `PHPSESSID` but no `cnvx-auth` is redirected to
+   `src/app/api/auth/bridge/route.ts`, which calls PHP's `user-by-session`
+   endpoint, signs a Convex JWT, and sets it as `cnvx-auth`.
+3. **Sync.** Once Convex reports authenticated, `ProfileSyncBootstrap` POSTs
+   `src/app/api/auth/sync-profile/route.ts` to upsert the `profiles` row.
+   Between steps 2 and 3 the JWT is valid but the profile row does not exist yet.
+4. **Authorize.** Convex functions call `getAuthenticatedUser(ctx)` and gate with
+   `requirePermission` / `requireFeature` — the only authoritative layer
+   ([authorization.md](./authorization.md)).
+
+Silent re-validation uses the same exchange without a navigation:
+`src/app/api/auth/token/refresh/route.ts`.
+
+### Guest access
+
+Unauthenticated visitors may READ a small set of product pages. Three route
+categories, all declared in `convex/lib/access.ts`:
+
+| Category | Runs the bridge? | Terminal verdict |
+| --- | --- | --- |
+| `PUBLIC_PATH_PREFIXES` — infra (`/api/auth/*`, `/_next/*`, auth screens) | no — short-circuits the chain | render |
+| `GUEST_VIEWABLE_PATHS` — `/`, `/lobby`, `/leaderboard` | **yes** | render read-only |
+| everything else | yes | redirect to `/auth/required` |
+
+The distinction is load-bearing: a public prefix skips the bridge entirely, so
+putting a product page there would leave a logged-in mafia.ge user rendering as a
+guest permanently. Guest-viewable paths still bridge — they only change the
+verdict when bridging finds no user.
+
+`/game/*` is deliberately absent: that is the "no spectating for guests"
+guarantee, enforced at the edge.
+
+### Four viewer states
+
+`useViewer()` (`src/features/auth/hooks/useViewer.ts`) is the client-side
+primitive. Convex `useQuery` returns `undefined` while loading, and
+`currentProfile` returns `null` for **both** a guest and an authenticated user
+whose profile row has not landed yet — so `if (!profile)` is always a bug.
+
+| status | meaning |
+| --- | --- |
+| `loading` | query in flight — wait |
+| `syncing` | JWT valid, profile row not written yet — wait |
+| `guest` | terminal — render guest UI |
+| `member` | settled |
+
+Only `guest` is terminal. Any `useQuery` whose handler calls
+`getAuthenticatedUser` must pass `"skip"` unless `viewer.isMember`.
+
+### The `bridge_attempted` invariant
+
+`bridge_attempted` is a short-lived cookie caching the verdict *"this PHPSESSID
+has no user"*, so a browsing guest does not re-hit PHP on every navigation.
+Without it, guest page → middleware → bridge → guest page loops forever.
+
+**Anything that sends the user to mafia.ge login must clear it first.** Logging in
+is precisely the event that falsifies the cached verdict, and the round trip is
+far shorter than the cookie's TTL — so a stale marker makes the middleware skip
+the very bridge that would have succeeded, and the user returns authenticated but
+is rendered as a guest.
+
+That is why UI sign-in links point at `src/app/api/auth/login/route.ts` (via
+`loginStartUrl` in `src/features/auth/lib/phpLogin.ts`) instead of straight at
+mafia.ge: a plain `<a>` cannot clear an httpOnly cookie.
 
 ## Deployment
 
 - **Frontend**: Vercel (Next.js deployment)
 - **Backend + Database**: Convex (managed service)
 - **Video**: LiveKit (self-hosted or cloud)
-- **Environment Variables**: `NEXT_PUBLIC_CONVEX_URL`, `AUTH_RESEND_KEY`, LiveKit credentials
+- **Environment Variables**: `NEXT_PUBLIC_CONVEX_URL`, `NEXT_PUBLIC_ENVIRONMENT`
+  (selects the PHP base URL), `NEXT_PUBLIC_ONLINE_MAFIA_ORIGIN`,
+  `INTERNAL_API_KEY` + `CONVEX_JWT_ISSUER` (the PHP↔Convex bridge), LiveKit credentials
