@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import { Eye, LogIn } from "lucide-react";
 import Modal from "@/shared/ui/Modal";
-import { phpLoginUrl } from "@/features/auth/lib/phpLogin";
+import { loginStartUrl } from "@/features/auth/lib/phpLogin";
 
 type SignInPromptReason = "join" | "spectate";
 
@@ -59,7 +59,7 @@ export function SignInPrompt({ reason, returnTo, onClose }: SignInPromptProps) {
             {tc("cancel")}
           </button>
           <a
-            href={phpLoginUrl(returnTo)}
+            href={loginStartUrl(returnTo)}
             className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-red-700 py-3 font-sans text-sm font-semibold text-white shadow-[0_0_20px_rgba(220,38,38,0.35)] transition hover:from-red-500 hover:to-red-600 hover:shadow-[0_0_35px_rgba(220,38,38,0.55)]"
           >
             {t("signInOnSite")}

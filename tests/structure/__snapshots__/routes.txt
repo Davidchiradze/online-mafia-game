@@ -10,6 +10,7 @@
 /admin/games  [page]  ← src/app/admin/games/page.tsx
 /admin/users  [page]  ← src/app/admin/users/page.tsx
 /api/auth/bridge  [route]  ← src/app/api/auth/bridge/route.ts
+/api/auth/login  [route]  ← src/app/api/auth/login/route.ts
 /api/auth/logout  [route]  ← src/app/api/auth/logout/route.ts
 /api/auth/sync-profile  [route]  ← src/app/api/auth/sync-profile/route.ts
 /api/auth/token  [route]  ← src/app/api/auth/token/route.ts

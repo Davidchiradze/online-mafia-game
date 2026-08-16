@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { LogIn } from "lucide-react";
-import { phpLoginUrl } from "@/features/auth/lib/phpLogin";
+import { loginStartUrl } from "@/features/auth/lib/phpLogin";
 
 type SignInCtaProps = {
   /** Already-translated label — callers pass `t("signInToPlay")` etc. */
@@ -24,7 +24,7 @@ const DEFAULT_CLASS =
 export function SignInCta({ label, returnTo, className }: SignInCtaProps) {
   const pathname = usePathname();
   return (
-    <a href={phpLoginUrl(returnTo ?? pathname)} className={className ?? DEFAULT_CLASS}>
+    <a href={loginStartUrl(returnTo ?? pathname)} className={className ?? DEFAULT_CLASS}>
       <LogIn className="h-4 w-4" strokeWidth={2.6} />
       {label}
     </a>

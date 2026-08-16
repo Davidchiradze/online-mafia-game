@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { PHP_SESSION_COOKIE_NAME } from "@/features/auth/lib/constants";
 import {
   clearAuthCookie,
+  clearBridgeAttemptCookie,
   setBridgeAttemptCookie,
   isSafeRelativePath,
   setAuthCookie,
@@ -32,6 +33,9 @@ export async function GET(req: NextRequest) {
   const sessionId = req.cookies.get(PHP_SESSION_COOKIE_NAME)?.value;
   if (!sessionId) {
     const res = NextResponse.redirect(phpLoginUrl(destination));
+    // Heading to login: the cached "no user" verdict is about to be falsified,
+    // so it must not survive the round trip and suppress the return bridge.
+    clearBridgeAttemptCookie(res);
     clearAuthCookie(res);
     return res;
   }
@@ -76,6 +80,7 @@ export async function GET(req: NextRequest) {
       return res;
     }
     const res = NextResponse.redirect(phpLoginUrl(destination));
+    clearBridgeAttemptCookie(res);
     clearAuthCookie(res);
     return res;
   }

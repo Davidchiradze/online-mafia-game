@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { LogIn } from "lucide-react";
 import { cn } from "@/shared/lib/cn";
-import { phpLoginUrl } from "@/features/auth/lib/phpLogin";
+import { loginStartUrl } from "@/features/auth/lib/phpLogin";
 
 type SidebarSignInButtonProps = {
   expanded: boolean;
@@ -18,7 +18,7 @@ export default function SidebarSignInButton({
 
   return (
     <a
-      href={phpLoginUrl(pathname)}
+      href={loginStartUrl(pathname)}
       className="group relative flex h-11 w-full items-center rounded-lg px-[10px] text-gray-400 transition-all duration-300 ease-in-out hover:bg-red-500/10 hover:text-red-400"
     >
       <LogIn className="h-5 w-5 shrink-0 transition-colors group-hover:text-red-500" />
