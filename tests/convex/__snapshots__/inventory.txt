@@ -49,7 +49,7 @@ mutation | public | games/core/farewellSpeech:grantFarewellTime | eddbc4df9e94 |
 mutation | public | games/core/farewellSpeech:markDeadAndAdvance | eddbc4df9e94 | 74234e98afe7
 mutation | public | games/core/farewellSpeech:startFarewellSpeech | eddbc4df9e94 | 74234e98afe7
 query | public | games/core/gameLogs:getGameLog | 18c69bcf4bfb | 74234e98afe7
-query | public | games/core/gameLogs:getMyStats | 5151b7eb8536 | 74234e98afe7
+query | public | games/core/gameLogs:getMyStats | 7b0aeb6e568a | 74234e98afe7
 query | public | games/core/gameLogs:listMyGameLogs | 3f39b9e015e6 | 74234e98afe7
 query | public | games/core/leaderboard:getLeaderboard | 1a3d9f9349a0 | 74234e98afe7
 query | public | games/core/nightPhase:checkDoctorAuthority | eddbc4df9e94 | 74234e98afe7
@@ -130,9 +130,10 @@ query | public | lobby/joinRequests:myActiveRequests | 5151b7eb8536 | 74234e98af
 query | public | lobby/joinRequests:myStatus | eddbc4df9e94 | 74234e98afe7
 mutation | public | lobby/joinRequests:reject | e7fede0e4e63 | 74234e98afe7
 mutation | public | lobby/joinRequests:request | eddbc4df9e94 | 74234e98afe7
-mutation | internal | migrations:backfillRatings | 5151b7eb8536 | 74234e98afe7
+mutation | internal | migrations:backfillRatings | b89b2130c90d | 74234e98afe7
 mutation | internal | migrations:clearLegacyRoles | 5151b7eb8536 | 74234e98afe7
 mutation | internal | migrations:clearLegacyUsername | 5151b7eb8536 | 74234e98afe7
+mutation | internal | migrations:splitPlayerStatsByGameType | 2558a19a6fcd | 74234e98afe7
 mutation | public | presence:disconnect | 7a093977780b | 74234e98afe7
 mutation | public | presence:heartbeat | f026456986d5 | 74234e98afe7
 query | public | presence:list | 68031d243930 | 74234e98afe7

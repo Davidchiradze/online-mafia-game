@@ -104,7 +104,7 @@ export const gameLogs = {
     { gameLogId: Id<"gameLogs"> },
     GameLogDetail
   >("games/core/gameLogs:getGameLog"),
-  myStats: makeFunctionReference<"query", Record<string, never>, PlayerStats>(
+  myStats: makeFunctionReference<"query", { gameType: GameType }, PlayerStats>(
     "games/core/gameLogs:getMyStats",
   ),
 };

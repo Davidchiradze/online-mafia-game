@@ -1,5 +1,6 @@
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
+import { gameType } from "./games";
 
 /**
  * Per-player aggregate statistics, maintained incrementally inside
@@ -8,9 +9,18 @@ import { v } from "convex/values";
  *
  * `noContests` are tracked but excluded from win-rate denominators:
  * winRate = wins / (wins + losses).
+ *
+ * One row per player per game variant, mirroring `playerRatings` — each variant
+ * is its own record, so a Sports win never shows up in a Japanese win rate
+ * (/docs/ranking-system.md §12).
  */
 export const playerStats = defineTable({
   playerId: v.id("profiles"),
+  // REQUIRED since migrations:splitPlayerStatsByGameType ran. A row with no
+  // game type is a pre-split leftover, and this validator is what makes such a
+  // row impossible rather than merely unexpected — Convex rejects the deploy if
+  // one still exists.
+  gameType,
   totalMatches: v.number(),
   wins: v.number(),
   losses: v.number(),
@@ -29,4 +39,10 @@ export const playerStats = defineTable({
       losses: v.number(),
     }),
   ),
-}).index("by_playerId", ["playerId"]);
+})
+  // Kept permanently, not transitional: the public API's `gamesPlayed` is
+  // cross-variant by contract (/docs/public-api.md §3), so that reader needs
+  // ALL of a player's rows, not one variant's.
+  .index("by_playerId", ["playerId"])
+  // The per-variant record: one row per (player, variant).
+  .index("by_playerId_gameType", ["playerId", "gameType"]);

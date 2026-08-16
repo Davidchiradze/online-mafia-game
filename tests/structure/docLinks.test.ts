@@ -180,21 +180,28 @@ describe("docs", () => {
     ).toEqual([]);
   });
 
-  it("cites every doc by a path that names exactly one file", () => {
+  it("cites every §section by a path that names exactly one file", () => {
     // A basename stopped identifying a document once a second variant folder
     // landed: docs/variants/japanese/rules.md and docs/variants/sports/rules.md
     // are different files. A comment citing only the basename cannot have its
     // `§N` anchors checked against anything — and reads as the wrong variant to
     // a human too. Cite enough of the path to be unambiguous.
+    //
+    // Scoped to citations that CARRY a section, because that is where
+    // ambiguity does damage. A bare filename with no anchor is often not a
+    // citation at all — a placeholder like docs/variants/<id>/… , or a path
+    // assembled from a template — and failing those taught nothing.
     const ambiguous: string[] = [];
     for (const { repoPath, text } of sources) {
       for (const citation of docCitations(text, docPaths)) {
-        if (citation.ambiguous) ambiguous.push(`${repoPath} → ${citation.doc}`);
+        if (citation.ambiguous && citation.sections.length > 0) {
+          ambiguous.push(`${repoPath} → ${citation.doc} §${citation.sections.join(", §")}`);
+        }
       }
     }
     expect(
       ambiguous,
-      "these citations name a doc that exists in more than one folder — qualify them with the directory",
+      "these §citations name a doc that exists in more than one folder — qualify them with the directory",
     ).toEqual([]);
   });
 

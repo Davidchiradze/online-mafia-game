@@ -1,3 +1,8 @@
+// TYPE-ONLY, and it must stay that way: `lib/roles.ts` imports the team-role
+// constants from this file at run time. `import type` is erased, so the cycle
+// exists only for the type-checker, which handles it.
+import type { Faction } from "./roles";
+
 export const GAME_PHASES = [
   "game_session_started",
   "picking_roles",
@@ -158,35 +163,52 @@ export type RatingConfig = {
   /** Rating never drops below this; the clipped delta is what gets recorded. */
   floor: number;
   /**
-   * Faction-calibrated base payouts: the K × (S − E) ratios (E = the faction's
-   * observed win rate, see /docs/ranking-system.md §2–§3) scaled 2× — effective
-   * K = 80 — to widen level movement given the low games-per-player volume.
-   * Wins still pay ~2× losses because the average player wins only ~33.5% of
-   * games, and the average per-role EV stays ~zero.
+   * Base payouts for THIS variant's factions: the K × (S − E) ratios, where E
+   * is the faction's win rate **in this variant** (/docs/ranking-system.md
+   * §2–§3). Each variant's numbers, and how they were arrived at, live with
+   * the variant — /docs/variants/japanese/rating.md is measured from the
+   * archive, /docs/variants/sports/rating.md is declared symmetric.
+   *
+   * PARTIAL because `Faction` is a global union while a faction *set* is
+   * per-variant: a two-faction variant must carry no dead third row
+   * (/docs/ranking-system.md §13). A type cannot know which factions a
+   * definition declares, so exact coverage is a BUILD FAILURE instead —
+   * tests/structure/ratedVariants.test.ts checks every rated config against
+   * the registry.
    */
-  deltas: Record<
-    "mafia" | "citizens" | "yakuza",
-    { win: number; loss: number }
-  >;
+  deltas: Partial<Record<Faction, { win: number; loss: number }>>;
   /**
    * Symmetric table-strength term b = clamp(round((T − R) / divisor), ±cap).
    * divisor 20 is kept deliberately loose (a weaker spring than the K-linear
-   * value) so skilled players can separate; the cap scales with the base and
-   * stays below the smallest base number (yakuza loss 22) so a win can never
-   * pay ≤ 0 and a loss can never turn positive.
+   * value) so skilled players can separate.
+   *
+   * INVARIANT, checked per rated variant in tests/structure/ratedVariants.test.ts:
+   * the cap stays below that variant's smallest base payout, so a win can never
+   * pay ≤ 0 and a loss can never turn positive however lopsided the table.
    */
   tableAdjustment: { divisor: number; cap: number };
 };
 
 /**
+ * The game-type ids rating is keyed by — mirrors the `gameType` validator in
+ * `convex/tables/games.ts`. Declared here so `RATING_CONFIG` and
+ * `BACKFILL_POLICY` are keyed by the SAME union: adding a variant to the
+ * validator without answering both is then a compile error in one of them.
+ */
+type RatableGameType = "sports_mafia" | "city_mafia" | "japanese_mafia";
+
+/**
  * Per-game-type rating config — each game variant has its own ELO calculation
  * and ladder. A game type absent from this record is UNRATED: `archiveGameLog`
- * skips all rating logic for it. Calibrated from production data (2026-07,
- * 269 decided games); recalibrate E-derived deltas every ~200 decided games.
+ * skips all rating logic for it.
+ *
+ * Where an entry's numbers come from is per variant, and it decides whether
+ * recalibration applies: Japanese's E values are MEASURED (production data,
+ * 2026-07, 269 decided games — re-derive every ~200 decided games), Sports'
+ * are DECLARED and fixed. Each variant's rating doc under /docs/variants/ owns
+ * the derivation; this file only holds the result.
  */
-export const RATING_CONFIG: Partial<
-  Record<"sports_mafia" | "city_mafia" | "japanese_mafia", RatingConfig>
-> = {
+export const RATING_CONFIG: Partial<Record<RatableGameType, RatingConfig>> = {
   japanese_mafia: {
     start: 1000,
     floor: 100,
@@ -197,4 +219,45 @@ export const RATING_CONFIG: Partial<
     },
     tableAdjustment: { divisor: 20, cap: 16 },
   },
+  // DECLARED, not measured — the one calibration in here that is a rule rather
+  // than an observation, and the reason the recalibration cadence above does
+  // not apply to it (/docs/variants/sports/rating.md §2). A two-faction game is
+  // *defined* as a balanced contest, so E = 0.50 on both sides and K = 80 gives
+  // ±40: a win is worth exactly what a loss costs, whichever side the shuffle
+  // dealt. No yakuza row — Sports has no yakuza, and a dead row here is a build
+  // failure (tests/structure/ratedVariants.test.ts).
+  sports_mafia: {
+    start: 1000,
+    floor: 100,
+    deltas: {
+      mafia: { win: 40, loss: -40 }, // E = 0.500 (declared)
+      citizens: { win: 40, loss: -40 }, // E = 0.500 (declared)
+    },
+    // Same spring as Japanese, so the two ladders move at the same pace and the
+    // shared level brackets stay honest (/docs/variants/sports/rating.md §4).
+    tableAdjustment: { divisor: 20, cap: 16 },
+  },
+};
+
+/**
+ * Whether a variant's EXISTING archive may be replayed by
+ * `migrations:backfillRatings` (/docs/ranking-system.md §8).
+ *
+ * Backfilling is a per-variant DECISION, and the migration cannot infer it:
+ * "has a rating config" only says the variant is rated from now on, not that
+ * games played before it was rated should retroactively count. Sports is the
+ * case in point — its archive was played, and shown to players, as unrated
+ * (/docs/variants/sports/rating.md §5).
+ *
+ * TOTAL over `RatableGameType` on purpose: adding a variant is a compile error
+ * here until someone answers the question, which is the type-system catch the
+ * bare `RATING_CONFIG[gameType]` check never had.
+ */
+export const BACKFILL_POLICY: Record<RatableGameType, "replay" | "never"> = {
+  japanese_mafia: "replay",
+  // Played as unrated; the ladder starts empty and fills from the first game
+  // finished after the config shipped.
+  sports_mafia: "never",
+  // No definition registered, so there is no archive and no ladder.
+  city_mafia: "never",
 };

@@ -2,10 +2,15 @@ import { describe, it, expect } from "vitest";
 import { Skull, Swords, Shield } from "lucide-react";
 import {
   roleToFaction,
+  factionForRole,
   factionIcon,
   factionBadgeClass,
   roleLabel,
 } from "@/shared/lib/game/roleDisplay";
+import {
+  getGameDefinition,
+  REGISTERED_GAME_TYPES,
+} from "@convex/games/registry";
 import {
   ROLE_DISPLAY_CONFIG,
   getRoleDisplayConfig,
@@ -100,5 +105,55 @@ describe("getRoleDisplayConfig / getRoleEmoji", () => {
 
   it("has a config entry for every one of the 8 roles", () => {
     expect(Object.keys(ROLE_DISPLAY_CONFIG)).toHaveLength(8);
+  });
+});
+
+/**
+ * `factionForRole` is the variant-aware sibling added when the profile role grid
+ * started switching ladders. It must agree with the definition, because the
+ * definition is what the backend rates with — a card coloured "citizens" beside
+ * a mafia payout is the mismatch this prevents.
+ */
+describe("factionForRole — resolves through the variant definition", () => {
+  it("agrees with every registered variant's own mapper", () => {
+    const disagreements: string[] = [];
+    for (const gameType of REGISTERED_GAME_TYPES) {
+      const def = getGameDefinition(gameType);
+      for (const role of def.roles) {
+        const viaHelper = factionForRole(gameType, role);
+        const viaDefinition = def.roleToFaction(role);
+        if (viaHelper !== viaDefinition) {
+          disagreements.push(
+            `${gameType}/${role}: helper says ${viaHelper}, definition says ${viaDefinition}`,
+          );
+        }
+      }
+    }
+    expect(disagreements).toEqual([]);
+  });
+
+  it("only ever returns a faction the variant actually has", () => {
+    const foreign: string[] = [];
+    for (const gameType of REGISTERED_GAME_TYPES) {
+      const def = getGameDefinition(gameType);
+      for (const role of def.roles) {
+        const faction = factionForRole(gameType, role);
+        if (!def.factions.includes(faction)) {
+          foreign.push(`${gameType}/${role} → ${faction}, not in [${def.factions}]`);
+        }
+      }
+    }
+    expect(
+      foreign,
+      "a role card would be coloured for a faction its own game does not have",
+    ).toEqual([]);
+  });
+
+  it("falls back to the global map instead of throwing on an unregistered type", () => {
+    // city_mafia has no definition. This renders profile cards, so a throw here
+    // would take the page down over a badge colour.
+    expect(() => factionForRole("city_mafia", "DON")).not.toThrow();
+    expect(factionForRole("city_mafia", "DON")).toBe(roleToFaction("DON"));
+    expect(factionForRole("city_mafia", "YAKUZA")).toBe("yakuza");
   });
 });

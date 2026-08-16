@@ -10,7 +10,7 @@ export type LeaderboardRow = {
   avatar: string | null;
   rating: number;
   peakRating: number;
-  // Global stats from playerStats (not per-gameType) — v1 caveat, see the query.
+  // Scoped to the board's own gameType, like the rating above it.
   wins: number;
   losses: number;
   winRate: number;

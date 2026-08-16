@@ -370,8 +370,8 @@ describe("_generated drift", () => {
     ).toEqual({ missingFromGenerated: [], staleInGenerated: [] });
   });
 
-  it("has 84 modules in the bundler set", () => {
-    expect(convexModulePaths().length).toBe(84);
+  it("has 85 modules in the bundler set", () => {
+    expect(convexModulePaths().length).toBe(85);
   });
 
   it("never lets convex/games acquire a nested convex.config.ts", () => {
@@ -394,9 +394,9 @@ describe("function inventory", () => {
     expect(importErrors).toEqual([]);
   });
 
-  it("has 139 registered functions", async () => {
+  it("has 140 registered functions", async () => {
     const { functions } = await inventoryPromise;
-    expect(functions.length).toBe(139);
+    expect(functions.length).toBe(140);
   });
 
   it("matches the signature snapshot", async () => {

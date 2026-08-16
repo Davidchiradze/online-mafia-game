@@ -136,10 +136,10 @@ Order matters only for step 1: at `N = 0` both step 2 and step 3 would fire.
   reusing the shared terminal outcome (§5 rule 0).
 - **Winner recording, host confirmation and the foul re-check are shared.** They
   are the same seam every variant uses; nothing here is Sports-specific.
-- **Sports is unrated.** The outcome is recorded but no ELO moves — Sports is
-  absent from `RATING_CONFIG` by design
-  ([ranking-system.md](../../ranking-system.md) §9). The win *decision* is
-  unaffected.
+- **The outcome feeds a Sports-only ladder.** A decided game moves ELO on the
+  Sports ladder and nothing else ([rating.md](./rating.md)); a no-contest moves
+  nothing. The win *decision* itself is unaffected by rating in either
+  direction — it is computed first and rating reads it.
 
 ## 9. Implementation (built)
 

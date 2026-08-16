@@ -407,7 +407,8 @@
     "levelTooltip": "{elo} ELO — Level {level}",
     "toNextLevel": "{points} to Level {level}",
     "tableAvgTooltip": "Table average: {avg}",
-    "tableAvgLabel": "Table avg"
+    "tableAvgLabel": "Table avg",
+    "statsForMode": "Stats for"
   },
   "leaderboard": {
     "pageTitle": "Leaderboard",
@@ -424,7 +425,8 @@
     "statBestStreak": "Best Streak",
     "onStreak": "{count} win streak",
     "topRole": "Top Role",
-    "you": "You"
+    "you": "You",
+    "emptyForMode": "No ranked {mode} players yet. Finish a game to claim the first spot."
   },
   "game": {
     "gameTypes": {
@@ -818,7 +820,8 @@
     },
     "player": {
       "waitingToStart": "Waiting for players"
-    }
+    },
+    "chooseLadder": "Choose ladder"
   },
   "errors": {
     "_fallback": "Something went wrong. Please try again.",

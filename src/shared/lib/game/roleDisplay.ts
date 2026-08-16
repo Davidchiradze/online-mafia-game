@@ -4,17 +4,41 @@ import {
   YAKUZA_TEAM_ROLES,
   JAPANESE_MAFIA_ROLE_LABEL,
 } from "@/shared/lib/constants/game";
+import { getGameDefinition } from "@convex/games/registry";
 
 export type Faction = "mafia" | "yakuza" | "citizens";
 
 const MAFIA_ROLE_SET = new Set<string>(MAFIA_TEAM_ROLES);
 const YAKUZA_ROLE_SET = new Set<string>(YAKUZA_TEAM_ROLES);
 
-/** Map a role to its faction. Anything that isn't Mafia/Yakuza is a Citizen. */
+/**
+ * Map a role to its faction using the GLOBAL role sets.
+ *
+ * Variant-blind, and correct only while every variant agrees on what a role
+ * means — which they do today. Prefer `factionForRole` wherever the variant is
+ * known; this stays for the callers that genuinely have no game in hand.
+ */
 export function roleToFaction(role: string): Faction {
   if (MAFIA_ROLE_SET.has(role)) return "mafia";
   if (YAKUZA_ROLE_SET.has(role)) return "yakuza";
   return "citizens";
+}
+
+/**
+ * Map a role to its faction **according to the variant being displayed**.
+ *
+ * The definition owns this mapping, so a future variant that reuses a role name
+ * for a different side colours correctly instead of inheriting the Japanese
+ * answer. Falls back to the global map for an unregistered game type rather
+ * than throwing — this is card decoration, and no colour is worth taking a
+ * profile page down.
+ */
+export function factionForRole(gameType: string, role: string): Faction {
+  try {
+    return getGameDefinition(gameType).roleToFaction(role);
+  } catch {
+    return roleToFaction(role);
+  }
 }
 
 /** Lucide icon for a faction — render as `const Icon = factionIcon(f); <Icon />`. */

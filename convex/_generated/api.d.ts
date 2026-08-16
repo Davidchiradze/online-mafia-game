@@ -58,6 +58,7 @@ import type * as lib_constants from "../lib/constants.js";
 import type * as lib_entitlements from "../lib/entitlements.js";
 import type * as lib_games from "../lib/games.js";
 import type * as lib_playerRatings from "../lib/playerRatings.js";
+import type * as lib_playerStats from "../lib/playerStats.js";
 import type * as lib_profiles from "../lib/profiles.js";
 import type * as lib_publicApi from "../lib/publicApi.js";
 import type * as lib_ratings from "../lib/ratings.js";
@@ -150,6 +151,7 @@ declare const fullApi: ApiFromModules<{
   "lib/entitlements": typeof lib_entitlements;
   "lib/games": typeof lib_games;
   "lib/playerRatings": typeof lib_playerRatings;
+  "lib/playerStats": typeof lib_playerStats;
   "lib/profiles": typeof lib_profiles;
   "lib/publicApi": typeof lib_publicApi;
   "lib/ratings": typeof lib_ratings;

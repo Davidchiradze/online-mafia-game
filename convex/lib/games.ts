@@ -17,6 +17,7 @@ import {
   getPlayerRating,
   loadRatingSnapshot,
 } from "./playerRatings";
+import { bumpPlayerStats, recomputePlayerStats } from "./playerStats";
 import { RATING_CONFIG } from "./constants";
 
 export async function getGameById(db: DatabaseReader, gameId: Id<"games">) {
@@ -346,75 +347,10 @@ export async function archiveGameLog(ctx: MutationCtx, gameId: Id<"games">) {
       ...ratingFields,
     });
 
-    await bumpPlayerStats(ctx, p.playerId, p.role, outcome);
+    await bumpPlayerStats(ctx, p.playerId, game.gameType, p.role, outcome);
   }
 
   return gameLogId;
-}
-
-/**
- * Incrementally fold one finished-game result into a player's aggregate stats.
- * Creates the row on first game; otherwise increments the overall counters and
- * the per-role entry. Win rates are derived on read, not stored.
- */
-async function bumpPlayerStats(
-  ctx: MutationCtx,
-  playerId: Id<"profiles">,
-  role: string,
-  outcome: "win" | "loss" | "no_contest",
-) {
-  const existing = await ctx.db
-    .query("playerStats")
-    .withIndex("by_playerId", (q) => q.eq("playerId", playerId))
-    .unique();
-
-  const w = outcome === "win" ? 1 : 0;
-  const l = outcome === "loss" ? 1 : 0;
-  const nc = outcome === "no_contest" ? 1 : 0;
-
-  if (!existing) {
-    await ctx.db.insert("playerStats", {
-      playerId,
-      totalMatches: 1,
-      wins: w,
-      losses: l,
-      noContests: nc,
-      currentStreak: w,
-      bestStreak: w,
-      roleStats: [{ role, matches: 1, wins: w, losses: l }],
-    });
-    return;
-  }
-
-  // Win → extend streak, loss → reset, no-contest → leave unchanged.
-  const prevStreak = existing.currentStreak ?? 0;
-  const currentStreak =
-    outcome === "win" ? prevStreak + 1 : outcome === "loss" ? 0 : prevStreak;
-  const bestStreak = Math.max(existing.bestStreak ?? 0, currentStreak);
-
-  const roleStats = [...existing.roleStats];
-  const idx = roleStats.findIndex((r) => r.role === role);
-  if (idx === -1) {
-    roleStats.push({ role, matches: 1, wins: w, losses: l });
-  } else {
-    const cur = roleStats[idx];
-    roleStats[idx] = {
-      role,
-      matches: cur.matches + 1,
-      wins: cur.wins + w,
-      losses: cur.losses + l,
-    };
-  }
-
-  await ctx.db.patch(existing._id, {
-    totalMatches: existing.totalMatches + 1,
-    wins: existing.wins + w,
-    losses: existing.losses + l,
-    noContests: existing.noContests + nc,
-    currentStreak,
-    bestStreak,
-    roleStats,
-  });
 }
 
 /**
@@ -490,84 +426,10 @@ export async function annulGameLog(ctx: MutationCtx, log: Doc<"gameLogs">) {
 
   // 3) Recompute aggregate stats for each affected player from their history.
   for (const playerId of affectedPlayerIds) {
-    await recomputePlayerStats(ctx, playerId);
+    await recomputePlayerStats(ctx, playerId, log.gameType);
   }
 
   // 4) The log itself becomes a no-contest.
   await ctx.db.patch(log._id, { winner: null, winMethod: undefined });
 }
 
-/**
- * Rebuild a player's `playerStats` row from scratch off their full
- * `gameLogPlayers` history. Pure re-aggregation of the same counters and streak
- * rules `bumpPlayerStats` maintains incrementally, so the result is identical to
- * what incremental updates would have produced for the (now-updated) history.
- * Used by `annulGameLog` after a game's rows are flipped to no-contest.
- */
-async function recomputePlayerStats(
-  ctx: MutationCtx,
-  playerId: Id<"profiles">,
-) {
-  const rows = await ctx.db
-    .query("gameLogPlayers")
-    .withIndex("by_playerId", (q) => q.eq("playerId", playerId))
-    .collect();
-  // Chronological order so the streak walk matches how it was built live.
-  rows.sort((a, b) => a.finishedAt - b.finishedAt);
-
-  let wins = 0;
-  let losses = 0;
-  let noContests = 0;
-  let currentStreak = 0;
-  let bestStreak = 0;
-  const roleMap = new Map<
-    string,
-    { role: string; matches: number; wins: number; losses: number }
-  >();
-
-  for (const r of rows) {
-    const entry = roleMap.get(r.role) ?? {
-      role: r.role,
-      matches: 0,
-      wins: 0,
-      losses: 0,
-    };
-    entry.matches += 1;
-
-    if (r.outcome === "win") {
-      wins += 1;
-      entry.wins += 1;
-      currentStreak += 1;
-      bestStreak = Math.max(bestStreak, currentStreak);
-    } else if (r.outcome === "loss") {
-      losses += 1;
-      entry.losses += 1;
-      currentStreak = 0; // a loss resets the streak
-    } else {
-      noContests += 1; // no-contest leaves the streak unchanged
-    }
-
-    roleMap.set(r.role, entry);
-  }
-
-  const stats = await ctx.db
-    .query("playerStats")
-    .withIndex("by_playerId", (q) => q.eq("playerId", playerId))
-    .unique();
-
-  const fields = {
-    totalMatches: rows.length,
-    wins,
-    losses,
-    noContests,
-    currentStreak,
-    bestStreak,
-    roleStats: [...roleMap.values()],
-  };
-
-  if (stats) {
-    await ctx.db.patch(stats._id, fields);
-  } else {
-    await ctx.db.insert("playerStats", { playerId, ...fields });
-  }
-}

@@ -10,7 +10,6 @@ component-file-length | src/features/game-room/components/room/GameRoomHeader.ts
 component-file-length | src/features/game-room/components/room/SpectatorJoinPrompt.tsx
 component-file-length | src/features/game-room/components/room/WaitingRoom.tsx
 component-file-length | src/features/game-room/context/gameRoomContext.tsx
-component-file-length | src/features/headquarters/leaderboard/LeaderboardContent.tsx
 component-file-length | src/features/headquarters/match-history/RolePerformanceGrid.tsx
 component-file-length | src/features/lobby/components/CreateGameModal.tsx
 component-file-length | src/features/lobby/components/room-card/TableStage.tsx
@@ -66,7 +65,6 @@ one-component-per-file | src/features/game-room/context/gameRoomContext.tsx
 one-component-per-file | src/features/headquarters/community-chat/FloatingChatWidget.tsx
 one-component-per-file | src/features/headquarters/components/HeadquartersWrapper.tsx
 one-component-per-file | src/features/headquarters/components/NavigationSidebar.tsx
-one-component-per-file | src/features/headquarters/leaderboard/LeaderboardContent.tsx
 one-component-per-file | src/features/headquarters/match-history/RolePerformanceGrid.tsx
 one-component-per-file | src/features/headquarters/match-history/StatsHeader.tsx
 one-component-per-file | src/features/lobby/components/room-card/SpectatorCount.tsx

@@ -407,7 +407,8 @@
     "levelTooltip": "{elo} ELO — ლეველი {level}",
     "toNextLevel": "{points} ელო {level} ლეველამდე",
     "tableAvgTooltip": "მაგიდის საშუალო: {avg}",
-    "tableAvgLabel": "მაგიდის საშ."
+    "tableAvgLabel": "მაგიდის საშ.",
+    "statsForMode": "სტატისტიკა"
   },
   "leaderboard": {
     "pageTitle": "ლიდერბორდი",
@@ -424,7 +425,8 @@
     "statBestStreak": "საუკეთესო სერია",
     "onStreak": "{count} მოგება ზედიზედ",
     "topRole": "საუკეთესო როლი",
-    "you": "შენ"
+    "you": "შენ",
+    "emptyForMode": "{mode} რეიტინგში ჯერ არავინაა. დაასრულე თამაში პირველი ადგილის დასაკავებლად."
   },
   "game": {
     "gameTypes": {
@@ -818,7 +820,8 @@
     },
     "player": {
       "waitingToStart": "ველოდებით მოთამაშეებს"
-    }
+    },
+    "chooseLadder": "აირჩიე რეიტინგი"
   },
   "errors": {
     "_fallback": "რაღაც შეცდომა მოხდა. გთხოვთ სცადოთ თავიდან.",

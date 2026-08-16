@@ -8,14 +8,16 @@
  * `Id<"profiles">`, which PHP has no way to know.
  *
  * Reads are O(1) per player. `playerStats` is a rolling aggregate maintained by
- * `bumpPlayerStats` as each game archives (see `convex/lib/games.ts`), so this
- * never touches `gameLogPlayers` and cost does not grow with a player's
- * history — two indexed point-reads per requested id, that is all.
+ * `bumpPlayerStats` as each game archives (see `convex/lib/playerStats.ts`), so
+ * this never touches `gameLogPlayers` and cost does not grow with a player's
+ * history — two indexed reads per requested id, that is all.
  *
  * `totalMatches` is deliberately GLOBAL across variants: japanese_mafia and
  * sports_mafia both count toward `gamesPlayed`. That is the agreed meaning of
  * the field on the PHP side; a per-variant breakdown would be a NEW field, not
- * a redefinition of this one — docs/public-api.md §3.
+ * a redefinition of this one — docs/public-api.md §3. Since the record is now
+ * kept per variant, holding that promise means SUMMING a player's rows — and
+ * reading them with `.unique()` would throw the moment they have two.
  */
 
 import { v } from "convex/values";
@@ -23,6 +25,7 @@ import { internalQuery, httpAction } from "../_generated/server";
 import { internal } from "../_generated/api";
 import type { Doc } from "../_generated/dataModel";
 import { getProfileByAccountId } from "../lib/profiles";
+import { getAllPlayerStats } from "../lib/playerStats";
 import {
   errorResponse,
   isAuthorized,
@@ -51,9 +54,11 @@ export type PlayerStatsPayload = {
  */
 const ZERO: PlayerStatsPayload = { gamesPlayed: 0 };
 
-function toPayload(stats: Doc<"playerStats"> | null): PlayerStatsPayload {
-  if (!stats) return ZERO;
-  return { gamesPlayed: stats.totalMatches };
+function toPayload(rows: Doc<"playerStats">[]): PlayerStatsPayload {
+  // SUM, never pick: a player has one row per variant they have played, and
+  // `gamesPlayed` is cross-variant by contract. Summing the parts gives exactly
+  // the number the old single global row held.
+  return { gamesPlayed: rows.reduce((n, row) => n + row.totalMatches, 0) };
 }
 
 /**
@@ -82,12 +87,9 @@ export const byAccountIds = internalQuery({
         continue;
       }
 
-      const row = await ctx.db
-        .query("playerStats")
-        .withIndex("by_playerId", (q) => q.eq("playerId", profile._id))
-        .unique();
-
-      stats[accountId] = toPayload(row);
+      stats[accountId] = toPayload(
+        await getAllPlayerStats(ctx.db, profile._id),
+      );
     }
 
     return { stats, missing };
