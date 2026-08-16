@@ -87,8 +87,11 @@ b = clamp( round((T − R) / 20), −16, +16 )
 | You | Table avg `T` | `b` | Win | Loss |
 | --- | --- | --- | --- | --- |
 | 1000 | 1140 | +7 | **+47** | **−33** |
-| 1400 | 1150 | −13 | **+27** | **−53** |
+| 1400 | 1150 | −12 | **+28** | **−52** |
 | 1050 | 1050 | 0 | **+40** | **−40** |
+
+(−12, not −13: exact halves round toward +∞ — see
+[ranking-system.md §3](../../ranking-system.md).)
 
 The cap (16) stays below the base (40), so the sign can never flip: a Sports win
 pays at least **+24** and a loss costs at least **−24**. Full range: **+56** to

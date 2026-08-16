@@ -1,3 +1,8 @@
+// TYPE-ONLY, and it must stay that way: `lib/roles.ts` imports the team-role
+// constants from this file at run time. `import type` is erased, so the cycle
+// exists only for the type-checker, which handles it.
+import type { Faction } from "./roles";
+
 export const GAME_PHASES = [
   "game_session_started",
   "picking_roles",
@@ -158,22 +163,28 @@ export type RatingConfig = {
   /** Rating never drops below this; the clipped delta is what gets recorded. */
   floor: number;
   /**
-   * Faction-calibrated base payouts: the K × (S − E) ratios (E = the faction's
-   * observed win rate, see /docs/ranking-system.md §2–§3) scaled 2× — effective
-   * K = 80 — to widen level movement given the low games-per-player volume.
-   * Wins still pay ~2× losses because the average player wins only ~33.5% of
-   * games, and the average per-role EV stays ~zero.
+   * Base payouts for THIS variant's factions: the K × (S − E) ratios, where E
+   * is the faction's win rate **in this variant** (/docs/ranking-system.md
+   * §2–§3). Each variant's numbers, and how they were arrived at, live with
+   * the variant — /docs/variants/japanese/rating.md is measured from the
+   * archive, /docs/variants/sports/rating.md is declared symmetric.
+   *
+   * PARTIAL because `Faction` is a global union while a faction *set* is
+   * per-variant: a two-faction variant must carry no dead third row
+   * (/docs/ranking-system.md §13). A type cannot know which factions a
+   * definition declares, so exact coverage is a BUILD FAILURE instead —
+   * tests/structure/ratedVariants.test.ts checks every rated config against
+   * the registry.
    */
-  deltas: Record<
-    "mafia" | "citizens" | "yakuza",
-    { win: number; loss: number }
-  >;
+  deltas: Partial<Record<Faction, { win: number; loss: number }>>;
   /**
    * Symmetric table-strength term b = clamp(round((T − R) / divisor), ±cap).
    * divisor 20 is kept deliberately loose (a weaker spring than the K-linear
-   * value) so skilled players can separate; the cap scales with the base and
-   * stays below the smallest base number (yakuza loss 22) so a win can never
-   * pay ≤ 0 and a loss can never turn positive.
+   * value) so skilled players can separate.
+   *
+   * INVARIANT, checked per rated variant in tests/structure/ratedVariants.test.ts:
+   * the cap stays below that variant's smallest base payout, so a win can never
+   * pay ≤ 0 and a loss can never turn positive however lopsided the table.
    */
   tableAdjustment: { divisor: number; cap: number };
 };

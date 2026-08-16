@@ -14,7 +14,8 @@ import type { Faction } from "./roles";
  *                 (host excluded, self included)
  * @returns the clipped delta actually applied and the resulting rating;
  *          `after` never drops below the floor, and `delta = after − rating`
- *          so the recorded delta is clipped by construction.
+ *          so the recorded delta is clipped by construction. A faction the
+ *          config does not price moves nothing (see below).
  */
 export function computeRatingDelta(
   config: RatingConfig,
@@ -25,7 +26,21 @@ export function computeRatingDelta(
 ): { delta: number; after: number } {
   if (outcome === "no_contest") return { delta: 0, after: rating };
 
-  const base = config.deltas[faction][outcome];
+  // `deltas` only holds the factions this variant uses. Sports has no yakuza,
+  // so it has no yakuza payout to look up.
+  //
+  // If the faction is missing, give 0 instead of crashing. This code runs
+  // inside `archiveGameLog`. In Convex, if anything in a mutation throws, every
+  // write that mutation made is undone — so the whole game log would be lost.
+  // A rating that does not move is a small problem. A game with no record at
+  // all is a big one.
+  //
+  // This should never happen: tests/structure/ratedVariants.test.ts fails the
+  // build if a variant's payouts do not match its factions.
+  const payouts = config.deltas[faction];
+  if (!payouts) return { delta: 0, after: rating };
+
+  const base = payouts[outcome];
   const { divisor, cap } = config.tableAdjustment;
   const b = Math.max(
     -cap,

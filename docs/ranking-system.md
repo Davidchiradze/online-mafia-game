@@ -159,9 +159,15 @@ Worked examples (Japanese Citizens, base +54 / −26 — the Sports equivalents 
 in [sports/rating.md §3](./variants/sports/rating.md)):
 
 - You are `1000`, table average `1140` → `b = +7`. Win **+61**, loss **−19**.
-- You are `1400`, table average `1150` → `b = −13` (rounded from −12.5, within
-  the ±16 cap). Win **+41**, loss **−39**.
+- You are `1400`, table average `1150` → `b = −12` (from −12.5). Win **+42**,
+  loss **−38**.
 - You are `1050`, table average `1050` → `b = 0`. Base numbers apply as-is.
+
+> **Exact halves round toward +∞**, because the term is `Math.round`. So −12.5
+> becomes −12, not −13: at a `.5` boundary the player keeps one point. This doc
+> claimed −13 until `tests/convex/ratings.test.ts` was written and pinned what
+> actually ships. The one-point asymmetry is left alone deliberately — changing
+> it would move shipped payouts to fix a rounding aesthetic.
 
 Why these numbers are safe:
 
@@ -429,8 +435,8 @@ gap analysis for making a second variant rated — not a sequenced plan.
 
 | Piece | Where | Variant-aware? |
 | --- | --- | --- |
-| `RATING_CONFIG` — `{ start, floor, deltas, tableAdjustment }` per game type; absent ⇒ unrated | `convex/lib/constants.ts` | **Keyed by game type ✓, but `deltas` is a total `Record` over all three factions ✗** — a two-faction variant has to supply a dead `yakuza` row. Should key on the variant's own factions (§13). |
-| `computeRatingDelta` — the pure formula | `convex/lib/ratings.ts` | ✓ fully config-driven; shared by the live path and the migration so they cannot drift. |
+| `RATING_CONFIG` — `{ start, floor, deltas, tableAdjustment }` per game type; absent ⇒ unrated | `convex/lib/constants.ts` | ✓ keyed by game type, and `deltas` prices only the variant's **own** factions. A type cannot know which those are, so exact coverage is a build failure in `tests/structure/ratedVariants.test.ts` instead. |
+| `computeRatingDelta` — the pure formula | `convex/lib/ratings.ts` | ✓ fully config-driven; shared by the live path and the migration so they cannot drift. A faction the config does not price moves nothing rather than throwing — a throw here would roll back the whole archive. |
 | `playerRatings` table + `by_playerId_gameType` / `by_gameType_rating` | `convex/tables/playerRatings.ts` | ✓ one row per (player, game type). Nothing to change, ever, per variant. |
 | Snapshot/apply helpers, default-rating reads | `convex/lib/playerRatings.ts` | ✓ resolves the config by game type; returns `null` (skip) for unrated. |
 | Live table average shown in lobby/room | `convex/lib/playerRatings.ts` → `getLiveTableAvgRating` | ✓ per game type; starts rendering for a variant the moment it has a config. |
