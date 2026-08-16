@@ -11,27 +11,38 @@ import MatchFilters, {
   type GameTypeFilter,
 } from "./MatchFilters";
 import MatchHistoryList from "./MatchHistoryList";
-import { DEFAULT_RATED_GAME_TYPE } from "@/shared/lib/ranking/ratedVariants";
+import {
+  DEFAULT_RATED_GAME_TYPE,
+  type RatedGameType,
+} from "@/shared/lib/ranking/ratedVariants";
 
 export default function MatchHistoryContent() {
   const [outcome, setOutcome] = useState<OutcomeFilter>("all");
   const [gameType, setGameType] = useState<GameTypeFilter>("all");
 
-  // The stats block is per variant — a rating cannot be averaged across
-  // ladders. It stays on the default one until it gets its own switcher; the
-  // filter below drives only the match list, and offers "all" plus unrated
-  // variants, neither of which has a record to show.
-  const stats = useQuery(historyRefs.myStats, {
-    gameType: DEFAULT_RATED_GAME_TYPE,
-  });
+  // THREE independent selections, and the third is deliberately not the second.
+  //
+  // `gameType` above filters the match LIST and offers "all" plus unrated
+  // variants — neither of which names a ladder, so neither can drive the stats.
+  // `statsVariant` picks the ladder whose ELO and record are shown. Binding
+  // them would mean either dropping "all" from the list or inventing a record
+  // for it, and there is no honest number to invent (/docs/ranking-system.md §12).
+  const [statsVariant, setStatsVariant] = useState<RatedGameType>(
+    DEFAULT_RATED_GAME_TYPE,
+  );
+  const stats = useQuery(historyRefs.myStats, { gameType: statsVariant });
   const { profile } = useViewer();
   const currentPlayerId = profile?._id;
 
   return (
     <div className="flex min-h-full w-full flex-col items-center pb-12 text-white">
       <div className="mt-8 flex w-full max-w-6xl flex-col px-6 sm:mt-12 sm:px-8">
-        <StatsHeader stats={stats} />
-        <RolePerformanceGrid stats={stats} />
+        <StatsHeader
+          stats={stats}
+          gameType={statsVariant}
+          onGameTypeChange={setStatsVariant}
+        />
+        <RolePerformanceGrid stats={stats} gameType={statsVariant} />
         <MatchFilters
           outcome={outcome}
           gameType={gameType}

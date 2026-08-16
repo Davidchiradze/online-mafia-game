@@ -407,7 +407,8 @@
     "levelTooltip": "{elo} ELO — ლეველი {level}",
     "toNextLevel": "{points} ელო {level} ლეველამდე",
     "tableAvgTooltip": "მაგიდის საშუალო: {avg}",
-    "tableAvgLabel": "მაგიდის საშ."
+    "tableAvgLabel": "მაგიდის საშ.",
+    "statsForMode": "სტატისტიკა"
   },
   "leaderboard": {
     "pageTitle": "ლიდერბორდი",
