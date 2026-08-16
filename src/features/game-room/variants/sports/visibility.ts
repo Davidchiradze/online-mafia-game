@@ -1,5 +1,5 @@
 /**
- * Sports visibility ruleset (docs/engine/variant-architecture.md §2.4, docs/variants/sports.md §5.4).
+ * Sports visibility ruleset (docs/engine/variant-architecture.md §2.4, docs/variants/sports/rules.md §5.4).
  *
  * Authored as REAL Sports rules rather than the Phase-1 Japanese re-export. The
  * VisibilityState layering (COVERED/DIMMED/VISIBLE/DEAD) stays shared — built by
@@ -145,7 +145,7 @@ function isNightActivityPhase(gamePhase: GamePhase): boolean {
 }
 
 /**
- * Host-monitoring override (docs/variants/sports.md §5): during `mafia_chooses_target`
+ * Host-monitoring override (docs/variants/sports/rules.md §5): during `mafia_chooses_target`
  * the mafia see nothing (their tiles are covered via `canSeeParticipant`), but
  * the HOST watches the whole table — every player is shown CLEARLY (not dimmed),
  * so the moderator can observe the mafia making their private picks. Returns null

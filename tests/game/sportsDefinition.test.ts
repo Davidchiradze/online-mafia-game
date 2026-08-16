@@ -6,7 +6,7 @@ import type { WinContext } from "@convex/games/core/winConditions";
 /**
  * CHARACTERIZATION TEST — the Sports Mafia `GameDefinition` (Phase 2, data only).
  *
- * Validates the definition against the ruleset spec in docs/variants/sports.md:
+ * Validates the definition against the ruleset spec in docs/variants/sports/rules.md:
  * roles/deck/factions (§2), the phase graph (§3), the parity `decideWinner`
  * worked-examples table (§6), and the unanimous-vote night resolution (§5.2).
  * These are the tables the implementation must reproduce — assertions are the

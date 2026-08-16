@@ -1,17 +1,21 @@
-# Sports Mafia — Ruleset Specification
+# Sports Mafia — Rules
 
+> **Scope: `sports_mafia` only.** Win outcomes are a separate doc
+> ([win-conditions.md](./win-conditions.md)); shared engine mechanism lives
+> under [docs/engine/](../../engine/).
+>
 > Status: **Built and creatable.** The definition, night model, best-move flow
 > and UI ruleset all ship; `CreateGameModal` filters only `city_mafia`. The one
 > deliberate gap is rating — Sports is absent from `RATING_CONFIG`, so games are
 > unrated by design until there is enough data to calibrate
-> ([ranking-system.md](../ranking-system.md) §9).
+> ([ranking-system.md](../../ranking-system.md) §9).
 >
 > `gameType` id: **`sports_mafia`** (renamed from the legacy `traditional`),
 > **10 players**, seat count `10` (host sits in seat `11`). Architecture:
-> [engine/variant-architecture.md](../engine/variant-architecture.md).
+> [engine/variant-architecture.md](../../engine/variant-architecture.md).
 >
-> Read [japanese/rules.md](./japanese/rules.md) and
-> [japanese/win-conditions.md](./japanese/win-conditions.md) first — Sports is
+> Read [japanese/rules.md](../japanese/rules.md) and
+> [japanese/win-conditions.md](../japanese/win-conditions.md) first — Sports is
 > defined as a **diff** against that Japanese baseline. Anything not listed as a
 > difference below is **identical to Japanese**.
 
@@ -25,7 +29,7 @@ authority.
 
 ## 2. Roles & factions
 
-> **Generated.** Roles, deck counts, factions and night actors: [game-spec.md#roles](../generated/game-spec.md#roles).
+> **Generated.** Roles, deck counts, factions and night actors: [game-spec.md#roles](../../generated/game-spec.md#roles).
 
 The decisions behind those numbers, which the table cannot express:
 
@@ -37,10 +41,10 @@ The decisions behind those numbers, which the table cannot express:
 
 ## 3. Phase flow
 
-> **Generated.** Phase order, timers, awake roles and advance targets: [game-spec.md#phases](../generated/game-spec.md#phases).
+> **Generated.** Phase order, timers, awake roles and advance targets: [game-spec.md#phases](../../generated/game-spec.md#phases).
 > The graph, including the branches a Convex mutation owns, is drawn at
-> [game-spec.md#state-machine](../generated/game-spec.md#state-machine).
-> For a side-by-side against Japanese, [game-spec.md#phase-universe](../generated/game-spec.md#phase-universe)
+> [game-spec.md#state-machine](../../generated/game-spec.md#state-machine).
+> For a side-by-side against Japanese, [game-spec.md#phase-universe](../../generated/game-spec.md#phase-universe)
 > marks every phase as shared or variant-specific.
 
 What the tables do not say — the reasoning behind the diff:
@@ -328,7 +332,7 @@ mutations and `nextPhase` returns `null` for them.
 Definition surface: add `hasBestMove: boolean` to `GameFlags`
 (`convex/games/core/types.ts`) — `false` for Japanese, `true` for Sports — so the
 shared dawn seam reads a flag rather than a `gameType` literal (§8 guardrails in
-[game-types.md](../engine/variant-architecture.md)).
+[game-types.md](../../engine/variant-architecture.md)).
 
 > **Registration note.** `best_move` must be **appended last** to `GAME_PHASES`
 > in `src/shared/lib/constants/game.ts` — the same treatment `phase_transition` and
@@ -447,27 +451,23 @@ displayed anywhere.
 
 ## 7. Win conditions
 
-> **Generated.** Complete table over every reachable roster: [game-spec.md#win-conditions](../generated/game-spec.md#win-conditions).
+> **Moved.** The rules, the notation and the resolved decisions now live beside
+> this file in [win-conditions.md](./win-conditions.md) — the same split
+> Japanese uses ([japanese/win-conditions.md](../japanese/win-conditions.md)).
+> Complete decision table: [game-spec.md#win-conditions](../../generated/game-spec.md#win-conditions).
+> When the check runs: [engine/win-check-seam.md](../../engine/win-check-seam.md).
+>
+> The heading keeps its number — 42 source citations anchor on `§N` in this
+> document, and §8/§9 below must not shift.
 
-The rule is a flat parity check: mafia win once `2m ≥ N`, citizens win when
-`m = 0`, otherwise the game continues. Two properties are worth stating
-because they are the opposite of Japanese:
-
-- **Context is irrelevant.** `beforeNight` and `beforeDay` give the same
-  answer for every roster — the generated table shows both columns so this
-  is checkable rather than asserted.
-- **No exceptions and no cap.** There is no `N ≤ 6` ceiling and no
-  role-presence carve-out, so the key needs nothing beyond `N` and `m`. The
-  generator derives that; it is not hand-declared.
-
-It plugs into the same two seams and the same foul trigger as every other
-variant — see [engine/win-check-seam.md](../engine/win-check-seam.md). The
-host still confirms via the Finish Game banner.
+In one line: a flat parity check — mafia win once `2m ≥ N`, citizens win when
+`m = 0`, otherwise the game continues. No context sensitivity, no `N ≤ 6`
+ceiling, no role-presence carve-outs. Everything else is in the sibling doc.
 
 ## 8. What stays identical to Japanese
 
 > Moved. This list was a verbatim duplicate of the shared/variant split in
-> [engine/variant-architecture.md §4](../engine/variant-architecture.md),
+> [engine/variant-architecture.md §4](../../engine/variant-architecture.md),
 > which is now its single source. Two copies of the same thirteen items is
 > how they drift apart.
 
@@ -501,4 +501,4 @@ All previously-open questions are confirmed:
 7. **Sports launches UNRATED — ELO is skipped.** No `RATING_CONFIG` entry, so
    `archiveGameLog` records games with no rating change (exactly as an unrated
    type does today). A calibrated config can be added later per
-   [ranking-system.md](../ranking-system.md) §9.
+   [ranking-system.md](../../ranking-system.md) §9.

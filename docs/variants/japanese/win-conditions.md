@@ -7,7 +7,8 @@
 >
 > Implemented in `convex/games/japanese/winConditions.ts` (`decideWinner` /
 > `describeWin`, both pure). Sports has its own rules — a flat parity rule with
-> no context sensitivity — in [variants/sports.md](../sports.md) §7.
+> no context sensitivity — in
+> [variants/sports/win-conditions.md](../sports/win-conditions.md).
 >
 > Section numbers here are load-bearing: `convex/games/japanese/winConditions.ts`
 > cites §7. Do not renumber.

@@ -17,7 +17,7 @@ import {
 
 /**
  * CHARACTERIZATION TEST — the shared day-round derivation + 3rd-foul speaking
- * ban logic (docs/variants/sports.md §4.1 / §4.2). Pure functions consumed by
+ * ban logic (docs/variants/sports/rules.md §4.1 / §4.2). Pure functions consumed by
  * `dayPhase.ts` under the Sports flags; these pin the arithmetic so the
  * DB-coupled behavior in gameEngine.test.ts can trust it.
  */

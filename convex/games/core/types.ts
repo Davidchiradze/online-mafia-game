@@ -105,7 +105,7 @@ export type GameFlags = {
   thirdFoulSpeakingBan: boolean;
   /**
    * Sports: the first-night victim names 3 suspects in a dedicated `best_move`
-   * phase before their farewell (docs/variants/sports.md §6). Read by the shared
+   * phase before their farewell (docs/variants/sports/rules.md §6). Read by the shared
    * dawn seam (`farewellSpeech:startFarewellSpeech`) so it never names a variant.
    */
   hasBestMove: boolean;
@@ -147,7 +147,7 @@ export interface GameDefinition {
    * Structured endgame snapshot (or `"no_contest"` / `null`) recorded on the
    * session and used for the win-method label. Japanese ships the 3-faction
    * snapshot; Sports a 2-faction one (`yakuzaAlive`/`shogunAlive` always false,
-   * per variants/sports.md §7). `decideWinner` is the faction-only convenience;
+   * per variants/sports/win-conditions.md §2). `decideWinner` is the faction-only convenience;
    * both agree on the outcome.
    */
   describeWin: (

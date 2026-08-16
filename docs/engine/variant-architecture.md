@@ -17,7 +17,7 @@
 > | --- | --- |
 > | Shared win-check mechanism | [engine/win-check-seam.md](./win-check-seam.md) |
 > | Japanese rules | [variants/japanese/rules.md](../variants/japanese/rules.md), [win-conditions.md](../variants/japanese/win-conditions.md) |
-> | Sports rules | [variants/sports.md](../variants/sports.md) |
+> | Sports rules | [variants/sports/rules.md](../variants/sports/rules.md), [win-conditions.md](../variants/sports/win-conditions.md) |
 
 ## 1. The problem (historical)
 

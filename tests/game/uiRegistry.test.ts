@@ -182,7 +182,7 @@ describe("SPORTS_UI_RULESET", () => {
   });
 
   // -------------------------------------------------------------------------
-  // Best move (docs/variants/sports.md §6)
+  // Best move (docs/variants/sports/rules.md §6)
   // -------------------------------------------------------------------------
 
   it("advances best_move straight to the farewell — NO sleep buffer", () => {

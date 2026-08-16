@@ -1,6 +1,6 @@
 /**
  * The Sports 3rd-foul speaking ban as it applies to ONE participant tile
- * (docs/variants/sports.md §4.2). Pure derivation over context state — the rules
+ * (docs/variants/sports/rules.md §4.2). Pure derivation over context state — the rules
  * themselves live in `lib/game/speakingBan`; this hook only feeds them the
  * viewer's session, the corrected alive count, and this tile's player.
  *

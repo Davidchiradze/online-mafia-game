@@ -25,7 +25,7 @@ disagrees with it, the hand-written doc is wrong.**
 
 | Question | Read |
 | --- | --- |
-| Who wins / when does the game end? | `#win-conditions` in the spec; rules + rationale in `docs/variants/japanese/win-conditions.md`, `docs/variants/sports.md` §7 |
+| Who wins / when does the game end? | `#win-conditions` in the spec; rules + rationale in `docs/variants/japanese/win-conditions.md`, `docs/variants/sports/win-conditions.md` |
 | *When* is the win check run, and by whom? | `docs/engine/win-check-seam.md` — shared, all variants |
 | What phase follows X? | `#phases` and `#state-machine` in the spec |
 | How many of role X / what's in the deck? | `#roles` in the spec |

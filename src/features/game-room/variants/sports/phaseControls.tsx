@@ -1,5 +1,5 @@
 /**
- * Sports phase → host-controls map (docs/variants/sports.md §3, Phase 4).
+ * Sports phase → host-controls map (docs/variants/sports/rules.md §3, Phase 4).
  *
  * Reuses the SHARED, variant-agnostic panels for everything (card picking, day
  * and nominated speaking, the generic night advances, the neutral buffer). The

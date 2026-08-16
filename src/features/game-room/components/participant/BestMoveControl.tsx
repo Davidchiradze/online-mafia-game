@@ -11,7 +11,7 @@ import BestMoveIndicator from "./BestMoveIndicator";
 
 /**
  * The Sports best-move suspect control for one participant tile
- * (docs/variants/sports.md §6).
+ * (docs/variants/sports/rules.md §6).
  *
  * A single centered round check button per tile:
  *  - the VICTIM gets an interactive circle they check / uncheck;

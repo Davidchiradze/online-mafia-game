@@ -64,7 +64,7 @@ export function useSpeakingRunControls(
     gameSessionState.currentSpeakerIndex,
   );
 
-  // The Sports final-day carve-out (docs/variants/sports.md §4.2): a
+  // The Sports final-day carve-out (docs/variants/sports/rules.md §4.2): a
   // 3rd-foul-banned player still speaks on the last day, for 30s not 60s. The
   // host's countdown has to agree with the progress bar on the speaker's tile,
   // so it reads the same rule rather than assuming the phase default.

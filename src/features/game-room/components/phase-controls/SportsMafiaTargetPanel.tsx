@@ -26,7 +26,7 @@ type SportsMafiaTargetPanelProps = {
 const URGENT_SECONDS = 2;
 
 /**
- * Sports `mafia_chooses_target` (docs/variants/sports.md §5) — the one night
+ * Sports `mafia_chooses_target` (docs/variants/sports/rules.md §5) — the one night
  * phase that is not "wait for a role, then advance".
  *
  * Every living mafia picks PRIVATELY inside a timed window, and the window has

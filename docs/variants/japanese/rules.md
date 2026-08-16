@@ -2,7 +2,7 @@
 
 > **Scope: `japanese_mafia` only.** 12 players, three factions, structured
 > phase flow with role-based visibility. Sports is a separate variant with a
-> separate doc ([variants/sports.md](../sports.md)); shared engine mechanism
+> separate doc ([variants/sports/rules.md](../sports/rules.md)); shared engine mechanism
 > lives under [docs/engine/](../../engine/).
 >
 > Roles, decks, phase order and win outcomes are **generated** from the
@@ -21,7 +21,7 @@ Currently supported:
 
 - `japanese_mafia` - 12 players — **the variant this document describes.**
 - `sports_mafia` - 10 players — **built and creatable**; documented separately in
-  [variants/sports.md](../sports.md) as a diff from this one. Renamed from the
+  [variants/sports/rules.md](../sports/rules.md) as a diff from this one. Renamed from the
   legacy `traditional`.
 - `city_mafia` - reserved in the `GameType` union; **no definition registered**,
   so it cannot be created.

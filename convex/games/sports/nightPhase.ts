@@ -9,7 +9,7 @@ import type { Id } from "../../_generated/dataModel";
 import type { DatabaseReader } from "../../_generated/server";
 
 /**
- * Sports Mafia night — the `unanimous-vote` kill model (docs/variants/sports.md §5).
+ * Sports Mafia night — the `unanimous-vote` kill model (docs/variants/sports/rules.md §5).
  *
  * Distinct from the Japanese `nightPhase.ts` single-authority model: every
  * living mafia PRIVATELY picks one target during a 5s window; the kill resolves

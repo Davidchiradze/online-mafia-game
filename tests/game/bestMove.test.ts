@@ -9,7 +9,7 @@ import { JAPANESE_DEFINITION } from "@convex/games/japanese/definition";
 import { SPORTS } from "@convex/lib/constants";
 
 /**
- * Sports "best move" (docs/variants/sports.md §6) — the pure rules.
+ * Sports "best move" (docs/variants/sports/rules.md §6) — the pure rules.
  *
  * Mirrors the §6.8 edge-case table one-for-one, so the doc and the code cannot
  * drift apart silently.

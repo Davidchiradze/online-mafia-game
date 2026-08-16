@@ -1,5 +1,5 @@
 /**
- * Sports seat geometry — a 10-seat ring (docs/engine/variant-architecture.md §6, variants/sports.md
+ * Sports seat geometry — a 10-seat ring (docs/engine/variant-architecture.md §6, variants/sports/rules.md
  * §1). 10 players + the host, laid out on a 4-col × 3-row grid so there are no
  * phantom empty seats (the §6 bug a 12-ring would show for a 10-player game):
  *

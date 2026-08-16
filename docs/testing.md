@@ -305,7 +305,7 @@ idealized behavior.
   not a refactor — investigate before changing it.
 - New pure logic (e.g. the Sports `decideWinner`) gets its own characterization
   tests _as it is written_ (refactor Phase 2), validated against
-  [sports-mafia.md](./variants/sports.md).
+  [variants/sports/win-conditions.md](./variants/sports/win-conditions.md).
 
 ### Known drift the suite pins
 

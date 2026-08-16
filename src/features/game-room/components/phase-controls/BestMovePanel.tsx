@@ -18,7 +18,7 @@ type BestMovePanelProps = {
 };
 
 /**
- * Best move (docs/variants/sports.md §6): the first night's victim names three
+ * Best move (docs/variants/sports/rules.md §6): the first night's victim names three
  * suspects before saying goodbye.
  *
  * The host does not pick anything — the victim taps seats and this panel

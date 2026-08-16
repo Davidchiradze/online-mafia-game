@@ -313,7 +313,7 @@ export const nightPhase = {
 };
 
 // ============================================================================
-// SPORTS NIGHT PHASE (unanimous-vote kill model — docs/variants/sports.md §5)
+// SPORTS NIGHT PHASE (unanimous-vote kill model — docs/variants/sports/rules.md §5)
 // ============================================================================
 
 export const sportsNightPhase = {
@@ -344,7 +344,7 @@ export const sportsNightPhase = {
 };
 
 // ============================================================================
-// BEST MOVE (Sports — docs/variants/sports.md §6)
+// BEST MOVE (Sports — docs/variants/sports/rules.md §6)
 // ============================================================================
 
 export const bestMove = {

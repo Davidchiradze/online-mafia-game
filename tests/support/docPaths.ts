@@ -168,21 +168,51 @@ export function markdownLinks(text: string): string[] {
   return [...out].sort();
 }
 
-export type DocCitation = { doc: string; sections: string[] };
+export type DocCitation = {
+  /** Resolved repo path, or the literal as written when it names more than one doc. */
+  doc: string;
+  sections: string[];
+  /** The citation matched several docs — its `§` anchors cannot be checked. */
+  ambiguous: boolean;
+};
+
+/**
+ * Every doc a citation could mean. The directory segments the citation carries
+ * are matched as a path SUFFIX, so `variants/sports/rules.md` and the fuller
+ * `docs/variants/sports/rules.md` both land on that one file — while a citation
+ * carrying no directory at all lands on every folder holding a file of that
+ * name, which is what `ambiguous` reports.
+ */
+export function resolveCitedDoc(cited: string, knownDocs: Set<string>): string[] {
+  const spec = cited.replace(/^(?:\.{1,2}\/)+/, "");
+  return [...knownDocs].filter((repoPath) => repoPath === spec || repoPath.endsWith(`/${spec}`));
+}
 
 /**
  * `docs/engine/variant-architecture.md §2.1` and chained forms like `docs/engine/variant-architecture.md §1; §8`.
  * Only sections attached directly to a filename are attributed to it — a bare
  * `§3` further along a sentence is ambiguous and deliberately ignored.
+ *
+ * PATH-AWARE, because a basename no longer identifies a document:
+ * `docs/variants/japanese/rules.md` and `docs/variants/sports/rules.md` are
+ * different files. Keying on the basename would have silently checked one
+ * variant's `§N` anchors against the other variant's headings — passing or
+ * failing for reasons unrelated to the citation. `knownDocs` is therefore a set
+ * of repo paths, not basenames.
  */
 export function docCitations(text: string, knownDocs: Set<string>): DocCitation[] {
   const out: DocCitation[] = [];
-  const re = /(?:docs\/)?([A-Za-z0-9._-]+\.md)((?:\s*[;,]?\s*§\d+(?:\.\d+)*)*)/g;
+  const re =
+    /(?:\.{1,2}\/)*((?:[A-Za-z0-9._-]+\/)*[A-Za-z0-9._-]+\.md)((?:\s*[;,]?\s*§\d+(?:\.\d+)*)*)/g;
   for (const match of text.matchAll(re)) {
-    const doc = match[1];
-    if (!knownDocs.has(doc)) continue;
+    const resolved = resolveCitedDoc(match[1], knownDocs);
+    if (resolved.length === 0) continue;
     const sections = [...(match[2] ?? "").matchAll(/§(\d+(?:\.\d+)*)/g)].map((m) => m[1]);
-    out.push({ doc, sections });
+    out.push({
+      doc: resolved.length === 1 ? resolved[0] : match[1],
+      sections,
+      ambiguous: resolved.length > 1,
+    });
   }
   return out;
 }

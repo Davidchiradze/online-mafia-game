@@ -197,7 +197,7 @@ export async function recordWinnerIfDecided(
   // Already decided on a previous transition — keep the game paused.
   if (session.winner) return session.winner;
 
-  // Dispatch the win decision to the game's variant (variants/sports.md §6). The
+  // Dispatch the win decision to the game's variant (variants/sports/win-conditions.md §9). The
   // Japanese definition reuses the exact `describeWin` this seam called before,
   // so Japanese behavior is unchanged; Sports gets its parity snapshot.
   const game = await getGameById(ctx.db, gameId);

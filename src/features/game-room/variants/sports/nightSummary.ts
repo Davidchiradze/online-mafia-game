@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Sports host night summary (docs/variants/sports.md §5).
+ * Sports host night summary (docs/variants/sports/rules.md §5).
  *
  * The Sports night is the `unanimous-vote` model: EVERY living mafia privately
  * picks a target inside a timed window, so there is no single scalar to show —

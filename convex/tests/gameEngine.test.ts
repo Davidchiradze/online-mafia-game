@@ -1626,7 +1626,7 @@ describe("fouls — giveFoul", () => {
 });
 
 // ===========================================================================
-// P3-T2 — Sports unanimous-vote night (docs/variants/sports.md §5).
+// P3-T2 — Sports unanimous-vote night (docs/variants/sports/rules.md §5).
 // The window lifecycle + per-mafia private selection (`sportsNightPhase.ts`),
 // and the dawn resolution wired through the SHARED `startFarewellSpeech` (which
 // branches on `definition.night.kind`). The Japanese single-authority path is
@@ -1915,7 +1915,7 @@ describe("sports night — dawn resolution via startFarewellSpeech", () => {
 });
 
 // ===========================================================================
-// Best move (docs/variants/sports.md §6) — dawn ROUTING + the victim's picks.
+// Best move (docs/variants/sports/rules.md §6) — dawn ROUTING + the victim's picks.
 //
 // Two halves:
 //  - routing: which of the three dawn destinations the night-1 resolution picks
@@ -2302,7 +2302,7 @@ describe("sports win detection (recordWinnerIfDecided → definition)", () => {
 });
 
 // ===========================================================================
-// P3-T4 — Sports single-nominee day rule (docs/variants/sports.md §4.1), gated on
+// P3-T4 — Sports single-nominee day rule (docs/variants/sports/rules.md §4.1), gated on
 // `flags.firstDaySingleNomineeSkipsToNight`:
 //   • Day 1 (night 0), one nominee → NO elimination, skip voting → night.
 //   • Day 2+ (night ≥ 1), one nominee → eliminated without a vote → farewell →
@@ -2446,7 +2446,7 @@ describe("sports single-nominee day rule (startNominatedPlayersSpeaking)", () =>
 });
 
 // ===========================================================================
-// P3-T3 — Sports 3rd-foul speaking ban (docs/variants/sports.md §4.2), gated on
+// P3-T3 — Sports 3rd-foul speaking ban (docs/variants/sports/rules.md §4.2), gated on
 // `flags.thirdFoulSpeakingBan`. `giveFoul` stamps `foulSpeakingBanRound` on the
 // 3rd foul; `startDaySpeaking` drops a player muted for the current round from
 // the day speaking order — unless it is the final day phase (≤ 4 alive), where

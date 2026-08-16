@@ -1,5 +1,5 @@
 /**
- * Sports Mafia night model — `unanimous-vote` (docs/variants/sports.md §5).
+ * Sports Mafia night model — `unanimous-vote` (docs/variants/sports/rules.md §5).
  *
  * Every living mafia privately picks one target within a 5s window. A kill
  * happens iff EVERY living mafia submitted a selection AND all chose the same

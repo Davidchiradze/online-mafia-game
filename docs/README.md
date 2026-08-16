@@ -21,7 +21,7 @@ The folder a doc lives in is a contract:
 | roles, decks, phase order, win outcomes | **[generated/game-spec.md](./generated/game-spec.md)** | *why* any rule is the way it is |
 | how a game ends, and when the check runs | [engine/win-check-seam.md](./engine/win-check-seam.md) | which faction wins — that is per-variant |
 | the Japanese rules | [variants/japanese/rules.md](./variants/japanese/rules.md), [win-conditions.md](./variants/japanese/win-conditions.md) | anything about Sports |
-| the Sports rules | [variants/sports.md](./variants/sports.md) | the Japanese baseline it diffs against |
+| the Sports rules | [variants/sports/rules.md](./variants/sports/rules.md), [win-conditions.md](./variants/sports/win-conditions.md) | the Japanese baseline it diffs against |
 | how to add or change a variant | [engine/variant-architecture.md](./engine/variant-architecture.md) | current values — those are generated |
 | the stack and how data flows | [architecture.md](./architecture.md) | any game rule |
 | Convex patterns, mutations, queries | [backend.md](./backend.md) | React conventions |

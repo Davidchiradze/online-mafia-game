@@ -1,5 +1,5 @@
 /**
- * The Sports Mafia game definition (docs/variants/sports.md).
+ * The Sports Mafia game definition (docs/variants/sports/rules.md).
  *
  * Phase 2 authors this as pure DATA — roles, deck, factions, phase graph, the
  * parity `decideWinner`, the unanimous-vote night model, and flags. Nothing is

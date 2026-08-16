@@ -7,7 +7,7 @@ import type { Id } from "../../_generated/dataModel";
 import type { DatabaseReader } from "../../_generated/server";
 
 /**
- * Sports "best move" (docs/variants/sports.md §6) — the first-night victim names 3
+ * Sports "best move" (docs/variants/sports/rules.md §6) — the first-night victim names 3
  * players they believe are mafia, before their farewell speech.
  *
  * A DAWN action, not a night action (hence its own file rather than living in
