@@ -14,12 +14,13 @@
 
 ## 1. Status
 
-**Rated**, with a declared symmetric calibration (decided 2026-08-16).
+**Rated** — live, with a declared symmetric calibration (decided and shipped
+2026-08-16).
 
 Sports shipped unrated on purpose — it had no calibration data and Japanese's
-numbers would have been meaningless for a two-faction game. That gap is now
-closed by *declaring* the calibration instead of measuring it (§2), so Sports
-gets its own ladder without waiting for ~200 decided games.
+numbers would have been meaningless for a two-faction game. That gap is closed
+by *declaring* the calibration instead of measuring it (§2), so Sports got its
+own ladder without waiting for ~200 decided games.
 
 Its ladder is **completely separate** from Japanese: separate rating, separate
 peak, separate leaderboard, separate record. Winning or losing here moves
@@ -120,8 +121,8 @@ would nearly swallow the base, leaving a win at a weak table worth +4.
 
 Archived Sports games stay **permanently unrated**. They were played as unrated
 games, and their rows keep `ratingDelta` absent — no chip on the match-history
-card, no contribution to the ladder. The Sports leaderboard starts **empty** and
-fills from the first game finished after the config ships.
+card, no contribution to the ladder. The Sports leaderboard started **empty** and
+fills from the first game finished after the config shipped.
 
 > **This does not happen by itself, and it is now enforced.** `backfillRatings`
 > (`convex/migrations.ts`) used to select games by "does this game type have a
@@ -132,18 +133,23 @@ fills from the first game finished after the config ships.
 > `sports_mafia` is **`"never"`**. Naming Sports explicitly is rejected too — the
 > policy is the authority, not the caller.
 
-## 6. What turns on when the config lands
+## 6. What the config turned on
 
-Adding the `RATING_CONFIG` entry is not only a leaderboard change — several
-surfaces read "is this game type rated" implicitly and start showing data:
+Adding the `RATING_CONFIG` entry was not only a leaderboard change — several
+surfaces read "is this game type rated" implicitly and started showing data the
+moment it landed:
 
 | Surface | Before | After |
 | --- | --- | --- |
 | Lobby room card + game-room header "Avg ELO" | hidden (`getLiveTableAvgRating` returns `undefined` for an unrated type) | live table average of the Sports roster |
 | Match-history card | no ± chip | `+40` / `−40` chip, with the table average behind it |
-| Leaderboard | Japanese only | a Sports board, scoped to the Sports ladder |
-| Profile | one ELO block | one block per rated variant |
+| Leaderboard | Japanese only | a Sports board, scoped to the Sports ladder — the query takes the game type; the tab that asks for it is the remaining UI work |
+| Profile | one ELO block | one block per rated variant — same: `getMyStats` takes the game type, the switcher is pending |
 | Staff annul | no rating to reverse | reverses the stored Sports delta, same as Japanese |
+
+The first two rows are the only ones needing more than the config: both queries
+are already per-variant, so what is missing is a control that lets a player ask
+for the other ladder ([ranking-system.md §10](../../ranking-system.md)).
 
 ## 7. What deliberately does **not** change
 

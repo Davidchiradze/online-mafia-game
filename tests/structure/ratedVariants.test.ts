@@ -47,7 +47,7 @@ describe("rated variants", () => {
     expect(
       rated.map((v) => v.id).sort(),
       "the rated-variant set changed — confirm the new variant's calibration was decided, not copied",
-    ).toEqual(["japanese_mafia"]);
+    ).toEqual(["japanese_mafia", "sports_mafia"]);
   });
 
   it("registers every rated variant", () => {

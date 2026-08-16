@@ -460,8 +460,8 @@ The gate for any of it is `npm run lint && npm run typecheck && npm test`.
 Accepted deliberately (decided 2026-07):
 
 - **Table strength is linear and capped, not full logistic ELO.** The `b`
-  term values every ELO point of table difference equally and stops at ±8
-  (~±160 difference) — beyond that, an even stronger table adds nothing. This
+  term values every ELO point of table difference equally and stops at ±16
+  (±320 difference, per §3) — beyond that, an even stronger table adds nothing. This
   is intentional: bounded, predictable numbers players can verify by hand,
   while still killing lobby-farming and gently mean-reverting runaway ratings.
 - **Escape hatch — full logistic ELO.** If the linear cap ever proves too

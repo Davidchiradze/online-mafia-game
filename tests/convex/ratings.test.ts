@@ -40,6 +40,18 @@ describe("computeRatingDelta — base payouts", () => {
     expect(computeRatingDelta(config, faction, "loss", 1000, 1000).delta).toBe(loss);
   });
 
+  // Pinned from /docs/variants/sports/rating.md §3.
+  const SPORTS: Array<[Faction, number, number]> = [
+    ["mafia", 40, -40],
+    ["citizens", 40, -40],
+  ];
+
+  it.each(SPORTS)("sports %s pays %d on a win, %d on a loss", (faction, win, loss) => {
+    const config = RATING_CONFIG.sports_mafia!;
+    expect(computeRatingDelta(config, faction, "win", 1000, 1000).delta).toBe(win);
+    expect(computeRatingDelta(config, faction, "loss", 1000, 1000).delta).toBe(loss);
+  });
+
   it("moves nothing on a no-contest, in every rated variant", () => {
     for (const [, config] of RATED) {
       for (const faction of factionsOf(config)) {
@@ -93,6 +105,21 @@ describe("computeRatingDelta — table-strength term b", () => {
     expect(computeRatingDelta(config, "citizens", "win", 1050, 1050).delta).toBe(54);
   });
 
+  // The same three tables from /docs/variants/sports/rating.md §3, where the
+  // ±40 base makes the term's contribution readable on its own.
+  describe("sports", () => {
+    const sports = RATING_CONFIG.sports_mafia!;
+
+    it.each([
+      [1000, 1140, 7, 47, -33],
+      [1400, 1150, -12, 28, -52],
+      [1050, 1050, 0, 40, -40],
+    ])("at R=%d T=%d (b=%d) pays +%d / %d", (rating, table, _b, win, loss) => {
+      expect(computeRatingDelta(sports, "citizens", "win", rating, table).delta).toBe(win);
+      expect(computeRatingDelta(sports, "citizens", "loss", rating, table).delta).toBe(loss);
+    });
+  });
+
   it("clamps at ±cap in every rated variant", () => {
     for (const [gameType, config] of RATED) {
       const { cap } = config.tableAdjustment;
@@ -107,6 +134,32 @@ describe("computeRatingDelta — table-strength term b", () => {
         computeRatingDelta(config, faction, "win", 5000, 5000 - cap * 100).delta,
         `${gameType} should cap the penalty at −${cap}`,
       ).toBe(base - cap);
+    }
+  });
+});
+
+describe("sports_mafia — the two properties its declared symmetry buys", () => {
+  const config = RATING_CONFIG.sports_mafia!;
+  const factions = factionsOf(config);
+
+  it("prices every faction identically — no faction spread", () => {
+    // Japanese pays its hardest faction more for a win and charges it less for
+    // a loss, because its factions win at different rates. Sports declares one
+    // shared E, so there is nothing to compensate for and the rows must match
+    // (/docs/variants/sports/rating.md §3). A spread appearing here means
+    // someone measured Sports without also removing the "declared" stance.
+    const rows = factions.map((f) => config.deltas[f]!);
+    for (const row of rows) expect(row).toEqual(rows[0]);
+  });
+
+  it("neither inflates nor decays the ladder — zero drift", () => {
+    // With E = 0.5, an average player's expected move per game is
+    // 0.5·win + 0.5·loss, and 80 × (S − 0.5) is exact at both outcomes, so that
+    // is 0 — unlike Japanese's deliberate +0.16…+0.32/game rounding drift.
+    for (const faction of factions) {
+      const win = computeRatingDelta(config, faction, "win", 1500, 1500).delta;
+      const loss = computeRatingDelta(config, faction, "loss", 1500, 1500).delta;
+      expect(win + loss, `${faction} drifts ${win + loss} per game`).toBe(0);
     }
   });
 });

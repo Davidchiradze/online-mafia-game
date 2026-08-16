@@ -6,8 +6,9 @@
  * (docs/engine/variant-architecture.md §8). Shared engine code calls `getGameDefinition(...)`
  * and reads the definition instead of branching on `gameType`.
  *
- * Registers Japanese (Phase 1) and Sports (Phase 2). `sports_mafia` stays
- * non-creatable in the UI (filtered in `CreateGameModal`) until Phase 5.
+ * Registers Japanese and Sports. Both are creatable and both are rated; a
+ * variant registered here is playable, and whether it is rated is a separate
+ * answer given by `RATING_CONFIG` in lib/constants.ts.
  */
 
 import { ConvexError } from "convex/values";

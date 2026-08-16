@@ -111,7 +111,8 @@ function statsRows(t: TestConvex<typeof schema>, playerId: Id<"profiles">) {
   );
 }
 
-const rowFor = (rows: Doc<"playerStats">[], gameType: GameType) =>
+/** Picks a variant's row out of a per-variant set — stats or ratings alike. */
+const rowFor = <T extends { gameType: GameType }>(rows: T[], gameType: GameType) =>
   rows.find((r) => r.gameType === gameType);
 
 describe("archiveGameLog — the record is per variant", () => {
@@ -244,7 +245,7 @@ describe("annulGameLog — scoped to the annulled game's variant", () => {
 });
 
 describe("archiveGameLog — rating stays per variant", () => {
-  it("rates a rated variant and skips an unrated one", async () => {
+  it("writes one independent ladder row per rated variant", async () => {
     const t = convexTest(schema, modules);
     const player = await createPlayer(t, "rated");
 
@@ -274,18 +275,15 @@ describe("archiveGameLog — rating stays per variant", () => {
         .collect(),
     );
 
-    // Japanese is rated: a citizens win at a table sitting at the 1000 default
-    // is the base payout with no table adjustment (/docs/variants/japanese/rating.md §2).
-    expect(ratings).toHaveLength(1);
-    expect(ratings[0]).toMatchObject({
-      gameType: "japanese_mafia",
-      rating: 1054,
-    });
-
-    // Sports has no RATING_CONFIG entry yet, so it is silently unrated — a
-    // deliberate, valid state (/docs/ranking-system.md §13). This expectation
-    // flips when the Sports config lands.
-    expect(ratings.some((r) => r.gameType === "sports_mafia")).toBe(false);
+    // Both tables sit at the 1000 default, so the table term is 0 and each
+    // delta IS that variant's base payout for a citizens win. The two numbers
+    // differ (+54 vs +40) precisely because the calibrations are independent,
+    // which is what makes this a per-variant ladder rather than one ladder
+    // filtered two ways: the same player, the same faction, the same result,
+    // priced by the variant that was actually played.
+    expect(ratings).toHaveLength(2);
+    expect(rowFor(ratings, "japanese_mafia")).toMatchObject({ rating: 1054 });
+    expect(rowFor(ratings, "sports_mafia")).toMatchObject({ rating: 1040 });
 
     const logRows = await t.run((ctx) =>
       ctx.db
@@ -296,6 +294,6 @@ describe("archiveGameLog — rating stays per variant", () => {
     const japaneseRow = logRows.find((r) => r.gameType === "japanese_mafia");
     const sportsRow = logRows.find((r) => r.gameType === "sports_mafia");
     expect(japaneseRow?.ratingDelta).toBe(54);
-    expect(sportsRow?.ratingDelta).toBeUndefined();
+    expect(sportsRow?.ratingDelta).toBe(40);
   });
 });

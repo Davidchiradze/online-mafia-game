@@ -200,8 +200,13 @@ type RatableGameType = "sports_mafia" | "city_mafia" | "japanese_mafia";
 /**
  * Per-game-type rating config — each game variant has its own ELO calculation
  * and ladder. A game type absent from this record is UNRATED: `archiveGameLog`
- * skips all rating logic for it. Calibrated from production data (2026-07,
- * 269 decided games); recalibrate E-derived deltas every ~200 decided games.
+ * skips all rating logic for it.
+ *
+ * Where an entry's numbers come from is per variant, and it decides whether
+ * recalibration applies: Japanese's E values are MEASURED (production data,
+ * 2026-07, 269 decided games — re-derive every ~200 decided games), Sports'
+ * are DECLARED and fixed. Each variant's rating doc under /docs/variants/ owns
+ * the derivation; this file only holds the result.
  */
 export const RATING_CONFIG: Partial<Record<RatableGameType, RatingConfig>> = {
   japanese_mafia: {
@@ -212,6 +217,24 @@ export const RATING_CONFIG: Partial<Record<RatableGameType, RatingConfig>> = {
       citizens: { win: 54, loss: -26 }, // E = 0.327 (2x)
       yakuza: { win: 56, loss: -22 }, // E = 0.286 (2x)
     },
+    tableAdjustment: { divisor: 20, cap: 16 },
+  },
+  // DECLARED, not measured — the one calibration in here that is a rule rather
+  // than an observation, and the reason the recalibration cadence above does
+  // not apply to it (/docs/variants/sports/rating.md §2). A two-faction game is
+  // *defined* as a balanced contest, so E = 0.50 on both sides and K = 80 gives
+  // ±40: a win is worth exactly what a loss costs, whichever side the shuffle
+  // dealt. No yakuza row — Sports has no yakuza, and a dead row here is a build
+  // failure (tests/structure/ratedVariants.test.ts).
+  sports_mafia: {
+    start: 1000,
+    floor: 100,
+    deltas: {
+      mafia: { win: 40, loss: -40 }, // E = 0.500 (declared)
+      citizens: { win: 40, loss: -40 }, // E = 0.500 (declared)
+    },
+    // Same spring as Japanese, so the two ladders move at the same pace and the
+    // shared level brackets stay honest (/docs/variants/sports/rating.md §4).
     tableAdjustment: { divisor: 20, cap: 16 },
   },
 };
