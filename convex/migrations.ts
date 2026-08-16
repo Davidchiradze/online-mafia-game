@@ -2,6 +2,7 @@ import { ConvexError, v } from "convex/values";
 import { internalMutation } from "./_generated/server";
 import { BACKFILL_POLICY, RATING_CONFIG } from "./lib/constants";
 import { computeRatingDelta } from "./lib/ratings";
+import { aggregateHistory } from "./lib/playerStats";
 import { gameType } from "./tables/games";
 import type { Doc } from "./_generated/dataModel";
 
@@ -64,6 +65,136 @@ export const clearLegacyUsername = internalMutation({
       }
     }
     return { total: profiles.length, cleared };
+  },
+});
+
+/**
+ * Split `playerStats` into one row per (player, game variant) —
+ * /docs/ranking-system.md §12.
+ *
+ * REBUILDS FROM `gameLogPlayers` rather than patching rows in place, for the
+ * reason the split exists at all: one global row holds two variants' games
+ * mixed together, and nothing can separate them except the archive they came
+ * from. Stamping a game type onto the existing row would just relabel the mix.
+ *
+ * It also reuses `aggregateHistory`, the same function the live annul path
+ * uses, so a rebuilt row cannot disagree with an incrementally maintained one.
+ * Idempotent by construction: the output is a pure function of the archive, so
+ * a re-run converges and any pre-existing skew is corrected rather than kept.
+ *
+ * Run order (/docs/ranking-system.md §12):
+ *   1. Deploy this + the per-variant write path.
+ *   2. `npx convex run migrations:splitPlayerStatsByGameType` — DRY RUN. Read
+ *      `playersWithMultipleVariants` and `byGameType` before going further:
+ *      that is the check on "every existing row is really Japanese history".
+ *   3. Re-run with `'{"apply":true}'`.
+ *   4. Only then tighten `playerStats.gameType` to required and deploy.
+ *
+ * Scale: reads all of `gameLogPlayers` (~3.4k docs) and writes ~one row per
+ * player-variant pair — a few hundred, well inside the 8,192-write budget. The
+ * binding limit is the read side (~16k docs scanned); past that, chunk by
+ * player-id range, which is safe here because the aggregation is per-player and
+ * order-independent ACROSS players (unlike `backfillRatings`).
+ */
+export const splitPlayerStatsByGameType = internalMutation({
+  args: {
+    /** Omitted or false = dry run: compute and report, write nothing. */
+    apply: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const apply = args.apply ?? false;
+
+    const history = await ctx.db.query("gameLogPlayers").collect();
+    const existing = await ctx.db.query("playerStats").collect();
+
+    // 1. Target state: one entry per (player, variant) that has any history.
+    const byKey = new Map<string, Doc<"gameLogPlayers">[]>();
+    for (const row of history) {
+      const key = `${row.playerId}:${row.gameType}`;
+      const group = byKey.get(key);
+      if (group) group.push(row);
+      else byKey.set(key, [row]);
+    }
+
+    const targets = new Map<
+      string,
+      {
+        playerId: Doc<"gameLogPlayers">["playerId"];
+        gameType: Doc<"gameLogPlayers">["gameType"];
+        fields: ReturnType<typeof aggregateHistory>;
+      }
+    >();
+    for (const [key, group] of byKey) {
+      targets.set(key, {
+        playerId: group[0].playerId,
+        gameType: group[0].gameType,
+        fields: aggregateHistory(group),
+      });
+    }
+
+    // 2. Reconcile against what is stored — never blind-insert, so a re-run
+    //    converges instead of duplicating.
+    let legacyRemoved = 0;
+    let patched = 0;
+    let inserted = 0;
+    let orphansRemoved = 0;
+    const seen = new Set<string>();
+
+    for (const row of existing) {
+      // Pre-split row: it has no game type, and its counters live on in the
+      // per-variant rows rebuilt below.
+      if (!row.gameType) {
+        if (apply) await ctx.db.delete(row._id);
+        legacyRemoved++;
+        continue;
+      }
+      const key = `${row.playerId}:${row.gameType}`;
+      // A row for a variant with no history left (all games annulled away, or a
+      // duplicate) has nothing to hold.
+      if (!targets.has(key) || seen.has(key)) {
+        if (apply) await ctx.db.delete(row._id);
+        orphansRemoved++;
+        continue;
+      }
+      seen.add(key);
+      if (apply) await ctx.db.patch(row._id, targets.get(key)!.fields);
+      patched++;
+    }
+
+    for (const [key, target] of targets) {
+      if (seen.has(key)) continue;
+      if (apply) {
+        await ctx.db.insert("playerStats", {
+          playerId: target.playerId,
+          gameType: target.gameType,
+          ...target.fields,
+        });
+      }
+      inserted++;
+    }
+
+    // 3. The numbers worth reading before applying.
+    const variantsPerPlayer = new Map<string, Set<string>>();
+    const byGameType: Record<string, number> = {};
+    for (const target of targets.values()) {
+      const set = variantsPerPlayer.get(target.playerId) ?? new Set<string>();
+      set.add(target.gameType);
+      variantsPerPlayer.set(target.playerId, set);
+      byGameType[target.gameType] = (byGameType[target.gameType] ?? 0) + 1;
+    }
+
+    return {
+      mode: apply ? "applied" : "dry-run",
+      legacyRemoved,
+      patched,
+      inserted,
+      orphansRemoved,
+      playersTouched: variantsPerPlayer.size,
+      playersWithMultipleVariants: [...variantsPerPlayer.values()].filter(
+        (s) => s.size > 1,
+      ).length,
+      byGameType,
+    };
   },
 });
 

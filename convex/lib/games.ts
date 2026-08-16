@@ -347,7 +347,7 @@ export async function archiveGameLog(ctx: MutationCtx, gameId: Id<"games">) {
       ...ratingFields,
     });
 
-    await bumpPlayerStats(ctx, p.playerId, p.role, outcome);
+    await bumpPlayerStats(ctx, p.playerId, game.gameType, p.role, outcome);
   }
 
   return gameLogId;
@@ -426,7 +426,7 @@ export async function annulGameLog(ctx: MutationCtx, log: Doc<"gameLogs">) {
 
   // 3) Recompute aggregate stats for each affected player from their history.
   for (const playerId of affectedPlayerIds) {
-    await recomputePlayerStats(ctx, playerId);
+    await recomputePlayerStats(ctx, playerId, log.gameType);
   }
 
   // 4) The log itself becomes a no-contest.

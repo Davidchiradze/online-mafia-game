@@ -23,6 +23,8 @@ import type { Doc, Id } from "../_generated/dataModel";
 
 type RoleStat = { role: string; matches: number; wins: number; losses: number };
 
+type GameType = Doc<"games">["gameType"];
+
 // ---------------------------------------------------------------------------
 // Reads
 // ---------------------------------------------------------------------------
@@ -36,6 +38,27 @@ export function getAllPlayerStats(
     .query("playerStats")
     .withIndex("by_playerId", (q) => q.eq("playerId", playerId))
     .collect();
+}
+
+/**
+ * A player's row for ONE variant, or null if they have not played it.
+ *
+ * `.unique()` is correct here and nowhere else in this file: the table holds at
+ * most one row per (player, variant) by construction, exactly as
+ * `getPlayerRating` reads `playerRatings`. It is `by_playerId` that can return
+ * many.
+ */
+export function getPlayerStatsRow(
+  db: DatabaseReader,
+  playerId: Id<"profiles">,
+  gameType: GameType,
+): Promise<Doc<"playerStats"> | null> {
+  return db
+    .query("playerStats")
+    .withIndex("by_playerId_gameType", (q) =>
+      q.eq("playerId", playerId).eq("gameType", gameType),
+    )
+    .unique();
 }
 
 /** The cross-variant view of a player's record. */
@@ -108,22 +131,95 @@ export function mergePlayerStats(
 }
 
 // ---------------------------------------------------------------------------
+// Aggregation
+// ---------------------------------------------------------------------------
+
+/** The stored counters, i.e. a `playerStats` row minus its identity fields. */
+export type PlayerStatsFields = {
+  totalMatches: number;
+  wins: number;
+  losses: number;
+  noContests: number;
+  currentStreak: number;
+  bestStreak: number;
+  roleStats: RoleStat[];
+};
+
+/**
+ * Fold a player's history for ONE variant into the stored counters.
+ *
+ * The single definition of what those counters mean. `recomputePlayerStats`
+ * (annulment) and the split migration both call it, so a rebuild can never
+ * disagree with the incremental `bumpPlayerStats` — which is the same reason
+ * `computeRatingDelta` is shared between the live path and the backfill.
+ *
+ * Rows are walked in chronological order because the streak depends on it.
+ */
+export function aggregateHistory(
+  history: Doc<"gameLogPlayers">[],
+): PlayerStatsFields {
+  const rows = [...history].sort((a, b) => a.finishedAt - b.finishedAt);
+
+  let wins = 0;
+  let losses = 0;
+  let noContests = 0;
+  let currentStreak = 0;
+  let bestStreak = 0;
+  const roleMap = new Map<string, RoleStat>();
+
+  for (const r of rows) {
+    const entry = roleMap.get(r.role) ?? {
+      role: r.role,
+      matches: 0,
+      wins: 0,
+      losses: 0,
+    };
+    entry.matches += 1;
+
+    if (r.outcome === "win") {
+      wins += 1;
+      entry.wins += 1;
+      currentStreak += 1;
+      bestStreak = Math.max(bestStreak, currentStreak);
+    } else if (r.outcome === "loss") {
+      losses += 1;
+      entry.losses += 1;
+      currentStreak = 0; // a loss resets the streak
+    } else {
+      noContests += 1; // no-contest leaves the streak unchanged
+    }
+
+    roleMap.set(r.role, entry);
+  }
+
+  return {
+    totalMatches: rows.length,
+    wins,
+    losses,
+    noContests,
+    currentStreak,
+    bestStreak,
+    roleStats: [...roleMap.values()],
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Writes
 // ---------------------------------------------------------------------------
 
 /**
- * Incrementally fold one finished-game result into a player's aggregate stats.
- * Creates the row on first game; otherwise increments the overall counters and
- * the per-role entry. Win rates are derived on read, not stored.
+ * Incrementally fold one finished-game result into a player's stats for THAT
+ * variant. Creates the row on their first game of it; otherwise increments the
+ * counters and the per-role entry. Win rates are derived on read, not stored.
  */
 export async function bumpPlayerStats(
   ctx: MutationCtx,
   playerId: Id<"profiles">,
+  gameType: GameType,
   role: string,
   outcome: "win" | "loss" | "no_contest",
 ) {
-  const rows = await getAllPlayerStats(ctx.db, playerId);
-  const existing = rows[0] ?? null;
+  const existing = await getPlayerStatsRow(ctx.db, playerId, gameType);
 
   const w = outcome === "win" ? 1 : 0;
   const l = outcome === "loss" ? 1 : 0;
@@ -132,6 +228,7 @@ export async function bumpPlayerStats(
   if (!existing) {
     await ctx.db.insert("playerStats", {
       playerId,
+      gameType,
       totalMatches: 1,
       wins: w,
       losses: l,
@@ -175,70 +272,31 @@ export async function bumpPlayerStats(
 }
 
 /**
- * Rebuild a player's `playerStats` row from scratch off their full
- * `gameLogPlayers` history. Pure re-aggregation of the same counters and streak
- * rules `bumpPlayerStats` maintains incrementally, so the result is identical to
- * what incremental updates would have produced for the (now-updated) history.
- * Used by `annulGameLog` after a game's rows are flipped to no-contest.
+ * Rebuild a player's stats for ONE variant from their `gameLogPlayers` history.
+ * Same counters and streak rules `bumpPlayerStats` maintains incrementally, so
+ * the result is identical to what incremental updates would have produced for
+ * the (now-updated) history. Used by `annulGameLog` after a game's rows are
+ * flipped to no-contest.
+ *
+ * Scoped to the annulled game's variant on purpose: annulling a Japanese game
+ * must not touch the player's Sports record (/docs/ranking-system.md §12).
  */
 export async function recomputePlayerStats(
   ctx: MutationCtx,
   playerId: Id<"profiles">,
+  gameType: GameType,
 ) {
-  const rows = await ctx.db
+  const history = await ctx.db
     .query("gameLogPlayers")
     .withIndex("by_playerId", (q) => q.eq("playerId", playerId))
     .collect();
-  // Chronological order so the streak walk matches how it was built live.
-  rows.sort((a, b) => a.finishedAt - b.finishedAt);
 
-  let wins = 0;
-  let losses = 0;
-  let noContests = 0;
-  let currentStreak = 0;
-  let bestStreak = 0;
-  const roleMap = new Map<string, RoleStat>();
-
-  for (const r of rows) {
-    const entry = roleMap.get(r.role) ?? {
-      role: r.role,
-      matches: 0,
-      wins: 0,
-      losses: 0,
-    };
-    entry.matches += 1;
-
-    if (r.outcome === "win") {
-      wins += 1;
-      entry.wins += 1;
-      currentStreak += 1;
-      bestStreak = Math.max(bestStreak, currentStreak);
-    } else if (r.outcome === "loss") {
-      losses += 1;
-      entry.losses += 1;
-      currentStreak = 0; // a loss resets the streak
-    } else {
-      noContests += 1; // no-contest leaves the streak unchanged
-    }
-
-    roleMap.set(r.role, entry);
-  }
-
-  const existing = (await getAllPlayerStats(ctx.db, playerId))[0] ?? null;
-
-  const fields = {
-    totalMatches: rows.length,
-    wins,
-    losses,
-    noContests,
-    currentStreak,
-    bestStreak,
-    roleStats: [...roleMap.values()],
-  };
+  const fields = aggregateHistory(history.filter((r) => r.gameType === gameType));
+  const existing = await getPlayerStatsRow(ctx.db, playerId, gameType);
 
   if (existing) {
     await ctx.db.patch(existing._id, fields);
   } else {
-    await ctx.db.insert("playerStats", { playerId, ...fields });
+    await ctx.db.insert("playerStats", { playerId, gameType, ...fields });
   }
 }

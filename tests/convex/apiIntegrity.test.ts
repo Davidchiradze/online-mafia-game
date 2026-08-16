@@ -394,9 +394,9 @@ describe("function inventory", () => {
     expect(importErrors).toEqual([]);
   });
 
-  it("has 139 registered functions", async () => {
+  it("has 140 registered functions", async () => {
     const { functions } = await inventoryPromise;
-    expect(functions.length).toBe(139);
+    expect(functions.length).toBe(140);
   });
 
   it("matches the signature snapshot", async () => {
