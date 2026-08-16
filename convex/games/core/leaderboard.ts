@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { query } from "../../_generated/server";
 import { gameType as gameTypeValidator } from "../../tables/games";
+import { getAllPlayerStats, mergePlayerStats } from "../../lib/playerStats";
 
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 100;
@@ -36,19 +37,21 @@ export const getLeaderboard = query({
     return Promise.all(
       ratings.map(async (r) => {
         const profile = await ctx.db.get(r.playerId);
-        const stats = await ctx.db
-          .query("playerStats")
-          .withIndex("by_playerId", (q) => q.eq("playerId", r.playerId))
-          .unique();
-        const wins = stats?.wins ?? 0;
-        const losses = stats?.losses ?? 0;
+        // A player has one stats row per variant they have played; this board
+        // still folds them together (the v1 caveat above). Identical to the
+        // old single-row read while only one variant is rated.
+        const stats = mergePlayerStats(
+          await getAllPlayerStats(ctx.db, r.playerId),
+        );
+        const wins = stats.wins;
+        const losses = stats.losses;
         const decided = wins + losses;
 
         // Most-played role (tiebreak by wins) with its own win rate — the
         // headline "signature role" shown on the card.
         let topRole: { role: string; matches: number; winRate: number } | null =
           null;
-        if (stats && stats.roleStats.length > 0) {
+        if (stats.roleStats.length > 0) {
           const best = [...stats.roleStats].sort(
             (a, b) => b.matches - a.matches || b.wins - a.wins,
           )[0];
@@ -70,9 +73,9 @@ export const getLeaderboard = query({
           wins,
           losses,
           winRate: decided > 0 ? Math.round((wins / decided) * 100) : 0,
-          totalMatches: stats?.totalMatches ?? 0,
-          currentStreak: stats?.currentStreak ?? 0,
-          bestStreak: stats?.bestStreak ?? 0,
+          totalMatches: stats.totalMatches,
+          currentStreak: stats.currentStreak,
+          bestStreak: stats.bestStreak,
           topRole,
         };
       }),

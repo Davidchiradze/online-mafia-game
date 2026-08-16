@@ -4,6 +4,7 @@ import { query } from "../../_generated/server";
 import { getAuthenticatedUser } from "../../lib/auth";
 import { winMethodLabel } from "./winConditions";
 import { getPlayerRatingValues } from "../../lib/playerRatings";
+import { getAllPlayerStats, mergePlayerStats } from "../../lib/playerStats";
 import { gameType as gameTypeValidator } from "../../tables/games";
 import type { Doc } from "../../_generated/dataModel";
 
@@ -113,10 +114,10 @@ export const getMyStats = query({
   handler: async (ctx) => {
     const userId = await getAuthenticatedUser(ctx);
 
-    const stats = await ctx.db
-      .query("playerStats")
-      .withIndex("by_playerId", (q) => q.eq("playerId", userId))
-      .unique();
+    // One row per variant the player has played; this view is still the
+    // cross-variant total. A player with no games merges to zeros, which is the
+    // same shape the old "no row" branch returned.
+    const stats = mergePlayerStats(await getAllPlayerStats(ctx.db, userId));
 
     const { rating, peakRating } = await getPlayerRatingValues(
       ctx.db,
@@ -124,35 +125,14 @@ export const getMyStats = query({
       "japanese_mafia",
     );
 
-    if (!stats) {
-      return {
-        totalMatches: 0,
-        wins: 0,
-        losses: 0,
-        noContests: 0,
-        winRate: 0,
-        currentStreak: 0,
-        bestStreak: 0,
-        rating,
-        peakRating,
-        roleStats: [] as Array<{
-          role: string;
-          matches: number;
-          wins: number;
-          losses: number;
-          winRate: number;
-        }>,
-      };
-    }
-
     return {
       totalMatches: stats.totalMatches,
       wins: stats.wins,
       losses: stats.losses,
       noContests: stats.noContests,
       winRate: winRatePct(stats.wins, stats.losses),
-      currentStreak: stats.currentStreak ?? 0,
-      bestStreak: stats.bestStreak ?? 0,
+      currentStreak: stats.currentStreak,
+      bestStreak: stats.bestStreak,
       rating,
       peakRating,
       roleStats: stats.roleStats
