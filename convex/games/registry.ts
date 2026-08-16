@@ -20,6 +20,13 @@ const DEFINITIONS: Record<string, GameDefinition> = {
   sports_mafia: SPORTS_DEFINITION,
 };
 
+/**
+ * Registered variants, in registration order — the canonical ordering for any
+ * surface that enumerates variants (ladder tabs, filters). Reading it from the
+ * registry keeps that ordering from becoming a second list to maintain.
+ */
+export const REGISTERED_GAME_TYPES: readonly string[] = Object.keys(DEFINITIONS);
+
 export function getGameDefinition(gameType: string): GameDefinition {
   const def = DEFINITIONS[gameType];
   if (!def) throw new ConvexError(`No game definition for "${gameType}"`);

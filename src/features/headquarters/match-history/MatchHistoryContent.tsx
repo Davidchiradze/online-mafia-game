@@ -11,12 +11,19 @@ import MatchFilters, {
   type GameTypeFilter,
 } from "./MatchFilters";
 import MatchHistoryList from "./MatchHistoryList";
+import { DEFAULT_RATED_GAME_TYPE } from "@/shared/lib/ranking/ratedVariants";
 
 export default function MatchHistoryContent() {
   const [outcome, setOutcome] = useState<OutcomeFilter>("all");
   const [gameType, setGameType] = useState<GameTypeFilter>("all");
 
-  const stats = useQuery(historyRefs.myStats);
+  // The stats block is per variant — a rating cannot be averaged across
+  // ladders. It stays on the default one until it gets its own switcher; the
+  // filter below drives only the match list, and offers "all" plus unrated
+  // variants, neither of which has a record to show.
+  const stats = useQuery(historyRefs.myStats, {
+    gameType: DEFAULT_RATED_GAME_TYPE,
+  });
   const { profile } = useViewer();
   const currentPlayerId = profile?._id;
 

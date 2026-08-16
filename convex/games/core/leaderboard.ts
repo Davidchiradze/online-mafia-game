@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { query } from "../../_generated/server";
 import { gameType as gameTypeValidator } from "../../tables/games";
-import { getAllPlayerStats, mergePlayerStats } from "../../lib/playerStats";
+import { getPlayerStatsRow } from "../../lib/playerStats";
 
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 100;
@@ -16,9 +16,10 @@ const MAX_LIMIT = 100;
  * games have no `playerRatings` row and are deliberately absent (they'd all
  * tie at the 1000 default and bury the board).
  *
- * v1 caveat: `wins`/`losses`/`winRate` are joined from `playerStats`, which is
- * global across game types, not per-gameType — acceptable today because
- * effectively all archived games are `japanese_mafia`.
+ * Every number on a row belongs to THIS variant: the rating comes from its
+ * ladder and the record from its `playerStats` row. (Until the record was split
+ * per variant, the W/L columns were global — a Sports board would have shown
+ * Japanese results. /docs/ranking-system.md §12.)
  */
 export const getLeaderboard = query({
   args: {
@@ -37,21 +38,18 @@ export const getLeaderboard = query({
     return Promise.all(
       ratings.map(async (r) => {
         const profile = await ctx.db.get(r.playerId);
-        // A player has one stats row per variant they have played; this board
-        // still folds them together (the v1 caveat above). Identical to the
-        // old single-row read while only one variant is rated.
-        const stats = mergePlayerStats(
-          await getAllPlayerStats(ctx.db, r.playerId),
-        );
-        const wins = stats.wins;
-        const losses = stats.losses;
+        // This variant's record only. A player who also plays another variant
+        // has a separate row for it, and it does not belong on this board.
+        const stats = await getPlayerStatsRow(ctx.db, r.playerId, gameType);
+        const wins = stats?.wins ?? 0;
+        const losses = stats?.losses ?? 0;
         const decided = wins + losses;
 
         // Most-played role (tiebreak by wins) with its own win rate — the
         // headline "signature role" shown on the card.
         let topRole: { role: string; matches: number; winRate: number } | null =
           null;
-        if (stats.roleStats.length > 0) {
+        if (stats && stats.roleStats.length > 0) {
           const best = [...stats.roleStats].sort(
             (a, b) => b.matches - a.matches || b.wins - a.wins,
           )[0];
@@ -73,9 +71,9 @@ export const getLeaderboard = query({
           wins,
           losses,
           winRate: decided > 0 ? Math.round((wins / decided) * 100) : 0,
-          totalMatches: stats.totalMatches,
-          currentStreak: stats.currentStreak,
-          bestStreak: stats.bestStreak,
+          totalMatches: stats?.totalMatches ?? 0,
+          currentStreak: stats?.currentStreak ?? 0,
+          bestStreak: stats?.bestStreak ?? 0,
           topRole,
         };
       }),

@@ -49,7 +49,7 @@ mutation | public | games/core/farewellSpeech:grantFarewellTime | eddbc4df9e94 |
 mutation | public | games/core/farewellSpeech:markDeadAndAdvance | eddbc4df9e94 | 74234e98afe7
 mutation | public | games/core/farewellSpeech:startFarewellSpeech | eddbc4df9e94 | 74234e98afe7
 query | public | games/core/gameLogs:getGameLog | 18c69bcf4bfb | 74234e98afe7
-query | public | games/core/gameLogs:getMyStats | 5151b7eb8536 | 74234e98afe7
+query | public | games/core/gameLogs:getMyStats | 7b0aeb6e568a | 74234e98afe7
 query | public | games/core/gameLogs:listMyGameLogs | 3f39b9e015e6 | 74234e98afe7
 query | public | games/core/leaderboard:getLeaderboard | 1a3d9f9349a0 | 74234e98afe7
 query | public | games/core/nightPhase:checkDoctorAuthority | eddbc4df9e94 | 74234e98afe7

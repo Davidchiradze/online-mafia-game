@@ -61,46 +61,42 @@ export function getPlayerStatsRow(
     .unique();
 }
 
-/** The cross-variant view of a player's record. */
+/**
+ * The cross-variant view of a player's record.
+ *
+ * Deliberately NO streaks. A run of wins spanning two different games is not a
+ * streak in either of them, so there is no honest cross-variant number to
+ * report — anything that needs one reads the per-variant row instead.
+ */
 export type PlayerStatsTotals = {
   totalMatches: number;
   wins: number;
   losses: number;
   noContests: number;
-  currentStreak: number;
-  bestStreak: number;
   roleStats: RoleStat[];
 };
 
-const ZERO_TOTALS: PlayerStatsTotals = {
+const ZERO_TOTALS: Omit<PlayerStatsTotals, "roleStats"> = {
   totalMatches: 0,
   wins: 0,
   losses: 0,
   noContests: 0,
-  currentStreak: 0,
-  bestStreak: 0,
-  roleStats: [],
 };
 
 /**
- * Fold a player's rows into one cross-variant view. For a single row this is
- * that row verbatim, which is what makes replacing the old `.unique()` reads a
- * no-op on today's data.
+ * Fold a player's rows into one cross-variant view, for the surfaces that are
+ * legitimately cross-variant: the public API's `gamesPlayed`
+ * (/docs/public-api.md §3) and the admin board.
  *
- * Counters sum. Roles merge by name — worth knowing that CITIZEN in one variant
- * and CITIZEN in another become one entry here; that is the cost of a global
- * view and the reason per-variant readers stop using it (§12).
- *
- * Streaks do NOT sum, and neither number is really meaningful across variants:
- * `bestStreak` is the best of them, and `currentStreak` is reported the same
- * way for want of anything truer. Per-variant readers take the real value off
- * the row instead.
+ * Only the additive counters survive the fold, and they are exact — a sum of
+ * the per-variant parts is the number the old single global row held. Roles
+ * merge by name, so CITIZEN from two different decks becomes one entry; that
+ * is the cost of a global view, and the reason per-variant readers do not use
+ * this (/docs/ranking-system.md §12).
  */
 export function mergePlayerStats(
   rows: Doc<"playerStats">[],
 ): PlayerStatsTotals {
-  if (rows.length === 0) return { ...ZERO_TOTALS, roleStats: [] };
-
   const roleMap = new Map<string, RoleStat>();
   const totals: PlayerStatsTotals = { ...ZERO_TOTALS, roleStats: [] };
 
@@ -109,8 +105,6 @@ export function mergePlayerStats(
     totals.wins += row.wins;
     totals.losses += row.losses;
     totals.noContests += row.noContests;
-    totals.currentStreak = Math.max(totals.currentStreak, row.currentStreak ?? 0);
-    totals.bestStreak = Math.max(totals.bestStreak, row.bestStreak ?? 0);
 
     for (const r of row.roleStats) {
       const entry = roleMap.get(r.role) ?? {

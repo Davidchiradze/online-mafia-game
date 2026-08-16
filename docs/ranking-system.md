@@ -440,12 +440,13 @@ gap analysis for making a second variant rated — not a sequenced plan.
 | `playerRatings` table + `by_playerId_gameType` / `by_gameType_rating` | `convex/tables/playerRatings.ts` | ✓ one row per (player, game type). Nothing to change, ever, per variant. |
 | Snapshot/apply helpers, default-rating reads | `convex/lib/playerRatings.ts` | ✓ resolves the config by game type; returns `null` (skip) for unrated. |
 | Live table average shown in lobby/room | `convex/lib/playerRatings.ts` → `getLiveTableAvgRating` | ✓ per game type; starts rendering for a variant the moment it has a config. |
-| Rating pass inside `archiveGameLog`; annul reversal | `convex/lib/games.ts` | ✓ for rating. ✗ for `bumpPlayerStats` and the annul recompute, which write the **global** stats row (§12). |
+| Rating pass inside `archiveGameLog`; annul reversal | `convex/lib/games.ts` | ✓ both. `bumpPlayerStats` takes the game's type, and the annul recompute rebuilds only that variant's record (§12). |
 | Per-game snapshot on the log row (`ratingDelta`, `ratingAfter`, `tableAvgRating`) | `convex/tables/gameLogPlayers.ts` | ✓ already denormalizes `gameType` alongside them. |
 | Backfill migration | `convex/migrations.ts` | ✓ scoped: required `gameTypes` arg, dry run by default, and `BACKFILL_POLICY` refuses a variant whose archive must stay unrated (§8). |
-| `playerStats` — wins/losses/streaks/`roleStats` | `convex/tables/playerStats.ts` | ✗ **global**, keyed by `playerId` only (§12). |
-| Profile stats query | `convex/games/core/gameLogs.ts` → `getMyStats` | ✗ hardcodes `"japanese_mafia"` when reading the player's ELO. |
-| Leaderboard query | `convex/games/core/leaderboard.ts` | Partly: takes a `gameType` and reads the right ladder ✓, but joins the **global** `playerStats` for W/L, win rate, streaks and top role ✗ (its own v1 caveat comment). |
+| `playerStats` — wins/losses/streaks/`roleStats` | `convex/tables/playerStats.ts` | ✓ one row per `(playerId, gameType)`, with `by_playerId` kept for the cross-variant readers (§12). |
+| Profile stats query | `convex/games/core/gameLogs.ts` → `getMyStats` | ✓ takes a required `gameType` — required, not defaulted, so the hardcode cannot come back one layer down. |
+| Leaderboard query | `convex/games/core/leaderboard.ts` | ✓ every column belongs to the board's own variant, rating and record alike. |
+| Deliberately cross-variant readers | `convex/integrations/playerStats.ts`, `convex/admin/stats.ts` | ✓ by design — they fold a player's rows with `mergePlayerStats` (public `gamesPlayed` is global by contract, /docs/public-api.md §3). |
 | Leaderboard ref | `convex/refs/leaderboard.ts` | ✓ `gameType` is already an argument. |
 | Leaderboard page | `src/features/headquarters/leaderboard/LeaderboardContent.tsx` | ✗ hardcodes `gameType: "japanese_mafia"`; no tabs. |
 | Levels, brackets, `<LevelBadge />` | `src/shared/lib/constants/ranking.ts`, `src/shared/lib/ranking/levels.ts`, `src/shared/ui/LevelBadge.tsx` | ✓ variant-agnostic by design (§5) — shared brackets are the intended behaviour, not an oversight. |
@@ -492,39 +493,45 @@ Accepted deliberately (decided 2026-07):
 ## 12. Per-variant player record
 
 A rating is only half of "a player's standing in a variant". The other half —
-**wins, losses, no-contests, streaks and per-role stats** — currently lives in
-one global `playerStats` row per player (`convex/tables/playerStats.ts`), keyed
-by `playerId` alone. That was correct while effectively every archived game was
-Japanese. It stops being correct the moment a second variant is rated:
+**wins, losses, no-contests, streaks and per-role stats** — used to live in one
+global `playerStats` row per player, keyed by `playerId` alone. That was
+correct while effectively every archived game was Japanese, and wrong the
+moment a second variant was played:
 
-- The Sports leaderboard joins `playerStats` for its W/L, win rate, best streak
-  and "top role" columns, so a Sports row would report a player's **Japanese**
-  results beside their Sports ELO (the query says so in its own v1 caveat).
-- `roleStats` mixes vocabularies. `SHOGUN` and `DOCTOR` exist only in Japanese;
-  `CITIZEN` and `DETECTIVE` exist in both and are silently summed across two
-  different games. "Top role" becomes a statement about neither variant.
+- A leaderboard joined `playerStats` for its W/L, win rate, best streak and
+  "top role" columns, so a Sports row would report a player's **Japanese**
+  results beside their Sports ELO.
+- `roleStats` mixed vocabularies. `SHOGUN` and `DOCTOR` exist only in Japanese;
+  `CITIZEN` and `DETECTIVE` exist in both and were silently summed across two
+  different games. "Top role" became a statement about neither variant.
 - A win streak spanning both variants describes nothing a player recognises.
 
-**Decision (2026-08-16): the record splits per variant, exactly like the
-rating.** The target shape is one row per `(playerId, gameType)` carrying the
-counters that exist today, which makes every leaderboard column, profile block
-and streak scoped to the ladder it is displayed on.
+**Decision (2026-08-16), implemented: the record splits per variant, exactly
+like the rating.** One row per `(playerId, gameType)`, so every leaderboard
+column, profile block and streak is scoped to the ladder it is displayed on.
 
-What that pulls in, at analysis level:
-
-| Concern | What it means |
+| Concern | How it landed |
 | --- | --- |
-| Schema | `playerStats` gains `gameType` and an index on `(playerId, gameType)`; existing rows are a real migration, not an optional backfill. |
-| Write path | `bumpPlayerStats` (`convex/lib/games.ts`) folds a result into the row for **that game's** type — it already receives the log context it needs. |
-| Annulment | The annul recompute rebuilds a player's counters from their `gameLogPlayers` history; that history denormalizes `gameType`, so the rebuild filters to one variant instead of rewriting the global row. |
-| Reads | `getMyStats` stops hardcoding a game type and returns a per-variant block; the leaderboard join becomes same-variant by construction, which retires its v1 caveat. |
-| Migration | Every existing row is Japanese history in practice — but "in practice" is exactly the assumption that needs checking against `gameLogPlayers` before stamping `japanese_mafia` on it. |
-| UI + i18n | A variant selector on the profile and the leaderboard; the `game.gameTypes.*` labels already exist in both locales, anything new needs `en` **and** `ka`. |
+| Schema | `gameType` + a `(playerId, gameType)` index on `playerStats`; `by_playerId` kept, because the cross-variant readers need every row. |
+| Write path | `bumpPlayerStats(ctx, playerId, gameType, role, outcome)` — `archiveGameLog` already had the game's type in scope. |
+| Annulment | The recompute filters that player's `gameLogPlayers` history to the annulled game's variant, so annulling a Japanese game cannot touch a Sports streak. |
+| Shared aggregation | `aggregateHistory` is the one definition of what the counters mean; the annul path and the migration both call it, so a rebuild cannot drift from the incremental writer. |
+| Reads | `getMyStats` takes a **required** `gameType`; the leaderboard joins the same-variant row. Genuinely global readers (public `gamesPlayed`, admin board) fold rows with `mergePlayerStats`. |
+| Migration | `splitPlayerStatsByGameType` rebuilds from `gameLogPlayers` rather than stamping a type onto the existing row — a single row holds two variants' games mixed, and only the archive can separate them. Dry run by default. |
+| UI + i18n | Still open: a variant selector on the profile and the leaderboard. `game.gameTypes.*` labels already exist in both locales; anything new needs `en` **and** `ka`. |
+
+> **The migration's dry run is not a formality.** On the dev deployment it
+> reported **129 `sports_mafia` rows against 16 `japanese_mafia`**, with 9
+> players having played both. The "every existing row is Japanese history in
+> practice" assumption was simply false there, and stamping it would have
+> mislabelled 129 records. Read `byGameType` and `playersWithMultipleVariants`
+> on every deployment before applying.
 
 Streaks deserve one explicit note: `currentStreak` / `bestStreak` are
-**per variant** after the split, so a player can hold a live streak on two
-ladders at once. That is the intended reading — a Sports streak is a statement
-about Sports.
+**per variant**, so a player can hold a live streak on two ladders at once.
+That is the intended reading — a Sports streak is a statement about Sports. The
+cross-variant fold therefore reports **no streak at all**, rather than an
+invented one.
 
 ## 13. Adding a rated variant
 
