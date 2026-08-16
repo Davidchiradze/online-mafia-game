@@ -54,6 +54,13 @@ const GAME_TYPE_MAX_PLAYERS: Record<string, number> = {
 
 const MAX_CODE_ATTEMPTS = 5;
 
+/**
+ * Anonymous-readable (see `GUEST_VIEWABLE_PATHS` in `convex/lib/access.ts`) —
+ * this is the guest lobby's data source. Project an explicit field list,
+ * never a spread of `game`: a future column added to the table must be a
+ * deliberate decision to publish, not an accident of `...game`. `code` is
+ * excluded on purpose (see `LobbyGameSummary` in `convex/refs/lobby.ts`).
+ */
 export const list = query({
   args: {},
   handler: async (ctx) => {
@@ -67,9 +74,19 @@ export const list = query({
         const players = await getPlayersByGameId(ctx.db, game._id);
         const spectators = await getSpectatorsByGameId(ctx.db, game._id);
         const enriched = await withRosterAvatars(ctx, game, players, spectators);
+        const tableAvgRating = await getLiveTableAvgRating(ctx.db, game, players);
         return {
-          ...enriched,
-          tableAvgRating: await getLiveTableAvgRating(ctx.db, game, players),
+          _id: enriched._id,
+          _creationTime: enriched._creationTime,
+          name: enriched.name,
+          hostId: enriched.hostId,
+          gameType: enriched.gameType,
+          gameStatus: enriched.gameStatus,
+          maxPlayers: enriched.maxPlayers,
+          isPrivate: enriched.isPrivate,
+          players: enriched.players,
+          spectators: enriched.spectators,
+          tableAvgRating,
         };
       }),
     );

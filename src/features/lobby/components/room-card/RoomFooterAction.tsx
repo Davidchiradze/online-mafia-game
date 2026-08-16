@@ -8,6 +8,7 @@ type Props = {
   canPlay: boolean;
   canSpectate: boolean;
   canSpectateAny: boolean;
+  isGuest: boolean;
   full: boolean;
   onJoin: () => void;
   onSpectate: () => void;
@@ -31,6 +32,7 @@ export default function RoomFooterAction({
   canPlay,
   canSpectate,
   canSpectateAny,
+  isGuest,
   full,
   onJoin,
   onSpectate,
@@ -49,7 +51,7 @@ export default function RoomFooterAction({
     if (isPlayer) {
       return (
         <button onClick={onJoin} className={joinClass}>
-          {canPlay ? (
+          {canPlay || isGuest ? (
             <LogIn className="h-3.5 w-3.5" />
           ) : (
             <Lock className="h-3.5 w-3.5" />
@@ -69,7 +71,7 @@ export default function RoomFooterAction({
     }
     return (
       <button onClick={onSpectate} className={ghostClass}>
-        {canSpectate ? (
+        {canSpectate || isGuest ? (
           <Eye className="h-3.5 w-3.5" />
         ) : (
           <Lock className="h-3.5 w-3.5" />
@@ -90,7 +92,7 @@ export default function RoomFooterAction({
   }
   return (
     <button onClick={onJoin} className={joinClass}>
-      {canPlay ? (
+      {canPlay || isGuest ? (
         <LogIn className="h-3.5 w-3.5" />
       ) : (
         <Lock className="h-3.5 w-3.5" />

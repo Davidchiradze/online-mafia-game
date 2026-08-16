@@ -31,7 +31,17 @@
       "Bash(graphify *)",
       "Read(//Users/david/Desktop/Online mafia bag/mafia-php/controllers/**)",
       "Bash(node .claude/hooks/i18n-parity.mjs)",
-      "Bash(git stash *)"
+      "Bash(git stash *)",
+      "Bash(lsof -ti:3000 -sTCP:LISTEN)",
+      "Bash(xargs -r kill)",
+      "Bash(disown)",
+      "Bash(ls -la ~/.cache/ms-playwright 2>/dev/null | head -20; ls -la ~/Library/Caches/ms-playwright 2>/dev/null | head -20; echo \"---npm cache check---\"; npm ls playwright -g 2>/dev/null; find / -maxdepth 4 -iname \"*playwright*\" -not -path \"*/node_modules/.cache/*\" 2>/dev/null | grep -v \"Permission denied\" | head -20)",
+      "Read(//Users/david/.cache/**)",
+      "Read(//Users/david/Library/Caches/**)",
+      "Bash(node smoke4.mjs)",
+      "Bash(kill 26561)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" --max-time 2 http://localhost:8000/)",
+      "Bash(curl -s -i --max-time 3 http://localhost:8000/api/auth/user-by-session -H 'X-Internal-Api-Key: fake-test-key' -H 'X-Session-Id: fake-session-id-for-testing' -H 'Accept: application/json')"
     ],
     "deny": [
       "Bash(rm -rf *)",

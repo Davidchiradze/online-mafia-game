@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import { Crosshair, LogOut } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/shared/lib/cn";
+import { useViewer } from "@/features/auth/hooks/useViewer";
+import SidebarSignInButton from "@/features/headquarters/components/SidebarSignInButton";
 import {
   NAVIGATION_SIDEBAR_ITEMS,
   type NavigationSidebarItem,
@@ -86,6 +88,10 @@ export default function NavigationSidebar({
 }: NavigationSidebarProps) {
   const pathname = usePathname();
   const t = useTranslations("nav");
+  const { isGuest } = useViewer();
+  const items = isGuest
+    ? NAVIGATION_SIDEBAR_ITEMS.filter((item) => item.guestVisible)
+    : NAVIGATION_SIDEBAR_ITEMS;
 
   return (
     <>
@@ -107,7 +113,7 @@ export default function NavigationSidebar({
       </div>
 
       <div className="custom-scrollbar flex w-full flex-1 flex-col gap-2 overflow-x-hidden overflow-y-auto py-6">
-        {NAVIGATION_SIDEBAR_ITEMS.map((item) => (
+        {items.map((item) => (
           <NavItem
             key={item.href}
             item={item}
@@ -118,21 +124,25 @@ export default function NavigationSidebar({
       </div>
 
       <div className="w-full shrink-0 overflow-hidden border-t border-white/5 p-4">
-        <button
-          type="button"
-          onClick={onSignOut}
-          className="group relative flex h-11 w-full items-center rounded-lg px-[10px] text-gray-400 transition-all duration-300 ease-in-out hover:bg-red-500/10 hover:text-red-400"
-        >
-          <LogOut className="h-5 w-5 shrink-0 transition-colors group-hover:text-red-500" />
-          <span
-            className={cn(
-              "ml-0 max-w-0 overflow-hidden whitespace-nowrap text-sm font-medium opacity-0 transition-all duration-300 ease-in-out",
-              expanded && "ml-3 max-w-[100px] opacity-100",
-            )}
+        {isGuest ? (
+          <SidebarSignInButton expanded={expanded} />
+        ) : (
+          <button
+            type="button"
+            onClick={onSignOut}
+            className="group relative flex h-11 w-full items-center rounded-lg px-[10px] text-gray-400 transition-all duration-300 ease-in-out hover:bg-red-500/10 hover:text-red-400"
           >
-            {t("logout")}
-          </span>
-        </button>
+            <LogOut className="h-5 w-5 shrink-0 transition-colors group-hover:text-red-500" />
+            <span
+              className={cn(
+                "ml-0 max-w-0 overflow-hidden whitespace-nowrap text-sm font-medium opacity-0 transition-all duration-300 ease-in-out",
+                expanded && "ml-3 max-w-[100px] opacity-100",
+              )}
+            >
+              {t("logout")}
+            </span>
+          </button>
+        )}
       </div>
     </>
   );

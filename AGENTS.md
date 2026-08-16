@@ -68,7 +68,7 @@ checked-in baseline that may only shrink.
 
 ## Rules you will otherwise break
 
-1. **Auth**: `getAuthenticatedUser(ctx)` from `convex/lib/auth.ts` (90 uses).
+1. **Auth**: `getAuthenticatedUser(ctx)` from `convex/lib/auth.ts` (88 uses).
    There is **no `getAuthUserId` and no `@convex-dev/auth`** in this repo — auth
    is a custom JWT bridge to an external PHP service. Gate with
    `requirePermission(...)` / `requireFeature(...)`, never a raw role compare.
@@ -85,7 +85,7 @@ checked-in baseline that may only shrink.
    no `"use server"` for game logic, no Socket.IO/Redis/custom WebRTC.
 6. **i18n**: every user-facing string needs a key in **both** `messages/en.json`
    and `messages/ka.json`. **`ka` is the default locale**, so an English-only key
-   ships a hole. 684 keys, currently at parity, and no test enforces it — a
+   ships a hole. 710 keys, currently at parity, and no test enforces it — a
    PostToolUse hook checks it on edit.
 
 ## Verify

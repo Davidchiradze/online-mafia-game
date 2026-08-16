@@ -5,6 +5,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { roleHasPermission, PERMISSIONS } from "@convex/lib/access";
+import { useViewer } from "@/features/auth/hooks/useViewer";
 import { toast } from "@/shared/lib/utils/toast";
 import { useErrorMessage } from "@/shared/lib/i18n/errorMessage";
 
@@ -20,7 +21,7 @@ import { useErrorMessage } from "@/shared/lib/i18n/errorMessage";
 export function useCommunityChat({ active = true }: { active?: boolean } = {}) {
   const getErrorMessage = useErrorMessage();
 
-  const profile = useQuery(api.auth.profiles.currentProfile);
+  const { profile } = useViewer();
   const messages = useQuery(
     api.community.messages.list,
     active ? {} : "skip",

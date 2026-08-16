@@ -1,12 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { Shield, X } from "lucide-react";
-import { authProfiles } from "@convex/refs/lobby";
 import { PERMISSIONS, roleHasPermission } from "@convex/lib/access";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
+import { useViewer } from "@/features/auth/hooks/useViewer";
 import { cn } from "@/shared/lib/cn";
 import RevealRolesTool from "./RevealRolesTool";
 import BroadcastTool from "./BroadcastTool";
@@ -22,7 +21,7 @@ import BroadcastTool from "./BroadcastTool";
 export default function StaffToolsButton() {
   const t = useTranslations("game.staffTools");
   const { isSpectator, canRevealRoles, hostVisionEnabled } = useGameRoom();
-  const currentProfile = useQuery(authProfiles.currentProfile);
+  const { profile: currentProfile } = useViewer();
   const [open, setOpen] = useState(false);
 
   // Moderators + admins spectating (unlike reveal-roles, which is admin-only).

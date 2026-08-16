@@ -3,14 +3,10 @@
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useQuery } from "convex/react";
-import { gameLogs as historyRefs } from "@convex/refs/history";
-import { Doc } from "@convex/_generated/dataModel";
+import type { LobbyGameSummary } from "@convex/refs/lobby";
 import RoomCard from "@/features/lobby/components/room-card/RoomCard";
 import CreateGameModal from "@/features/lobby/components/CreateGameModal";
 import { Plus, Search, SearchX } from "lucide-react";
-// import LobbyStats from "./LobbyStats";
-import StreakFlame from "./StreakFlame";
 import FeatureBanner from "./FeatureBanner";
 import PromoBanner from "./PromoBanner";
 import { LobbySubscriptionModal } from "./LobbySubscriptionModal";
@@ -18,15 +14,11 @@ import {
   SubscriptionGuard,
   SubscriptionUpsell,
 } from "@/features/auth/components/SubscriptionGuard";
+import { SignInCta } from "@/features/auth/components/SignInCta";
+import { useViewer } from "@/features/auth/hooks/useViewer";
 import { FEATURES } from "@convex/lib/entitlements";
-import { RatingCard } from "@/features/headquarters/match-history/StatsHeader";
 
-export type LobbyGame = Doc<"games"> & {
-  players: (Doc<"gamePlayers"> & { avatar?: string })[];
-  spectators: (Doc<"gameSpectators"> & { avatar?: string })[];
-  /** Live table average ELO (non-host roster). Undefined when unrated or only the host has joined. */
-  tableAvgRating?: number;
-};
+export type LobbyGame = LobbyGameSummary;
 
 type Props = {
   games: LobbyGame[];
@@ -37,8 +29,10 @@ export default function LobbyContent({ games }: Props) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const router = useRouter();
+  const viewer = useViewer();
   const t = useTranslations("lobby");
   const tg = useTranslations("game");
+  const ta = useTranslations("auth");
 
   const handleCreated = (gameId: string) => {
     router.push(`/game/${gameId}`);
@@ -47,8 +41,6 @@ export default function LobbyContent({ games }: Props) {
   const navigateToRoom = (roomId: string) => {
     router.push(`/game/${roomId}`);
   };
-
-  const myStats = useQuery(historyRefs.myStats);
 
   const filtered = useMemo(() => {
     return games.filter((s) => {
@@ -82,8 +74,6 @@ export default function LobbyContent({ games }: Props) {
           </div>
         </div>
 
-        {/* <LobbyStats stats={myStats} /> */}
-
         {/* Legacy tournament artwork banner — kept for reuse if we swap the YouTube feature out */}
         {/* <PromoBanner
           href="https://www.mafia.ge/ka/tournament/details/15"
@@ -107,20 +97,26 @@ export default function LobbyContent({ games }: Props) {
             </span>
           </div>
 
-          <SubscriptionGuard
-            feature={FEATURES.PLAY_GAME}
-            fallback={
-              <SubscriptionUpsell className="flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/[0.08] px-5 py-2.5 font-sans text-sm font-semibold text-amber-300 transition hover:border-amber-500/50 hover:bg-amber-500/[0.14]" />
-            }
-          >
-            <button
-              onClick={() => setIsCreateOpen(true)}
-              className="flex shrink-0 cursor-pointer items-center justify-center gap-2.5 rounded-[11px] bg-gradient-to-r from-red-500 to-red-700 px-6 py-3 font-orbitron text-[0.82rem] font-bold tracking-[0.04em] text-white shadow-[0_0_22px_rgba(220,38,38,0.38),inset_0_1px_0_rgba(255,255,255,0.2)] transition hover:-translate-y-px hover:shadow-[0_0_38px_rgba(220,38,38,0.66),inset_0_1px_0_rgba(255,255,255,0.24)] active:translate-y-0"
+          {viewer.isLoading ? (
+            <div className="h-[46px] w-[168px] shrink-0 rounded-[11px] border border-white/5 bg-white/[0.03]" />
+          ) : viewer.isGuest ? (
+            <SignInCta label={ta("signInToPlay")} />
+          ) : (
+            <SubscriptionGuard
+              feature={FEATURES.PLAY_GAME}
+              fallback={
+                <SubscriptionUpsell className="flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/[0.08] px-5 py-2.5 font-sans text-sm font-semibold text-amber-300 transition hover:border-amber-500/50 hover:bg-amber-500/[0.14]" />
+              }
             >
-              <Plus className="h-4 w-4" strokeWidth={2.6} />
-              {t("createRoom")}
-            </button>
-          </SubscriptionGuard>
+              <button
+                onClick={() => setIsCreateOpen(true)}
+                className="flex shrink-0 cursor-pointer items-center justify-center gap-2.5 rounded-[11px] bg-gradient-to-r from-red-500 to-red-700 px-6 py-3 font-orbitron text-[0.82rem] font-bold tracking-[0.04em] text-white shadow-[0_0_22px_rgba(220,38,38,0.38),inset_0_1px_0_rgba(255,255,255,0.2)] transition hover:-translate-y-px hover:shadow-[0_0_38px_rgba(220,38,38,0.66),inset_0_1px_0_rgba(255,255,255,0.24)] active:translate-y-0"
+              >
+                <Plus className="h-4 w-4" strokeWidth={2.6} />
+                {t("createRoom")}
+              </button>
+            </SubscriptionGuard>
+          )}
         </div>
 
         {filtered.length === 0 ? (
@@ -153,11 +149,6 @@ export default function LobbyContent({ games }: Props) {
           </div>
         )}
 
-        {/* <div className="flex flex-wrap items-center gap-3.5">
-          <StreakFlame streak={myStats?.currentStreak ?? 0} />
-          <RatingCard stats={myStats} />
-        </div> */}
-
         {/* Featured YouTube banner */}
         <FeatureBanner
           videoId="y7t8PA8nh38"
@@ -175,7 +166,7 @@ export default function LobbyContent({ games }: Props) {
         onCreated={handleCreated}
       />
 
-      <LobbySubscriptionModal />
+      {viewer.isMember && <LobbySubscriptionModal />}
     </div>
   );
 }

@@ -100,8 +100,11 @@ The module exports:
 - **Permissions:** `PERMISSIONS`, `Permission`.
 - **Mapping:** `ROLE_PERMISSIONS: Record<AccessRole, readonly Permission[]>`,
   `getPermissionsForRole(role)`, `roleHasPermission(role, permission)`.
-- **Route policy:** `PUBLIC_PATH_PREFIXES`, `PROTECTED_ROUTE_RULES`,
-  `isPublicPath(pathname)`, `requiredPermissionForPath(pathname)`.
+- **Route policy:** `PUBLIC_PATH_PREFIXES`, `GUEST_VIEWABLE_PATHS`,
+  `PROTECTED_ROUTE_RULES`, `isPublicPath(pathname)`,
+  `isGuestViewablePath(pathname)`, `requiredPermissionForPath(pathname)`.
+  Guest-viewable is **not** the same as public — see
+  [architecture.md](./architecture.md).
 
 Style follows the existing constants modules (`convex/lib/constants.ts`,
 `src/shared/lib/constants/game.ts`): `as const`, union literals, `Record<…>` maps.
@@ -176,7 +179,7 @@ Three layers, only the last is authoritative:
 
 | Layer | File | Gate | Authoritative? |
 |---|---|---|---|
-| Middleware (edge) | `src/middleware.ts`, `src/features/auth/middleware/*` | authenticated vs. public | no |
+| Middleware (edge) | `src/middleware.ts`, `src/features/auth/middleware/*` | public / guest-viewable / authenticated | no |
 | `/admin` layout | `src/app/admin/layout.tsx` | redirect if missing `admin_panel.access` | no (UX) |
 | Convex functions | `convex/admin/*`, `requirePermission` | per-permission | **yes** |
 
@@ -188,33 +191,44 @@ avoids that staleness. The trade-off — a non-admin can momentarily load the
 `/admin` shell before the layout redirects — is acceptable because **no privileged
 data loads**: every admin query/mutation enforces `requirePermission`.
 
-**Middleware** stays as-is (the existing chain
-`publicPageMiddleware → jwtCookieMiddleware → bridgeRedirectMiddleware` already
-gates `/admin` as authenticated-only). The only change: `src/features/auth/middleware/constants.ts`
-re-exports `PUBLIC_PATH_PREFIXES` / `AUTH_ERROR_PATH` from `@convex/lib/access`, so the
-route policy lives in one place and never drifts.
+**Middleware** keeps its existing chain
+(`publicPageMiddleware → jwtCookieMiddleware → bridgeRedirectMiddleware`), which
+gates `/admin` as authenticated-only — `/admin` is not in `GUEST_VIEWABLE_PATHS`,
+so an unauthenticated request is redirected to `AUTH_ERROR_PATH` rather than
+rendered read-only. `src/features/auth/middleware/constants.ts` re-exports the
+route policy (`PUBLIC_PATH_PREFIXES`, `GUEST_VIEWABLE_PATHS`, `AUTH_ERROR_PATH`,
+`isPublicPath`, `isGuestViewablePath`) from `@convex/lib/access`, so it lives in
+one place and never drifts.
 
 ## Frontend usage
 
 ### `useAccess()` hook — `src/features/auth/hooks/useAccess.ts` (new)
 
-Built on the existing profile query, derives permissions via the shared map:
+Built on `useViewer()`, derives permissions via the shared map:
 
 ```ts
 export function useAccess() {
-  const profile = useQuery(api.auth.profiles.currentProfile);
-  const isLoading = profile === undefined;
-  const role = normalizeRole(profile?.role ?? null);
+  const viewer = useViewer();
+  const isLoading = viewer.isLoading;
+  const role: AccessRole = normalizeRole(viewer.profile?.role ?? null);
+  const permissions = getPermissionsForRole(role);
   return {
     isLoading,
     role,
-    permissions: getPermissionsForRole(role),
-    can: (p: Permission) => roleHasPermission(role, p),
+    permissions,
+    can: (permission: Permission) => roleHasPermission(role, permission),
   };
 }
 ```
 
 Lives with the auth feature under `src/features/auth/hooks/`.
+
+`isLoading` comes from `useViewer` rather than `profile === undefined`, so it
+also covers the `syncing` window (JWT valid, profile row not yet written). That
+matters: without it a just-authenticated admin normalizes to `"user"` with zero
+permissions for a moment, and `PermissionGuard` can `router.replace` them off
+`/admin` on a cold load. See [architecture.md](./architecture.md) for the four
+viewer states.
 
 ### `PermissionGuard` — `src/features/auth/components/PermissionGuard.tsx` (new)
 
@@ -297,7 +311,8 @@ table, find your row, set `role: "admin"`. No code path needed.
 2. Manual `/admin` access:
    - admin → sees the panel;
    - authenticated non-admin → redirected away by the layout;
-   - unauthenticated → bounced to PHP login by existing middleware.
+   - unauthenticated → redirected to `AUTH_ERROR_PATH` by the middleware.
+     `/admin` is not guest-viewable, so it is never rendered read-only.
 3. Authoritative check: call an admin mutation (e.g. `assignRole`) as a non-admin →
    rejected with `FORBIDDEN`, even if the UI is bypassed.
 4. Audit: each successful admin action writes an `adminAuditLog` row.

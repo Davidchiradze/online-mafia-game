@@ -155,11 +155,11 @@ children in a redirecting guard:
 
 ```tsx
 // src/app/game/layout.tsx
-<AuthGate>
+<SignedInGuard>
   <SubscriptionRouteGuard anyOf={[FEATURES.PLAY_GAME, FEATURES.SPECTATE_GAME]}>
     {children}
   </SubscriptionRouteGuard>
-</AuthGate>
+</SignedInGuard>
 ```
 
 `SubscriptionRouteGuard` ([src/features/auth/components/SubscriptionRouteGuard.tsx](../src/features/auth/components/SubscriptionRouteGuard.tsx))

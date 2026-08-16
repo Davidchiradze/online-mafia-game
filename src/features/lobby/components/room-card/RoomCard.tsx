@@ -1,14 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import { useQuery } from "convex/react";
+import { useMemo } from "react";
 import { useTranslations } from "next-intl";
-import { authProfiles } from "@convex/refs/lobby";
-import { FEATURES, hasFeature } from "@convex/lib/entitlements";
-import { PERMISSIONS, roleHasPermission } from "@convex/lib/access";
 import { Lock, Users } from "lucide-react";
-import { SUBSCRIPTIONS_PATH } from "@/features/auth/components/SubscriptionGuard";
+import { SignInPrompt } from "@/features/auth/components/SignInPrompt";
+import { useRoomCardActions } from "@/features/lobby/hooks/useRoomCardActions";
 import { LobbyGame } from "@/features/lobby/components/LobbyContent";
 import { LobbyConfirmModal } from "@/features/lobby/components/LobbyConfirmModal";
 import { buildSeatRing, MODE_TINT, MODE_TINT_FALLBACK } from "./helpers";
@@ -24,24 +20,20 @@ type Props = {
 
 export default function RoomCard({ room, onNavigate }: Props) {
   const t = useTranslations("game");
-  const router = useRouter();
-  const [showJoinConfirm, setShowJoinConfirm] = useState(false);
-
-  const currentProfile = useQuery(authProfiles.currentProfile);
-  const isPlayer =
-    !!currentProfile &&
-    room.players.some((p) => p.playerId === currentProfile._id);
-
-  const entInput = {
-    role: currentProfile?.role,
-    subscription: currentProfile?.subscription,
-  };
-  const canPlay = hasFeature(entInput, FEATURES.PLAY_GAME);
-  const canSpectate = hasFeature(entInput, FEATURES.SPECTATE_GAME);
-  const canSpectateAny = roleHasPermission(
-    currentProfile?.role,
-    PERMISSIONS.GAME_SPECTATE_ANY,
-  );
+  const {
+    isPlayer,
+    canPlay,
+    canSpectate,
+    canSpectateAny,
+    isGuest,
+    showJoinConfirm,
+    signInReason,
+    handleJoin,
+    handleSpectate,
+    handleJoinConfirm,
+    closeJoinConfirm,
+    closeSignInPrompt,
+  } = useRoomCardActions(room, onNavigate);
 
   // Ring seats = player seats (host sits in the middle, not on the ring).
   // Capacity chip includes the host slot → 13 for Japanese/City, 11 for Sports.
@@ -59,29 +51,6 @@ export default function RoomCard({ room, onNavigate }: Props) {
   );
 
   const modeTint = MODE_TINT[room.gameType] ?? MODE_TINT_FALLBACK;
-
-  const handleJoin = () => {
-    if (!canPlay) {
-      router.push(SUBSCRIPTIONS_PATH);
-      return;
-    }
-    if (room.gameStatus === "playing" && isPlayer) {
-      onNavigate(room._id);
-      return;
-    }
-    setShowJoinConfirm(true);
-  };
-  const handleSpectate = () => {
-    if (!canSpectate) {
-      router.push(SUBSCRIPTIONS_PATH);
-      return;
-    }
-    onNavigate(room._id);
-  };
-  const handleJoinConfirm = () => {
-    setShowJoinConfirm(false);
-    onNavigate(room._id);
-  };
 
   return (
     <>
@@ -170,6 +139,7 @@ export default function RoomCard({ room, onNavigate }: Props) {
             canPlay={canPlay}
             canSpectate={canSpectate}
             canSpectateAny={canSpectateAny}
+            isGuest={isGuest}
             full={full}
             onJoin={handleJoin}
             onSpectate={handleSpectate}
@@ -182,8 +152,12 @@ export default function RoomCard({ room, onNavigate }: Props) {
           type="join"
           roomName={room.name}
           onConfirm={handleJoinConfirm}
-          onCancel={() => setShowJoinConfirm(false)}
+          onCancel={closeJoinConfirm}
         />
+      )}
+
+      {signInReason && (
+        <SignInPrompt reason={signInReason} onClose={closeSignInPrompt} />
       )}
     </>
   );

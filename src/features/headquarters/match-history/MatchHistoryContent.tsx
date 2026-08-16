@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery } from "convex/react";
 import { gameLogs as historyRefs } from "@convex/refs/history";
-import { authProfiles } from "@convex/refs/lobby";
+import { useViewer } from "@/features/auth/hooks/useViewer";
 import StatsHeader from "./StatsHeader";
 import RolePerformanceGrid from "./RolePerformanceGrid";
 import MatchFilters, {
@@ -17,7 +17,7 @@ export default function MatchHistoryContent() {
   const [gameType, setGameType] = useState<GameTypeFilter>("all");
 
   const stats = useQuery(historyRefs.myStats);
-  const profile = useQuery(authProfiles.currentProfile);
+  const { profile } = useViewer();
   const currentPlayerId = profile?._id;
 
   return (

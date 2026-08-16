@@ -28,6 +28,7 @@ The folder a doc lives in is a contract:
 | React and UI conventions | [frontend.md](./frontend.md) | where files go — that is [AGENTS.md](../AGENTS.md) |
 | real-time subscriptions | [realtime.md](./realtime.md) | LiveKit media |
 | timer and countdown math | [server-time.md](./server-time.md) | phase durations — generated |
+| sign-in, the PHP session bridge, guest mode | [architecture.md](./architecture.md) | who may do what once signed in |
 | who may do what (staff, admin) | [authorization.md](./authorization.md) | paid-feature gating |
 | paid-tier gating | [subscriptions.md](./subscriptions.md) | staff permissions |
 | ELO and levels | [ranking-system.md](./ranking-system.md) | Sports payouts — it is unrated by design |

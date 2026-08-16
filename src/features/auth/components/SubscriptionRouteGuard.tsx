@@ -39,6 +39,7 @@ export function SubscriptionRouteGuard({
   const { isLoading, isSubscribed, has } = useEntitlements();
   const router = useRouter();
   const t = useTranslations("subscriptions.gate");
+  const tc = useTranslations("common");
   const allowed = anyOf ? anyOf.some((feature) => has(feature)) : isSubscribed;
   // Guard against firing twice (StrictMode double-invoke / re-renders before
   // the redirect unmounts this guard).
@@ -59,7 +60,7 @@ export function SubscriptionRouteGuard({
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <LoadingSpinner message="Checking access…" />
+        <LoadingSpinner message={tc("checkingAccess")} />
       </div>
     );
   }

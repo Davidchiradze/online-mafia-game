@@ -5,8 +5,8 @@ import { useTranslations } from "next-intl";
 import { Trophy, Flame, Gamepad2, Target, Crown } from "lucide-react";
 import type { LeaderboardRow } from "@convex/refs/leaderboard";
 import { leaderboard } from "@convex/refs/leaderboard";
-import { authProfiles } from "@convex/refs/lobby";
 import type { Id } from "@convex/_generated/dataModel";
+import { useViewer } from "@/features/auth/hooks/useViewer";
 import { cn } from "@/shared/lib/cn";
 import UserAvatar from "@/shared/ui/UserAvatar";
 import LevelBadge from "@/shared/ui/LevelBadge";
@@ -41,7 +41,7 @@ export default function LeaderboardContent() {
     gameType: "japanese_mafia",
     limit: 50,
   });
-  const profile = useQuery(authProfiles.currentProfile);
+  const { profile } = useViewer();
   const myId = profile?._id ?? null;
 
   return (
