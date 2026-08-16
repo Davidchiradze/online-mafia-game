@@ -1,6 +1,8 @@
+import { ConvexError, v } from "convex/values";
 import { internalMutation } from "./_generated/server";
-import { RATING_CONFIG } from "./lib/constants";
+import { BACKFILL_POLICY, RATING_CONFIG } from "./lib/constants";
 import { computeRatingDelta } from "./lib/ratings";
+import { gameType } from "./tables/games";
 import type { Doc } from "./_generated/dataModel";
 
 /**
@@ -87,25 +89,58 @@ export const clearLegacyUsername = internalMutation({
  * rows ≈ half the 8,192-write budget). Past ~7k rated player rows, convert to
  * an internalAction driving chunked internalMutations.
  *
- * Run: `npx convex run migrations:backfillRatings` (add `--prod` for prod).
+ * SCOPED AND DRY-RUN BY DEFAULT, because this is a destructive replay that
+ * starts by DELETING rating rows. `gameTypes` is required — there is no "all"
+ * — so a variant whose archive must stay unrated can never be swept in by a
+ * forgotten flag, and `BACKFILL_POLICY` refuses it a second time even if it is
+ * named explicitly. Without `apply: true` nothing is written; the returned
+ * counts are what a real run WOULD do.
+ *
+ * Run: `npx convex run migrations:backfillRatings '{"gameTypes":["japanese_mafia"]}'`
+ * to preview, then add `"apply":true` (and `--prod` for prod).
  */
 export const backfillRatings = internalMutation({
-  args: {},
-  handler: async (ctx) => {
-    // 1. Wipe current ratings for rated game types.
+  args: {
+    /** Archives to replay. Required, and checked against `BACKFILL_POLICY`. */
+    gameTypes: v.array(gameType),
+    /** Omitted or false = dry run: compute and report, write nothing. */
+    apply: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const apply = args.apply ?? false;
+
+    // 0. Refuse before touching data. An empty list is a mistake, not a no-op:
+    //    silently doing nothing reads as "ran fine" to whoever typed it.
+    if (args.gameTypes.length === 0) {
+      throw new ConvexError(
+        "backfillRatings needs an explicit gameTypes list — e.g. {\"gameTypes\":[\"japanese_mafia\"]}",
+      );
+    }
+    const refused = args.gameTypes.filter(
+      (t) => BACKFILL_POLICY[t] !== "replay" || !RATING_CONFIG[t],
+    );
+    if (refused.length > 0) {
+      throw new ConvexError(
+        `Refusing to replay: ${refused.join(", ")}. BACKFILL_POLICY says these archives stay as they were played, or the type is unrated (/docs/ranking-system.md §8).`,
+      );
+    }
+    const requested = new Set(args.gameTypes);
+
+    // 1. Wipe current ratings for the requested game types. Ladders not named
+    //    are untouched — a scoped replay must not disturb its neighbours.
     const existingRatings = await ctx.db.query("playerRatings").collect();
     let ratingsDeleted = 0;
     for (const r of existingRatings) {
-      if (RATING_CONFIG[r.gameType]) {
-        await ctx.db.delete(r._id);
+      if (requested.has(r.gameType)) {
+        if (apply) await ctx.db.delete(r._id);
         ratingsDeleted++;
       }
     }
 
-    // 2. Load rated games in global chronological order. No finishedAt index
-    //    on gameLogs — collect() + in-memory sort is fine at this volume.
+    // 2. Load requested games in global chronological order. No finishedAt
+    //    index on gameLogs — collect() + in-memory sort is fine at this volume.
     const logs = (await ctx.db.query("gameLogs").collect())
-      .filter((l) => RATING_CONFIG[l.gameType])
+      .filter((l) => requested.has(l.gameType))
       .sort(
         (a, b) =>
           a.finishedAt - b.finishedAt || a._creationTime - b._creationTime,
@@ -144,11 +179,15 @@ export const backfillRatings = internalMutation({
           rating,
           tableAvg,
         );
-        await ctx.db.patch(row._id, {
-          ratingDelta: delta,
-          ratingAfter: after,
-          tableAvgRating: Math.round(tableAvg),
-        });
+        if (apply) {
+          await ctx.db.patch(row._id, {
+            ratingDelta: delta,
+            ratingAfter: after,
+            tableAvgRating: Math.round(tableAvg),
+          });
+        }
+        // Updated even in a dry run: the replay is order-dependent, so the
+        // reported numbers are only faithful if the state advances.
         state.set(key(log.gameType, row.playerId), {
           rating: after,
           peak: Math.max(peak, after),
@@ -161,18 +200,22 @@ export const backfillRatings = internalMutation({
     let ratingsCreated = 0;
     for (const [k, { rating, peak }] of state) {
       const sep = k.indexOf(":");
-      const gameType = k.slice(0, sep) as Doc<"playerRatings">["gameType"];
+      const replayedType = k.slice(0, sep) as Doc<"playerRatings">["gameType"];
       const playerId = k.slice(sep + 1) as Doc<"playerRatings">["playerId"];
-      await ctx.db.insert("playerRatings", {
-        playerId,
-        gameType,
-        rating,
-        peakRating: peak,
-      });
+      if (apply) {
+        await ctx.db.insert("playerRatings", {
+          playerId,
+          gameType: replayedType,
+          rating,
+          peakRating: peak,
+        });
+      }
       ratingsCreated++;
     }
 
     return {
+      mode: apply ? "applied" : "dry-run",
+      gameTypes: [...requested],
       ratingsDeleted,
       gamesProcessed: logs.length,
       rowsStamped,

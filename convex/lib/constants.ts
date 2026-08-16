@@ -179,14 +179,20 @@ export type RatingConfig = {
 };
 
 /**
+ * The game-type ids rating is keyed by — mirrors the `gameType` validator in
+ * `convex/tables/games.ts`. Declared here so `RATING_CONFIG` and
+ * `BACKFILL_POLICY` are keyed by the SAME union: adding a variant to the
+ * validator without answering both is then a compile error in one of them.
+ */
+type RatableGameType = "sports_mafia" | "city_mafia" | "japanese_mafia";
+
+/**
  * Per-game-type rating config — each game variant has its own ELO calculation
  * and ladder. A game type absent from this record is UNRATED: `archiveGameLog`
  * skips all rating logic for it. Calibrated from production data (2026-07,
  * 269 decided games); recalibrate E-derived deltas every ~200 decided games.
  */
-export const RATING_CONFIG: Partial<
-  Record<"sports_mafia" | "city_mafia" | "japanese_mafia", RatingConfig>
-> = {
+export const RATING_CONFIG: Partial<Record<RatableGameType, RatingConfig>> = {
   japanese_mafia: {
     start: 1000,
     floor: 100,
@@ -197,4 +203,27 @@ export const RATING_CONFIG: Partial<
     },
     tableAdjustment: { divisor: 20, cap: 16 },
   },
+};
+
+/**
+ * Whether a variant's EXISTING archive may be replayed by
+ * `migrations:backfillRatings` (/docs/ranking-system.md §8).
+ *
+ * Backfilling is a per-variant DECISION, and the migration cannot infer it:
+ * "has a rating config" only says the variant is rated from now on, not that
+ * games played before it was rated should retroactively count. Sports is the
+ * case in point — its archive was played, and shown to players, as unrated
+ * (/docs/variants/sports/rating.md §5).
+ *
+ * TOTAL over `RatableGameType` on purpose: adding a variant is a compile error
+ * here until someone answers the question, which is the type-system catch the
+ * bare `RATING_CONFIG[gameType]` check never had.
+ */
+export const BACKFILL_POLICY: Record<RatableGameType, "replay" | "never"> = {
+  japanese_mafia: "replay",
+  // Played as unrated; the ladder starts empty and fills from the first game
+  // finished after the config shipped.
+  sports_mafia: "never",
+  // No definition registered, so there is no archive and no ladder.
+  city_mafia: "never",
 };

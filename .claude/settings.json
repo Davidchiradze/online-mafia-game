@@ -42,7 +42,8 @@
       "Bash(kill 26561)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" --max-time 2 http://localhost:8000/)",
       "Bash(curl -s -i --max-time 3 http://localhost:8000/api/auth/user-by-session -H 'X-Internal-Api-Key: fake-test-key' -H 'X-Session-Id: fake-session-id-for-testing' -H 'Accept: application/json')",
-      "Edit(/.claude/skills/mafia-rules/**)"
+      "Edit(/.claude/skills/mafia-rules/**)",
+      "Edit(/.claude/skills/add-game-variant/**)"
     ],
     "deny": [
       "Bash(rm -rf *)",

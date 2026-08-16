@@ -1,81 +1,108 @@
 # Ranking System (ELO + Levels)
 
-> Status: **Implemented** (backfill pending — run
-> `npx convex run migrations:backfillRatings`, see §8). This document is the
-> single source of truth for the player ranking system: a faction-calibrated,
-> table-strength-adjusted ELO rating plus FACEIT-style skill **Levels 1–10**
-> with custom badges. Ratings are
-> **namespaced per game type** — each game variant gets its own ELO
-> calculation and its own ladder (only `japanese_mafia` is rated today).
-> Rating math runs server-side inside `archiveGameLog`
-> (`convex/lib/games.ts`); levels and badges are display-only and derived on
-> the client.
+> Status: **Implemented**, Japanese backfilled. This document is the single
+> source of truth for the **mechanism** of the player ranking system: a
+> faction-calibrated, table-strength-adjusted ELO rating plus FACEIT-style skill
+> **Levels 1–10** with custom badges.
+>
+> Ratings are **namespaced per game type** — every variant has its own ladder,
+> its own record, and its own calibration, the way chess.com keeps blitz and
+> rapid apart. The *numbers* for each rated variant live with that variant:
+>
+> | Variant | Ladder | Calibration |
+> | --- | --- | --- |
+> | `japanese_mafia` | rated | [variants/japanese/rating.md](./variants/japanese/rating.md) — measured from 269 decided games |
+> | `sports_mafia` | rated | [variants/sports/rating.md](./variants/sports/rating.md) — declared 0.50 / 0.50, never recalibrated |
+> | `city_mafia` | unrated | no definition registered, so no ladder |
+>
+> Rating math runs server-side inside `archiveGameLog` (`convex/lib/games.ts`);
+> levels and badges are display-only and derived on the client.
 
 ## 1. Purpose
 
 Give players a persistent skill rating that is **fair regardless of which role
-the shuffle deals them**. The game has three factions with different sizes and
-different win probabilities, so a naive "+25 win / −25 loss" system would:
+the shuffle deals them**, and **fair across variants that are not the same
+game**. A naive "+25 win / −25 loss" system, applied globally, would:
 
-1. Bleed the average player's rating (in Japanese's 3-faction format the
-   average player wins only ~33.5% of games), and
-2. Make some faction's seats strictly more profitable than another's —
-   in Japanese, Mafia over Yakuza.
+1. Bleed the average player's rating wherever the average win rate is below 50%
+   (in Japanese's 3-faction format the average player wins only ~33.5% of
+   games), and
+2. Make some faction's seats strictly more profitable than another's — in
+   Japanese, Mafia over Yakuza — and
+3. Mix skill at one variant into the rating shown for another, so a strong
+   Japanese player would arrive at a Sports table already ranked.
 
-The fix: point payouts **calibrated to each faction's real win rate** — so the
-expected rating change for an average player is ~zero in every role — plus a
-**bounded table-strength adjustment** so winning against stronger tables pays
-extra and farming weaker tables doesn't (§3). Only above-average play climbs
-the ladder.
+The fix has two halves. Per game: payouts **calibrated to each faction's win
+rate in that variant** — so the expected rating change for an average player is
+~zero in every seat — plus a **bounded table-strength adjustment** so winning
+against stronger tables pays extra and farming weaker ones doesn't (§3). Across
+games: **one ladder per variant**, below.
 
 ### Multi-game principle
 
-The platform will host **multiple game variants over time, and each game has
-its own ELO calculation**. Nothing about a rating is global:
+The platform hosts **multiple variants, and each has its own ELO calculation**.
+Nothing about a rating is global:
 
 - A player has **one rating per `gameType`**, stored in a dedicated
   `playerRatings` table keyed by `(playerId, gameType)` — never a single
   rating field on `playerStats`.
+- A player's **record** — wins, losses, streaks, per-role stats — is per
+  `gameType` too (§12). A Sports board that showed Japanese win/loss beside a
+  Sports ELO would be reporting a different game's results.
 - Payouts/K/start/floor/table-adjustment live in a **per-game-type config**
-  (`RATING_CONFIG[gameType]`). A game type with no config is simply
-  **unrated** — `archiveGameLog` skips rating for it. Today only
-  `japanese_mafia` has a config (calibrated in §2–§3); future variants add
-  their own entry with their own calculation.
+  (`RATING_CONFIG[gameType]`), and each config's payouts are keyed by **that
+  variant's own factions** — Sports has no yakuza row to fill in. A game type
+  with no config is simply **unrated**: `archiveGameLog` skips rating for it,
+  silently and by design.
+- Calibration is **per variant and may be derived differently per variant**.
+  Japanese measures its E values from its archive and recalibrates on a cadence;
+  Sports declares a flat 0.50 and never recalibrates. Both plug into the same
+  formula (§3).
 - Leaderboards, seasons, and profile badges are always **scoped to one game
   type** (`gameLogPlayers` already denormalizes `gameType`, so per-game season
   sums come for free).
-- Level **brackets** (§5) are shared across game types by default (one mental
-  model for players, like FACEIT); a future variant may override them in its
-  config if its rating scale differs.
+- Level **brackets** (§5) are shared across game types deliberately — one
+  mental model for players, like FACEIT — which is only honest while every
+  ladder moves at a comparable pace (§5).
+- Nothing outside the registry and the config names a variant. Adding the third
+  or fourth variant is a config entry, not a code path (§13).
 
-## 2. Production data (calibration source) — `japanese_mafia`
+## 2. Calibration sources (per variant)
 
-> Every number in this section and in §3 is **Japanese-specific**: it is
-> derived from Japanese games and calibrates the Japanese E-table. The
-> *method* generalizes; the values do not. A second rated variant gets its
-> own snapshot and its own table (§9).
+> **Moved.** Each variant's E values, the data behind them and its payout table
+> now live with that variant, because they are that variant's rules — not the
+> platform's:
+>
+> | Variant | E comes from | Doc |
+> | --- | --- | --- |
+> | `japanese_mafia` | **measured** — 269 decided games, 2026-07 | [variants/japanese/rating.md](./variants/japanese/rating.md) |
+> | `sports_mafia` | **declared** — a balanced two-faction contest, 0.50 / 0.50 | [variants/sports/rating.md](./variants/sports/rating.md) |
+>
+> This heading keeps its number: `convex/lib/constants.ts` cites §2–§3.
 
-Snapshot from production as of **2026-07** (280 archived games, 269 decided):
+What is shared is the **granularity**, and it is worth stating once. Within a
+faction every role shares the outcome (the Don wins exactly when Mafia wins;
+the Detective wins exactly when Citizens win) and every role appears in every
+game — so **faction-level payouts are the correct granularity** in any variant.
+No per-role adjustment is needed or wanted.
 
-| Faction  | Wins | Win rate (E) | Faction size | Chance of being dealt it |
-| -------- | ---- | ------------ | ------------ | ------------------------ |
-| Mafia    | 104  | **38.7%**    | 3 / 12       | 25%                      |
-| Citizens | 88   | **32.7%**    | 7 / 12       | 58.3%                    |
-| Yakuza   | 77   | **28.6%**    | 2 / 12       | 16.7%                    |
-| No contest | 11 | —            | —            | —                        |
+The two ways to arrive at an E value are both legitimate, and the choice is a
+per-variant one:
 
-Average per-player win rate (weighted by faction size): **~33.5%**.
-
-> Within a faction every role shares the outcome (the Don wins exactly when
-> Mafia wins; the Doctor wins exactly when Citizens win) and every role appears
-> in every game — so **faction-level payouts are the correct granularity**. No
-> per-role adjustment is needed or wanted.
+- **Measured** — derive each faction's win rate from that variant's archive,
+  and recalibrate on a cadence (§9). Correct by construction, but needs volume:
+  ~200 decided games before the numbers mean anything.
+- **Declared** — assert the intended balance (e.g. 0.50 / 0.50 for a symmetric
+  two-faction game) and hold it fixed. Available on day one and verifiable by
+  hand, at the cost of being wrong if the variant turns out unbalanced. The
+  variant doc must then say so out loud.
 
 ## 3. Rating formula
 
-> Shape is shared; the constants below are the **Japanese** calibration
-> (see §2). `RATING_CONFIG` is keyed by `gameType`, and a variant absent
-> from it is unrated rather than rated with someone else's numbers.
+> **Shape is shared; every constant is per variant.** `RATING_CONFIG` is keyed
+> by `gameType`, and a variant absent from it is unrated rather than rated with
+> someone else's numbers. The base payouts below are Japanese's — Sports uses
+> the same formula with `E = 0.5`, giving ±40 ([sports/rating.md §3](./variants/sports/rating.md)).
 
 Two parts: a **faction-calibrated base** (expected-score ELO, K = 80 — the
 K = 40 ratios scaled 2×, see below) plus a
@@ -95,21 +122,29 @@ T    = table average ELO — mean rating of ALL role-holders in the game,
 R    = your ELO before the game
 ```
 
-Rounded to integers, the **base** payouts are (the original K = 40 numbers ×2):
+Rounded to integers, the **base** payouts per rated variant are:
 
-| Faction  | E     | **Win** | **Loss** | EV/game for an average player |
-| -------- | ----- | ------- | -------- | ----------------------------- |
-| Mafia    | 0.387 | **+48** | **−30**  | +0.16                         |
-| Citizens | 0.327 | **+54** | **−26**  | +0.16                         |
-| Yakuza   | 0.286 | **+56** | **−22**  | +0.32                         |
-| No contest | —   | 0       | 0        | 0                             |
+| Variant | Faction | E | **Win** | **Loss** |
+| --- | --- | ----- | ------- | -------- |
+| `japanese_mafia` | Mafia | 0.387 | **+48** | **−30** |
+| `japanese_mafia` | Citizens | 0.327 | **+54** | **−26** |
+| `japanese_mafia` | Yakuza | 0.286 | **+56** | **−22** |
+| `sports_mafia` | Mafia | 0.500 | **+40** | **−40** |
+| `sports_mafia` | Citizens | 0.500 | **+40** | **−40** |
+| either | No contest | — | 0 | 0 |
 
-> **Why 2×?** The K = 40 base was tuned for stability, but with a median of
-> only ~6 rated games per player the ladder over-compressed: replaying the real
-> archive left 85% of players stuck in Level 4 (rating std ≈ 46). Doubling the
-> payouts (formula and E untouched) spreads the same players across Levels 3–6
-> (std ≈ 92, 41% out of Level 4) while preserving their ranking order. See §5
-> pacing.
+Rationale for each column belongs to the variant:
+[japanese/rating.md §2](./variants/japanese/rating.md) explains the 2× scaling
+and the ~2:1 win/loss ratio; [sports/rating.md §3](./variants/sports/rating.md)
+explains why a symmetric E collapses that spread to a single pair of numbers and
+removes the drift.
+
+> **Why K = 80 for both?** In Japanese, the K = 40 base over-compressed the
+> ladder — replaying the real archive left 85% of players stuck in Level 4
+> (rating std ≈ 46); doubling it spread the same players across Levels 3–6
+> (std ≈ 92) with their ranking order preserved. Sports then inherits K = 80 not
+> by copying but because it lands on the same per-game volatility (≈40 vs ≈38),
+> which is the condition for sharing level brackets (§5).
 
 ### The table adjustment `b`
 
@@ -120,7 +155,8 @@ Rounded to integers, the **base** payouts are (the original K = 40 numbers ×2):
 | Stronger (`T > R`) | pays more | costs less |
 | Weaker (`T < R`)   | pays less | costs more |
 
-Worked examples (Citizens base +54 / −26):
+Worked examples (Japanese Citizens, base +54 / −26 — the Sports equivalents are
+in [sports/rating.md §3](./variants/sports/rating.md)):
 
 - You are `1000`, table average `1140` → `b = +7`. Win **+61**, loss **−19**.
 - You are `1400`, table average `1150` → `b = −13` (rounded from −12.5, within
@@ -133,23 +169,26 @@ Why these numbers are safe:
   than the K-linear value would give at K = 80) so skilled players can
   separate. The hard cap of ±16 (reached at ±320 table difference) bounds how
   much any lobby can swing a result.
-- Because the cap (16) is **below the smallest base numbers** (win +48,
-  loss −22), a win always pays **at least +32** and a loss always costs **at
-  least −6** — a win can never become ≤ 0 and a loss can never turn positive,
-  no matter how lopsided the table. Maximum possible swing: win +72, loss −46.
+- **The cap must stay below the smallest base number in every rated variant.**
+  In Japanese the smallest are +48 / −22, so a win always pays at least +32 and
+  a loss always costs at least −6; in Sports they are ±40, so at least ±24.
+  Either way a win can never become ≤ 0 and a loss can never turn positive, no
+  matter how lopsided the table. This is the constraint a new variant's config
+  has to satisfy — check it before shipping a lower K (§13).
 
 Properties:
 
-- **Role-fair**: hardest faction (Yakuza) pays the most for a win and costs the
-  least for a loss; easiest (Mafia) the reverse. Expected value ≈ 0 everywhere.
+- **Role-fair**: where factions win at different rates, the hardest one pays the
+  most for a win and costs the least for a loss (Japanese: Yakuza most, Mafia
+  least). Where they are declared equal, the payouts are equal. Expected value
+  ≈ 0 in every seat either way.
 - **Table-fair**: beating a stronger table pays more; farming weaker tables
   pays less *and* losing to them costs more — high-rated players can't grind
   beginner lobbies for full value.
-- **Win ≈ 2× loss** at a balanced table — compensates for the ~33.5% average
-  win rate.
-- The tiny positive drift (+0.16…+0.32/game ≈ +20 rating per 100 games) is a
-  deliberate rounding choice: imperceptibly slow inflation beats slow decay.
-  The symmetric `b` adds no drift of its own.
+- **Win : loss ratio tracks the average win rate.** ≈ 2:1 in Japanese (~33.5%
+  average win rate), 1:1 in Sports (50%). Drift follows: Japanese carries a
+  deliberate +0.16…+0.32/game rounding inflation, Sports exactly zero. The
+  symmetric `b` adds no drift of its own in either.
 
 ## 4. Rating mechanics
 
@@ -188,11 +227,17 @@ Properties:
 - **Leavers**: a player who abandons a game that later finishes with a winner
   keeps their faction's outcome (usually a loss). No extra penalty in v1.
 - **Peak rating** is stored alongside current rating (same pattern as
-  `bestStreak`).
-- **Scope**: ratings are per game type (§1). Only `japanese_mafia` has a
-  rating config today — `sports_mafia` / `city_mafia` have different faction
-  structures and no calibration data, so they stay unrated until they get
-  their **own** config + E table (§9).
+  `bestStreak`), and is per game type like everything else.
+- **Scope**: ratings are per game type (§1). `japanese_mafia` and
+  `sports_mafia` are rated, each with its own config and E table;
+  `city_mafia` has no definition registered at all, so it cannot be played and
+  is not a ladder. A player carries an independent rating, peak, level and
+  record on each ladder, starting at 1000 / Level 4 on a ladder they have never
+  played — there is no transfer, seeding or cross-credit between variants.
+- **Rating never leaves its variant.** The delta is computed from
+  `RATING_CONFIG[game.gameType]` and written to the `playerRatings` row for
+  that same game type. There is no code path that reads one variant's rating
+  while writing another's, and the schema has no place to express one.
 
 ## 5. Levels (FACEIT-style)
 
@@ -220,12 +265,29 @@ Rating is bucketed into **10 levels** using the official FACEIT ELO brackets:
 - New players (1000) start at **Level 4** — same as FACEIT.
 - **Progress within a level** (for progress bars / badge tooltips):
   `progress = (rating − min) / (max − min)`, Level 10 is always shown full.
-- Pacing sanity check: max single-game gain is +72 (base +56 + table cap +16)
-  and the narrowest bracket is 150 wide, so a player still can never skip a
-  level in one game. A solidly above-average player (~40% personal win rate)
-  gains ~+5.2/game at balanced tables — brisk enough that levels move with real
-  play, while the symmetric table adjustment still slows climbing once a player
-  out-rates their usual tables.
+- Pacing sanity check: max single-game gain is +72 (Japanese base +56 + table
+  cap +16; Sports tops out at +56) and the narrowest bracket is 150 wide, so a
+  player still can never skip a level in one game. A solidly above-average
+  Japanese player (~40% personal win rate) gains ~+5.2/game at balanced tables —
+  brisk enough that levels move with real play, while the symmetric table
+  adjustment still slows climbing once a player out-rates their usual tables.
+
+### Why one bracket table can serve every variant
+
+Shared brackets are a **claim** — that Level 7 means something comparable
+wherever you earned it — and the claim holds only while the ladders move at
+comparable speed. They currently do, because each variant's calibration is
+chosen with that in mind:
+
+| Variant | payouts | avg win rate | rating std per game |
+| --- | --- | --- | --- |
+| `japanese_mafia` | +48 / −30 (mafia seat) | ~33.5% | ≈ **38** |
+| `sports_mafia` | +40 / −40 | 50% | ≈ **40** |
+
+Wider payouts are cancelled by a lower win rate and vice versa. **A new
+variant's K should be chosen to land in this band** rather than copied blindly
+(§13); if one ever cannot, that variant overrides the brackets in its own config
+instead of quietly climbing twice as fast on the shared ones.
 
 ## 6. Level badges (our own design)
 
@@ -264,14 +326,26 @@ We render our **own** badge set — one visual per level, FACEIT-inspired
 
 ### Where badges appear
 
-1. **Leaderboard page** — rank, badge, nickname, ELO, W/L, win rate.
-2. **Player profile** — `lg` badge + ELO + progress bar + peak rating, per
-   rated game type (a single block today; one per variant later).
+1. **Leaderboard page** — rank, badge, nickname, ELO, W/L, win rate. **One
+   board per rated variant**, selected by a tab; every number on a row comes
+   from that variant only.
+2. **Player profile** — `lg` badge + ELO + progress bar + peak rating, **one
+   block per rated game type**. A player who only plays Sports shows a Sports
+   block; the Japanese default (1000 / Level 4) is not paraded as an
+   achievement.
 3. **Match history cards** — the stored per-game delta (e.g. `+27` / `−13`)
    rendered green/red, next to the player's badge at that time (optional v2:
-   use `ratingAfter` to show historical level).
+   use `ratingAfter` to show historical level). The delta already belongs to
+   the row's own `gameType`, so a mixed-variant history reads correctly with no
+   extra work.
 4. **Lobby / game room player tiles & community sidebar** — `sm` badge beside
    the nickname (subtle; never revealing anything about in-game roles).
+
+> **Which ladder does a badge show?** The one belonging to the context it is
+> rendered in: a Sports room shows Sports ELO on every tile, a Japanese room
+> Japanese. A badge next to a nickname **outside** any variant context (the
+> community sidebar) must pick one deliberately and label it — an unlabelled
+> number is read as "their rating", which no longer exists as a single value.
 
 ## 7. Seasons
 
@@ -289,10 +363,11 @@ No season tables, no reset migrations, no cold starts.
 
 ## 8. Backfill
 
-One-time internal migration replays the existing archive so the leaderboard is
-meaningful on day one:
+One-time internal migration replays an existing archive so a leaderboard is
+meaningful on day one. **It has been run for `japanese_mafia`. It must not be
+re-run as-is** — see the warning below.
 
-1. Load all **rated-game-type** `gameLogs` (today: `japanese_mafia`) sorted by
+1. Load all **rated-game-type** `gameLogs` sorted by
    `finishedAt` — **global chronological order across all games**, because
    each game's table average depends on everyone's rating at that moment.
 2. Keep an in-memory rating map (`playerId → rating`, default `1000`). For
@@ -307,36 +382,71 @@ meaningful on day one:
 > strictly by `finishedAt` (a per-player walk is not valid). Games with
 > `outcome: "no_contest"` get `ratingDelta: 0`.
 
+> **Backfilling is a per-variant decision, and the migration now says so.** It
+> used to select games by "does this game type have a `RATING_CONFIG` entry",
+> which would have swept a newly rated variant's whole archive in — including
+> games that were played, and shown to players, as unrated. Two locks replaced
+> that:
+>
+> - **`BACKFILL_POLICY`** (`convex/lib/constants.ts`) — `"replay"` or `"never"`
+>   per variant, a **total** record over the same union `RATING_CONFIG` is keyed
+>   by, so a new variant cannot be added without answering the question.
+> - **`backfillRatings` takes a required `gameTypes` argument** and is a **dry
+>   run unless `apply: true`**. There is no "all", and a type the policy refuses
+>   is rejected before anything is read.
+>
+> Sports is `"never"` ([sports/rating.md §5](./variants/sports/rating.md)): its
+> ladder starts empty and fills from the first game finished after its config
+> ships.
+
 ## 9. Recalibration policy
 
-269 decided games gives a standard error of ~±3 percentage points on each win
-rate, so the E values are good but not gospel.
+**Recalibration is per variant, and whether a variant recalibrates at all is
+part of its calibration decision.**
 
-- Re-derive faction win rates from `gameLogs` every **~200 new decided games**
-  (or quarterly) and update the payout constants.
+| Variant | Policy |
+| --- | --- |
+| `japanese_mafia` | **Recalibrates.** Its E values are measurements (~±3pp standard error at 269 games), so they go stale — re-derive every ~200 new decided games or quarterly ([japanese/rating.md §3](./variants/japanese/rating.md)). |
+| `sports_mafia` | **Does not.** Its E values are declared 0.50, not derived, so there is nothing to re-derive. Changing them is a deliberate decision with its own trade-off, recorded in [sports/rating.md §2](./variants/sports/rating.md). |
+
+Rules that apply to any recalibration:
+
 - Payout changes apply **forward only** — past deltas are never re-adjusted.
 - Only the faction win rates (E) recalibrate. The table-adjustment constants
   (`divisor: 20`, `cap: 16`) are structural — the cap scales with K (the base
   payout magnitude), the divisor is a deliberately loose spring — and only
   change if K changes.
-- If faction balance shifts (e.g. after rule tweaks), the payouts follow it
-  automatically at the next recalibration.
-- Per game type: each rated `gameType` gets its own E table (§4).
+- If faction balance shifts (e.g. after rule tweaks), a measured variant's
+  payouts follow it automatically at the next recalibration; a declared one
+  does not, which is exactly what "declared" means.
+- Re-derive from **that variant's** games only. `gameLogs` denormalizes
+  `gameType`, so the query is a filter, never a join across ladders.
 
-## 10. Implementation plan
+## 10. Implementation surfaces
 
-| # | Piece | Where | Notes |
-| - | ----- | ----- | ----- |
-| 1 | `RATING_CONFIG: Record<gameType, { start, floor, K, deltas, tableAdjustment: { divisor: 20, cap: 16 } }>` — one entry per **rated** game type (today: `japanese_mafia` only) | `convex/lib/constants.ts` | Server-only — clients never compute deltas (they read stored ones). A game type absent from the record is unrated. |
-| 2 | `RANK_LEVELS` brackets + colors, `getLevelForRating()`, `getLevelProgress()` | `src/shared/lib/constants/ranking.ts`, `src/shared/lib/ranking/levels.ts` | Client-only, pure functions (same spirit as `visibility.ts`). Shared across game types by default (§1). |
-| 3 | New `playerRatings` table: `{ playerId, gameType, rating, peakRating }`; indexes `by_playerId_gameType` + `by_gameType_rating`; register in `convex/schema.ts` | `convex/tables/playerRatings.ts` | One row per player per rated game type, created lazily on first rated game. Missing row ⇒ read as the default `1000` / Level 4 (no "unranked" state, §4). |
-| 4 | Schema: `ratingDelta` + `ratingAfter` + `tableAvgRating` (`v.optional(v.number())`) on `gameLogPlayers`; optional `by_finishedAt` index for season sums | `convex/tables/gameLogPlayers.ts` | Denormalized for match-history cards — no parent join. `tableAvgRating` lets the card explain the delta ("table avg 1140"). |
-| 5 | Apply payouts inside `archiveGameLog` | `convex/lib/games.ts` | Same mutation that updates `playerStats` ⇒ atomic with the archive. Look up `RATING_CONFIG[gameType]` — missing ⇒ skip rating entirely. Read all role-holders' pre-game ratings (missing row ⇒ 1000), compute `T` once, then per player `base + b`; skip host; clip at floor; record the clipped delta. |
-| 6 | Backfill migration (§8) | `convex/migrations/` (internal mutation) | One-time; **global chronological replay** by `finishedAt` (order-dependent, §8); idempotent guard (skip rows that already have `ratingDelta`). |
-| 7 | `<LevelBadge />` (§6) | `src/shared/ui/LevelBadge.tsx` | Single SVG component, `sm/md/lg`. |
-| 8 | Leaderboard page + profile rating block + delta on match-history card | `src/app` / `src/features` | Leaderboard reads `playerRatings` via `by_gameType_rating`, scoped to one game type (single board today; game-type tabs when a second rated variant ships). Season view via `ratingDelta` sums. |
+Where each piece lives, and whether it is **already** variant-aware. This is the
+gap analysis for making a second variant rated — not a sequenced plan.
 
-Run `npx tsc` after each schema/step change, per repo convention.
+| Piece | Where | Variant-aware? |
+| --- | --- | --- |
+| `RATING_CONFIG` — `{ start, floor, deltas, tableAdjustment }` per game type; absent ⇒ unrated | `convex/lib/constants.ts` | **Keyed by game type ✓, but `deltas` is a total `Record` over all three factions ✗** — a two-faction variant has to supply a dead `yakuza` row. Should key on the variant's own factions (§13). |
+| `computeRatingDelta` — the pure formula | `convex/lib/ratings.ts` | ✓ fully config-driven; shared by the live path and the migration so they cannot drift. |
+| `playerRatings` table + `by_playerId_gameType` / `by_gameType_rating` | `convex/tables/playerRatings.ts` | ✓ one row per (player, game type). Nothing to change, ever, per variant. |
+| Snapshot/apply helpers, default-rating reads | `convex/lib/playerRatings.ts` | ✓ resolves the config by game type; returns `null` (skip) for unrated. |
+| Live table average shown in lobby/room | `convex/lib/playerRatings.ts` → `getLiveTableAvgRating` | ✓ per game type; starts rendering for a variant the moment it has a config. |
+| Rating pass inside `archiveGameLog`; annul reversal | `convex/lib/games.ts` | ✓ for rating. ✗ for `bumpPlayerStats` and the annul recompute, which write the **global** stats row (§12). |
+| Per-game snapshot on the log row (`ratingDelta`, `ratingAfter`, `tableAvgRating`) | `convex/tables/gameLogPlayers.ts` | ✓ already denormalizes `gameType` alongside them. |
+| Backfill migration | `convex/migrations.ts` | ✓ scoped: required `gameTypes` arg, dry run by default, and `BACKFILL_POLICY` refuses a variant whose archive must stay unrated (§8). |
+| `playerStats` — wins/losses/streaks/`roleStats` | `convex/tables/playerStats.ts` | ✗ **global**, keyed by `playerId` only (§12). |
+| Profile stats query | `convex/games/core/gameLogs.ts` → `getMyStats` | ✗ hardcodes `"japanese_mafia"` when reading the player's ELO. |
+| Leaderboard query | `convex/games/core/leaderboard.ts` | Partly: takes a `gameType` and reads the right ladder ✓, but joins the **global** `playerStats` for W/L, win rate, streaks and top role ✗ (its own v1 caveat comment). |
+| Leaderboard ref | `convex/refs/leaderboard.ts` | ✓ `gameType` is already an argument. |
+| Leaderboard page | `src/features/headquarters/leaderboard/LeaderboardContent.tsx` | ✗ hardcodes `gameType: "japanese_mafia"`; no tabs. |
+| Levels, brackets, `<LevelBadge />` | `src/shared/lib/constants/ranking.ts`, `src/shared/lib/ranking/levels.ts`, `src/shared/ui/LevelBadge.tsx` | ✓ variant-agnostic by design (§5) — shared brackets are the intended behaviour, not an oversight. |
+| Faction union + log validators | `convex/lib/roles.ts`, `convex/tables/gameLogPlayers.ts` | ⚠️ `"mafia" \| "yakuza" \| "citizens"` is a global union. A future variant with a **new** faction touches the schema, not just a config (§13). |
+| Variant labels for tabs/filters | `messages/en.json`, `messages/ka.json` (`game.gameTypes.*`) | ✓ keys already exist for all three ids, at parity in both locales. |
+
+The gate for any of it is `npm run lint && npm run typecheck && npm test`.
 
 ## 11. Trade-offs & future levers
 
@@ -356,3 +466,91 @@ Accepted deliberately (decided 2026-07):
 - **No individual-performance modifiers** (survival, detective checks, doctor
   saves, fouls): rating is pure team outcome — transparent and unfarmable.
   Individual stats stay on the profile via `roleStats` but never move rating.
+  This is why a Sports best move scores nothing, and it would remain true even
+  if the picks were durable.
+- **Sports' E values are declared, not measured** (decided 2026-08-16). A
+  symmetric 0.50 is available on day one, gives exactly zero drift, and is
+  verifiable by hand — but it is an assertion about balance that no data backs
+  and no cadence revisits. If the real split is lopsided, the more common seat
+  quietly earns more. The full statement of the risk, and what changing it would
+  take, is in [sports/rating.md §2](./variants/sports/rating.md).
+- **Level brackets are shared across variants** rather than per-ladder. One
+  mental model for players, at the cost of a constraint on every future
+  calibration: a new variant's K has to land in the same volatility band, or it
+  climbs faster for the same skill (§5).
+- **Ladders never interact.** No seeding a new ladder from an existing one, no
+  cross-variant "overall" rating. A strong Japanese player starts Sports at 1000
+  like everyone else. Simple and honest, at the cost of a fresh grind per
+  variant — the same trade chess.com makes between time controls.
+
+## 12. Per-variant player record
+
+A rating is only half of "a player's standing in a variant". The other half —
+**wins, losses, no-contests, streaks and per-role stats** — currently lives in
+one global `playerStats` row per player (`convex/tables/playerStats.ts`), keyed
+by `playerId` alone. That was correct while effectively every archived game was
+Japanese. It stops being correct the moment a second variant is rated:
+
+- The Sports leaderboard joins `playerStats` for its W/L, win rate, best streak
+  and "top role" columns, so a Sports row would report a player's **Japanese**
+  results beside their Sports ELO (the query says so in its own v1 caveat).
+- `roleStats` mixes vocabularies. `SHOGUN` and `DOCTOR` exist only in Japanese;
+  `CITIZEN` and `DETECTIVE` exist in both and are silently summed across two
+  different games. "Top role" becomes a statement about neither variant.
+- A win streak spanning both variants describes nothing a player recognises.
+
+**Decision (2026-08-16): the record splits per variant, exactly like the
+rating.** The target shape is one row per `(playerId, gameType)` carrying the
+counters that exist today, which makes every leaderboard column, profile block
+and streak scoped to the ladder it is displayed on.
+
+What that pulls in, at analysis level:
+
+| Concern | What it means |
+| --- | --- |
+| Schema | `playerStats` gains `gameType` and an index on `(playerId, gameType)`; existing rows are a real migration, not an optional backfill. |
+| Write path | `bumpPlayerStats` (`convex/lib/games.ts`) folds a result into the row for **that game's** type — it already receives the log context it needs. |
+| Annulment | The annul recompute rebuilds a player's counters from their `gameLogPlayers` history; that history denormalizes `gameType`, so the rebuild filters to one variant instead of rewriting the global row. |
+| Reads | `getMyStats` stops hardcoding a game type and returns a per-variant block; the leaderboard join becomes same-variant by construction, which retires its v1 caveat. |
+| Migration | Every existing row is Japanese history in practice — but "in practice" is exactly the assumption that needs checking against `gameLogPlayers` before stamping `japanese_mafia` on it. |
+| UI + i18n | A variant selector on the profile and the leaderboard; the `game.gameTypes.*` labels already exist in both locales, anything new needs `en` **and** `ka`. |
+
+Streaks deserve one explicit note: `currentStreak` / `bestStreak` are
+**per variant** after the split, so a player can hold a live streak on two
+ladders at once. That is the intended reading — a Sports streak is a statement
+about Sports.
+
+## 13. Adding a rated variant
+
+The scalability contract, in the order it bites. Two more variants are expected;
+none of this should require touching the engine.
+
+1. **Register the variant first.** Rating reads `game.gameType`; a variant with
+   no definition in `convex/games/registry.ts` cannot produce a rated game.
+   Everything below assumes the checklist in the `add-game-variant` skill is
+   done.
+2. **Decide rated or unrated, deliberately.** A missing `RATING_CONFIG` entry is
+   a silent, valid choice — `archiveGameLog` skips rating with no error. Say
+   which it is in the variant's docs either way; an oversight and a decision
+   look identical in the code.
+3. **Choose how E is derived** (§2): measured needs ~200 decided games and buys
+   in to the recalibration cadence (§9); declared is available immediately and
+   opts out of it. Record the choice and its risk in
+   `docs/variants/<id>/rating.md`.
+4. **Cover exactly that variant's factions.** Payouts are per faction, and the
+   faction set comes from the definition — a two-faction variant must not carry
+   a third faction's row, and a variant that introduces a **new** faction needs
+   the shared `Faction` union and the `gameLogPlayers` / `gameLogs` validators
+   widened first. That is schema work, not config work.
+5. **Check K against the volatility band** (§5): std per game ≈ 38–40 keeps the
+   shared level brackets meaningful. Then check the safety property (§3): the
+   table-adjustment cap must stay below the smallest base payout, or a win at a
+   weak table can round to nothing.
+6. **Decide backfill explicitly** (§8). The migration will otherwise sweep the
+   new variant's whole archive in as soon as its config exists.
+7. **Add the ladder to the surfaces that enumerate variants** — leaderboard tab,
+   profile block — not to any that branch on one (§10). If a new `if (gameType
+   === …)` is needed anywhere in the rating path, the config is missing a field.
+8. **Docs**: a `docs/variants/<id>/rating.md` alongside the variant's other
+   docs, and a row in the calibration table in §2 here. The variant doc owns
+   the numbers; this doc owns the mechanism.

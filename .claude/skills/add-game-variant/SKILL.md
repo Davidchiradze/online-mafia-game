@@ -48,15 +48,24 @@ generator both import them.
 9. **Schema** — add the id to the validator union in `convex/tables/games.ts`.
 10. **`RATING_CONFIG`** in `convex/lib/constants.ts`. **A missing entry means the
     variant is silently UNRATED** — `archiveGameLog` skips rating entirely, with
-    no error. That is a legitimate choice for a new variant (Sports ships this
-    way deliberately), but it must be a choice, not an oversight.
+    no error. That is a legitimate choice, but it must be a choice, not an
+    oversight. Rating is **per variant**: its own ladder, its own E values, its
+    own payouts, covering exactly its own factions. Decide how E is derived
+    (measured from ~200 decided games, or declared), whether the archive is
+    backfilled, and check K lands in the shared level brackets' volatility band.
+    Full contract: `docs/ranking-system.md` §13.
 11. **Labels** — `GAME_TYPE_LABEL` and `GAME_TYPE_MAX_PLAYER_NUMBER` in
     `src/shared/lib/constants/game.ts`, and the creatability filter in
     `CreateGameModal`.
 12. **i18n** — keys in **both** `messages/en.json` and `messages/ka.json`.
-13. **Docs** — `docs/variants/<slug>.md` (or a folder). This is **enforced**:
+13. **Docs** — `docs/variants/<slug>/` (a folder; a bare `<slug>.md` also
+    satisfies the guard). This is **enforced**:
     `tests/structure/variantDocs.test.ts` fails the build the moment you
-    register a variant with no doc. Slug is the id minus `_mafia`.
+    register a variant with no doc. Slug is the id minus `_mafia`. Both current
+    variants ship `rules.md` + `win-conditions.md` + `rating.md` — mirror that
+    split rather than one long file, and cite sections by their full path
+    (`docs/variants/<slug>/rules.md §4`), because a bare basename now matches
+    more than one variant and `tests/structure/docLinks.test.ts` says so.
 14. **Regenerate the spec** — `npm run docs:generate`. Roles, phases, state
     machine and win tables appear automatically because everything iterates the
     registry.

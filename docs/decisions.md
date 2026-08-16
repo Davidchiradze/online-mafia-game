@@ -450,6 +450,70 @@ algorithm.
 
 ---
 
+## ADR-014: One ladder and one record per variant, calibrated per variant
+
+**Status**: Accepted (2026-08-16)
+
+**Decision**: Every game variant has its **own** rating, peak, leaderboard and
+player record, the way chess.com separates time controls. A result in one
+variant moves nothing in another. Each rated variant supplies its own
+calibration through `RATING_CONFIG[gameType]`, covering exactly its own
+factions, and may derive that calibration differently: `japanese_mafia`
+**measures** its faction win rates from its archive and recalibrates on a
+cadence; `sports_mafia` **declares** a symmetric `E = 0.50` and never
+recalibrates. The formula shape, the table-strength term, the level brackets and
+the seams stay shared.
+
+**Context**:
+
+`playerRatings` was already keyed by `(playerId, gameType)`, so the ladders were
+separate by construction — but only one variant was ever rated, so everything
+downstream quietly assumed a single one: `RATING_CONFIG.deltas` requires all
+three of Japanese's factions, `playerStats` is one global row per player, and
+both the profile stats query and the leaderboard page name `japanese_mafia`
+literally. Rating Sports surfaces all of it at once, and two more variants are
+expected.
+
+Sports also has no calibration data and, by this decision, never will need any:
+a two-faction game declared balanced needs no measurement, which is what lets it
+be rated on day one instead of after ~200 games.
+
+**Consequences**:
+
+- Adding a rated variant is a config entry plus a `docs/variants/<id>/rating.md`,
+  not a code path. The contract is written down in `docs/ranking-system.md` §13.
+- Payouts must cover a variant's **own** factions, so `deltas` stops being a
+  total record over the global faction union. A variant that introduces a new
+  faction still needs a schema change, and that is now stated rather than
+  discovered.
+- The record splits too: `playerStats` becomes per `(playerId, gameType)`, which
+  retires the leaderboard's "global W/L beside a per-variant ELO" caveat and
+  stops `roleStats` from summing roles that exist in different games.
+- Level brackets stay shared, which converts into a constraint on every future
+  calibration: K must land in the same volatility band (≈38–40 std per game) or
+  the same Level number means different things on different ladders.
+- Sports' declared `E` will be wrong if the variant turns out unbalanced, and
+  nothing detects that automatically. Accepted knowingly; the risk and the exit
+  are recorded in the variant's rating doc.
+- Backfill becomes a per-variant decision. Sports is **not** backfilled — the
+  games were played as unrated — and the existing migration, which selects by
+  "has a config", must be scoped before it is ever run again.
+
+**Rejected**:
+
+- **A single global rating across variants.** Simplest, and wrong: it would
+  price a Sports result with Japanese's faction calibration and let skill at one
+  game rank a player at another.
+- **Seeding a new ladder from an existing one.** Tempting for retention, but it
+  imports an assumption (that the variants measure the same skill) that the
+  separate calibrations explicitly deny. Everyone starts a new ladder at 1000.
+- **Waiting for ~200 decided Sports games before rating it** (the original
+  plan). Correct-by-construction, but it leaves the variant permanently second
+  class: unrated games attract fewer players, which is what keeps the sample
+  from arriving.
+
+---
+
 ## Summary
 
 | Decision | Key Technology |
@@ -467,3 +531,4 @@ algorithm.
 | Folder Structure | Feature-first `src/features/*` + `src/shared/*`; variant-keyed `convex/games/*` |
 | Game rules in docs | Generated from the definitions into `docs/generated/` |
 | Doc layout | Mirrors the engine/variant code seam, enforced by a vocabulary firewall |
+| Ranking | One ELO ladder and one player record per variant, calibrated per variant |

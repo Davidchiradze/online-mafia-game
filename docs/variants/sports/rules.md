@@ -5,10 +5,9 @@
 > under [docs/engine/](../../engine/).
 >
 > Status: **Built and creatable.** The definition, night model, best-move flow
-> and UI ruleset all ship; `CreateGameModal` filters only `city_mafia`. The one
-> deliberate gap is rating — Sports is absent from `RATING_CONFIG`, so games are
-> unrated by design until there is enough data to calibrate
-> ([ranking-system.md](../../ranking-system.md) §9).
+> and UI ruleset all ship; `CreateGameModal` filters only `city_mafia`. Sports
+> is **rated on its own ladder**, calibrated in [rating.md](./rating.md) — a
+> declared 0.50 / 0.50, separate from Japanese in every direction.
 >
 > `gameType` id: **`sports_mafia`** (renamed from the legacy `traditional`),
 > **10 players**, seat count `10` (host sits in seat `11`). Architecture:
@@ -420,11 +419,16 @@ but no visible clock; the host watches the timer and skips when it makes sense
 Checks are **not** shown once `farewell_speech` starts: the phase is over, the
 table is awake, and the tiles go back to normal.
 
-### 6.7 Scoring — out of scope for launch
+### 6.7 Scoring — out of scope
 
-Real sports mafia awards extra points for 2 or 3 correct guesses. **Sports
-launches unrated (§9.7), so nothing is scored** and the correct-count is not
-displayed anywhere.
+Real sports mafia awards extra points for 2 or 3 correct guesses. **Nothing is
+scored here** and the correct-count is not displayed anywhere.
+
+> The original reason was that Sports launched unrated. That is no longer true
+> (§9.7), and the answer has not changed: rating is a **pure team outcome** with
+> no individual-performance modifiers at all
+> ([ranking-system.md §11](../../ranking-system.md)), so a correct best move
+> would have nowhere to be paid out even now.
 
 > **The picks are NOT durable.** `bestMoveSuspects` lives on the night session,
 > and `deleteGameAndRelations` (`convex/lib/games.ts`) wipes `nightPhaseSessions`
@@ -498,7 +502,9 @@ All previously-open questions are confirmed:
    visibility shape verbatim. The host's advance stays always enabled ("Skip Best
    Move") so an AFK or disconnected victim cannot stall the game. Unscored at
    launch. (§6)
-7. **Sports launches UNRATED — ELO is skipped.** No `RATING_CONFIG` entry, so
-   `archiveGameLog` records games with no rating change (exactly as an unrated
-   type does today). A calibrated config can be added later per
-   [ranking-system.md](../../ranking-system.md) §9.
+7. **Sports is RATED, on its own ladder** (decided 2026-08-16; it launched
+   unrated). Two factions declared at `E = 0.50` each, `K = 80` → **+40 / −40**
+   plus the shared table adjustment. Nothing about the ladder is shared with
+   Japanese, and the archive from the unrated period is **not** backfilled.
+   Numbers and rationale: [rating.md](./rating.md); mechanism:
+   [ranking-system.md](../../ranking-system.md).

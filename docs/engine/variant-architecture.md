@@ -262,7 +262,8 @@ For the wider layout see [architecture.md](../architecture.md).
   through the ruleset. Fixed the `maxPlayers` plumbing (§6) and added the
   10-seat layout.
 - **Phase 5 — Enable.** `sports_mafia` un-filtered in `CreateGameModal` and
-  shipped **unrated** (absent from `RATING_CONFIG` → rating skipped).
+  shipped **unrated** (absent from `RATING_CONFIG` → rating skipped). Rating was
+  added afterwards as its own ladder — see the ranking docs.
 
 ### Remaining work
 
@@ -278,10 +279,13 @@ archived task tracker so this is the only place they live:
   mechanical move guarded by `tests/game/gameDefinition.test.ts` — import paths
   change, values must not.
 
-- **Sports is intentionally unrated.** `RATING_CONFIG` in
-  `convex/lib/constants.ts` has only a `japanese_mafia` entry; a missing entry
-  means ELO is skipped entirely. Add the Sports config and E-table once ~200
-  decided Sports games exist (see [ranking-system.md](../ranking-system.md) §9).
+- **Per-variant ladders are half-wired.** `playerRatings` is keyed by
+  `(playerId, gameType)` and `RATING_CONFIG` is keyed by game type, so the
+  backend already gives each variant its own ELO. What is not variant-aware yet:
+  `RATING_CONFIG.deltas` demands all three factions even for a two-faction
+  variant, `playerStats` is one global row per player, and both the profile
+  stats query and the leaderboard page name a game type literally. Analysis and
+  the full surface map: [ranking-system.md](../ranking-system.md) §10, §12.
 
 ## 6. Seat geometry
 
@@ -319,8 +323,10 @@ to 12, so a Sports room no longer renders a 12-seat ring.
   `gameSessions.winner` union already includes `citizens` and `mafia`, which are
   the only outcomes Sports emits — no schema change needed there.
 - **ELO ladders are per-`gameType`** (`playerRatings.by_gameType_rating`), so a
-  Sports ladder is automatically separate from Japanese once a `RATING_CONFIG`
-  entry is added. No cross-contamination.
+  variant's ladder is automatically separate from every other one once a
+  `RATING_CONFIG` entry exists. No cross-contamination. The **record** attached
+  to it (wins, streaks, per-role stats) is not split yet —
+  [ranking-system.md](../ranking-system.md) §12.
 
 ## 8. Guardrails
 
