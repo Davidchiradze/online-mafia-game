@@ -118,21 +118,34 @@ export function votingRound(snapshot: VotingSnapshot): VotingRound {
 }
 
 /**
- * The candidate queue as label→value pills: seat on the left, votes on the
- * right. Vote counts are the whole point of this phase, and a bare seat chip
- * cannot carry a number — the pills also survive the collapse to a phone bar,
- * where they scroll sideways rather than disappearing.
+ * The candidate queue as label→value pills: the seat, and the votes standing
+ * against it. Vote counts are the whole point of this phase, and a bare seat
+ * chip cannot carry a number — the pills also survive the collapse to a phone
+ * bar, where they scroll sideways rather than disappearing.
+ *
+ * `emphasis: "strong"` is what separates these from the night summary. Both are
+ * label→value pills, but a night pill is an annotation the host reads once,
+ * while these are the live scoreboard of the phase — hosts could not read them
+ * at the summary's 10px ceiling, so the strong ramp scales the digits with the
+ * cell instead of capping them.
+ *
+ * The cursor, not the seat number, decides the three states: everything before
+ * it has been counted (dimmed), the seat AT it is on the clock (rose, glowing),
+ * everything after is still waiting. Past the end of the queue nothing is
+ * active and every candidate is done, which is exactly the tally screen.
  */
 export function votingTally(
   candidates: readonly number[],
   votes: Record<string, readonly number[]>,
-  activeCandidate: number | null,
+  currentIndex: number,
 ): HostPanelMeta[] {
-  return candidates.map((seat) => ({
+  return candidates.map((seat, index) => ({
     id: `candidate-${seat}`,
     label: `#${seat}`,
     value: String((votes[String(seat)] ?? []).length),
-    tone: seat === activeCandidate ? "rose" : "slate",
-    isActive: seat === activeCandidate,
+    tone: index === currentIndex ? "rose" : "slate",
+    isActive: index === currentIndex,
+    isDone: index < currentIndex,
+    emphasis: "strong",
   }));
 }

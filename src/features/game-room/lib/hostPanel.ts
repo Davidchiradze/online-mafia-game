@@ -199,6 +199,18 @@ export type HostPanelNote = { text: string; tone: HostPanelNoteTone };
  */
 export type HostPanelMetaTone = "rose" | "violet" | "emerald" | "slate";
 
+/**
+ * How loudly the pill's VALUE is read.
+ *
+ * Default is an annotation — "the mafia picked #7" is a fact the host glances
+ * at once and the label carries most of the meaning. `strong` is for the
+ * opposite case, the vote tally: the number IS the phase, it changes every
+ * second the window is open, and it is read from across a room. A strong pill
+ * stacks label over value and scales the value on its own, far taller ramp, so
+ * a big centre cell actually spends its pixels on the digits.
+ */
+export type HostPanelMetaEmphasis = "strong";
+
 export type HostPanelMeta = {
   /** Stable across renders — used as the React key. */
   id: string;
@@ -209,12 +221,33 @@ export type HostPanelMeta = {
   /** The role currently choosing: the pill glows. */
   isActive?: boolean;
   /**
+   * Already settled — dimmed, the way a spent seat chip is. Distinguishing
+   * "counted" from "not reached yet" is what turns a row of identical pills
+   * back into a sequence the host can follow.
+   */
+  isDone?: boolean;
+  /** See `HostPanelMetaEmphasis`. Omitted means annotation-sized. */
+  emphasis?: HostPanelMetaEmphasis;
+  /**
    * Draw a crosshair between label and value. Sports' per-mafia pills pair two
    * seat numbers, and without it "#2 #7" reads as two seats rather than
    * "#2 is killing #7".
    */
   icon?: "target";
 };
+
+/** The pill's modifier classes, in cascade order: tone, then its two states. */
+export function hostPanelMetaPillClass(item: HostPanelMeta): string {
+  return [
+    "host-panel__meta-pill",
+    `host-panel__meta-pill--${item.tone}`,
+    item.emphasis === "strong" && "host-panel__meta-pill--strong",
+    item.isDone && "host-panel__meta-pill--done",
+    item.isActive && "host-panel__meta-pill--active",
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
 
 /**
  * The emphasised tail of a title — currently only the winning faction on the
@@ -340,6 +373,31 @@ export function hostPanelRunChips(
   descriptor: HostPanelDescriptor,
 ): SeatChip[] {
   return windowedChips(descriptor.chips ?? []);
+}
+
+/**
+ * Identifies the item the collapsed rail should keep centred, or `null` when
+ * nothing is on the clock.
+ *
+ * An opaque string rather than an element or a bare index, because its only job
+ * is to be compared against the previous render: the rail re-centres when the
+ * cursor MOVES and never otherwise. Re-centring every render would fight a host
+ * who has swiped the rail themselves, and re-centring on a vote count changing
+ * would yank it sideways mid-window — the seat is what moves, not the number
+ * next to it.
+ *
+ * Chips win over meta because no phase renders both (see `HostPanelDataLine`);
+ * where one somehow did, the ordered run is the thing with a cursor.
+ */
+export function hostPanelRailCursor(
+  chips: readonly SeatChip[],
+  meta: readonly HostPanelMeta[],
+): string | null {
+  const index = chips.findIndex((chip) => chip.tone === "active");
+  const chip = chips[index];
+  if (chip) return `chip:${String(index)}:${String(chip.seat)}`;
+  const active = meta.find((item) => item.isActive);
+  return active ? `meta:${active.id}` : null;
 }
 
 /**

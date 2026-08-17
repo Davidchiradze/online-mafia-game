@@ -67,7 +67,7 @@ export function useVotingRound(): VotingRoundState {
 
   return {
     round,
-    tally: votingTally(round.candidates, voteData.votes, round.currentCandidate),
+    tally: votingTally(round.candidates, voteData.votes, round.currentIndex),
     timer,
     currentVotes:
       round.currentCandidate !== null

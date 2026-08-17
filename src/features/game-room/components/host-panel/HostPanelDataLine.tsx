@@ -3,8 +3,7 @@ import {
   hostPanelCompactLine,
   type HostPanelDescriptor,
 } from "@/features/game-room/lib/hostPanel";
-import SeatChip from "./SeatChip";
-import HostPanelMetaPill from "./HostPanelMetaPill";
+import HostPanelLineRun from "./HostPanelLineRun";
 
 type HostPanelDataLineProps = {
   descriptor: HostPanelDescriptor;
@@ -25,10 +24,8 @@ type HostPanelDataLineProps = {
  * mafia picked — the one thing the night exists to record. The pills are sized
  * to fit instead (three Japanese M/Y/H pills fit a bar's identity column), and
  * the run scrolls sideways for the cases that genuinely cannot fit, such as
- * Sports' one-pill-per-mafia with a full table.
- *
- * Chips and meta share the run because no phase has both: a night has a
- * summary and no ordered run, a day has an ordered run and no summary.
+ * Sports' one-pill-per-mafia with a full table or a full voting queue — which
+ * is why `HostPanelLineRun` keeps the active item scrolled into the middle.
  */
 export default function HostPanelDataLine({
   descriptor,
@@ -40,24 +37,7 @@ export default function HostPanelDataLine({
 
   return (
     <div className="host-panel__line">
-      {(chips.length > 0 || meta.length > 0) && (
-        <div className="host-panel__line-run">
-          {/* Keyed by position, not by seat: the same seat legitimately
-              appears twice here — once rose because it is nominated, once
-              emerald because it holds the floor — and a shared key makes
-              React reconcile the two against each other. */}
-          {chips.map((chip, index) => (
-            <SeatChip
-              key={`${chip.tone}-${String(chip.seat)}-${String(index)}`}
-              seat={chip.seat}
-              tone={chip.tone}
-            />
-          ))}
-          {meta.map((item) => (
-            <HostPanelMetaPill key={item.id} item={item} />
-          ))}
-        </div>
-      )}
+      <HostPanelLineRun chips={chips} meta={meta} />
       {line && (
         <span className="host-panel__line-text text-slate-400">{line}</span>
       )}

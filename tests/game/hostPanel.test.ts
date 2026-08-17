@@ -16,11 +16,14 @@ import {
   HOST_PANEL_PHASES,
   hostPanelCollapsedChips,
   hostPanelHasCollapsedData,
+  hostPanelMetaPillClass,
   hostPanelNominatedSeats,
+  hostPanelRailCursor,
   hostPanelRunChips,
   orderedSeatChips,
   resolveHostPanelLayout,
   type HostPanelDescriptor,
+  type HostPanelMeta,
 } from "@/features/game-room/lib/hostPanel";
 import { JAPANESE_PHASE_CONTROLS } from "@/features/game-room/variants/japanese/phaseControls";
 import { SPORTS_PHASE_CONTROLS } from "@/features/game-room/variants/sports/phaseControls";
@@ -145,6 +148,100 @@ describe("hostPanelRunChips", () => {
     });
     expect(chips).toHaveLength(HOST_PANEL_COLLAPSED_CHIP_LIMIT);
     expect(chips.some((chip) => chip.tone === "active")).toBe(true);
+  });
+});
+
+describe("hostPanelRailCursor", () => {
+  const tally = (activeSeat: number | null): HostPanelMeta[] =>
+    [4, 7, 9].map((seat) => ({
+      id: `candidate-${String(seat)}`,
+      label: `#${String(seat)}`,
+      value: "0",
+      tone: seat === activeSeat ? "rose" : "slate",
+      isActive: seat === activeSeat,
+    }));
+
+  it("is null when nothing is on the clock", () => {
+    expect(hostPanelRailCursor([], tally(null))).toBeNull();
+    expect(hostPanelRailCursor([], [])).toBeNull();
+  });
+
+  it("changes when the vote queue advances to the next candidate", () => {
+    expect(hostPanelRailCursor([], tally(4))).not.toBe(
+      hostPanelRailCursor([], tally(7)),
+    );
+  });
+
+  // The whole point of gating on this: a count ticking up mid-window must not
+  // re-centre the rail under the host's eye.
+  it("is stable while only the vote counts change", () => {
+    const before = tally(7);
+    const after = tally(7).map((item) => ({ ...item, value: "3" }));
+    expect(hostPanelRailCursor([], after)).toBe(hostPanelRailCursor([], before));
+  });
+
+  it("follows the ordered run's cursor when the rail holds chips", () => {
+    const run = orderedSeatChips([3, 5, 8], 1);
+    expect(hostPanelRailCursor(run, [])).toBe("chip:1:5");
+  });
+
+  // A seat can appear twice in the bar's flattened run — once nominated, once
+  // speaking — so the position has to be part of the identity, not just a seat.
+  it("distinguishes the same seat reached at a different position", () => {
+    expect(hostPanelRailCursor(orderedSeatChips([5, 5], 0), [])).not.toBe(
+      hostPanelRailCursor(orderedSeatChips([5, 5], 1), []),
+    );
+  });
+
+  it("prefers the ordered run over the meta pills", () => {
+    const run = orderedSeatChips([3, 5], 0);
+    expect(hostPanelRailCursor(run, tally(7))).toBe("chip:0:3");
+  });
+});
+
+describe("hostPanelMetaPillClass", () => {
+  const pill = (extra: Partial<HostPanelMeta> = {}): HostPanelMeta => ({
+    id: "candidate-4",
+    label: "#4",
+    value: "3",
+    tone: "slate",
+    ...extra,
+  });
+
+  it("emits the tone alone for a plain night-summary pill", () => {
+    expect(hostPanelMetaPillClass(pill({ tone: "rose" }))).toBe(
+      "host-panel__meta-pill host-panel__meta-pill--rose",
+    );
+  });
+
+  // The CSS resolves `--strong` against `--done` and `--active` by source
+  // order, so the class list has to arrive in the order the sheet expects.
+  it("orders the state modifiers after the tone", () => {
+    expect(
+      hostPanelMetaPillClass(
+        pill({ tone: "rose", emphasis: "strong", isActive: true }),
+      ),
+    ).toBe(
+      "host-panel__meta-pill host-panel__meta-pill--rose" +
+        " host-panel__meta-pill--strong host-panel__meta-pill--active",
+    );
+  });
+
+  it("drops the state modifiers a pill has turned off", () => {
+    expect(
+      hostPanelMetaPillClass(
+        pill({ emphasis: "strong", isDone: false, isActive: false }),
+      ),
+    ).toBe(
+      "host-panel__meta-pill host-panel__meta-pill--slate" +
+        " host-panel__meta-pill--strong",
+    );
+  });
+
+  it("marks a counted candidate done", () => {
+    expect(
+      hostPanelMetaPillClass(pill({ emphasis: "strong", isDone: true })),
+    ).toContain("host-panel__meta-pill--done");
   });
 });
 

@@ -75,7 +75,7 @@
 }
 
 .host-panel--compact .host-panel__title {
-  font-size: clamp(11px, 10.5cqh, 19px);
+  font-size: clamp(11px, 10.5cqh, 13px);
   line-height: 1.06;
   letter-spacing: 0.01em;
 }
@@ -176,6 +176,26 @@
   height: clamp(8px, 7cqh, 11px);
 }
 
+/* The tally's score card cannot stack here — the whole data zone is one line.
+   It reverts to an inline pill, but NOT to the night summary's ramp: the vote
+   counts are the phase's entire content, so they stay the largest thing on the
+   line. Written as three-part selectors on purpose, so they beat the base
+   `--strong` block on specificity rather than on import order. */
+.host-panel--compact .host-panel__meta-pill--strong {
+  @apply flex-row rounded-full;
+  gap: 4px;
+  min-width: 0;
+  padding: 2px 8px;
+}
+
+.host-panel--compact .host-panel__meta-pill--strong .host-panel__meta-label {
+  font-size: clamp(9px, 7.5cqh, 12px);
+}
+
+.host-panel--compact .host-panel__meta-pill--strong .host-panel__meta-value {
+  font-size: clamp(12px, 10cqh, 17px);
+}
+
 /* ── Bar composition ─────────────────────────────────────────────────────────
    One row: identity on the left, a 44px action and the disclosure chevron on
    the right. Type is fixed here — there is no vertical room left to scale
@@ -256,6 +276,29 @@
    adjacent pills do not bleed into one another. */
 .host-panel--bar .host-panel__meta-pill--active {
   box-shadow: 0 0 8px rgba(255, 255, 255, 0.16);
+}
+
+/* Same trade as compact, one step tighter. A bar's identity column is ~100px,
+   so three tally pills at this ramp fit and four scroll — which is the right
+   way round, because the seat on the clock is kept in view by the rail while
+   the counts stay large enough to read on a phone held at arm's length. */
+.host-panel--bar .host-panel__meta-pill--strong {
+  @apply flex-row rounded-full;
+  gap: 3px;
+  min-width: 0;
+  padding: 1px 6px;
+}
+
+.host-panel--bar .host-panel__meta-pill--strong .host-panel__meta-label {
+  font-size: 9px;
+}
+
+.host-panel--bar .host-panel__meta-pill--strong .host-panel__meta-value {
+  font-size: 13px;
+}
+
+.host-panel--bar .host-panel__meta-pill--strong.host-panel__meta-pill--active {
+  border-width: 1.5px;
 }
 
 .host-panel--bar .host-panel__actions {

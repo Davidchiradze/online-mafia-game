@@ -131,14 +131,47 @@ describe("votingRound — both leave", () => {
 
 describe("votingTally", () => {
   it("pairs each candidate with their standing vote count", () => {
-    expect(votingTally([4, 7], { "4": [1, 2, 3], "7": [] }, 4)).toEqual([
-      { id: "candidate-4", label: "#4", value: "3", tone: "rose", isActive: true },
-      { id: "candidate-7", label: "#7", value: "0", tone: "slate", isActive: false },
+    expect(votingTally([4, 7], { "4": [1, 2, 3], "7": [] }, 0)).toEqual([
+      {
+        id: "candidate-4",
+        label: "#4",
+        value: "3",
+        tone: "rose",
+        isActive: true,
+        isDone: false,
+        emphasis: "strong",
+      },
+      {
+        id: "candidate-7",
+        label: "#7",
+        value: "0",
+        tone: "slate",
+        isActive: false,
+        isDone: false,
+        emphasis: "strong",
+      },
     ]);
   });
 
   it("shows a zero rather than dropping a candidate nobody voted for", () => {
-    const [pill] = votingTally([9], {}, null);
+    const [pill] = votingTally([9], {}, 0);
     expect(pill.value).toBe("0");
+  });
+
+  // The cursor is what makes the run a sequence rather than three identical
+  // pills — counted behind it, on the clock at it, waiting ahead of it.
+  it("marks the candidates behind the cursor as counted", () => {
+    const pills = votingTally([4, 7, 9], {}, 1);
+    expect(pills.map((pill) => [pill.isDone, pill.isActive])).toEqual([
+      [true, false],
+      [false, true],
+      [false, false],
+    ]);
+  });
+
+  it("leaves nothing active once the queue has run out", () => {
+    const pills = votingTally([4, 7], {}, 2);
+    expect(pills.every((pill) => pill.isDone && !pill.isActive)).toBe(true);
+    expect(pills.every((pill) => pill.tone === "slate")).toBe(true);
   });
 });

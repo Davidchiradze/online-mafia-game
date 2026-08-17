@@ -5,8 +5,7 @@ import {
 } from "@/features/game-room/lib/hostPanel";
 import HostPanelNominated from "./HostPanelNominated";
 import HostPanelSpeakers from "./HostPanelSpeakers";
-import SeatChip from "./SeatChip";
-import HostPanelMetaPill from "./HostPanelMetaPill";
+import HostPanelLineRun from "./HostPanelLineRun";
 
 type HostPanelCompactDataProps = {
   descriptor: HostPanelDescriptor;
@@ -50,23 +49,10 @@ export default function HostPanelCompactData({
     <div className="host-panel__line">
       {nominated && <HostPanelNominated nominated={nominated} />}
       <HostPanelSpeakers speakers={speakers} />
-      {(chips.length > 0 || meta.length > 0) && (
-        <div className="host-panel__line-run">
-          {chips.map((chip, index) => (
-            <SeatChip
-              key={`${chip.tone}-${String(chip.seat)}-${String(index)}`}
-              seat={chip.seat}
-              tone={chip.tone}
-            />
-          ))}
-          {meta.map((item) => (
-            <HostPanelMetaPill key={item.id} item={item} />
-          ))}
-        </div>
-      )}
-      {line && (
+      <HostPanelLineRun chips={chips} meta={meta} />
+      {/* {line && (
         <span className="host-panel__line-text text-slate-400">{line}</span>
-      )}
+      )} */}
     </div>
   );
 }
