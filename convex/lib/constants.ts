@@ -105,17 +105,8 @@ export const JAPANESE_MAFIA_ROLE_DISTRIBUTION = [
   "CITIZEN",
 ] as const;
 
-/**
- * The mafia faction's roles, and the input to `roleToFaction`.
- *
- * `MAFIA_RIGHT_HAND` is RETIRED — no variant deals it and no live game can
- * produce it — but it stays listed on purpose: finished games persist it in
- * `gameLogPlayers.role` and `playerStats.roleStats`, and dropping it here would
- * silently reclassify those archived rows as citizens. Keeping it costs nothing
- * live (no player holds it, so every count is unchanged) and keeps match
- * history honest.
- */
-export const MAFIA_TEAM_ROLES = ["DON", "MAFIA_RIGHT_HAND", "MAFIA"] as const;
+/** The mafia faction's roles, and the input to `roleToFaction`. */
+export const MAFIA_TEAM_ROLES = ["DON", "MAFIA"] as const;
 export const YAKUZA_TEAM_ROLES = ["YAKUZA", "SHOGUN"] as const;
 
 export const VOTING = {

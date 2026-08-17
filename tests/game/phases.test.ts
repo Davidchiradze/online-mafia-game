@@ -103,10 +103,7 @@ describe("Japanese role set & deck", () => {
   });
 
   it("defines the mafia and yakuza teams", () => {
-    // MAFIA_RIGHT_HAND is RETIRED but deliberately still listed: archived games
-    // persist it, and dropping it here would reclassify those rows as citizens.
-    // No live game can hold it, so faction COUNTS are unaffected.
-    expect(MAFIA_TEAM_ROLES).toEqual(["DON", "MAFIA_RIGHT_HAND", "MAFIA"]);
+    expect(MAFIA_TEAM_ROLES).toEqual(["DON", "MAFIA"]);
     expect(YAKUZA_TEAM_ROLES).toEqual(["YAKUZA", "SHOGUN"]);
   });
 });
