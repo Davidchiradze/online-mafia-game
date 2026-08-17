@@ -11,6 +11,7 @@ import type {
   HostPanelAction,
   HostPanelDescriptor,
 } from "@/features/game-room/lib/hostPanel";
+import { GamePhase } from "@/shared/lib/constants/game";
 
 /**
  * The one thing a player does from the centre cell: vote.
@@ -123,7 +124,7 @@ export default function PlayerVotingPanel() {
             gameSessionState?.currentNightNumber ?? 0,
           ),
         }),
-    title: isBothLeaveMode ? t("bothLeaveVote") : tPhases("voting"),
+    title: isBothLeaveMode ? t("bothLeaveVote") : tPhases(GamePhase.VOTING),
     nominated:
       onTheBlock.length > 0
         ? {

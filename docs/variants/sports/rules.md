@@ -21,7 +21,7 @@
 ## 1. Overview
 
 Sports Mafia is the classic two-faction game: **Mafia vs Citizens**. No Yakuza
-clan, no Doctor, no Don's Right Hand. It is smaller (10 vs 12), starts the day
+clan and no Doctor. It is smaller (10 vs 12), starts the day
 cycle immediately (no separate introduction phase), and resolves the nightly
 mafia kill by **unanimous vote among all living mafia** rather than a single kill
 authority.
@@ -49,8 +49,7 @@ The decisions behind those numbers, which the table cannot express:
 What the tables do not say — the reasoning behind the diff:
 
 - **Added:** `don_meet` (the Don acts alone) and `best_move` (§6).
-- **Removed:** every yakuza, doctor and right-hand phase, plus
-  `introduction_phase`.
+- **Removed:** every yakuza and doctor phase, plus `introduction_phase`.
 - **Kept identical to Japanese** wherever there was no reason to differ, so
   the shared engine keeps one implementation of the day/vote/farewell cycle.
 
@@ -102,8 +101,9 @@ Proposed model (Phase 3):
 
 ## 5. Night — mafia kill by unanimous vote (biggest change)
 
-Japanese uses a **single kill authority** (priority DON > RIGHT_HAND > MAFIA)
-that picks one target, and the host cannot advance until a target is chosen.
+Japanese uses a **single kill authority** (the DON, then the living mafia in the
+next seat clockwise from the Don's) that picks one target, and the host cannot
+advance until a target is chosen.
 Sports replaces this entirely.
 
 ### 5.1 Behaviour (confirmed)
@@ -485,8 +485,7 @@ All previously-open questions are confirmed:
 1. **Citizen count = 6 → 10 players.** (§2)
 2. **Detective checks + Don checks are both kept, identical to Japanese.** The
    Sports night includes `don_checks_for_detective` and
-   `detective_checks_for_mafia`; only the Yakuza/Doctor/right-hand phases are
-   dropped. (§3)
+   `detective_checks_for_mafia`; only the Yakuza/Doctor phases are dropped. (§3)
 3. **The 5s mafia window gates buttons only; the host advances manually.**
    Buttons appear on every alive participant on phase entry, auto-disable after
    5s; the host clicks Finish Mafia Phase when ready. Mafia selections are

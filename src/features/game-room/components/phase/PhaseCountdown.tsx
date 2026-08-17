@@ -3,7 +3,7 @@
 import React from "react";
 import { useTranslations } from "next-intl";
 import { PHASE_TIMERS, SPORTS } from "@/shared/lib/constants/game";
-import { type GamePhase } from "@/shared/lib/game/visibility";
+import { GamePhase } from "@/shared/lib/game/visibility";
 import { useCountdown } from "@/features/game-room/hooks/game/useCountdown";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 import { canSeePhaseTimer } from "@/features/game-room/lib/playerPanel";
@@ -28,7 +28,7 @@ function usePhaseTimerSource(): TimerSource | null {
 
   if (
     ruleset.mafiaNightModel === "unanimous-vote" &&
-    phase === "mafia_chooses_target"
+    phase === GamePhase.MAFIA_CHOOSES_TARGET
   ) {
     const startedAt = nightPhaseSession?.mafiaTargetWindowStartedAt;
     if (nightPhaseSession?.mafiaTargetWindowActive !== true || !startedAt) {

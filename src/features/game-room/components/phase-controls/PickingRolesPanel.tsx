@@ -5,7 +5,7 @@ import { useMutation } from "convex/react";
 import { gameSessions } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
 import { useTranslations } from "next-intl";
-import { CARD_PICK, GAME_PHASES } from "@/shared/lib/constants/game";
+import { CARD_PICK, GamePhase } from "@/shared/lib/constants/game";
 import {
   useGameRoom,
   type GameSessionState,
@@ -55,7 +55,7 @@ export default function PickingRolesPanel({
     try {
       await updateSession({
         sessionId: gameSessionState._id,
-        updates: ruleset.advanceUpdates(GAME_PHASES[1]),
+        updates: ruleset.advanceUpdates(GamePhase.PICKING_ROLES),
       });
     } finally {
       setIsLoading(false);
@@ -65,7 +65,7 @@ export default function PickingRolesPanel({
   const currentSeat = state?.currentSeat ?? null;
   const descriptor: HostPanelDescriptor = {
     eyebrow: t("preGame"),
-    title: tPhases("picking_roles"),
+    title: tPhases(GamePhase.PICKING_ROLES),
     timer:
       !isComplete && turnStartedMs !== null
         ? {

@@ -2,7 +2,7 @@ import { ConvexError, v } from "convex/values";
 import { mutation } from "../../_generated/server";
 import { getAuthenticatedUser } from "../../lib/auth";
 import { getPlayerInGame, getPlayersByGameId } from "../../lib/games";
-import { SPORTS } from "../../lib/constants";
+import { SPORTS, GamePhase } from "../../lib/constants";
 import type { Id } from "../../_generated/dataModel";
 import type { DatabaseReader } from "../../_generated/server";
 
@@ -67,7 +67,7 @@ export const toggleSuspect = mutation({
     const userId = await getAuthenticatedUser(ctx);
 
     const session = await getGameSession(ctx.db, gameId);
-    if (session.gamePhase !== "best_move") {
+    if (session.gamePhase !== GamePhase.BEST_MOVE) {
       throw new ConvexError("Not in the best move phase");
     }
     const nightNumber = session.currentNightNumber;

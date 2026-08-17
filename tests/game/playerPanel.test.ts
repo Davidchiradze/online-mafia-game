@@ -14,26 +14,27 @@ import {
   canSeePhaseTimer,
   phaseClock,
 } from "@/features/game-room/lib/playerPanel";
+import { GamePhase } from "@/shared/lib/constants/game";
 
 describe("phaseClock", () => {
   it("counts the night through every meeting, action and buffer", () => {
-    expect(phaseClock("mafia_meet", 1)).toEqual({ kind: "night", value: 1 });
-    expect(phaseClock("mafia_chooses_target", 3)).toEqual({
+    expect(phaseClock(GamePhase.MAFIA_MEET, 1)).toEqual({ kind: "night", value: 1 });
+    expect(phaseClock(GamePhase.MAFIA_CHOOSES_TARGET, 3)).toEqual({
       kind: "night",
       value: 3,
     });
-    expect(phaseClock("phase_transition", 2)).toEqual({
+    expect(phaseClock(GamePhase.PHASE_TRANSITION, 2)).toEqual({
       kind: "night",
       value: 2,
     });
-    expect(phaseClock("don_meet", 1)).toEqual({ kind: "night", value: 1 });
+    expect(phaseClock(GamePhase.DON_MEET, 1)).toEqual({ kind: "night", value: 1 });
   });
 
   it("counts the day as a round, not as a night", () => {
     // The first day runs before any night, so night 0 is day 1.
-    expect(phaseClock("day_phase", 0)).toEqual({ kind: "day", value: 1 });
-    expect(phaseClock("voting", 2)).toEqual({ kind: "day", value: 3 });
-    expect(phaseClock("introduction_phase", 0)).toEqual({
+    expect(phaseClock(GamePhase.DAY_PHASE, 0)).toEqual({ kind: "day", value: 1 });
+    expect(phaseClock(GamePhase.VOTING, 2)).toEqual({ kind: "day", value: 3 });
+    expect(phaseClock(GamePhase.INTRODUCTION_PHASE, 0)).toEqual({
       kind: "day",
       value: 1,
     });
@@ -42,35 +43,35 @@ describe("phaseClock", () => {
   it("puts the night's goodbye at dawn and the vote's in the day", () => {
     // Same phase, two clocks. Standing nominations mean the day already voted
     // somebody out — the same signal `advanceFromFarewell` routes on.
-    expect(phaseClock("farewell_speech", 2)).toEqual({
+    expect(phaseClock(GamePhase.FAREWELL_SPEECH, 2)).toEqual({
       kind: "dawn",
       value: 2,
     });
-    expect(phaseClock("farewell_speech", 2, 1)).toEqual({
+    expect(phaseClock(GamePhase.FAREWELL_SPEECH, 2, 1)).toEqual({
       kind: "day",
       value: 3,
     });
   });
 
   it("puts best move at dawn", () => {
-    expect(phaseClock("best_move", 1)).toEqual({ kind: "dawn", value: 1 });
+    expect(phaseClock(GamePhase.BEST_MOVE, 1)).toEqual({ kind: "dawn", value: 1 });
   });
 
   it("never shows night 0", () => {
     // `currentNightNumber` is 0 until the first night is entered, and a "Night
     // 0" kicker is nonsense on a phase that only runs during night 1.
-    expect(phaseClock("mafia_meet", 0)).toEqual({ kind: "night", value: 1 });
+    expect(phaseClock(GamePhase.MAFIA_MEET, 0)).toEqual({ kind: "night", value: 1 });
   });
 
   it("has no clock to show before the game or after it", () => {
-    expect(phaseClock("game_session_started", 0)).toBeNull();
-    expect(phaseClock("picking_roles", 0)).toBeNull();
-    expect(phaseClock("end_game", 4)).toBeNull();
+    expect(phaseClock(GamePhase.GAME_SESSION_STARTED, 0)).toBeNull();
+    expect(phaseClock(GamePhase.PICKING_ROLES, 0)).toBeNull();
+    expect(phaseClock(GamePhase.END_GAME, 4)).toBeNull();
   });
 });
 
 describe("canSeePhaseTimer", () => {
-  const awakeRoles = ["DON", "MAFIA", "MAFIA_RIGHT_HAND"] as const;
+  const awakeRoles = ["DON", "MAFIA"] as const;
 
   it("shows it to the acting role", () => {
     expect(

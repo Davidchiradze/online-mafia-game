@@ -11,26 +11,27 @@
 import { describe, expect, it } from "vitest";
 
 import { nightPhaseLabelKey } from "@/features/game-room/lib/nightPhase";
+import { GamePhase } from "@/shared/lib/constants/game";
 
 describe("nightPhaseLabelKey", () => {
   it("labels the first night's mafia phase as a meeting, not a kill", () => {
-    expect(nightPhaseLabelKey("mafia_chooses_target", 1)).toBe(
+    expect(nightPhaseLabelKey(GamePhase.MAFIA_CHOOSES_TARGET, 1)).toBe(
       "mafia_meets_first_night",
     );
   });
 
   it("labels every later night as a target pick", () => {
-    expect(nightPhaseLabelKey("mafia_chooses_target", 2)).toBe(
-      "mafia_chooses_target",
+    expect(nightPhaseLabelKey(GamePhase.MAFIA_CHOOSES_TARGET, 2)).toBe(
+      GamePhase.MAFIA_CHOOSES_TARGET,
     );
-    expect(nightPhaseLabelKey("mafia_chooses_target", 7)).toBe(
-      "mafia_chooses_target",
+    expect(nightPhaseLabelKey(GamePhase.MAFIA_CHOOSES_TARGET, 7)).toBe(
+      GamePhase.MAFIA_CHOOSES_TARGET,
     );
   });
 
   it("passes every other phase through untouched", () => {
-    expect(nightPhaseLabelKey("doctor_heals_player", 1)).toBe(
-      "doctor_heals_player",
+    expect(nightPhaseLabelKey(GamePhase.DOCTOR_HEALS_PLAYER, 1)).toBe(
+      GamePhase.DOCTOR_HEALS_PLAYER,
     );
   });
 });

@@ -98,7 +98,6 @@ export interface NightModel {
 export type GameFlags = {
   hasIntroductionPhase: boolean;
   hasFarewellSpeech: boolean;
-  hasRightHandPromotion: boolean;
   /** Sports day-1 rule: a single nominee on the first day skips to night. */
   firstDaySingleNomineeSkipsToNight: boolean;
   /** Sports: the 3rd foul bans the player from speaking. */

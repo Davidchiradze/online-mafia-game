@@ -26,6 +26,7 @@ import type * as games_core_farewellSpeech from "../games/core/farewellSpeech.js
 import type * as games_core_fouls from "../games/core/fouls.js";
 import type * as games_core_gameLogs from "../games/core/gameLogs.js";
 import type * as games_core_leaderboard from "../games/core/leaderboard.js";
+import type * as games_core_mafiaSuccession from "../games/core/mafiaSuccession.js";
 import type * as games_core_nightPhase from "../games/core/nightPhase.js";
 import type * as games_core_phaseTransitions from "../games/core/phaseTransitions.js";
 import type * as games_core_players from "../games/core/players.js";
@@ -119,6 +120,7 @@ declare const fullApi: ApiFromModules<{
   "games/core/fouls": typeof games_core_fouls;
   "games/core/gameLogs": typeof games_core_gameLogs;
   "games/core/leaderboard": typeof games_core_leaderboard;
+  "games/core/mafiaSuccession": typeof games_core_mafiaSuccession;
   "games/core/nightPhase": typeof games_core_nightPhase;
   "games/core/phaseTransitions": typeof games_core_phaseTransitions;
   "games/core/players": typeof games_core_players;

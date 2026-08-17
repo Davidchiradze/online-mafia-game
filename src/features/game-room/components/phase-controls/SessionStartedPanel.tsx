@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 import type { GameSessionState } from "@/features/game-room/context/gameRoomContext";
 import HostPanel from "@/features/game-room/components/host-panel/HostPanel";
 import type { HostPanelDescriptor } from "@/features/game-room/lib/hostPanel";
+import { GamePhase } from "@/shared/lib/constants/game";
 
 type SessionStartedPanelProps = {
   gameSessionState: GameSessionState;
@@ -46,7 +47,7 @@ export default function SessionStartedPanel({
 
   const descriptor: HostPanelDescriptor = {
     eyebrow: t("preGame"),
-    title: tPhases("game_session_started"),
+    title: tPhases(GamePhase.GAME_SESSION_STARTED),
     status: t("rolesNotDealt"),
     actions: [
       {

@@ -1,8 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   GAME_PHASES as SRC_GAME_PHASES,
-  JAPANESE_MAFIA_ROLES,
-} from "@/shared/lib/constants/game";
+  JAPANESE_MAFIA_ROLES, GamePhase } from "@/shared/lib/constants/game";
 import {
   GAME_PHASES as CONVEX_GAME_PHASES,
   JAPANESE_MAFIA_ROLE_DISTRIBUTION,
@@ -25,59 +24,56 @@ describe("GAME_PHASES — frontend (src/lib/constants/game.ts)", () => {
     // Indices 0..21 are the Japanese sequence (+ the phase_transition buffer at
     // 21); Sports-only phases are appended after so those indices stay stable.
     expect(SRC_GAME_PHASES).toEqual([
-      "game_session_started",
-      "picking_roles",
-      "mafia_meet",
-      "don_chooses_right_hand",
-      "yakuda_shogun_meet",
-      "detective_meet",
-      "doctor_meet",
-      "introduction_phase",
-      "night_phase",
-      "mafia_chooses_target",
-      "don_checks_for_detective",
-      "right_hand_checks_for_yakuza",
-      "yakuza_and_shogun_chooses_target",
-      "detective_checks_for_mafia",
-      "doctor_heals_player",
-      "farewell_speech",
-      "day_phase",
-      "nominated_players_speak",
-      "voting",
-      "repeat",
-      "end_game",
-      "phase_transition",
-      "don_meet",
-      "best_move",
+      GamePhase.GAME_SESSION_STARTED,
+      GamePhase.PICKING_ROLES,
+      GamePhase.MAFIA_MEET,
+      GamePhase.YAKUDA_SHOGUN_MEET,
+      GamePhase.DETECTIVE_MEET,
+      GamePhase.DOCTOR_MEET,
+      GamePhase.INTRODUCTION_PHASE,
+      GamePhase.NIGHT_PHASE,
+      GamePhase.MAFIA_CHOOSES_TARGET,
+      GamePhase.DON_CHECKS_FOR_DETECTIVE,
+      GamePhase.YAKUZA_AND_SHOGUN_CHOOSES_TARGET,
+      GamePhase.DETECTIVE_CHECKS_FOR_MAFIA,
+      GamePhase.DOCTOR_HEALS_PLAYER,
+      GamePhase.FAREWELL_SPEECH,
+      GamePhase.DAY_PHASE,
+      GamePhase.NOMINATED_PLAYERS_SPEAK,
+      GamePhase.VOTING,
+      GamePhase.REPEAT,
+      GamePhase.END_GAME,
+      GamePhase.PHASE_TRANSITION,
+      GamePhase.DON_MEET,
+      GamePhase.BEST_MOVE,
     ]);
   });
 
   it("includes the phase_transition buffer", () => {
-    expect(SRC_GAME_PHASES).toContain("phase_transition");
+    expect(SRC_GAME_PHASES).toContain(GamePhase.PHASE_TRANSITION);
   });
 });
 
 describe("GAME_PHASES — backend (convex/lib/constants.ts)", () => {
-  it("is the 21-phase list WITHOUT the phase_transition buffer", () => {
+  it("is the 19-phase list WITHOUT the phase_transition buffer", () => {
     // KNOWN DRIFT: the two GAME_PHASES lists are duplicated and out of sync —
     // the backend copy predates the phase_transition buffer. The refactor
     // collapses these into a single `definition.phases`. Documented here so the
     // consolidation is intentional, not a silent behavior change.
-    expect(CONVEX_GAME_PHASES).not.toContain("phase_transition");
-    expect(CONVEX_GAME_PHASES).toHaveLength(21);
+    expect(CONVEX_GAME_PHASES).not.toContain(GamePhase.PHASE_TRANSITION);
+    expect(CONVEX_GAME_PHASES).toHaveLength(19);
   });
 
-  it("shares its ordering with the first 21 frontend phases", () => {
-    expect(SRC_GAME_PHASES.slice(0, 21)).toEqual([...CONVEX_GAME_PHASES]);
+  it("shares its ordering with the first 19 frontend phases", () => {
+    expect(SRC_GAME_PHASES.slice(0, 19)).toEqual([...CONVEX_GAME_PHASES]);
   });
 });
 
 describe("Japanese role set & deck", () => {
-  it("declares the 8 Japanese roles", () => {
+  it("declares the 7 Japanese roles", () => {
     expect(JAPANESE_MAFIA_ROLES).toEqual([
       "DON",
       "MAFIA",
-      "MAFIA_RIGHT_HAND",
       "SHOGUN",
       "YAKUZA",
       "DETECTIVE",
@@ -86,9 +82,18 @@ describe("Japanese role set & deck", () => {
     ]);
   });
 
-  it("deals a 12-card deck without MAFIA_RIGHT_HAND (promoted in-game)", () => {
+  it("deals a 12-card deck covering every role it can assign", () => {
     expect(JAPANESE_MAFIA_ROLE_DISTRIBUTION).toHaveLength(12);
+    // No role is reachable only by in-game promotion any more: everything
+    // Japanese can assign is dealt from the deck.
+    for (const role of JAPANESE_MAFIA_ROLES) {
+      expect(JAPANESE_MAFIA_ROLE_DISTRIBUTION).toContain(role);
+    }
+  });
+
+  it("keeps the retired MAFIA_RIGHT_HAND out of the deck and the role set", () => {
     expect(JAPANESE_MAFIA_ROLE_DISTRIBUTION).not.toContain("MAFIA_RIGHT_HAND");
+    expect(JAPANESE_MAFIA_ROLES).not.toContain("MAFIA_RIGHT_HAND");
   });
 
   it("deals exactly 2 MAFIA and 5 CITIZEN cards", () => {
@@ -98,6 +103,9 @@ describe("Japanese role set & deck", () => {
   });
 
   it("defines the mafia and yakuza teams", () => {
+    // MAFIA_RIGHT_HAND is RETIRED but deliberately still listed: archived games
+    // persist it, and dropping it here would reclassify those rows as citizens.
+    // No live game can hold it, so faction COUNTS are unaffected.
     expect(MAFIA_TEAM_ROLES).toEqual(["DON", "MAFIA_RIGHT_HAND", "MAFIA"]);
     expect(YAKUZA_TEAM_ROLES).toEqual(["YAKUZA", "SHOGUN"]);
   });

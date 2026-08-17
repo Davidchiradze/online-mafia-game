@@ -5,7 +5,7 @@ import { useMutation } from "convex/react";
 import { gameSessions, sportsNightPhase } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
 import { useTranslations } from "next-intl";
-import { SPORTS } from "@/shared/lib/constants/game";
+import { SPORTS, GamePhase } from "@/shared/lib/constants/game";
 import {
   useGameRoom,
   type GameSessionState,
@@ -92,7 +92,7 @@ export default function SportsMafiaTargetPanel({
         void callMutation(() =>
           updateSession({
             sessionId: gameSessionState._id,
-            updates: ruleset.advanceUpdates("mafia_chooses_target"),
+            updates: ruleset.advanceUpdates(GamePhase.MAFIA_CHOOSES_TARGET),
           }),
         ),
       isLoading,

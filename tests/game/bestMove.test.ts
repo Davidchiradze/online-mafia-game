@@ -7,6 +7,7 @@ import { SPORTS_PHASES, sportsNextPhase } from "@convex/games/sports/phases";
 import { SPORTS_DEFINITION } from "@convex/games/sports/definition";
 import { JAPANESE_DEFINITION } from "@convex/games/japanese/definition";
 import { SPORTS } from "@convex/lib/constants";
+import { GamePhase } from "@/shared/lib/constants/game";
 
 /**
  * Sports "best move" (docs/variants/sports/rules.md §6) — the pure rules.
@@ -74,15 +75,15 @@ describe("isBestMoveComplete (§6.2)", () => {
 
 describe("best_move in the Sports phase graph (§6.4)", () => {
   it("sits between the last night check and the farewell", () => {
-    const i = SPORTS_PHASES.indexOf("best_move");
+    const i = SPORTS_PHASES.indexOf(GamePhase.BEST_MOVE);
     expect(i).toBeGreaterThan(
-      SPORTS_PHASES.indexOf("detective_checks_for_mafia"),
+      SPORTS_PHASES.indexOf(GamePhase.DETECTIVE_CHECKS_FOR_MAFIA),
     );
-    expect(i).toBeLessThan(SPORTS_PHASES.indexOf("farewell_speech"));
+    expect(i).toBeLessThan(SPORTS_PHASES.indexOf(GamePhase.FAREWELL_SPEECH));
   });
 
   it("always advances to farewell_speech (a deterministic edge)", () => {
-    expect(sportsNextPhase("best_move")).toBe("farewell_speech");
+    expect(sportsNextPhase(GamePhase.BEST_MOVE)).toBe(GamePhase.FAREWELL_SPEECH);
   });
 
   it("is flagged on Sports and absent from Japanese", () => {
@@ -91,6 +92,6 @@ describe("best_move in the Sports phase graph (§6.4)", () => {
   });
 
   it("is not a Japanese phase", () => {
-    expect(JAPANESE_DEFINITION.phases).not.toContain("best_move");
+    expect(JAPANESE_DEFINITION.phases).not.toContain(GamePhase.BEST_MOVE);
   });
 });

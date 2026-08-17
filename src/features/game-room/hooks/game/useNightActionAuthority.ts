@@ -36,6 +36,7 @@ export function useNightActionAuthority(): NightActionAuthority {
         players: players.map((p) => ({
           playerId: p.playerId as string,
           isAlive: p.isAlive,
+          seatNumber: p.seatNumber,
         })),
         roleOf: (playerId) => playerRolesMap.get(playerId) ?? null,
       }),

@@ -103,8 +103,8 @@ describe("getRoleDisplayConfig / getRoleEmoji", () => {
     expect(getRoleEmoji("SOMETHING_ELSE")).toBe("❓");
   });
 
-  it("has a config entry for every one of the 8 roles", () => {
-    expect(Object.keys(ROLE_DISPLAY_CONFIG)).toHaveLength(8);
+  it("has a config entry for every one of the 7 dealt roles", () => {
+    expect(Object.keys(ROLE_DISPLAY_CONFIG)).toHaveLength(7);
   });
 });
 

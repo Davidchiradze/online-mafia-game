@@ -10,6 +10,7 @@ import {
 import HostPanel from "@/features/game-room/components/host-panel/HostPanel";
 import RegularVotingPanel from "./RegularVotingPanel";
 import BothLeaveVotingPanel from "./BothLeaveVotingPanel";
+import { GamePhase } from "@/shared/lib/constants/game";
 
 type VotingPanelProps = {
   gameSessionState: GameSessionState;
@@ -40,7 +41,7 @@ export default function VotingPanel({ gameSessionState }: VotingPanelProps) {
           eyebrow: tHost("dayCounter", {
             day: dayRoundFromNightNumber(gameSessionState.currentNightNumber),
           }),
-          title: tPhases("voting"),
+          title: tPhases(GamePhase.VOTING),
           status: t("loading"),
           actions: [],
         }}

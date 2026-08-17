@@ -18,11 +18,12 @@ import { sportsNightPhase } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 import type { HostPanelMeta } from "@/features/game-room/lib/hostPanel";
+import { GamePhase } from "@/shared/lib/constants/game";
 
 const NIGHT_PHASES: readonly string[] = [
-  "mafia_chooses_target",
-  "don_checks_for_detective",
-  "detective_checks_for_mafia",
+  GamePhase.MAFIA_CHOOSES_TARGET,
+  GamePhase.DON_CHECKS_FOR_DETECTIVE,
+  GamePhase.DETECTIVE_CHECKS_FOR_MAFIA,
 ];
 
 const EMPTY: readonly HostPanelMeta[] = [];
@@ -40,7 +41,7 @@ export function useSportsNightSummary(): readonly HostPanelMeta[] {
 
   if (!isHost || !inNightPhase || !selections) return EMPTY;
 
-  const isChoosing = phase === "mafia_chooses_target";
+  const isChoosing = phase === GamePhase.MAFIA_CHOOSES_TARGET;
 
   return selections.map(({ mafiaSeat, targetSeat }) => ({
     id: `mafia-${String(mafiaSeat)}`,

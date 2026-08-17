@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
-import { YAKUZA_TEAM_ROLES } from "@/shared/lib/constants/game";
+import { YAKUZA_TEAM_ROLES, GamePhase } from "@/shared/lib/constants/game";
 
 type GameSessionState = NonNullable<
   ReturnType<typeof useGameRoom>["gameSessionState"]
@@ -54,7 +54,7 @@ export function useYakuzaTargetSelection(
   const isYakuzaTargetSelected = useMemo(() => {
     if (!gameSessionState || seatNumber === null) return false;
     const isInYakuzaPhase =
-      gameSessionState.gamePhase === "yakuza_and_shogun_chooses_target";
+      gameSessionState.gamePhase === GamePhase.YAKUZA_AND_SHOGUN_CHOOSES_TARGET;
     if (!isInYakuzaPhase) return false;
 
     if ((isViewerHost || isViewerOnYakuzaTeam) && nightPhaseSession) {

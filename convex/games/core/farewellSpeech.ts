@@ -8,6 +8,7 @@ import { isBestMoveEligible } from "../sports/bestMove";
 import type { GameDefinition } from "./types";
 import type { Id } from "../../_generated/dataModel";
 import type { DatabaseReader } from "../../_generated/server";
+import { GamePhase } from "../../lib/constants";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -210,7 +211,7 @@ export const startFarewellSpeech = mutation({
       })
     ) {
       await ctx.db.patch(session._id, {
-        gamePhase: "best_move",
+        gamePhase: GamePhase.BEST_MOVE,
         speakingOrder: randomizedOrder,
         currentSpeakerIndex: undefined,
         speakerStartedAt: undefined,
@@ -227,7 +228,7 @@ export const startFarewellSpeech = mutation({
     }
 
     await ctx.db.patch(session._id, {
-      gamePhase: "farewell_speech",
+      gamePhase: GamePhase.FAREWELL_SPEECH,
       speakingOrder: randomizedOrder,
       currentSpeakerIndex: undefined,
       speakerStartedAt: undefined,
@@ -251,7 +252,7 @@ export const grantFarewellTime = mutation({
     await assertIsHost(ctx.db, gameId, userId);
     const session = await getGameSession(ctx.db, gameId);
 
-    if (session.gamePhase !== "farewell_speech") {
+    if (session.gamePhase !== GamePhase.FAREWELL_SPEECH) {
       throw new ConvexError("Not in farewell speech phase");
     }
 
@@ -294,7 +295,7 @@ export const markDeadAndAdvance = mutation({
     await assertIsHost(ctx.db, gameId, userId);
     const session = await getGameSession(ctx.db, gameId);
 
-    if (session.gamePhase !== "farewell_speech") {
+    if (session.gamePhase !== GamePhase.FAREWELL_SPEECH) {
       throw new ConvexError("Not in farewell speech phase");
     }
 
@@ -328,7 +329,7 @@ export const advanceFromFarewell = mutation({
     await assertIsHost(ctx.db, gameId, userId);
     const session = await getGameSession(ctx.db, gameId);
 
-    if (session.gamePhase !== "farewell_speech") {
+    if (session.gamePhase !== GamePhase.FAREWELL_SPEECH) {
       throw new ConvexError("Not in farewell speech phase");
     }
 

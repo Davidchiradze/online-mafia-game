@@ -19,7 +19,7 @@ Everywhere else, read the resolved definition/ruleset. Never `if (gameType === â
 | --- | --- | --- |
 | Seats / factions | 12 / mafia, yakuza, citizens | 10 / mafia, citizens |
 | Night model | `single-authority` (one picker, shared target) | `unanimous-vote` (every living mafia picks **privately**) |
-| Variant extras | right-hand promotion, intro phase | best move, 3rd-foul speaking ban, day-1 single-nominee skip |
+| Variant extras | intro phase, seat-order kill succession | best move, 3rd-foul speaking ban, day-1 single-nominee skip |
 | Rated | yes | no â€” absent from `RATING_CONFIG`, so rating is skipped |
 
 `GameDefinition`: `id, seatCount, roles, roleDistribution, factions,

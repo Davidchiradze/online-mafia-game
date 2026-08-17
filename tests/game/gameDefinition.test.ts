@@ -10,7 +10,7 @@ import {
 import { roleToFaction, type Faction } from "@convex/lib/roles";
 import { decideWinner } from "@convex/games/japanese/winConditions";
 import type { WinContext } from "@convex/games/core/winConditions";
-import { JAPANESE_MAFIA_ROLES } from "@/shared/lib/constants/game";
+import { JAPANESE_MAFIA_ROLES, GamePhase } from "@/shared/lib/constants/game";
 
 /**
  * EQUIVALENCE / CHARACTERIZATION TEST — the Japanese `GameDefinition`.
@@ -82,7 +82,6 @@ describe("JAPANESE_DEFINITION — data mirrors the legacy constants", () => {
     expect(def.flags).toEqual({
       hasIntroductionPhase: true,
       hasFarewellSpeech: true,
-      hasRightHandPromotion: true,
       firstDaySingleNomineeSkipsToNight: false,
       thirdFoulSpeakingBan: false,
       hasBestMove: false,
@@ -93,8 +92,8 @@ describe("JAPANESE_DEFINITION — data mirrors the legacy constants", () => {
 describe("JAPANESE_DEFINITION.decideWinner — delegates to the pinned tables", () => {
   const def = JAPANESE_DEFINITION;
   const cases: Array<[string[], WinContext]> = [
-    [["DON", "MAFIA", "MAFIA_RIGHT_HAND", "CITIZEN", "CITIZEN", "DOCTOR"], "beforeDay"],
-    [["DON", "MAFIA", "MAFIA_RIGHT_HAND", "DOCTOR", "YAKUZA"], "beforeNight"],
+    [["DON", "MAFIA", "MAFIA", "CITIZEN", "CITIZEN", "DOCTOR"], "beforeDay"],
+    [["DON", "MAFIA", "MAFIA", "DOCTOR", "YAKUZA"], "beforeNight"],
     [["YAKUZA", "SHOGUN", "CITIZEN"], "beforeDay"],
     [["CITIZEN", "DETECTIVE", "DOCTOR"], "beforeDay"],
     [[], "beforeDay"],
@@ -109,20 +108,21 @@ describe("JAPANESE_DEFINITION.nextPhase — the deterministic host-advance graph
 
   // Exactly the deterministic edges in tests/game/phaseTransitionGraph.test.ts.
   const edges: Array<[string, string]> = [
-    ["picking_roles", "mafia_meet"],
-    ["mafia_meet", "don_chooses_right_hand"],
-    ["don_chooses_right_hand", "yakuda_shogun_meet"],
-    ["yakuda_shogun_meet", "detective_meet"],
-    ["detective_meet", "doctor_meet"],
-    ["doctor_meet", "introduction_phase"],
-    ["night_phase", "mafia_chooses_target"],
-    ["mafia_chooses_target", "don_checks_for_detective"],
-    ["don_checks_for_detective", "right_hand_checks_for_yakuza"],
-    ["right_hand_checks_for_yakuza", "yakuza_and_shogun_chooses_target"],
-    ["yakuza_and_shogun_chooses_target", "detective_checks_for_mafia"],
-    ["detective_checks_for_mafia", "doctor_heals_player"],
-    ["doctor_heals_player", "farewell_speech"],
-    ["voting", "repeat"],
+    [GamePhase.PICKING_ROLES, GamePhase.MAFIA_MEET],
+    [GamePhase.MAFIA_MEET, GamePhase.YAKUDA_SHOGUN_MEET],
+    [GamePhase.YAKUDA_SHOGUN_MEET, GamePhase.DETECTIVE_MEET],
+    [GamePhase.DETECTIVE_MEET, GamePhase.DOCTOR_MEET],
+    [GamePhase.DOCTOR_MEET, GamePhase.INTRODUCTION_PHASE],
+    [GamePhase.NIGHT_PHASE, GamePhase.MAFIA_CHOOSES_TARGET],
+    [GamePhase.MAFIA_CHOOSES_TARGET, GamePhase.DON_CHECKS_FOR_DETECTIVE],
+    [
+      GamePhase.DON_CHECKS_FOR_DETECTIVE,
+      GamePhase.YAKUZA_AND_SHOGUN_CHOOSES_TARGET,
+    ],
+    [GamePhase.YAKUZA_AND_SHOGUN_CHOOSES_TARGET, GamePhase.DETECTIVE_CHECKS_FOR_MAFIA],
+    [GamePhase.DETECTIVE_CHECKS_FOR_MAFIA, GamePhase.DOCTOR_HEALS_PLAYER],
+    [GamePhase.DOCTOR_HEALS_PLAYER, GamePhase.FAREWELL_SPEECH],
+    [GamePhase.VOTING, GamePhase.REPEAT],
   ];
 
   it.each(edges)("%s advances to %s", (from, to) => {
@@ -139,13 +139,13 @@ describe("JAPANESE_DEFINITION.nextPhase — the deterministic host-advance graph
 
   // State-dependent / terminal transitions are owned by server mutations.
   const branchingOrTerminal = [
-    "game_session_started",
-    "introduction_phase",
-    "farewell_speech",
-    "day_phase",
-    "nominated_players_speak",
-    "repeat",
-    "end_game",
+    GamePhase.GAME_SESSION_STARTED,
+    GamePhase.INTRODUCTION_PHASE,
+    GamePhase.FAREWELL_SPEECH,
+    GamePhase.DAY_PHASE,
+    GamePhase.NOMINATED_PLAYERS_SPEAK,
+    GamePhase.REPEAT,
+    GamePhase.END_GAME,
   ];
   it.each(branchingOrTerminal)("returns null for the non-deterministic %s", (p) => {
     expect(def.nextPhase(p)).toBeNull();

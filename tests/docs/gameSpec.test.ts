@@ -26,6 +26,7 @@ import {
   registeredVariants,
   winTable,
 } from "../support/gameSpec";
+import { GamePhase } from "@/shared/lib/constants/game";
 
 const variants = registeredVariants();
 
@@ -103,15 +104,20 @@ describe("phase universe", () => {
     expect(
       phaseUniverseDrift(),
       "the set of phases reachable-but-undeclared changed — regenerate the spec and confirm the change is intended",
-    ).toEqual(["phase_transition"]);
+    ).toEqual([GamePhase.PHASE_TRANSITION]);
   });
 
-  it("deals a promoted role that is absent from the deck", () => {
-    // MAFIA_RIGHT_HAND exists in Japanese's role list but not its deck — it is
-    // reached by in-game promotion. The generator has to model that or the
-    // roles table silently drops a role.
-    const japanese = variants.find((v) => v.id === "japanese_mafia")!;
-    expect(japanese.def.roles).toContain("MAFIA_RIGHT_HAND");
-    expect(deckCounts(japanese.def).get("MAFIA_RIGHT_HAND")).toBeUndefined();
+  it("deals every role each variant declares", () => {
+    // No variant has a promotion-only role any more (MAFIA_RIGHT_HAND was the
+    // only one). Every declared role must therefore appear in the deck — if a
+    // future variant reintroduces a deck-absent role, this fails and the
+    // generator's "promoted in game" branch needs a test of its own again.
+    for (const v of variants) {
+      const deck = deckCounts(v.def);
+      for (const role of v.def.roles) {
+        expect(deck.get(role), `${v.id} declares ${role} but never deals it`)
+          .toBeGreaterThan(0);
+      }
+    }
   });
 });

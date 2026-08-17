@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { advanceUpdates } from "@/features/game-room/variants/japanese/phaseFlow";
+import { GamePhase } from "@/shared/lib/constants/game";
 
 /**
  * CHARACTERIZATION TEST — the Japanese host-advance `updates` payloads.
@@ -18,12 +19,10 @@ import { advanceUpdates } from "@/features/game-room/variants/japanese/phaseFlow
 
 describe("advanceUpdates — direct transitions (no buffer)", () => {
   const cases: Array<[string, string]> = [
-    ["picking_roles", "mafia_meet"], // ConfirmRolesButton
-    ["mafia_meet", "don_chooses_right_hand"], // EndMafiaMeetButton
-    ["night_phase", "mafia_chooses_target"], // StartMafiaTargetButton
-    ["mafia_chooses_target", "don_checks_for_detective"], // EndMafiaTargetButton
-    ["don_checks_for_detective", "right_hand_checks_for_yakuza"], // EndDonCheckButton
-    ["voting", "repeat"], // EndVotingButton
+    [GamePhase.PICKING_ROLES, GamePhase.MAFIA_MEET], // ConfirmRolesButton
+    [GamePhase.NIGHT_PHASE, GamePhase.MAFIA_CHOOSES_TARGET], // StartMafiaTargetButton
+    [GamePhase.MAFIA_CHOOSES_TARGET, GamePhase.DON_CHECKS_FOR_DETECTIVE], // EndMafiaTargetButton
+    [GamePhase.VOTING, GamePhase.REPEAT], // EndVotingButton
   ];
 
   it.each(cases)("%s → { gamePhase: %s }", (from, to) => {
@@ -33,19 +32,24 @@ describe("advanceUpdates — direct transitions (no buffer)", () => {
 
 describe("advanceUpdates — buffer-mediated transitions", () => {
   const cases: Array<[string, string]> = [
-    ["don_chooses_right_hand", "yakuda_shogun_meet"], // EndDonChooseRightHandButton
-    ["yakuda_shogun_meet", "detective_meet"], // EndYakuzaShogunMeetButton
-    ["detective_meet", "doctor_meet"], // EndDetectiveMeetButton
-    ["doctor_meet", "introduction_phase"], // EndDoctorMeetButton
-    ["right_hand_checks_for_yakuza", "yakuza_and_shogun_chooses_target"], // EndRightHandCheckButton
-    ["yakuza_and_shogun_chooses_target", "detective_checks_for_mafia"], // EndYakuzaTargetButton
-    ["detective_checks_for_mafia", "doctor_heals_player"], // EndDetectiveCheckButton
-    ["doctor_heals_player", "farewell_speech"], // EndDoctorHealButton (resolve-marker)
+    // mafia → yakuza: inherited the buffer when don_chooses_right_hand went away
+    [GamePhase.MAFIA_MEET, GamePhase.YAKUDA_SHOGUN_MEET], // EndMafiaMeetButton
+    [GamePhase.YAKUDA_SHOGUN_MEET, GamePhase.DETECTIVE_MEET], // EndYakuzaShogunMeetButton
+    [GamePhase.DETECTIVE_MEET, GamePhase.DOCTOR_MEET], // EndDetectiveMeetButton
+    [GamePhase.DOCTOR_MEET, GamePhase.INTRODUCTION_PHASE], // EndDoctorMeetButton
+    // mafia → yakuza: inherited the buffer when right_hand_checks_for_yakuza went away
+    [
+      GamePhase.DON_CHECKS_FOR_DETECTIVE,
+      GamePhase.YAKUZA_AND_SHOGUN_CHOOSES_TARGET,
+    ], // EndDonCheckButton
+    [GamePhase.YAKUZA_AND_SHOGUN_CHOOSES_TARGET, GamePhase.DETECTIVE_CHECKS_FOR_MAFIA], // EndYakuzaTargetButton
+    [GamePhase.DETECTIVE_CHECKS_FOR_MAFIA, GamePhase.DOCTOR_HEALS_PLAYER], // EndDetectiveCheckButton
+    [GamePhase.DOCTOR_HEALS_PLAYER, GamePhase.FAREWELL_SPEECH], // EndDoctorHealButton (resolve-marker)
   ];
 
   it.each(cases)("%s → phase_transition, nextPhase %s", (from, to) => {
     expect(advanceUpdates(from)).toEqual({
-      gamePhase: "phase_transition",
+      gamePhase: GamePhase.PHASE_TRANSITION,
       nextPhase: to,
     });
   });
@@ -54,7 +58,7 @@ describe("advanceUpdates — buffer-mediated transitions", () => {
 describe("advanceUpdates — guardrails", () => {
   it("throws for a phase with no deterministic host-advance edge", () => {
     // Branching / terminal phases are owned by server mutations, not buttons.
-    for (const p of ["day_phase", "farewell_speech", "repeat", "end_game"]) {
+    for (const p of [GamePhase.DAY_PHASE, GamePhase.FAREWELL_SPEECH, GamePhase.REPEAT, GamePhase.END_GAME]) {
       expect(() => advanceUpdates(p)).toThrow();
     }
   });

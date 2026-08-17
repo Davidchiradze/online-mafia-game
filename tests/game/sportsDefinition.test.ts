@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { getGameDefinition } from "@convex/games/registry";
 import { SPORTS_DEFINITION } from "@convex/games/sports/definition";
 import type { WinContext } from "@convex/games/core/winConditions";
+import { GamePhase } from "@/shared/lib/constants/game";
 
 /**
  * CHARACTERIZATION TEST — the Sports Mafia `GameDefinition` (Phase 2, data only).
@@ -60,7 +61,6 @@ describe("SPORTS_DEFINITION — roles, deck, factions (§2)", () => {
     expect(def.flags).toEqual({
       hasIntroductionPhase: false,
       hasFarewellSpeech: true,
-      hasRightHandPromotion: false,
       firstDaySingleNomineeSkipsToNight: true,
       thirdFoulSpeakingBan: true,
       hasBestMove: true,
@@ -73,46 +73,44 @@ describe("SPORTS_DEFINITION — phase graph (§3)", () => {
 
   it("drops the Japanese-only phases", () => {
     const dropped = [
-      "introduction_phase",
-      "don_chooses_right_hand",
-      "yakuda_shogun_meet",
-      "doctor_meet",
-      "right_hand_checks_for_yakuza",
-      "yakuza_and_shogun_chooses_target",
-      "doctor_heals_player",
+      GamePhase.INTRODUCTION_PHASE,
+      GamePhase.YAKUDA_SHOGUN_MEET,
+      GamePhase.DOCTOR_MEET,
+      GamePhase.YAKUZA_AND_SHOGUN_CHOOSES_TARGET,
+      GamePhase.DOCTOR_HEALS_PLAYER,
     ];
     for (const p of dropped) expect(def.phases).not.toContain(p);
   });
 
   it("keeps the two info-check phases", () => {
-    expect(def.phases).toContain("don_checks_for_detective");
-    expect(def.phases).toContain("detective_checks_for_mafia");
+    expect(def.phases).toContain(GamePhase.DON_CHECKS_FOR_DETECTIVE);
+    expect(def.phases).toContain(GamePhase.DETECTIVE_CHECKS_FOR_MAFIA);
   });
 
   it("adds a don_meet phase after mafia_meet", () => {
-    expect(def.phases).toContain("don_meet");
-    expect(def.phases.indexOf("don_meet")).toBe(
-      def.phases.indexOf("mafia_meet") + 1,
+    expect(def.phases).toContain(GamePhase.DON_MEET);
+    expect(def.phases.indexOf(GamePhase.DON_MEET)).toBe(
+      def.phases.indexOf(GamePhase.MAFIA_MEET) + 1,
     );
   });
 
   const edges: Array<[string, string]> = [
-    ["picking_roles", "mafia_meet"],
-    ["mafia_meet", "don_meet"], // Sports adds the Don's solo meet after mafia_meet
-    ["don_meet", "detective_meet"], // skips don_chooses_right_hand
-    ["detective_meet", "day_phase"], // no introduction_phase
-    ["night_phase", "mafia_chooses_target"],
-    ["mafia_chooses_target", "don_checks_for_detective"],
-    ["don_checks_for_detective", "detective_checks_for_mafia"], // skips right_hand check
-    ["detective_checks_for_mafia", "farewell_speech"], // resolve-marker
-    ["voting", "repeat"],
+    [GamePhase.PICKING_ROLES, GamePhase.MAFIA_MEET],
+    [GamePhase.MAFIA_MEET, GamePhase.DON_MEET], // Sports adds the Don's solo meet after mafia_meet
+    [GamePhase.DON_MEET, GamePhase.DETECTIVE_MEET], // skips don_chooses_right_hand
+    [GamePhase.DETECTIVE_MEET, GamePhase.DAY_PHASE], // no introduction_phase
+    [GamePhase.NIGHT_PHASE, GamePhase.MAFIA_CHOOSES_TARGET],
+    [GamePhase.MAFIA_CHOOSES_TARGET, GamePhase.DON_CHECKS_FOR_DETECTIVE],
+    [GamePhase.DON_CHECKS_FOR_DETECTIVE, GamePhase.DETECTIVE_CHECKS_FOR_MAFIA], // skips right_hand check
+    [GamePhase.DETECTIVE_CHECKS_FOR_MAFIA, GamePhase.FAREWELL_SPEECH], // resolve-marker
+    [GamePhase.VOTING, GamePhase.REPEAT],
   ];
   it.each(edges)("nextPhase: %s → %s", (from, to) => {
     expect(def.nextPhase(from)).toBe(to);
   });
 
   it("returns null for branching / terminal phases", () => {
-    for (const p of ["day_phase", "farewell_speech", "repeat", "end_game"]) {
+    for (const p of [GamePhase.DAY_PHASE, GamePhase.FAREWELL_SPEECH, GamePhase.REPEAT, GamePhase.END_GAME]) {
       expect(def.nextPhase(p)).toBeNull();
     }
   });

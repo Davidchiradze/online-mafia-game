@@ -16,6 +16,7 @@ import type {
   HostPanelAction,
   HostPanelDescriptor,
 } from "@/features/game-room/lib/hostPanel";
+import { GamePhase } from "@/shared/lib/constants/game";
 
 type RegularVotingPanelProps = {
   gameSessionState: GameSessionState;
@@ -152,7 +153,7 @@ export default function RegularVotingPanel({
       : tHost("dayCounter", {
           day: dayRoundFromNightNumber(gameSessionState.currentNightNumber),
         }),
-    title: tPhases("voting"),
+    title: tPhases(GamePhase.VOTING),
     timer,
     note: note ? { text: note, tone: "amber" } : undefined,
     meta: tally.length > 0 ? tally : undefined,

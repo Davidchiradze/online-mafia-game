@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
+import { GamePhase } from "@/shared/lib/constants/game";
 
 /**
  * Hook to determine if a player voted for the current candidate.
@@ -11,7 +12,7 @@ export function useVoteIndicator(seatNumber: number | null) {
   const { gameSessionState, votingSession, voteData } = useGameRoom();
 
   return useMemo(() => {
-    if (gameSessionState?.gamePhase !== "voting") {
+    if (gameSessionState?.gamePhase !== GamePhase.VOTING) {
       return { showVoteIndicator: false };
     }
 

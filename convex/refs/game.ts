@@ -260,16 +260,6 @@ export const gameRoles = {
     { gameId: Id<"games">; playerId: Id<"profiles">; role: string },
     null
   >("games/core/roles:assign"),
-  /**
-   * Don-only single-shot promotion of a MAFIA player to MAFIA_RIGHT_HAND
-   * during the `don_chooses_right_hand` phase. See `roles.ts` for full
-   * validation rules.
-   */
-  promoteToRightHand: makeFunctionReference<
-    "mutation",
-    { gameId: Id<"games">; targetPlayerId: Id<"profiles"> },
-    null
-  >("games/core/roles:promoteToRightHand"),
 };
 
 // ============================================================================

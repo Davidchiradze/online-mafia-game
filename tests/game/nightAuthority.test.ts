@@ -2,28 +2,38 @@ import { describe, it, expect } from "vitest";
 import { japaneseNightAuthority } from "@/features/game-room/variants/japanese/nightAuthority";
 import { sportsNightAuthority } from "@/features/game-room/variants/sports/nightAuthority";
 import type { NightAuthorityInput } from "@/features/game-room/variants/core/types";
+import { GamePhase } from "@/shared/lib/constants/game";
 
 /**
  * CHARACTERIZATION TEST — night-action authority per variant (P4-T3).
  *
- * The Japanese cases pin the SINGLE-authority logic extracted verbatim from the
- * old `useNightActionAuthority` (DON > MAFIA_RIGHT_HAND > MAFIA; SHOGUN > YAKUZA
- * with a lone SHOGUN unable to kill; DOCTOR heals; host never acts). The Sports
- * cases pin the §5 rule: EVERY living mafia acts during `mafia_chooses_target`,
- * and there is no yakuza/doctor.
+ * The Japanese cases pin the SINGLE-authority logic: the DON while alive, then
+ * the living mafia in the next SEAT clockwise from the Don's (wrapping);
+ * SHOGUN > YAKUZA with a lone SHOGUN unable to kill; DOCTOR heals; host never
+ * acts. The Sports cases pin the §5 rule: EVERY living mafia acts during
+ * `mafia_chooses_target`, and there is no yakuza/doctor.
  */
 
-// A roster keyed by role → playerId, with an alive map.
+// A roster keyed by label → player. The label is the role unless `role` says
+// otherwise, which is how a roster expresses two players holding MAFIA.
 function makeInput(
-  roster: Record<string, { id: string; alive?: boolean }>,
+  roster: Record<
+    string,
+    { id: string; alive?: boolean; seat?: number; role?: string }
+  >,
   over: { viewerId: string; phase: string | null; isHost?: boolean },
 ): NightAuthorityInput {
-  const players = Object.values(roster).map((r) => ({
+  const players = Object.values(roster).map((r, i) => ({
     playerId: r.id,
     isAlive: r.alive ?? true,
+    seatNumber: r.seat ?? i + 1,
   }));
-  const roleOf = (id: string) =>
-    Object.entries(roster).find(([, r]) => r.id === id)?.[0] ?? null;
+  const roleOf = (id: string) => {
+    const found = Object.entries(roster).find(([, r]) => r.id === id);
+    if (!found) return null;
+    const [label, entry] = found;
+    return entry.role ?? label;
+  };
   return {
     phase: over.phase,
     isHost: over.isHost ?? false,
@@ -36,39 +46,72 @@ function makeInput(
 
 describe("japaneseNightAuthority — single kill authority", () => {
   const roster = {
-    DON: { id: "u1" },
-    MAFIA_RIGHT_HAND: { id: "u2" },
-    MAFIA: { id: "u3" },
-    YAKUZA: { id: "u4" },
-    SHOGUN: { id: "u5" },
-    DOCTOR: { id: "u6" },
-    CITIZEN: { id: "u7" },
+    DON: { id: "u1", seat: 3 },
+    MAFIA_A: { id: "u2", seat: 1, role: "MAFIA" },
+    MAFIA_B: { id: "u3", seat: 5, role: "MAFIA" },
+    YAKUZA: { id: "u4", seat: 6 },
+    SHOGUN: { id: "u5", seat: 7 },
+    DOCTOR: { id: "u6", seat: 8 },
+    CITIZEN: { id: "u7", seat: 9 },
   };
 
   it("mafia authority is the DON when alive", () => {
     const don = japaneseNightAuthority(
-      makeInput(roster, { viewerId: "u1", phase: "mafia_chooses_target" }),
+      makeInput(roster, { viewerId: "u1", phase: GamePhase.MAFIA_CHOOSES_TARGET }),
     );
     const mafia = japaneseNightAuthority(
-      makeInput(roster, { viewerId: "u3", phase: "mafia_chooses_target" }),
+      makeInput(roster, { viewerId: "u3", phase: GamePhase.MAFIA_CHOOSES_TARGET }),
     );
     expect(don.hasMafiaKillAuthority).toBe(true);
     expect(mafia.hasMafiaKillAuthority).toBe(false);
   });
 
-  it("falls to the RIGHT_HAND when the DON is dead", () => {
-    const dead = { ...roster, DON: { id: "u1", alive: false } };
-    const rh = japaneseNightAuthority(
-      makeInput(dead, { viewerId: "u2", phase: "mafia_chooses_target" }),
+  it("falls to the mafia in the next seat after a dead DON, not the lowest seat", () => {
+    // DON sits at 3; living mafia at 1 and 5. Clockwise reaches 5 first.
+    const dead = { ...roster, DON: { id: "u1", seat: 3, alive: false } };
+    const seat5 = japaneseNightAuthority(
+      makeInput(dead, { viewerId: "u3", phase: GamePhase.MAFIA_CHOOSES_TARGET }),
     );
-    expect(rh.hasMafiaKillAuthority).toBe(true);
+    const seat1 = japaneseNightAuthority(
+      makeInput(dead, { viewerId: "u2", phase: GamePhase.MAFIA_CHOOSES_TARGET }),
+    );
+    expect(seat5.hasMafiaKillAuthority).toBe(true);
+    expect(seat1.hasMafiaKillAuthority).toBe(false);
+  });
+
+  it("wraps to the lowest seat when every living mafia sits before the DON", () => {
+    const dead = {
+      ...roster,
+      DON: { id: "u1", seat: 9, alive: false },
+      CITIZEN: { id: "u7", seat: 3 },
+    };
+    const seat1 = japaneseNightAuthority(
+      makeInput(dead, { viewerId: "u2", phase: GamePhase.MAFIA_CHOOSES_TARGET }),
+    );
+    const seat5 = japaneseNightAuthority(
+      makeInput(dead, { viewerId: "u3", phase: GamePhase.MAFIA_CHOOSES_TARGET }),
+    );
+    expect(seat1.hasMafiaKillAuthority).toBe(true);
+    expect(seat5.hasMafiaKillAuthority).toBe(false);
+  });
+
+  it("skips a dead successor and keeps walking clockwise", () => {
+    const dead = {
+      ...roster,
+      DON: { id: "u1", seat: 3, alive: false },
+      MAFIA_B: { id: "u3", seat: 5, role: "MAFIA", alive: false },
+    };
+    const seat1 = japaneseNightAuthority(
+      makeInput(dead, { viewerId: "u2", phase: GamePhase.MAFIA_CHOOSES_TARGET }),
+    );
+    expect(seat1.hasMafiaKillAuthority).toBe(true);
   });
 
   it("SHOGUN kills when a YAKUZA is alive; a lone SHOGUN cannot", () => {
     const shogun = japaneseNightAuthority(
       makeInput(roster, {
         viewerId: "u5",
-        phase: "yakuza_and_shogun_chooses_target",
+        phase: GamePhase.YAKUZA_AND_SHOGUN_CHOOSES_TARGET,
       }),
     );
     expect(shogun.hasYakuzaKillAuthority).toBe(true);
@@ -77,7 +120,7 @@ describe("japaneseNightAuthority — single kill authority", () => {
     const lone = japaneseNightAuthority(
       makeInput(noYakuza, {
         viewerId: "u5",
-        phase: "yakuza_and_shogun_chooses_target",
+        phase: GamePhase.YAKUZA_AND_SHOGUN_CHOOSES_TARGET,
       }),
     );
     expect(lone.hasYakuzaKillAuthority).toBe(false);
@@ -85,14 +128,14 @@ describe("japaneseNightAuthority — single kill authority", () => {
 
   it("the DOCTOR heals; the host never has authority", () => {
     const doc = japaneseNightAuthority(
-      makeInput(roster, { viewerId: "u6", phase: "doctor_heals_player" }),
+      makeInput(roster, { viewerId: "u6", phase: GamePhase.DOCTOR_HEALS_PLAYER }),
     );
     expect(doc.hasDoctorHealAuthority).toBe(true);
 
     const asHost = japaneseNightAuthority(
       makeInput(roster, {
         viewerId: "u1",
-        phase: "mafia_chooses_target",
+        phase: GamePhase.MAFIA_CHOOSES_TARGET,
         isHost: true,
       }),
     );
@@ -110,10 +153,10 @@ describe("sportsNightAuthority — every living mafia acts", () => {
 
   it("both the DON and each living MAFIA have kill authority", () => {
     const don = sportsNightAuthority(
-      makeInput(roster, { viewerId: "u1", phase: "mafia_chooses_target" }),
+      makeInput(roster, { viewerId: "u1", phase: GamePhase.MAFIA_CHOOSES_TARGET }),
     );
     const mafia = sportsNightAuthority(
-      makeInput(roster, { viewerId: "u2", phase: "mafia_chooses_target" }),
+      makeInput(roster, { viewerId: "u2", phase: GamePhase.MAFIA_CHOOSES_TARGET }),
     );
     expect(don.hasMafiaKillAuthority).toBe(true);
     expect(mafia.hasMafiaKillAuthority).toBe(true); // NOT gated by priority
@@ -121,20 +164,20 @@ describe("sportsNightAuthority — every living mafia acts", () => {
 
   it("citizens have no authority; a dead mafia loses it", () => {
     const citizen = sportsNightAuthority(
-      makeInput(roster, { viewerId: "u3", phase: "mafia_chooses_target" }),
+      makeInput(roster, { viewerId: "u3", phase: GamePhase.MAFIA_CHOOSES_TARGET }),
     );
     expect(citizen.hasMafiaKillAuthority).toBe(false);
 
     const deadMafia = { ...roster, MAFIA: { id: "u2", alive: false } };
     const dead = sportsNightAuthority(
-      makeInput(deadMafia, { viewerId: "u2", phase: "mafia_chooses_target" }),
+      makeInput(deadMafia, { viewerId: "u2", phase: GamePhase.MAFIA_CHOOSES_TARGET }),
     );
     expect(dead.hasMafiaKillAuthority).toBe(false);
   });
 
   it("has no yakuza or doctor authority, ever", () => {
     const a = sportsNightAuthority(
-      makeInput(roster, { viewerId: "u1", phase: "mafia_chooses_target" }),
+      makeInput(roster, { viewerId: "u1", phase: GamePhase.MAFIA_CHOOSES_TARGET }),
     );
     expect(a.hasYakuzaKillAuthority).toBe(false);
     expect(a.isYakuzaPhase).toBe(false);

@@ -4,7 +4,7 @@ import { getAuthenticatedUser } from "../../lib/auth";
 import { assertIsHost, getPlayerInGame } from "../../lib/games";
 import { enterNightPhase } from "./phaseTransitions";
 import { voting as votingRefs } from "../../refs/game";
-import { VOTING } from "../../lib/constants";
+import { VOTING, GamePhase } from "../../lib/constants";
 import type { Id } from "../../_generated/dataModel";
 import type { DatabaseReader, DatabaseWriter } from "../../_generated/server";
 
@@ -140,7 +140,7 @@ export const initializeVoting = mutation({
       .unique();
 
     if (!session) throw new ConvexError("Game session not found");
-    if (session.gamePhase !== "voting") throw new ConvexError("Not in voting phase");
+    if (session.gamePhase !== GamePhase.VOTING) throw new ConvexError("Not in voting phase");
 
     const candidates = session.nominatedPlayers ?? [];
     if (candidates.length === 0) throw new ConvexError("No candidates to vote on");
@@ -438,7 +438,7 @@ export const startTieBreak = mutation({
 
     if (gameSession) {
       await ctx.db.patch(gameSession._id, {
-        gamePhase: "nominated_players_speak",
+        gamePhase: GamePhase.NOMINATED_PLAYERS_SPEAK,
         speakingOrder: tiedCandidates,
         currentSpeakerIndex: undefined,
         speakerStartedAt: undefined,
@@ -551,7 +551,7 @@ export const startVotingFarewell = mutation({
 
     if (gameSession) {
       await ctx.db.patch(gameSession._id, {
-        gamePhase: "farewell_speech",
+        gamePhase: GamePhase.FAREWELL_SPEECH,
         speakingOrder: [winnerSeatNumber],
         currentSpeakerIndex: undefined,
         speakerStartedAt: undefined,
@@ -582,7 +582,7 @@ export const startBothLeaveFarewell = mutation({
 
     if (gameSession) {
       await ctx.db.patch(gameSession._id, {
-        gamePhase: "farewell_speech",
+        gamePhase: GamePhase.FAREWELL_SPEECH,
         speakingOrder: candidates,
         currentSpeakerIndex: undefined,
         speakerStartedAt: undefined,

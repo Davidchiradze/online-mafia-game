@@ -4,7 +4,7 @@ import { internal } from "../../_generated/api";
 import { getAuthenticatedUser } from "../../lib/auth";
 import { assertIsHost, getPlayerInGame, getPlayersByGameId } from "../../lib/games";
 import { getGameDefinition } from "../registry";
-import { SPORTS } from "../../lib/constants";
+import { SPORTS, GamePhase } from "../../lib/constants";
 import type { Id } from "../../_generated/dataModel";
 import type { DatabaseReader } from "../../_generated/server";
 
@@ -66,7 +66,7 @@ export const startMafiaTargetWindow = mutation({
     await assertIsHost(ctx.db, gameId, userId);
 
     const session = await getGameSession(ctx.db, gameId);
-    if (session.gamePhase !== "mafia_chooses_target") {
+    if (session.gamePhase !== GamePhase.MAFIA_CHOOSES_TARGET) {
       throw new ConvexError("Not in mafia target selection phase");
     }
     const nightNumber = session.currentNightNumber;
@@ -151,7 +151,7 @@ export const selectMafiaTarget = mutation({
     }
 
     const session = await getGameSession(ctx.db, gameId);
-    if (session.gamePhase !== "mafia_chooses_target") {
+    if (session.gamePhase !== GamePhase.MAFIA_CHOOSES_TARGET) {
       throw new ConvexError("Not in mafia target selection phase");
     }
     const nightNumber = session.currentNightNumber;

@@ -17,17 +17,26 @@
  */
 
 import { japaneseNextPhase } from "@convex/games/japanese/phases";
+import { GamePhase } from "@/shared/lib/constants/game";
 
-/** Sources whose host-advance sleeps through the neutral buffer first. */
+/**
+ * Sources whose host-advance sleeps through the neutral buffer first.
+ *
+ * The rule is "buffer whenever the awake team changes across the edge". When the
+ * two right-hand phases were removed, the edges they used to absorb collapsed
+ * onto their predecessors, so `mafia_meet` and `don_checks_for_detective` became
+ * buffered: both now hand off from the mafia straight to the yakuza. Without the
+ * buffer the yakuza would wake while the mafia were still watching.
+ */
 const BUFFER_MEDIATED: ReadonlySet<string> = new Set([
-  "don_chooses_right_hand",
-  "yakuda_shogun_meet",
-  "detective_meet",
-  "doctor_meet",
-  "right_hand_checks_for_yakuza",
-  "yakuza_and_shogun_chooses_target",
-  "detective_checks_for_mafia",
-  "doctor_heals_player",
+  GamePhase.MAFIA_MEET, // → yakuda_shogun_meet (mafia → yakuza)
+  GamePhase.YAKUDA_SHOGUN_MEET,
+  GamePhase.DETECTIVE_MEET,
+  GamePhase.DOCTOR_MEET,
+  GamePhase.DON_CHECKS_FOR_DETECTIVE, // → yakuza_and_shogun (mafia → yakuza)
+  GamePhase.YAKUZA_AND_SHOGUN_CHOOSES_TARGET,
+  GamePhase.DETECTIVE_CHECKS_FOR_MAFIA,
+  GamePhase.DOCTOR_HEALS_PLAYER,
 ]);
 
 export type PhaseAdvanceUpdates = { gamePhase: string; nextPhase?: string };
@@ -48,7 +57,7 @@ export function advanceUpdates(phase: string): PhaseAdvanceUpdates {
     throw new Error(`No host-advance edge from phase "${phase}"`);
   }
   if (BUFFER_MEDIATED.has(phase)) {
-    return { gamePhase: "phase_transition", nextPhase: next };
+    return { gamePhase: GamePhase.PHASE_TRANSITION, nextPhase: next };
   }
   return { gamePhase: next };
 }

@@ -3,36 +3,92 @@
 // exists only for the type-checker, which handles it.
 import type { Faction } from "./roles";
 
+/**
+ * THE SINGLE SOURCE OF TRUTH for phase names — every phase string in the app,
+ * across both variants, is a member of this enum. Nothing else may write a
+ * phase name as a bare string literal.
+ *
+ * It lives in `convex/` because `convex/` may never import from `src/`, so the
+ * shared vocabulary has to sit on this side of the boundary;
+ * `src/shared/lib/constants/game.ts` re-exports it for the frontend.
+ *
+ * The values are the wire format: they are what `gameSessions.gamePhase`
+ * (`v.string()`) stores, so members stay assignable to `string` and a `string`
+ * read back from the DB is compared against a member, never cast wholesale.
+ *
+ * ORDER IS NOT MEANINGFUL HERE — this is a vocabulary, not a sequence. A
+ * variant's phase ORDER is its own ordered list (`GAME_PHASES` below for
+ * Japanese) and its transition graph is `definition.nextPhase`.
+ */
+export enum GamePhase {
+  GAME_SESSION_STARTED = "game_session_started",
+  PICKING_ROLES = "picking_roles",
+  MAFIA_MEET = "mafia_meet",
+  YAKUDA_SHOGUN_MEET = "yakuda_shogun_meet",
+  DETECTIVE_MEET = "detective_meet",
+  DOCTOR_MEET = "doctor_meet",
+  INTRODUCTION_PHASE = "introduction_phase",
+  NIGHT_PHASE = "night_phase",
+  MAFIA_CHOOSES_TARGET = "mafia_chooses_target",
+  DON_CHECKS_FOR_DETECTIVE = "don_checks_for_detective",
+  YAKUZA_AND_SHOGUN_CHOOSES_TARGET = "yakuza_and_shogun_chooses_target",
+  DETECTIVE_CHECKS_FOR_MAFIA = "detective_checks_for_mafia",
+  DOCTOR_HEALS_PLAYER = "doctor_heals_player",
+  FAREWELL_SPEECH = "farewell_speech",
+  DAY_PHASE = "day_phase",
+  NOMINATED_PLAYERS_SPEAK = "nominated_players_speak",
+  VOTING = "voting",
+  REPEAT = "repeat",
+  END_GAME = "end_game",
+  /**
+   * Neutral "everyone asleep" buffer inserted between meetings where the awake
+   * role changes across teams (and on Doctor→wake exits).
+   */
+  PHASE_TRANSITION = "phase_transition",
+  /** Sports-only: the Don's solo meet, inserted after `mafia_meet`. */
+  DON_MEET = "don_meet",
+  /**
+   * Sports-only: the first-night victim names 3 suspects before their farewell
+   * (docs/variants/sports/rules.md §6).
+   */
+  BEST_MOVE = "best_move",
+}
+
+/**
+ * Japanese Mafia's ordered phase list (`definition.phases`).
+ *
+ * A SUBSET of the vocabulary above — it deliberately omits the Sports-only
+ * phases. Order is the reading order of a round, not a state machine; the
+ * actual transitions are `japaneseNextPhase`.
+ */
 export const GAME_PHASES = [
-  "game_session_started",
-  "picking_roles",
-  "mafia_meet",
-  "don_chooses_right_hand",
-  "yakuda_shogun_meet",
-  "detective_meet",
-  "doctor_meet",
-  "introduction_phase",
-  "night_phase",
-  "mafia_chooses_target",
-  "don_checks_for_detective",
-  "right_hand_checks_for_yakuza",
-  "yakuza_and_shogun_chooses_target",
-  "detective_checks_for_mafia",
-  "doctor_heals_player",
-  "farewell_speech",
-  "day_phase",
-  "nominated_players_speak",
-  "voting",
-  "repeat",
-  "end_game",
+  GamePhase.GAME_SESSION_STARTED,
+  GamePhase.PICKING_ROLES,
+  GamePhase.MAFIA_MEET,
+  GamePhase.YAKUDA_SHOGUN_MEET,
+  GamePhase.DETECTIVE_MEET,
+  GamePhase.DOCTOR_MEET,
+  GamePhase.INTRODUCTION_PHASE,
+  GamePhase.NIGHT_PHASE,
+  GamePhase.MAFIA_CHOOSES_TARGET,
+  GamePhase.DON_CHECKS_FOR_DETECTIVE,
+  GamePhase.YAKUZA_AND_SHOGUN_CHOOSES_TARGET,
+  GamePhase.DETECTIVE_CHECKS_FOR_MAFIA,
+  GamePhase.DOCTOR_HEALS_PLAYER,
+  GamePhase.FAREWELL_SPEECH,
+  GamePhase.DAY_PHASE,
+  GamePhase.NOMINATED_PLAYERS_SPEAK,
+  GamePhase.VOTING,
+  GamePhase.REPEAT,
+  GamePhase.END_GAME,
 ] as const;
 
 /**
  * Initial card-pick deck for a 12-player Japanese Mafia game.
  *
- * Note: MAFIA_RIGHT_HAND is intentionally absent from the initial deck.
- * Two MAFIA cards are dealt, and during the `don_chooses_right_hand` phase
- * the Don promotes one of the MAFIA players to MAFIA_RIGHT_HAND.
+ * Every role Japanese can hold is dealt from here — there are no roles reached
+ * by in-game promotion. The two MAFIA cards give the mafia team its 3-strong
+ * size alongside the DON.
  */
 export const JAPANESE_MAFIA_ROLE_DISTRIBUTION = [
   "DON",
@@ -49,6 +105,16 @@ export const JAPANESE_MAFIA_ROLE_DISTRIBUTION = [
   "CITIZEN",
 ] as const;
 
+/**
+ * The mafia faction's roles, and the input to `roleToFaction`.
+ *
+ * `MAFIA_RIGHT_HAND` is RETIRED — no variant deals it and no live game can
+ * produce it — but it stays listed on purpose: finished games persist it in
+ * `gameLogPlayers.role` and `playerStats.roleStats`, and dropping it here would
+ * silently reclassify those archived rows as citizens. Keeping it costs nothing
+ * live (no player holds it, so every count is unchanged) and keeps match
+ * history honest.
+ */
 export const MAFIA_TEAM_ROLES = ["DON", "MAFIA_RIGHT_HAND", "MAFIA"] as const;
 export const YAKUZA_TEAM_ROLES = ["YAKUZA", "SHOGUN"] as const;
 
@@ -149,11 +215,11 @@ export const FOULS = {
   MAX_FOULS: 3,
   ELIMINATION_THRESHOLD: 4,
   ALLOWED_PHASES: [
-    "introduction_phase",
-    "farewell_speech",
-    "day_phase",
-    "nominated_players_speak",
-    "voting",
+    GamePhase.INTRODUCTION_PHASE,
+    GamePhase.FAREWELL_SPEECH,
+    GamePhase.DAY_PHASE,
+    GamePhase.NOMINATED_PLAYERS_SPEAK,
+    GamePhase.VOTING,
   ] as const,
 } as const;
 

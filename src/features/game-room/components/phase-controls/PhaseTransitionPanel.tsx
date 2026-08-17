@@ -11,6 +11,7 @@ import {
 } from "@/features/game-room/context/gameRoomContext";
 import HostPanel from "@/features/game-room/components/host-panel/HostPanel";
 import type { HostPanelDescriptor } from "@/features/game-room/lib/hostPanel";
+import { GamePhase } from "@/shared/lib/constants/game";
 
 type PhaseTransitionPanelProps = {
   gameSessionState: GameSessionState;
@@ -53,11 +54,11 @@ export default function PhaseTransitionPanel({
     setIsLoading(true);
     try {
       const id = gameId as Id<"games">;
-      if (nextPhase === "farewell_speech") {
+      if (nextPhase === GamePhase.FAREWELL_SPEECH) {
         await startFarewellSpeech({ gameId: id });
-      } else if (nextPhase === "introduction_phase") {
+      } else if (nextPhase === GamePhase.INTRODUCTION_PHASE) {
         await enterIntroductionPhase({ gameId: id });
-      } else if (nextPhase === "day_phase") {
+      } else if (nextPhase === GamePhase.DAY_PHASE) {
         await enterDayPhase({ gameId: id });
       } else {
         await updateSession({
@@ -74,13 +75,13 @@ export default function PhaseTransitionPanel({
 
   // The farewell marker resolves to day-or-farewell only once it runs, so the
   // honest thing to show the host is the destination it always passes through.
-  const destination = nextPhase === "farewell_speech" ? "day_phase" : nextPhase;
+  const destination = nextPhase === GamePhase.FAREWELL_SPEECH ? GamePhase.DAY_PHASE : nextPhase;
 
   const descriptor: HostPanelDescriptor = {
-    eyebrow: tPhases("phase_transition"),
+    eyebrow: tPhases(GamePhase.PHASE_TRANSITION),
     title: destination
       ? tTitle("nextPhase", { label: tPhases(destination) })
-      : tPhases("phase_transition"),
+      : tPhases(GamePhase.PHASE_TRANSITION),
     // No status line — the eyebrow already says everyone is asleep.
     actions: [
       {

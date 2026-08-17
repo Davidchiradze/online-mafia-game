@@ -10,6 +10,7 @@ import type { GameSessionState } from "@/features/game-room/context/gameRoomCont
 import { useSpeakingRunControls } from "@/features/game-room/hooks/game/useSpeakingRunControls";
 import HostPanel from "@/features/game-room/components/host-panel/HostPanel";
 import type { HostPanelDescriptor } from "@/features/game-room/lib/hostPanel";
+import { GamePhase } from "@/shared/lib/constants/game";
 
 type IntroductionPanelProps = {
   gameId: string;
@@ -49,7 +50,7 @@ export default function IntroductionPanel({
     eyebrow: t("dayCounter", {
       day: dayRoundFromNightNumber(gameSessionState.currentNightNumber),
     }),
-    title: tPhases("introduction_phase"),
+    title: tPhases(GamePhase.INTRODUCTION_PHASE),
     ...fields,
     actions: [
       action ?? {

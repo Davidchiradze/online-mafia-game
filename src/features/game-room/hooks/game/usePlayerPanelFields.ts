@@ -1,8 +1,8 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { GAME_PHASES, PHASE_TIMERS } from "@/shared/lib/constants/game";
-import type { GamePhase } from "@/shared/lib/game/visibility";
+import { PHASE_TIMERS } from "@/shared/lib/constants/game";
+import { GamePhase } from "@/shared/lib/game/visibility";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 import { nightPhaseLabelKey } from "@/features/game-room/lib/nightPhase";
 import { canSeePhaseTimer, phaseClock } from "@/features/game-room/lib/playerPanel";
@@ -95,7 +95,7 @@ function useSpeakerPills(): HostPanelDescriptor["speakers"] {
 
   const phase = gameSessionState?.gamePhase;
 
-  if (phase === GAME_PHASES[15] /* farewell_speech */) {
+  if (phase === GamePhase.FAREWELL_SPEECH) {
     const deadSeats = new Set(
       players.filter((player) => !player.isAlive).map((p) => p.seatNumber),
     );

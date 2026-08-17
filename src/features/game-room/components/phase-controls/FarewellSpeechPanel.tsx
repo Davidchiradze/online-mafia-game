@@ -6,7 +6,7 @@ import { farewellSpeech } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
 import { useTranslations } from "next-intl";
 import { dayRoundFromNightNumber } from "@convex/games/core/dayRound";
-import { FAREWELL_SPEECH } from "@/shared/lib/constants/game";
+import { FAREWELL_SPEECH, GamePhase } from "@/shared/lib/constants/game";
 import {
   useGameRoom,
   type GameSessionState,
@@ -132,7 +132,7 @@ export default function FarewellSpeechPanel({
         : t("dawnCounter", {
             night: Math.max(1, gameSessionState.currentNightNumber),
           }),
-    title: tPhases("farewell_speech"),
+    title: tPhases(GamePhase.FAREWELL_SPEECH),
     timer,
     speakers:
       run.activeSeat !== null
