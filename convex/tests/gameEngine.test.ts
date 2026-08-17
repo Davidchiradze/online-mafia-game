@@ -167,8 +167,7 @@ const WIN_SAFE_ROSTER: SeatSpec[] = [
 
 // ===========================================================================
 // Night kill authority. Mafia: the DON while alive, then the living mafia in the
-// next seat CLOCKWISE from the Don's (wrapping). Yakuza: SHOGUN > YAKUZA, and a
-// lone SHOGUN can't kill.
+// LOWEST-numbered seat. Yakuza: SHOGUN > YAKUZA, and a lone SHOGUN can't kill.
 // ===========================================================================
 
 describe("night kill authority", () => {
@@ -192,10 +191,10 @@ describe("night kill authority", () => {
     expect(asMafia).toEqual({ hasAuthority: false, role: "DON" });
   });
 
-  it("passes to the mafia in the next seat after the dead DON, not the lowest seat", async () => {
+  it("passes to the lowest living mafia seat once the DON is dead", async () => {
     const t = convexTest(schema, modules);
-    // DON at 3; living mafia at 1 and 5. Clockwise from 3 reaches 5 first — the
-    // seat-order rule and a "lowest living seat" rule disagree here on purpose.
+    // DON at 3, living mafia at 1 and 5. The Don's seat sitting between them
+    // must not matter: seat 1 is lowest, so seat 1 inherits.
     const s = await seedGame(t, {
       players: [
         { seat: 1, role: "MAFIA" },
@@ -204,50 +203,30 @@ describe("night kill authority", () => {
       ],
     });
 
+    const asSeat1 = await t
+      .withIdentity({ subject: s.bySeat[1].accountId })
+      .query(api.games.core.nightPhase.checkMafiaAuthority, { gameId: s.gameId });
+    expect(asSeat1).toEqual({ hasAuthority: true, role: "MAFIA" });
+
+    const asSeat5 = await t
+      .withIdentity({ subject: s.bySeat[5].accountId })
+      .query(api.games.core.nightPhase.checkMafiaAuthority, { gameId: s.gameId });
+    expect(asSeat5).toEqual({ hasAuthority: false, role: "MAFIA" });
+  });
+
+  it("moves up to the next-lowest seat when the lowest mafia dies too", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      players: [
+        { seat: 1, role: "MAFIA", alive: false },
+        { seat: 3, role: "DON", alive: false },
+        { seat: 5, role: "MAFIA" },
+      ],
+    });
     const asSeat5 = await t
       .withIdentity({ subject: s.bySeat[5].accountId })
       .query(api.games.core.nightPhase.checkMafiaAuthority, { gameId: s.gameId });
     expect(asSeat5).toEqual({ hasAuthority: true, role: "MAFIA" });
-
-    const asSeat1 = await t
-      .withIdentity({ subject: s.bySeat[1].accountId })
-      .query(api.games.core.nightPhase.checkMafiaAuthority, { gameId: s.gameId });
-    expect(asSeat1).toEqual({ hasAuthority: false, role: "MAFIA" });
-  });
-
-  it("wraps past the highest seat when every living mafia sits before the DON", async () => {
-    const t = convexTest(schema, modules);
-    const s = await seedGame(t, {
-      players: [
-        { seat: 2, role: "MAFIA" },
-        { seat: 4, role: "MAFIA" },
-        { seat: 9, role: "DON", alive: false },
-      ],
-    });
-    const asSeat2 = await t
-      .withIdentity({ subject: s.bySeat[2].accountId })
-      .query(api.games.core.nightPhase.checkMafiaAuthority, { gameId: s.gameId });
-    expect(asSeat2).toEqual({ hasAuthority: true, role: "MAFIA" });
-
-    const asSeat4 = await t
-      .withIdentity({ subject: s.bySeat[4].accountId })
-      .query(api.games.core.nightPhase.checkMafiaAuthority, { gameId: s.gameId });
-    expect(asSeat4).toEqual({ hasAuthority: false, role: "MAFIA" });
-  });
-
-  it("skips a dead successor and keeps walking clockwise", async () => {
-    const t = convexTest(schema, modules);
-    const s = await seedGame(t, {
-      players: [
-        { seat: 1, role: "DON", alive: false },
-        { seat: 2, role: "MAFIA", alive: false },
-        { seat: 3, role: "MAFIA" },
-      ],
-    });
-    const asSeat3 = await t
-      .withIdentity({ subject: s.bySeat[3].accountId })
-      .query(api.games.core.nightPhase.checkMafiaAuthority, { gameId: s.gameId });
-    expect(asSeat3).toEqual({ hasAuthority: true, role: "MAFIA" });
   });
 
   it("reports no authority once every mafia is dead", async () => {
@@ -277,11 +256,11 @@ describe("night kill authority", () => {
       ],
     });
 
-    // Seat 1 is a living mafia but NOT the successor — the gate must hold even
+    // Seat 5 is a living mafia but NOT the successor — the gate must hold even
     // though the client would never offer them the button.
     await expect(
       t
-        .withIdentity({ subject: s.bySeat[1].accountId })
+        .withIdentity({ subject: s.bySeat[5].accountId })
         .mutation(api.games.core.nightPhase.selectMafiaTarget, {
           gameId: s.gameId,
           targetSeatNumber: 7,
@@ -289,7 +268,7 @@ describe("night kill authority", () => {
     ).rejects.toThrow();
 
     await t
-      .withIdentity({ subject: s.bySeat[5].accountId })
+      .withIdentity({ subject: s.bySeat[1].accountId })
       .mutation(api.games.core.nightPhase.selectMafiaTarget, {
         gameId: s.gameId,
         targetSeatNumber: 7,

@@ -9,15 +9,11 @@
  * the server then rejects.
  *
  * THE RULE. The Don kills while the Don lives. Once the Don is gone, authority
- * passes clockwise around the table: the living mafia in the next seat AFTER the
- * Don's, wrapping past the highest seat back to seat 1.
- *
- * The Don's seat is therefore needed even though the Don is dead — that is why
- * this takes EVERY player and filters internally, rather than taking a
- * pre-filtered living list.
+ * goes to the living mafia in the LOWEST-numbered seat. The Don's own seat does
+ * not enter into it — there is no walk and no wrap-around.
  *
  * Seat order (not turn order, not database order) is what makes this
- * deterministic. The previous rule ended in `find(role === "MAFIA")` over a
+ * deterministic. The original rule ended in `find(role === "MAFIA")` over a
  * `by_gameId` query, so with two living MAFIA the holder was whichever row the
  * index happened to return first.
  */
@@ -59,18 +55,13 @@ export function mafiaKillAuthority<T extends SuccessionPlayer>(
   const livingDon = livingMafia.find((p) => p.role === "DON");
   if (livingDon) return livingDon;
 
-  // Succession is by seat, so only seated mafia can inherit.
-  const bySeat = livingMafia
-    .filter((p): p is T & { seatNumber: number } => p.seatNumber !== undefined)
-    .sort((a, b) => a.seatNumber - b.seatNumber);
-  if (bySeat.length === 0) return null;
+  // Succession is by seat, so only seated mafia can inherit. Lowest seat wins.
+  const seated = livingMafia.filter(
+    (p): p is T & { seatNumber: number } => p.seatNumber !== undefined,
+  );
+  if (seated.length === 0) return null;
 
-  // Read the Don's seat from ALL players — by now the Don is dead.
-  const donSeat = players.find((p) => p.role === "DON")?.seatNumber;
-
-  // An unseated or missing Don is not reachable in a dealt game; fall back to
-  // the lowest living mafia seat rather than leaving the team unable to act.
-  if (donSeat === undefined) return bySeat[0];
-
-  return bySeat.find((p) => p.seatNumber > donSeat) ?? bySeat[0];
+  return seated.reduce((lowest, p) =>
+    p.seatNumber < lowest.seatNumber ? p : lowest,
+  );
 }

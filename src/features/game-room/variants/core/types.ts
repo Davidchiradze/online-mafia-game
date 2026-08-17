@@ -132,9 +132,9 @@ export type SeatLayout = {
 /**
  * One player as the night-authority computation needs them (role via `roleOf`).
  *
- * `seatNumber` is here because Japanese mafia succession walks the table
- * clockwise from the Don's seat, so seat order — not database order — decides
- * who inherits the kill.
+ * `seatNumber` is here because Japanese mafia succession hands the kill to the
+ * lowest living mafia seat, so seat order — not database order — decides who
+ * inherits it.
  */
 export type NightAuthorityPlayer = {
   playerId: string;

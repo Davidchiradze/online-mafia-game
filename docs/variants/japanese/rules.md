@@ -146,13 +146,11 @@ Japanese is `single-authority`: exactly one mafia picks a target the whole team
 sees. That authority is:
 
 1. the **`DON`**, for as long as the Don is alive;
-2. otherwise the living mafia in the **next seat clockwise from the Don's**,
-   wrapping past the highest seat back to seat 1.
+2. otherwise the living mafia in the **lowest-numbered seat**.
 
-The Don's seat still decides the order after the Don dies, so the successor is
-not "the lowest surviving mafia seat" — with the Don at seat 3 and mafia alive at
-seats 1 and 5, seat 5 inherits. If that player also dies, the walk continues
-clockwise.
+The Don's own seat plays no part once the Don is dead — there is no clockwise
+walk and no wrap-around. With the Don at seat 3 and mafia alive at seats 1 and 5,
+seat 1 inherits. If that player also dies, authority moves up to seat 5.
 
 The rule is one pure function, `mafiaKillAuthority` in
 `convex/games/core/mafiaSuccession.ts`, used by both the server (which rejects a
