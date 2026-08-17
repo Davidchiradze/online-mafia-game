@@ -10,7 +10,7 @@ import {
   archiveGameLog,
 } from "../../lib/games";
 import { getGameDefinition } from "../registry";
-import { GAME_CLEANUP } from "../../lib/constants";
+import { GAME_CLEANUP, GamePhase } from "../../lib/constants";
 
 const removeGameInternal = makeFunctionReference<
   "mutation",
@@ -43,7 +43,7 @@ export const create = mutation({
 
     return await ctx.db.insert("gameSessions", {
       gameId,
-      gamePhase: "game_session_started",
+      gamePhase: GamePhase.GAME_SESSION_STARTED,
       isFinished: false,
       currentNightNumber: 0,
       nominatedPlayers: [],
@@ -166,7 +166,7 @@ export const startGame = mutation({
 
     return await ctx.db.insert("gameSessions", {
       gameId,
-      gamePhase: "game_session_started",
+      gamePhase: GamePhase.GAME_SESSION_STARTED,
       isFinished: false,
       currentNightNumber: 0,
       nominatedPlayers: [],

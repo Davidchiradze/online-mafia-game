@@ -14,6 +14,7 @@ import {
   hasShortenedFinalDaySpeech,
   isSeatMutedThisRound,
 } from "@/shared/lib/game/speakingBan";
+import { GamePhase } from "@/shared/lib/constants/game";
 
 /**
  * CHARACTERIZATION TEST — the shared day-round derivation + 3rd-foul speaking
@@ -88,22 +89,22 @@ describe("isSeatMutedThisRound — phase scope", () => {
 
   it("mutes the banned player's day speech", () => {
     expect(
-      isSeatMutedThisRound(banned, NIGHT_AFTER_FOUL, ALIVE, "day_phase"),
+      isSeatMutedThisRound(banned, NIGHT_AFTER_FOUL, ALIVE, GamePhase.DAY_PHASE),
     ).toBe(true);
   });
 
   it("never mutes a farewell speech — a player killed that night still speaks", () => {
     expect(
-      isSeatMutedThisRound(banned, NIGHT_AFTER_FOUL, ALIVE, "farewell_speech"),
+      isSeatMutedThisRound(banned, NIGHT_AFTER_FOUL, ALIVE, GamePhase.FAREWELL_SPEECH),
     ).toBe(false);
   });
 
   it("leaves every other speaking phase alone", () => {
     for (const phase of [
-      "nominated_players_speak",
-      "voting",
-      "best_move",
-      "night_phase",
+      GamePhase.NOMINATED_PLAYERS_SPEAK,
+      GamePhase.VOTING,
+      GamePhase.BEST_MOVE,
+      GamePhase.NIGHT_PHASE,
       undefined,
     ]) {
       expect(
@@ -131,11 +132,11 @@ describe("isSeatMutedThisRound — phase scope", () => {
     ];
     const alive = countAliveSeatedPlayers(table, 10);
     expect(alive).toBe(4);
-    expect(isSeatMutedThisRound(banned, NIGHT_AFTER_FOUL, alive, "day_phase")).toBe(
+    expect(isSeatMutedThisRound(banned, NIGHT_AFTER_FOUL, alive, GamePhase.DAY_PHASE)).toBe(
       false,
     );
     expect(
-      hasShortenedFinalDaySpeech(banned, NIGHT_AFTER_FOUL, alive, "day_phase"),
+      hasShortenedFinalDaySpeech(banned, NIGHT_AFTER_FOUL, alive, GamePhase.DAY_PHASE),
     ).toBe(true);
   });
 
@@ -155,13 +156,13 @@ describe("isSeatMutedThisRound — phase scope", () => {
 
   it("still honours the round + final-day rules inside day_phase", () => {
     // Wrong round (the day before the ban lands) → not muted.
-    expect(isSeatMutedThisRound(banned, 0, ALIVE, "day_phase")).toBe(false);
+    expect(isSeatMutedThisRound(banned, 0, ALIVE, GamePhase.DAY_PHASE)).toBe(false);
     // Final day phase carve-out (≤ 4 alive) → speaks anyway.
-    expect(isSeatMutedThisRound(banned, NIGHT_AFTER_FOUL, 4, "day_phase")).toBe(
+    expect(isSeatMutedThisRound(banned, NIGHT_AFTER_FOUL, 4, GamePhase.DAY_PHASE)).toBe(
       false,
     );
     // No ban stamped (Japanese, or a player under 3 fouls).
-    expect(isSeatMutedThisRound({}, NIGHT_AFTER_FOUL, ALIVE, "day_phase")).toBe(
+    expect(isSeatMutedThisRound({}, NIGHT_AFTER_FOUL, ALIVE, GamePhase.DAY_PHASE)).toBe(
       false,
     );
   });
@@ -173,30 +174,30 @@ describe("hasShortenedFinalDaySpeech — the 30s carve-out", () => {
 
   it("shortens only a banned player's final-day speech", () => {
     expect(
-      hasShortenedFinalDaySpeech(banned, NIGHT_AFTER_FOUL, 4, "day_phase"),
+      hasShortenedFinalDaySpeech(banned, NIGHT_AFTER_FOUL, 4, GamePhase.DAY_PHASE),
     ).toBe(true);
     expect(
-      hasShortenedFinalDaySpeech(banned, NIGHT_AFTER_FOUL, 3, "day_phase"),
+      hasShortenedFinalDaySpeech(banned, NIGHT_AFTER_FOUL, 3, GamePhase.DAY_PHASE),
     ).toBe(true);
   });
 
   it("leaves an unbanned player on the final day at the full 60s", () => {
-    expect(hasShortenedFinalDaySpeech({}, NIGHT_AFTER_FOUL, 4, "day_phase")).toBe(
+    expect(hasShortenedFinalDaySpeech({}, NIGHT_AFTER_FOUL, 4, GamePhase.DAY_PHASE)).toBe(
       false,
     );
     // Banned, but for a different round.
-    expect(hasShortenedFinalDaySpeech(banned, 0, 4, "day_phase")).toBe(false);
+    expect(hasShortenedFinalDaySpeech(banned, 0, 4, GamePhase.DAY_PHASE)).toBe(false);
   });
 
   it("does not shorten while more than 4 are alive (that seat is muted instead)", () => {
     expect(
-      hasShortenedFinalDaySpeech(banned, NIGHT_AFTER_FOUL, 5, "day_phase"),
+      hasShortenedFinalDaySpeech(banned, NIGHT_AFTER_FOUL, 5, GamePhase.DAY_PHASE),
     ).toBe(false);
   });
 
   it("is a day_phase rule only — never shortens a farewell speech", () => {
     expect(
-      hasShortenedFinalDaySpeech(banned, NIGHT_AFTER_FOUL, 4, "farewell_speech"),
+      hasShortenedFinalDaySpeech(banned, NIGHT_AFTER_FOUL, 4, GamePhase.FAREWELL_SPEECH),
     ).toBe(false);
   });
 });

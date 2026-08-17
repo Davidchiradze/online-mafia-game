@@ -18,8 +18,8 @@
  * variant maps all read the same plain data.
  */
 
-import { GAME_PHASES } from "@/shared/lib/constants/game";
 import type { Faction } from "@/shared/lib/constants/factions";
+import { GamePhase } from "@/shared/lib/constants/game";
 
 // ---------------------------------------------------------------------------
 // Composition bands
@@ -441,34 +441,32 @@ export function hostPanelHasCollapsedData(
  */
 export const HOST_PANEL_PHASES: ReadonlySet<string> = new Set<string>([
   // Pre-game
-  GAME_PHASES[0], // game_session_started
-  GAME_PHASES[1], // picking_roles
+  GamePhase.GAME_SESSION_STARTED,
+  GamePhase.PICKING_ROLES,
   // Speaking
-  GAME_PHASES[7], // introduction_phase
-  GAME_PHASES[16], // day_phase
-  GAME_PHASES[17], // nominated_players_speak
+  GamePhase.INTRODUCTION_PHASE,
+  GamePhase.DAY_PHASE,
+  GamePhase.NOMINATED_PLAYERS_SPEAK,
   // Night — meetings, actions and the neutral buffer between them
-  GAME_PHASES[2], // mafia_meet
-  GAME_PHASES[3], // don_chooses_right_hand
-  GAME_PHASES[4], // yakuda_shogun_meet
-  GAME_PHASES[5], // detective_meet
-  GAME_PHASES[6], // doctor_meet
-  GAME_PHASES[8], // night_phase
-  GAME_PHASES[9], // mafia_chooses_target
-  GAME_PHASES[10], // don_checks_for_detective
-  GAME_PHASES[11], // right_hand_checks_for_yakuza
-  GAME_PHASES[12], // yakuza_and_shogun_chooses_target
-  GAME_PHASES[13], // detective_checks_for_mafia
-  GAME_PHASES[14], // doctor_heals_player
-  GAME_PHASES[21], // phase_transition
-  GAME_PHASES[22], // don_meet (Sports)
+  GamePhase.MAFIA_MEET,
+  GamePhase.YAKUDA_SHOGUN_MEET,
+  GamePhase.DETECTIVE_MEET,
+  GamePhase.DOCTOR_MEET,
+  GamePhase.NIGHT_PHASE,
+  GamePhase.MAFIA_CHOOSES_TARGET,
+  GamePhase.DON_CHECKS_FOR_DETECTIVE,
+  GamePhase.YAKUZA_AND_SHOGUN_CHOOSES_TARGET,
+  GamePhase.DETECTIVE_CHECKS_FOR_MAFIA,
+  GamePhase.DOCTOR_HEALS_PLAYER,
+  GamePhase.PHASE_TRANSITION,
+  GamePhase.DON_MEET, // Sports
   // Dawn — what the night cost, and the goodbye that follows it
-  GAME_PHASES[23], // best_move (Sports)
-  GAME_PHASES[15], // farewell_speech
+  GamePhase.BEST_MOVE, // Sports
+  GamePhase.FAREWELL_SPEECH,
   // The vote
-  GAME_PHASES[18], // voting
+  GamePhase.VOTING,
   // Game over. The live end screen is the `endGameState` guard in
   // `GamePhaseControls`, which bypasses this map entirely; the phase is listed
   // so its fallback entry renders bare like every other panel.
-  GAME_PHASES[20], // end_game
+  GamePhase.END_GAME,
 ]);

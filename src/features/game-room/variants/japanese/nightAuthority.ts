@@ -1,21 +1,24 @@
 /**
  * Japanese night-action authority (docs/variants/japanese/rules.md).
  *
- * A pure extraction of the logic that used to live inline in
- * `useNightActionAuthority`: a SINGLE kill authority per team —
- * DON > MAFIA_RIGHT_HAND > MAFIA for the mafia, SHOGUN > YAKUZA for the yakuza
- * (a lone SHOGUN cannot kill), and the DOCTOR heals. The hook now gathers the
- * room context and delegates here via `ruleset.nightAuthority`. Behavior is
- * unchanged (imports-only move for the hook).
+ * A SINGLE kill authority per team: for the mafia the DON while the DON lives,
+ * then the living mafia in the next seat clockwise from the Don's (wrapping past
+ * the highest seat); SHOGUN > YAKUZA for the yakuza (a lone SHOGUN cannot kill);
+ * and the DOCTOR heals. The hook gathers the room context and delegates here via
+ * `ruleset.nightAuthority`.
+ *
+ * The mafia rule is NOT reimplemented here — it is `mafiaKillAuthority`, the
+ * same pure function the server enforces in `selectMafiaTarget`. A second copy
+ * would drift, and a drifted copy enables the kill button for a player the
+ * server then rejects.
  */
 
-import { MAFIA_TEAM_ROLES, YAKUZA_TEAM_ROLES } from "@/shared/lib/constants/game";
+import { MAFIA_TEAM_ROLES, YAKUZA_TEAM_ROLES, GamePhase } from "@/shared/lib/constants/game";
+import { mafiaKillAuthority } from "@convex/games/core/mafiaSuccession";
 import type {
   NightActionAuthority,
   NightAuthorityInput,
 } from "@/features/game-room/variants/core/types";
-
-const MAFIA_KILL_PRIORITY = ["DON", "MAFIA_RIGHT_HAND", "MAFIA"] as const;
 
 export function japaneseNightAuthority({
   phase,
@@ -25,9 +28,9 @@ export function japaneseNightAuthority({
   players,
   roleOf,
 }: NightAuthorityInput): NightActionAuthority {
-  const isMafiaPhase = phase === "mafia_chooses_target";
-  const isYakuzaPhase = phase === "yakuza_and_shogun_chooses_target";
-  const isDoctorPhase = phase === "doctor_heals_player";
+  const isMafiaPhase = phase === GamePhase.MAFIA_CHOOSES_TARGET;
+  const isYakuzaPhase = phase === GamePhase.YAKUZA_AND_SHOGUN_CHOOSES_TARGET;
+  const isDoctorPhase = phase === GamePhase.DOCTOR_HEALS_PLAYER;
 
   const holderOf = (role: string) =>
     players.find((p) => p.isAlive && roleOf(p.playerId) === role) ?? null;
@@ -39,13 +42,15 @@ export function japaneseNightAuthority({
     viewerRole &&
     MAFIA_TEAM_ROLES.includes(viewerRole as (typeof MAFIA_TEAM_ROLES)[number])
   ) {
-    for (const priorityRole of MAFIA_KILL_PRIORITY) {
-      const holder = holderOf(priorityRole);
-      if (holder) {
-        hasMafiaKillAuthority = holder.playerId === userId;
-        break;
-      }
-    }
+    const holder = mafiaKillAuthority(
+      players.map((p) => ({
+        playerId: p.playerId,
+        role: roleOf(p.playerId),
+        seatNumber: p.seatNumber,
+        isAlive: p.isAlive,
+      })),
+    );
+    hasMafiaKillAuthority = holder?.playerId === userId;
   }
 
   let hasYakuzaKillAuthority = false;

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
+import { GamePhase } from "@/shared/lib/constants/game";
 
 type UseNominationOptions = {
   seatNumber: number | null;
@@ -56,7 +57,7 @@ export function useNomination({
     };
   }, [isNominated]);
 
-  const isDayPhase = gameSessionState?.gamePhase === "day_phase";
+  const isDayPhase = gameSessionState?.gamePhase === GamePhase.DAY_PHASE;
 
   const foulEliminationOccurred = gameSessionState?.foulEliminationOccurred ?? false;
 

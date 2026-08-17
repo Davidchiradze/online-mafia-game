@@ -1,3 +1,4 @@
+import { GamePhase } from "@/shared/lib/constants/game";
 /**
  * Night-phase titles.
  *
@@ -19,7 +20,7 @@
  * "chooses target" phase is labelled as a meeting instead.
  */
 export function nightPhaseLabelKey(phase: string, nightNumber: number): string {
-  if (phase === "mafia_chooses_target" && nightNumber === 1) {
+  if (phase === GamePhase.MAFIA_CHOOSES_TARGET && nightNumber === 1) {
     return "mafia_meets_first_night";
   }
   return phase;

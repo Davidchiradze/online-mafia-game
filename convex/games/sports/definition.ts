@@ -44,7 +44,6 @@ export const SPORTS_DEFINITION: GameDefinition = {
   flags: {
     hasIntroductionPhase: false,
     hasFarewellSpeech: true,
-    hasRightHandPromotion: false,
     firstDaySingleNomineeSkipsToNight: true,
     thirdFoulSpeakingBan: true,
     hasBestMove: true,

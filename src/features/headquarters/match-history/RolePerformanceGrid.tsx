@@ -74,13 +74,23 @@ export default function RolePerformanceGrid({ stats, gameType }: Props) {
   // unplayed stay in canonical order).
   //
   // The role list comes from the definition, so switching ladders swaps the
-  // deck: Sports has no Doctor, Shogun, Yakuza or Right Hand to show, and
-  // padding its grid with four roles it cannot deal would invent history.
+  // deck: Sports has no Doctor, Shogun or Yakuza to show, and padding its grid
+  // with roles it cannot deal would invent history.
   const played = new Map<string, RoleStat>(
     stats.roleStats.map((r) => [r.role, r]),
   );
-  const allRoles: RoleCardStat[] = getGameDefinition(gameType)
-    .roles.map((role) => ({
+  const dealable = getGameDefinition(gameType).roles;
+
+  // A role the player actually HELD but the variant no longer deals (e.g. the
+  // retired Right Hand) still gets a card. Keying the grid off the deck alone
+  // would silently drop those matches from a real record — the opposite failure
+  // from padding with roles that were never dealt.
+  const retiredButPlayed = stats.roleStats
+    .filter((r) => r.matches > 0 && !dealable.includes(r.role))
+    .map((r) => r.role);
+
+  const allRoles: RoleCardStat[] = [...dealable, ...retiredButPlayed]
+    .map((role) => ({
       ...(played.get(role) ?? {
         role,
         matches: 0,

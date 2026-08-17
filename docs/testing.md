@@ -59,7 +59,7 @@ Unit tests live in a top-level `tests/` tree **on purpose** — not colocated in
 
 | Area | Covers |
 | --- | --- |
-| Night kill authority | mafia `DON > MAFIA_RIGHT_HAND > MAFIA`, yakuza `SHOGUN > YAKUZA` (lone SHOGUN can't kill), doctor |
+| Night kill authority | mafia: the `DON`, else the living mafia in the next seat clockwise from the Don's (wrapping); yakuza `SHOGUN > YAKUZA` (lone SHOGUN can't kill), doctor |
 | Night kill resolution | `startFarewellSpeech` — heal saves, dual kills, dedup, no-kill → day, host-only |
 | Phase transitions + win check | `enterNightPhase` / `enterDayPhase` / `enterVotingPhase`, pause-on-win, no-contest, idempotency |
 | Role deal + promotion | `assignRandomRoles` (deck = distribution), `promoteToRightHand` (Don-only, MAFIA-only, once, right phase) |

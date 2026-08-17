@@ -26,12 +26,6 @@ export const ROLE_DISPLAY_CONFIG: Record<RoleType, RoleDisplayConfig> = {
     bgGradient: "from-red-900 via-gray-900 to-black",
     borderColor: "border-red-600/40",
   },
-  MAFIA_RIGHT_HAND: {
-    emoji: "🤝",
-    color: "text-red-400",
-    bgGradient: "from-red-900 via-amber-900/30 to-black",
-    borderColor: "border-red-500/40",
-  },
   SHOGUN: {
     emoji: "⚔️",
     color: "text-purple-400",

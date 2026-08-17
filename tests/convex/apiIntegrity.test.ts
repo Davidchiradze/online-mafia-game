@@ -205,11 +205,11 @@ const inventoryPromise = loadConvexFunctions();
 
 describe("refs integrity", () => {
   it("extracts every makeFunctionReference call site", () => {
-    // 106 makeFunctionReference calls across 8 files (refs/game 77, refs/lobby 18,
+    // 105 makeFunctionReference calls across 8 files (refs/game 76, refs/lobby 18,
     // refs/history 3, refs/admin 2, refs/leaderboard 1, games/core/webhookHandler 3,
-    // games/core/sessions 1, admin/games 1) + 1 sendBeacon path = the 107 raw strings.
-    expect(refs.length).toBe(106);
-    expect(refs.length + EXTRA_RAW_PATHS.length).toBe(107);
+    // games/core/sessions 1, admin/games 1) + 1 sendBeacon path = the 106 raw strings.
+    expect(refs.length).toBe(105);
+    expect(refs.length + EXTRA_RAW_PATHS.length).toBe(106);
   });
 
   it("passes a string literal as the path to every ref", () => {
@@ -370,8 +370,8 @@ describe("_generated drift", () => {
     ).toEqual({ missingFromGenerated: [], staleInGenerated: [] });
   });
 
-  it("has 85 modules in the bundler set", () => {
-    expect(convexModulePaths().length).toBe(85);
+  it("has 86 modules in the bundler set", () => {
+    expect(convexModulePaths().length).toBe(86);
   });
 
   it("never lets convex/games acquire a nested convex.config.ts", () => {
@@ -394,9 +394,9 @@ describe("function inventory", () => {
     expect(importErrors).toEqual([]);
   });
 
-  it("has 140 registered functions", async () => {
+  it("has 139 registered functions", async () => {
     const { functions } = await inventoryPromise;
-    expect(functions.length).toBe(140);
+    expect(functions.length).toBe(139);
   });
 
   it("matches the signature snapshot", async () => {

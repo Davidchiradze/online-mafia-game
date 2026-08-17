@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useMutation } from "convex/react";
 import { gameSessions } from "@convex/refs/game";
 import { useTranslations } from "next-intl";
-import { SPORTS } from "@/shared/lib/constants/game";
+import { SPORTS, GamePhase } from "@/shared/lib/constants/game";
 import {
   useGameRoom,
   type GameSessionState,
@@ -54,10 +54,10 @@ export default function BestMovePanel({
     try {
       await updateSession({
         sessionId: gameSessionState._id,
-        updates: ruleset.advanceUpdates("best_move"),
+        updates: ruleset.advanceUpdates(GamePhase.BEST_MOVE),
       });
     } catch (error) {
-      console.error('Failed to advance from "best_move":', error);
+      console.error('Failed to advance from GamePhase.BEST_MOVE:', error);
     } finally {
       setIsLoading(false);
     }
@@ -68,7 +68,7 @@ export default function BestMovePanel({
     eyebrow: t("dawnCounter", {
       night: Math.max(1, gameSessionState.currentNightNumber),
     }),
-    title: tPhases("best_move"),
+    title: tPhases(GamePhase.BEST_MOVE),
     timer,
     speakers:
       victimSeat !== null

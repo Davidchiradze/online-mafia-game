@@ -13,7 +13,7 @@ import {
   enterNightPhase,
   enterVotingPhase,
 } from "./phaseTransitions";
-import { SPEAKING_STATE, FOULS } from "../../lib/constants";
+import { SPEAKING_STATE, FOULS, GamePhase } from "../../lib/constants";
 import { getNextSpeaker } from "./speakingOrder";
 import { getGameDefinition } from "../registry";
 import { isFirstDayRound } from "./dayRound";
@@ -80,7 +80,7 @@ export const enterIntroductionPhase = mutation({
     );
 
     await ctx.db.patch(session._id, {
-      gamePhase: "introduction_phase",
+      gamePhase: GamePhase.INTRODUCTION_PHASE,
       speakingOrder,
       dayRoundOpenerIndex: openerIndex,
       currentSpeakerIndex: undefined,
@@ -198,7 +198,7 @@ export const nominatePlayer = mutation({
     await assertIsHost(ctx.db, gameId, userId);
     const session = await getGameSession(ctx.db, gameId);
 
-    if (session.gamePhase !== "day_phase") {
+    if (session.gamePhase !== GamePhase.DAY_PHASE) {
       throw new ConvexError("Nominations only allowed during day phase");
     }
 
@@ -244,7 +244,7 @@ export const startNominatedPlayersSpeaking = mutation({
     const game = await assertIsHost(ctx.db, gameId, userId);
     const session = await getGameSession(ctx.db, gameId);
 
-    if (session.gamePhase !== "day_phase") {
+    if (session.gamePhase !== GamePhase.DAY_PHASE) {
       throw new ConvexError(
         "Can only start nominated players speaking from day phase",
       );
@@ -270,7 +270,7 @@ export const startNominatedPlayersSpeaking = mutation({
         await enterNightPhase(ctx, gameId);
       } else {
         await ctx.db.patch(session._id, {
-          gamePhase: "farewell_speech",
+          gamePhase: GamePhase.FAREWELL_SPEECH,
           speakingOrder: [nominatedPlayers[0]],
           currentSpeakerIndex: undefined,
           speakerStartedAt: undefined,
@@ -293,7 +293,7 @@ export const startNominatedPlayersSpeaking = mutation({
     // and it is the same state a tie-break arrives in (`voting:startTieBreak`),
     // so the phase behaves identically however it was reached.
     await ctx.db.patch(session._id, {
-      gamePhase: "nominated_players_speak",
+      gamePhase: GamePhase.NOMINATED_PLAYERS_SPEAK,
       speakingOrder: nominatedPlayers,
       currentSpeakerIndex: undefined,
       speakerStartedAt: undefined,
@@ -313,7 +313,7 @@ export const advanceNominatedSpeaker = mutation({
     await assertIsHost(ctx.db, gameId, userId);
     const session = await getGameSession(ctx.db, gameId);
 
-    if (session.gamePhase !== "nominated_players_speak") {
+    if (session.gamePhase !== GamePhase.NOMINATED_PLAYERS_SPEAK) {
       throw new ConvexError("Not in nominated players speaking phase");
     }
 
@@ -372,7 +372,7 @@ export const finishCurrentNominatedSpeaker = mutation({
     await assertIsHost(ctx.db, gameId, userId);
     const session = await getGameSession(ctx.db, gameId);
 
-    if (session.gamePhase !== "nominated_players_speak") {
+    if (session.gamePhase !== GamePhase.NOMINATED_PLAYERS_SPEAK) {
       throw new ConvexError("Not in nominated players speaking phase");
     }
 

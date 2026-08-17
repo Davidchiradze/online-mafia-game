@@ -32,7 +32,7 @@ consulted `gameType`, and phases were referenced **positionally**
 codebase or threading `if (gameType === ...)` through dozens of files.
 
 Every concern that was hardwired — phase list, role deck, teams, night kill
-model, kill resolution, win detection, role deal, right-hand promotion, seat
+model, kill resolution, win detection, role deal, mafia kill succession, seat
 geometry — now resolves through one of the two registries in §2. The current
 per-variant values are generated into
 [generated/game-spec.md](../generated/game-spec.md); this section deliberately
@@ -231,7 +231,7 @@ For the wider layout see [architecture.md](../architecture.md).
 - Visibility ruleset + awake roles.
 - Host phase-controls map (which button per phase).
 - Seat layout geometry (12-ring vs 10-ring).
-- Special mechanics: right-hand promotion (Japanese), 3rd-foul speaking ban
+- Special mechanics: mafia kill succession (Japanese), 3rd-foul speaking ban
   (Sports), day-1 single-nominee rule (Sports).
 
 ## 5. Phased refactor plan (complete)

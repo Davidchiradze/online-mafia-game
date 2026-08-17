@@ -7,6 +7,7 @@
 
 import { dayRoundFromNightNumber } from "@convex/games/core/dayRound";
 import { isSpeakingBanned, LAST_DAY_ALIVE_MAX } from "@convex/games/core/fouls";
+import { GamePhase } from "@/shared/lib/constants/game";
 
 /**
  * The ONLY phase the ban applies to: docs/variants/sports/rules.md §4.2 bans the player
@@ -15,7 +16,7 @@ import { isSpeakingBanned, LAST_DAY_ALIVE_MAX } from "@convex/games/core/fouls";
  * killed the same night, which shares the banned round's night number and would
  * otherwise be swallowed by the ban.
  */
-const BANNED_PHASE = "day_phase";
+const BANNED_PHASE = GamePhase.DAY_PHASE;
 
 type SeatedPlayer = { isAlive: boolean; seatNumber?: number };
 

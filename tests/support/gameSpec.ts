@@ -31,8 +31,7 @@ import {
   GAME_PHASES as UI_PHASES,
   GAME_PHASE_LABELS,
   GAME_TYPES,
-  PHASE_TIMERS,
-} from "@/shared/lib/constants/game";
+  PHASE_TIMERS, GamePhase } from "@/shared/lib/constants/game";
 import { advanceUpdates } from "@/features/game-room/variants/japanese/phaseFlow";
 import { sportsAdvanceUpdates } from "@/features/game-room/variants/sports/phaseFlow";
 import { JAPANESE_VISIBILITY } from "@/features/game-room/variants/japanese/visibility";
@@ -42,7 +41,7 @@ import type { VisibilityRuleset } from "@/features/game-room/variants/core/types
 const REPO_ROOT = new URL("../../", import.meta.url).pathname;
 const p = (rel: string) => join(REPO_ROOT, rel);
 
-export const BUFFER_PHASE = "phase_transition";
+export const BUFFER_PHASE = GamePhase.PHASE_TRANSITION;
 
 // ---------------------------------------------------------------------------
 // Registered variants
@@ -105,48 +104,48 @@ export type BranchEdge = {
 export const BRANCHING_EDGES: readonly BranchEdge[] = [
   {
     variants: ["sports_mafia"],
-    from: "day_phase",
-    to: "night_phase",
+    from: GamePhase.DAY_PHASE,
+    to: GamePhase.NIGHT_PHASE,
     when: "first day round AND exactly one nominee",
     owner: "convex/games/core/dayPhase.ts",
     guard: "definition.flags.firstDaySingleNomineeSkipsToNight &&",
   },
   {
     variants: ["sports_mafia"],
-    from: "day_phase",
-    to: "farewell_speech",
+    from: GamePhase.DAY_PHASE,
+    to: GamePhase.FAREWELL_SPEECH,
     when: "later day round AND exactly one nominee — eliminated without a vote",
     owner: "convex/games/core/dayPhase.ts",
     guard: "isFirstDayRound(session.currentNightNumber)",
   },
   {
     variants: ["japanese_mafia", "sports_mafia"],
-    from: "day_phase",
-    to: "voting",
+    from: GamePhase.DAY_PHASE,
+    to: GamePhase.VOTING,
     when: "self-justification skipped, or exactly one nominee",
     owner: "convex/games/core/dayPhase.ts",
     guard: "session.withoutSelfJustification || nominatedPlayers.length === 1",
   },
   {
     variants: ["japanese_mafia", "sports_mafia"],
-    from: "night_phase",
-    to: "day_phase",
+    from: GamePhase.NIGHT_PHASE,
+    to: GamePhase.DAY_PHASE,
     when: "night resolved to zero kills — the farewell is skipped",
     owner: "convex/games/core/farewellSpeech.ts",
     guard: "if (killedPlayers.length === 0) {",
   },
   {
     variants: ["sports_mafia"],
-    from: "night_phase",
-    to: "best_move",
+    from: GamePhase.NIGHT_PHASE,
+    to: GamePhase.BEST_MOVE,
     when: "variant grants best move AND the victim is eligible",
     owner: "convex/games/core/farewellSpeech.ts",
     guard: "definition.flags.hasBestMove &&",
   },
   {
     variants: ["japanese_mafia", "sports_mafia"],
-    from: "voting",
-    to: "night_phase",
+    from: GamePhase.VOTING,
+    to: GamePhase.NIGHT_PHASE,
     when: "repeated tie — nobody is eliminated",
     owner: "convex/games/core/voting.ts",
     guard: "skipToNightAfterTie",

@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 import { useCardPicking } from "@/features/game-room/hooks/game";
-import { CARD_PICK, GAME_PHASES } from "@/shared/lib/constants/game";
+import { CARD_PICK, GamePhase } from "@/shared/lib/constants/game";
 import { useServerTime } from "@/shared/lib/time/serverTime";
 import type { Id } from "@convex/_generated/dataModel";
 import RoleCard from "./RoleCard";
@@ -67,7 +67,7 @@ export default function CardPickingBoard() {
     setPickedCardId(null);
   }, []);
 
-  const isPickingPhase = gameSessionState?.gamePhase === GAME_PHASES[1]; // "picking_roles"
+  const isPickingPhase = gameSessionState?.gamePhase === GamePhase.PICKING_ROLES;
   const shouldRender =
     Boolean(state) &&
     isPickingPhase &&

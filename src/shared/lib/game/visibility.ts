@@ -5,9 +5,15 @@
  * The visibility is based on the viewer's role and the current game phase.
  */
 
-import type { GAME_PHASES, JAPANESE_MAFIA_ROLES } from "@/shared/lib/constants/game";
+import { GamePhase } from "@/shared/lib/constants/game";
+import type { JAPANESE_MAFIA_ROLES } from "@/shared/lib/constants/game";
 
-export type GamePhase = (typeof GAME_PHASES)[number];
+/**
+ * Re-exported so the many `import type { GamePhase, Role } from ".../visibility"`
+ * call sites keep working. The enum itself is declared once, in
+ * `convex/lib/constants.ts`.
+ */
+export { GamePhase };
 export type Role = (typeof JAPANESE_MAFIA_ROLES)[number] | null;
 
 /**
@@ -55,18 +61,18 @@ export function canSeeParticipant(
 
   // GAME SESSION STARTED: Everyone can see everyone (pre-role assignment)
   // Note: Players don't have roles yet during this phase
-  if (gamePhase === "game_session_started") {
+  if (gamePhase === GamePhase.GAME_SESSION_STARTED) {
     return true;
   }
 
   // PICKING ROLES: Only host can see everyone, others see no one
   // Note: Players don't have roles yet during this phase
-  if (gamePhase === "picking_roles") {
+  if (gamePhase === GamePhase.PICKING_ROLES) {
     return isViewerHost;
   }
 
   // NIGHT PHASE: No one sees anyone (complete darkness)
-  if (gamePhase === "night_phase") {
+  if (gamePhase === GamePhase.NIGHT_PHASE) {
     return false;
   }
 
@@ -76,34 +82,34 @@ export function canSeeParticipant(
   // keep monitoring the table during the buffer. Non-host must return false
   // here or the default `return true` below would reveal everyone and
   // re-introduce the cross-faction leak.
-  if (gamePhase === "phase_transition") {
+  if (gamePhase === GamePhase.PHASE_TRANSITION) {
     return isViewerHost;
   }
 
   // INTRODUCTION PHASE: Everyone can see everyone (day time)
-  if (gamePhase === "introduction_phase") {
+  if (gamePhase === GamePhase.INTRODUCTION_PHASE) {
     return true;
   }
 
   // DAY PHASE: Everyone can see everyone
-  if (gamePhase === "day_phase") {
+  if (gamePhase === GamePhase.DAY_PHASE) {
     return true;
   }
 
   // NOMINATED PLAYERS SPEAK: Everyone can see everyone (self-justification phase)
-  if (gamePhase === "nominated_players_speak") {
+  if (gamePhase === GamePhase.NOMINATED_PLAYERS_SPEAK) {
     return true;
   }
 
   // VOTING: Everyone can see everyone
-  if (gamePhase === "voting") {
+  if (gamePhase === GamePhase.VOTING) {
     return true;
   }
 
-  // MAFIA MEET: Mafia (Don, Mafia, Right Hand) are awake — they see every
-  // player (teammates fully, everyone else dimmed). Non-mafia see no one.
-  if (gamePhase === "mafia_meet") {
-    const mafiaRoles: Role[] = ["DON", "MAFIA", "MAFIA_RIGHT_HAND"];
+  // MAFIA MEET: Mafia (Don, Mafia) are awake — they see every player
+  // (teammates fully, everyone else dimmed). Non-mafia see no one.
+  if (gamePhase === GamePhase.MAFIA_MEET) {
+    const mafiaRoles: Role[] = ["DON", "MAFIA"];
 
     if (isViewerHost) return true; // Host sees everyone
     if (mafiaRoles.includes(viewerRole)) return true; // Awake mafia see everyone
@@ -111,20 +117,18 @@ export function canSeeParticipant(
     return false;
   }
 
-  // DON CHOOSES RIGHT HAND: Mafia are awake — they see every player
-  // (teammates fully, everyone else dimmed). Non-mafia see no one.
-  if (gamePhase === "don_chooses_right_hand") {
-    const mafiaRoles: Role[] = ["DON", "MAFIA", "MAFIA_RIGHT_HAND"];
-
+  // DON MEET: the mafia have gone back to sleep and the Don wakes alone, so only
+  // the Don (and the host) see anyone.
+  if (gamePhase === GamePhase.DON_MEET) {
     if (isViewerHost) return true; // Host sees everyone
-    if (mafiaRoles.includes(viewerRole)) return true; // Awake mafia see everyone
-
+    if (isTargetHost && viewerRole === "DON") return true; // Don sees host
+    if (viewerRole === "DON") return true; // Don sees everyone
     return false;
   }
 
   // YAKUZA & SHOGUN MEET: Yakuza and Shogun are awake — they see every player
   // (teammates fully, everyone else dimmed). Others see no one.
-  if (gamePhase === "yakuda_shogun_meet") {
+  if (gamePhase === GamePhase.YAKUDA_SHOGUN_MEET) {
     const yakuzaRoles: Role[] = ["YAKUZA", "SHOGUN"];
 
     if (isViewerHost) return true; // Host sees everyone
@@ -135,7 +139,7 @@ export function canSeeParticipant(
 
   // DETECTIVE MEET: Detective is awake — sees every player (self fully,
   // everyone else dimmed). Others see no one.
-  if (gamePhase === "detective_meet") {
+  if (gamePhase === GamePhase.DETECTIVE_MEET) {
     if (isViewerHost) return true; // Host sees everyone
     if (viewerRole === "DETECTIVE") return true; // Awake detective sees everyone
     return false;
@@ -143,7 +147,7 @@ export function canSeeParticipant(
 
   // DOCTOR MEET: Doctor is awake — sees every player (self fully, everyone
   // else dimmed). Others see no one.
-  if (gamePhase === "doctor_meet") {
+  if (gamePhase === GamePhase.DOCTOR_MEET) {
     if (isViewerHost) return true; // Host sees everyone
     if (viewerRole === "DOCTOR") return true; // Awake doctor sees everyone
     return false;
@@ -151,8 +155,8 @@ export function canSeeParticipant(
 
   // MAFIA CHOOSES TARGET: Mafia are awake — they see every player (teammates
   // fully, everyone else dimmed) to pick a target. Non-mafia see no one.
-  if (gamePhase === "mafia_chooses_target") {
-    const mafiaRoles: Role[] = ["DON", "MAFIA", "MAFIA_RIGHT_HAND"];
+  if (gamePhase === GamePhase.MAFIA_CHOOSES_TARGET) {
+    const mafiaRoles: Role[] = ["DON", "MAFIA"];
 
     if (isViewerHost) return true; // Host sees everyone
     if (mafiaRoles.includes(viewerRole)) return true; // Awake mafia see everyone
@@ -161,24 +165,16 @@ export function canSeeParticipant(
   }
 
   // DON CHECKS FOR DETECTIVE: Only Don can see
-  if (gamePhase === "don_checks_for_detective") {
+  if (gamePhase === GamePhase.DON_CHECKS_FOR_DETECTIVE) {
     if (isViewerHost) return true; // Host sees everyone
     if (isTargetHost && viewerRole === "DON") return true; // Don sees host
     if (viewerRole === "DON") return true; // Don sees everyone (to check)
     return false;
   }
 
-  // RIGHT HAND CHECKS FOR YAKUZA: Only Right Hand can see
-  if (gamePhase === "right_hand_checks_for_yakuza") {
-    if (isViewerHost) return true; // Host sees everyone
-    if (isTargetHost && viewerRole === "MAFIA_RIGHT_HAND") return true; // Right hand sees host
-    if (viewerRole === "MAFIA_RIGHT_HAND") return true; // Right hand sees everyone (to check)
-    return false;
-  }
-
   // YAKUZA CHOOSES TARGET: Yakuza and Shogun are awake — they see every player
   // (teammates fully, everyone else dimmed) to pick a target. Others see no one.
-  if (gamePhase === "yakuza_and_shogun_chooses_target") {
+  if (gamePhase === GamePhase.YAKUZA_AND_SHOGUN_CHOOSES_TARGET) {
     const yakuzaRoles: Role[] = ["YAKUZA", "SHOGUN"];
 
     if (isViewerHost) return true; // Host sees everyone
@@ -188,7 +184,7 @@ export function canSeeParticipant(
   }
 
   // DETECTIVE CHECKS FOR MAFIA: Only Detective can see
-  if (gamePhase === "detective_checks_for_mafia") {
+  if (gamePhase === GamePhase.DETECTIVE_CHECKS_FOR_MAFIA) {
     if (isViewerHost) return true; // Host sees everyone
     if (isTargetHost && viewerRole === "DETECTIVE") return true; // Detective sees host
     if (viewerRole === "DETECTIVE") return true; // Detective sees everyone (to check)
@@ -196,7 +192,7 @@ export function canSeeParticipant(
   }
 
   // DOCTOR HEALS PLAYER: Only Doctor can see
-  if (gamePhase === "doctor_heals_player") {
+  if (gamePhase === GamePhase.DOCTOR_HEALS_PLAYER) {
     if (isViewerHost) return true; // Host sees everyone
     if (isTargetHost && viewerRole === "DOCTOR") return true; // Doctor sees host
     if (viewerRole === "DOCTOR") return true; // Doctor sees everyone (to heal)
@@ -204,7 +200,7 @@ export function canSeeParticipant(
   }
 
   // FAREWELL SPEECH: Everyone can see everyone (dying player says goodbye publicly)
-  if (gamePhase === "farewell_speech") {
+  if (gamePhase === GamePhase.FAREWELL_SPEECH) {
     return true;
   }
 
@@ -219,29 +215,25 @@ export function canSeeParticipant(
  */
 export function getAwakeRoles(gamePhase: GamePhase): Role[] {
   switch (gamePhase) {
-    case "mafia_meet":
-    case "mafia_chooses_target":
-      return ["DON", "MAFIA", "MAFIA_RIGHT_HAND"];
+    case GamePhase.MAFIA_MEET:
+    case GamePhase.MAFIA_CHOOSES_TARGET:
+      return ["DON", "MAFIA"];
 
-    case "don_chooses_right_hand":
-      return ["DON", "MAFIA", "MAFIA_RIGHT_HAND"];
-    case "don_checks_for_detective":
+    case GamePhase.DON_MEET:
+    case GamePhase.DON_CHECKS_FOR_DETECTIVE:
       return ["DON"];
 
-    case "yakuda_shogun_meet":
-    case "yakuza_and_shogun_chooses_target":
+    case GamePhase.YAKUDA_SHOGUN_MEET:
+    case GamePhase.YAKUZA_AND_SHOGUN_CHOOSES_TARGET:
       return ["YAKUZA", "SHOGUN"];
 
-    case "detective_meet":
-    case "detective_checks_for_mafia":
+    case GamePhase.DETECTIVE_MEET:
+    case GamePhase.DETECTIVE_CHECKS_FOR_MAFIA:
       return ["DETECTIVE"];
 
-    case "doctor_meet":
-    case "doctor_heals_player":
+    case GamePhase.DOCTOR_MEET:
+    case GamePhase.DOCTOR_HEALS_PLAYER:
       return ["DOCTOR"];
-
-    case "right_hand_checks_for_yakuza":
-      return ["MAFIA_RIGHT_HAND"];
 
     default:
       return [];
@@ -253,20 +245,19 @@ export function getAwakeRoles(gamePhase: GamePhase): Role[] {
  */
 export function isNightActivityPhase(gamePhase: GamePhase): boolean {
   const nightPhases: GamePhase[] = [
-    "picking_roles",
-    "night_phase",
-    "phase_transition",
-    "mafia_meet",
-    "don_chooses_right_hand",
-    "yakuda_shogun_meet",
-    "detective_meet",
-    "doctor_meet",
-    "mafia_chooses_target",
-    "don_checks_for_detective",
-    "right_hand_checks_for_yakuza",
-    "yakuza_and_shogun_chooses_target",
-    "detective_checks_for_mafia",
-    "doctor_heals_player",
+    GamePhase.PICKING_ROLES,
+    GamePhase.NIGHT_PHASE,
+    GamePhase.PHASE_TRANSITION,
+    GamePhase.MAFIA_MEET,
+    GamePhase.DON_MEET,
+    GamePhase.YAKUDA_SHOGUN_MEET,
+    GamePhase.DETECTIVE_MEET,
+    GamePhase.DOCTOR_MEET,
+    GamePhase.MAFIA_CHOOSES_TARGET,
+    GamePhase.DON_CHECKS_FOR_DETECTIVE,
+    GamePhase.YAKUZA_AND_SHOGUN_CHOOSES_TARGET,
+    GamePhase.DETECTIVE_CHECKS_FOR_MAFIA,
+    GamePhase.DOCTOR_HEALS_PLAYER,
   ];
   return nightPhases.includes(gamePhase);
 }
@@ -377,7 +368,10 @@ export function createVisibilityHelpers(
       }
 
       // During picking_roles and night_phase, everyone is "asleep"
-      if (gamePhase === "picking_roles" || gamePhase === "night_phase") {
+      if (
+        gamePhase === GamePhase.PICKING_ROLES ||
+        gamePhase === GamePhase.NIGHT_PHASE
+      ) {
         return VisibilityState.DIMMED;
       }
 

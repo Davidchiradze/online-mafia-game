@@ -28,7 +28,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 import { getGameDefinition } from "@convex/games/registry";
-import { GAME_TYPES } from "@/shared/lib/constants/game";
+import { GAME_TYPES, GamePhase } from "@/shared/lib/constants/game";
 
 const REPO_ROOT = new URL("../../", import.meta.url).pathname;
 const p = (rel: string) => join(REPO_ROOT, rel);
@@ -112,7 +112,7 @@ const VARIANT_PHASES = variantSpecific((def) => def.phases);
  */
 const FIREWALL_TERM_EXEMPT = new Map<string, string>([
   [
-    "phase_transition",
+    GamePhase.PHASE_TRANSITION,
     // Known, test-pinned drift: the backend GAME_PHASES predates the buffer, so
     // JAPANESE_DEFINITION.phases omits a phase its own UI flow routes through
     // (8 of its 14 host-advance edges). Shared mechanism, not a Sports feature.
@@ -150,7 +150,7 @@ describe("engine docs stay variant-agnostic", () => {
   it("derives the banned vocabulary from the registry", () => {
     // Pinned so the firewall cannot quietly become a no-op. If a variant gains
     // or loses a role, this is where you find out.
-    expect(VARIANT_ROLES).toEqual(["DOCTOR", "MAFIA_RIGHT_HAND", "SHOGUN", "YAKUZA"]);
+    expect(VARIANT_ROLES).toEqual(["DOCTOR", "SHOGUN", "YAKUZA"]);
     expect(bannedPhases.length, "no variant-specific phases derived — firewall would be toothless")
       .toBeGreaterThan(0);
   });

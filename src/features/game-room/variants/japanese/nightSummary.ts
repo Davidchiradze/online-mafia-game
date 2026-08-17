@@ -14,18 +14,17 @@
  */
 
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
-import { GAME_PHASES } from "@/shared/lib/constants/game";
 import type { HostPanelMeta } from "@/features/game-room/lib/hostPanel";
+import { GamePhase } from "@/shared/lib/constants/game";
 
 /** Phases during which the summary is meaningful (night_phase … doctor heal). */
 const NIGHT_PHASES: readonly string[] = [
-  GAME_PHASES[8], // night_phase
-  GAME_PHASES[9], // mafia_chooses_target
-  GAME_PHASES[10], // don_checks_for_detective
-  GAME_PHASES[11], // right_hand_checks_for_yakuza
-  GAME_PHASES[12], // yakuza_and_shogun_chooses_target
-  GAME_PHASES[13], // detective_checks_for_mafia
-  GAME_PHASES[14], // doctor_heals_player
+  GamePhase.NIGHT_PHASE,
+  GamePhase.MAFIA_CHOOSES_TARGET,
+  GamePhase.DON_CHECKS_FOR_DETECTIVE,
+  GamePhase.YAKUZA_AND_SHOGUN_CHOOSES_TARGET,
+  GamePhase.DETECTIVE_CHECKS_FOR_MAFIA,
+  GamePhase.DOCTOR_HEALS_PLAYER,
 ];
 
 const EMPTY: readonly HostPanelMeta[] = [];
@@ -46,21 +45,21 @@ export function useJapaneseNightSummary(): readonly HostPanelMeta[] {
       label: "M",
       value: seat(nightPhaseSession?.mafiaTarget),
       tone: "rose",
-      isActive: phase === GAME_PHASES[9],
+      isActive: phase === GamePhase.MAFIA_CHOOSES_TARGET,
     },
     {
       id: "yakuza",
       label: "Y",
       value: seat(nightPhaseSession?.yakuzaTarget),
       tone: "violet",
-      isActive: phase === GAME_PHASES[12],
+      isActive: phase === GamePhase.YAKUZA_AND_SHOGUN_CHOOSES_TARGET,
     },
     {
       id: "doctor",
       label: "H",
       value: seat(nightPhaseSession?.healedPlayer),
       tone: "emerald",
-      isActive: phase === GAME_PHASES[14],
+      isActive: phase === GamePhase.DOCTOR_HEALS_PLAYER,
     },
   ];
 }

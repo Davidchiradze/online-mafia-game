@@ -19,7 +19,6 @@ export const JAPANESE_NIGHT_MODEL: NightModel = {
   kind: "single-authority",
   actingRoles: [
     "DON",
-    "MAFIA_RIGHT_HAND",
     "MAFIA",
     "SHOGUN",
     "YAKUZA",

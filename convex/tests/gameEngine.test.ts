@@ -10,7 +10,7 @@ import {
   enterVotingPhase,
 } from "../games/core/phaseTransitions";
 import { recordWinnerIfDecided } from "../lib/games";
-import { JAPANESE_MAFIA_ROLE_DISTRIBUTION } from "../lib/constants";
+import { JAPANESE_MAFIA_ROLE_DISTRIBUTION, GamePhase } from "../lib/constants";
 import { SPORTS_MAFIA_ROLE_DISTRIBUTION } from "../games/sports/roles";
 
 /**
@@ -90,7 +90,7 @@ async function seedGame(
     });
     await ctx.db.insert("gameSessions", {
       gameId,
-      gamePhase: opts.phase ?? "night_phase",
+      gamePhase: opts.phase ?? GamePhase.NIGHT_PHASE,
       isFinished: false,
       currentNightNumber: opts.currentNightNumber ?? 1,
       nominatedPlayers: [],
@@ -157,7 +157,7 @@ function getSession(t: TestConvex<typeof schema>, gameId: Seeded["gameId"]) {
 const WIN_SAFE_ROSTER: SeatSpec[] = [
   { seat: 1, role: "DON" },
   { seat: 2, role: "MAFIA" },
-  { seat: 3, role: "MAFIA_RIGHT_HAND" },
+  { seat: 3, role: "MAFIA" },
   { seat: 4, role: "YAKUZA" },
   { seat: 5, role: "SHOGUN" },
   { seat: 6, role: "DETECTIVE" },
@@ -166,7 +166,9 @@ const WIN_SAFE_ROSTER: SeatSpec[] = [
 ];
 
 // ===========================================================================
-// Night kill authority (DON > RH > MAFIA; SHOGUN > YAKUZA; lone SHOGUN can't kill)
+// Night kill authority. Mafia: the DON while alive, then the living mafia in the
+// next seat CLOCKWISE from the Don's (wrapping). Yakuza: SHOGUN > YAKUZA, and a
+// lone SHOGUN can't kill.
 // ===========================================================================
 
 describe("night kill authority", () => {
@@ -175,7 +177,7 @@ describe("night kill authority", () => {
     const s = await seedGame(t, {
       players: [
         { seat: 1, role: "DON" },
-        { seat: 2, role: "MAFIA_RIGHT_HAND" },
+        { seat: 2, role: "MAFIA" },
         { seat: 3, role: "MAFIA" },
       ],
     });
@@ -185,39 +187,121 @@ describe("night kill authority", () => {
     expect(asDon).toEqual({ hasAuthority: true, role: "DON" });
 
     const asMafia = await t
-      .withIdentity({ subject: s.byRole.MAFIA.accountId })
+      .withIdentity({ subject: s.bySeat[2].accountId })
       .query(api.games.core.nightPhase.checkMafiaAuthority, { gameId: s.gameId });
     expect(asMafia).toEqual({ hasAuthority: false, role: "DON" });
   });
 
-  it("mafia authority falls to the RIGHT_HAND when the DON is dead", async () => {
+  it("passes to the mafia in the next seat after the dead DON, not the lowest seat", async () => {
     const t = convexTest(schema, modules);
+    // DON at 3; living mafia at 1 and 5. Clockwise from 3 reaches 5 first — the
+    // seat-order rule and a "lowest living seat" rule disagree here on purpose.
     const s = await seedGame(t, {
       players: [
-        { seat: 1, role: "DON", alive: false },
-        { seat: 2, role: "MAFIA_RIGHT_HAND" },
-        { seat: 3, role: "MAFIA" },
+        { seat: 1, role: "MAFIA" },
+        { seat: 3, role: "DON", alive: false },
+        { seat: 5, role: "MAFIA" },
       ],
     });
-    const asRh = await t
-      .withIdentity({ subject: s.byRole.MAFIA_RIGHT_HAND.accountId })
+
+    const asSeat5 = await t
+      .withIdentity({ subject: s.bySeat[5].accountId })
       .query(api.games.core.nightPhase.checkMafiaAuthority, { gameId: s.gameId });
-    expect(asRh).toEqual({ hasAuthority: true, role: "MAFIA_RIGHT_HAND" });
+    expect(asSeat5).toEqual({ hasAuthority: true, role: "MAFIA" });
+
+    const asSeat1 = await t
+      .withIdentity({ subject: s.bySeat[1].accountId })
+      .query(api.games.core.nightPhase.checkMafiaAuthority, { gameId: s.gameId });
+    expect(asSeat1).toEqual({ hasAuthority: false, role: "MAFIA" });
   });
 
-  it("mafia authority falls to a plain MAFIA when DON and RIGHT_HAND are dead", async () => {
+  it("wraps past the highest seat when every living mafia sits before the DON", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      players: [
+        { seat: 2, role: "MAFIA" },
+        { seat: 4, role: "MAFIA" },
+        { seat: 9, role: "DON", alive: false },
+      ],
+    });
+    const asSeat2 = await t
+      .withIdentity({ subject: s.bySeat[2].accountId })
+      .query(api.games.core.nightPhase.checkMafiaAuthority, { gameId: s.gameId });
+    expect(asSeat2).toEqual({ hasAuthority: true, role: "MAFIA" });
+
+    const asSeat4 = await t
+      .withIdentity({ subject: s.bySeat[4].accountId })
+      .query(api.games.core.nightPhase.checkMafiaAuthority, { gameId: s.gameId });
+    expect(asSeat4).toEqual({ hasAuthority: false, role: "MAFIA" });
+  });
+
+  it("skips a dead successor and keeps walking clockwise", async () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
       players: [
         { seat: 1, role: "DON", alive: false },
-        { seat: 2, role: "MAFIA_RIGHT_HAND", alive: false },
+        { seat: 2, role: "MAFIA", alive: false },
         { seat: 3, role: "MAFIA" },
       ],
     });
-    const asMafia = await t
-      .withIdentity({ subject: s.byRole.MAFIA.accountId })
+    const asSeat3 = await t
+      .withIdentity({ subject: s.bySeat[3].accountId })
       .query(api.games.core.nightPhase.checkMafiaAuthority, { gameId: s.gameId });
-    expect(asMafia).toEqual({ hasAuthority: true, role: "MAFIA" });
+    expect(asSeat3).toEqual({ hasAuthority: true, role: "MAFIA" });
+  });
+
+  it("reports no authority once every mafia is dead", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      players: [
+        { seat: 1, role: "DON", alive: false },
+        { seat: 2, role: "MAFIA", alive: false },
+        { seat: 3, role: "DETECTIVE" },
+      ],
+    });
+    const asDetective = await t
+      .withIdentity({ subject: s.bySeat[3].accountId })
+      .query(api.games.core.nightPhase.checkMafiaAuthority, { gameId: s.gameId });
+    expect(asDetective).toEqual({ hasAuthority: false, role: null });
+  });
+
+  it("the server accepts the successor's kill and rejects the other mafia's", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedGame(t, {
+      phase: GamePhase.MAFIA_CHOOSES_TARGET,
+      players: [
+        { seat: 1, role: "MAFIA" },
+        { seat: 3, role: "DON", alive: false },
+        { seat: 5, role: "MAFIA" },
+        { seat: 7, role: "CITIZEN" },
+      ],
+    });
+
+    // Seat 1 is a living mafia but NOT the successor — the gate must hold even
+    // though the client would never offer them the button.
+    await expect(
+      t
+        .withIdentity({ subject: s.bySeat[1].accountId })
+        .mutation(api.games.core.nightPhase.selectMafiaTarget, {
+          gameId: s.gameId,
+          targetSeatNumber: 7,
+        }),
+    ).rejects.toThrow();
+
+    await t
+      .withIdentity({ subject: s.bySeat[5].accountId })
+      .mutation(api.games.core.nightPhase.selectMafiaTarget, {
+        gameId: s.gameId,
+        targetSeatNumber: 7,
+      });
+
+    const night = await t.run(async (ctx) =>
+      ctx.db
+        .query("nightPhaseSessions")
+        .withIndex("by_gameId", (q) => q.eq("gameId", s.gameId))
+        .first(),
+    );
+    expect(night?.mafiaTarget).toBe(7);
   });
 
   it("yakuza authority is the SHOGUN while the YAKUZA is alive", async () => {
@@ -298,7 +382,7 @@ describe("night kill resolution (startFarewellSpeech)", () => {
   it("kills a single mafia target and enters farewell_speech", async () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
-      phase: "doctor_heals_player",
+      phase: GamePhase.DOCTOR_HEALS_PLAYER,
       players: WIN_SAFE_ROSTER,
       night: { mafiaTarget: 8 },
     });
@@ -306,14 +390,14 @@ describe("night kill resolution (startFarewellSpeech)", () => {
     expect(result).toEqual({ skipToDay: false });
 
     const session = await getSession(t, s.gameId);
-    expect(session?.gamePhase).toBe("farewell_speech");
+    expect(session?.gamePhase).toBe(GamePhase.FAREWELL_SPEECH);
     expect(session?.speakingOrder).toEqual([8]);
   });
 
   it("skips to day when the doctor healed the mafia's target", async () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
-      phase: "doctor_heals_player",
+      phase: GamePhase.DOCTOR_HEALS_PLAYER,
       players: WIN_SAFE_ROSTER,
       night: { mafiaTarget: 8, healedPlayer: 8 },
     });
@@ -321,13 +405,13 @@ describe("night kill resolution (startFarewellSpeech)", () => {
     expect(result).toEqual({ skipToDay: true });
 
     const session = await getSession(t, s.gameId);
-    expect(session?.gamePhase).toBe("day_phase");
+    expect(session?.gamePhase).toBe(GamePhase.DAY_PHASE);
   });
 
   it("kills both the mafia and yakuza targets when distinct", async () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
-      phase: "doctor_heals_player",
+      phase: GamePhase.DOCTOR_HEALS_PLAYER,
       players: WIN_SAFE_ROSTER,
       night: { mafiaTarget: 6, yakuzaTarget: 8 },
     });
@@ -335,7 +419,7 @@ describe("night kill resolution (startFarewellSpeech)", () => {
     expect(result).toEqual({ skipToDay: false });
 
     const session = await getSession(t, s.gameId);
-    expect(session?.gamePhase).toBe("farewell_speech");
+    expect(session?.gamePhase).toBe(GamePhase.FAREWELL_SPEECH);
     expect(new Set(session?.speakingOrder)).toEqual(new Set([6, 8]));
     expect(session?.speakingOrder).toHaveLength(2);
   });
@@ -343,7 +427,7 @@ describe("night kill resolution (startFarewellSpeech)", () => {
   it("de-duplicates when mafia and yakuza pick the same target", async () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
-      phase: "doctor_heals_player",
+      phase: GamePhase.DOCTOR_HEALS_PLAYER,
       players: WIN_SAFE_ROSTER,
       night: { mafiaTarget: 8, yakuzaTarget: 8 },
     });
@@ -357,7 +441,7 @@ describe("night kill resolution (startFarewellSpeech)", () => {
   it("skips to day when there were no kills", async () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
-      phase: "doctor_heals_player",
+      phase: GamePhase.DOCTOR_HEALS_PLAYER,
       players: WIN_SAFE_ROSTER,
       night: {},
     });
@@ -365,13 +449,13 @@ describe("night kill resolution (startFarewellSpeech)", () => {
     expect(result).toEqual({ skipToDay: true });
 
     const session = await getSession(t, s.gameId);
-    expect(session?.gamePhase).toBe("day_phase");
+    expect(session?.gamePhase).toBe(GamePhase.DAY_PHASE);
   });
 
   it("rejects a non-host caller", async () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
-      phase: "doctor_heals_player",
+      phase: GamePhase.DOCTOR_HEALS_PLAYER,
       players: WIN_SAFE_ROSTER,
       night: { mafiaTarget: 8 },
     });
@@ -393,7 +477,7 @@ describe("phase transitions + win check", () => {
   it("enterNightPhase resets state and increments the night number", async () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
-      phase: "day_phase",
+      phase: GamePhase.DAY_PHASE,
       currentNightNumber: 1,
       players: WIN_SAFE_ROSTER,
     });
@@ -402,7 +486,7 @@ describe("phase transitions + win check", () => {
     expect(winner).toBeNull();
 
     const session = await getSession(t, s.gameId);
-    expect(session?.gamePhase).toBe("night_phase");
+    expect(session?.gamePhase).toBe(GamePhase.NIGHT_PHASE);
     expect(session?.currentNightNumber).toBe(2);
     expect(session?.speakingOrder).toEqual([]);
     expect(session?.nominatedPlayers).toEqual([]);
@@ -422,12 +506,12 @@ describe("phase transitions + win check", () => {
   it("enterNightPhase pauses (records winner, no transition) when a faction has won", async () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
-      phase: "day_phase",
+      phase: GamePhase.DAY_PHASE,
       currentNightNumber: 1,
       players: [
         { seat: 1, role: "DON" },
         { seat: 2, role: "MAFIA" },
-        { seat: 3, role: "MAFIA_RIGHT_HAND" },
+        { seat: 3, role: "MAFIA" },
       ],
     });
 
@@ -436,14 +520,14 @@ describe("phase transitions + win check", () => {
 
     const session = await getSession(t, s.gameId);
     expect(session?.winner).toBe("mafia");
-    expect(session?.gamePhase).toBe("day_phase"); // unchanged — paused on the win
+    expect(session?.gamePhase).toBe(GamePhase.DAY_PHASE); // unchanged — paused on the win
     expect(session?.currentNightNumber).toBe(1); // not incremented
   });
 
   it("enterDayPhase transitions to day when the game continues", async () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
-      phase: "farewell_speech",
+      phase: GamePhase.FAREWELL_SPEECH,
       players: WIN_SAFE_ROSTER,
     });
 
@@ -451,7 +535,7 @@ describe("phase transitions + win check", () => {
     expect(winner).toBeNull();
 
     const session = await getSession(t, s.gameId);
-    expect(session?.gamePhase).toBe("day_phase");
+    expect(session?.gamePhase).toBe(GamePhase.DAY_PHASE);
     // Order is precomputed at day entry (the "plan"), opener set, but NOT yet
     // ignited — currentSpeakerIndex stays undefined until the host clicks Start.
     expect(session?.speakingOrder).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
@@ -462,7 +546,7 @@ describe("phase transitions + win check", () => {
   it("startDaySpeaking ignites the order precomputed by enterDayPhase", async () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
-      phase: "farewell_speech",
+      phase: GamePhase.FAREWELL_SPEECH,
       players: WIN_SAFE_ROSTER,
     });
 
@@ -479,7 +563,7 @@ describe("phase transitions + win check", () => {
   it("enterIntroductionPhase precomputes the order symmetrically with day", async () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
-      phase: "phase_transition", // host advances into introduction from the buffer
+      phase: GamePhase.PHASE_TRANSITION, // host advances into introduction from the buffer
       currentNightNumber: 0,
       players: WIN_SAFE_ROSTER,
     });
@@ -489,7 +573,7 @@ describe("phase transitions + win check", () => {
       .mutation(api.games.core.dayPhase.enterIntroductionPhase, { gameId: s.gameId });
 
     const session = await getSession(t, s.gameId);
-    expect(session?.gamePhase).toBe("introduction_phase");
+    expect(session?.gamePhase).toBe(GamePhase.INTRODUCTION_PHASE);
     // Order is precomputed (the "plan"); not yet ignited.
     expect(session?.speakingOrder).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
     expect(session?.dayRoundOpenerIndex).toBe(1);
@@ -510,7 +594,7 @@ describe("phase transitions + win check", () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
       gameType: "sports_mafia",
-      phase: "phase_transition",
+      phase: GamePhase.PHASE_TRANSITION,
       currentNightNumber: 0, // first day
       players: SPORTS_NIGHT_ROSTER, // 7 alive, win-safe
     });
@@ -520,7 +604,7 @@ describe("phase transitions + win check", () => {
       .mutation(api.games.core.dayPhase.enterDayPhase, { gameId: s.gameId });
 
     const session = await getSession(t, s.gameId);
-    expect(session?.gamePhase).toBe("day_phase");
+    expect(session?.gamePhase).toBe(GamePhase.DAY_PHASE);
     expect(session?.speakingOrder).toEqual([1, 2, 3, 4, 5, 6, 7]);
     expect(session?.currentSpeakerIndex).toBeUndefined();
 
@@ -533,7 +617,7 @@ describe("phase transitions + win check", () => {
   it("enterDayPhase pauses on a decided win", async () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
-      phase: "farewell_speech",
+      phase: GamePhase.FAREWELL_SPEECH,
       players: [
         { seat: 1, role: "CITIZEN" },
         { seat: 2, role: "DETECTIVE" },
@@ -546,20 +630,20 @@ describe("phase transitions + win check", () => {
 
     const session = await getSession(t, s.gameId);
     expect(session?.winner).toBe("citizens");
-    expect(session?.gamePhase).toBe("farewell_speech"); // unchanged
+    expect(session?.gamePhase).toBe(GamePhase.FAREWELL_SPEECH); // unchanged
   });
 
   it("enterVotingPhase creates a voting session with the given candidates", async () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
-      phase: "nominated_players_speak",
+      phase: GamePhase.NOMINATED_PLAYERS_SPEAK,
       players: WIN_SAFE_ROSTER,
     });
 
     await t.run((ctx) => enterVotingPhase(ctx, s.gameId, [2, 5]));
 
     const session = await getSession(t, s.gameId);
-    expect(session?.gamePhase).toBe("voting");
+    expect(session?.gamePhase).toBe(GamePhase.VOTING);
 
     const voting = await t.run((ctx) =>
       ctx.db
@@ -573,7 +657,7 @@ describe("phase transitions + win check", () => {
   it("recordWinnerIfDecided records a no_contest when nobody is left alive", async () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
-      phase: "day_phase",
+      phase: GamePhase.DAY_PHASE,
       players: [
         { seat: 1, role: "DON", alive: false },
         { seat: 2, role: "CITIZEN", alive: false },
@@ -592,11 +676,11 @@ describe("phase transitions + win check", () => {
   it("recordWinnerIfDecided is idempotent once a winner is recorded", async () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
-      phase: "day_phase",
+      phase: GamePhase.DAY_PHASE,
       players: [
         { seat: 1, role: "DON" },
         { seat: 2, role: "MAFIA" },
-        { seat: 3, role: "MAFIA_RIGHT_HAND" },
+        { seat: 3, role: "MAFIA" },
       ],
     });
 
@@ -623,7 +707,7 @@ describe("role deal (assignRandomRoles)", () => {
       seat: i + 1,
       role: "CITIZEN",
     }));
-    const s = await seedGame(t, { phase: "picking_roles", players });
+    const s = await seedGame(t, { phase: GamePhase.PICKING_ROLES, players });
 
     await t
       .withIdentity({ subject: s.hostAccountId })
@@ -646,115 +730,13 @@ describe("role deal (assignRandomRoles)", () => {
   it("rejects a non-host caller", async () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
-      phase: "picking_roles",
+      phase: GamePhase.PICKING_ROLES,
       players: [{ seat: 1, role: "CITIZEN" }],
     });
     await expect(
       t
         .withIdentity({ subject: s.bySeat[1].accountId })
         .mutation(api.games.core.sessions.assignRandomRoles, { gameId: s.gameId }),
-    ).rejects.toThrow();
-  });
-});
-
-describe("right-hand promotion (promoteToRightHand)", () => {
-  const baseRoster: SeatSpec[] = [
-    { seat: 1, role: "DON" },
-    { seat: 2, role: "MAFIA" },
-    { seat: 3, role: "MAFIA" },
-    { seat: 4, role: "DETECTIVE" },
-  ];
-
-  it("promotes a MAFIA to MAFIA_RIGHT_HAND when the Don chooses during the right phase", async () => {
-    const t = convexTest(schema, modules);
-    const s = await seedGame(t, {
-      phase: "don_chooses_right_hand",
-      players: baseRoster,
-    });
-
-    await t
-      .withIdentity({ subject: s.byRole.DON.accountId })
-      .mutation(api.games.core.roles.promoteToRightHand, {
-        gameId: s.gameId,
-        targetPlayerId: s.bySeat[2].playerId,
-      });
-
-    const role = await t.run(async (ctx) =>
-      ctx.db
-        .query("gamePlayerRoles")
-        .withIndex("by_gameId_playerId", (q) =>
-          q.eq("gameId", s.gameId).eq("playerId", s.bySeat[2].playerId),
-        )
-        .unique(),
-    );
-    expect(role?.role).toBe("MAFIA_RIGHT_HAND");
-  });
-
-  it("rejects a non-Don caller", async () => {
-    const t = convexTest(schema, modules);
-    const s = await seedGame(t, {
-      phase: "don_chooses_right_hand",
-      players: baseRoster,
-    });
-    await expect(
-      t
-        .withIdentity({ subject: s.bySeat[2].accountId })
-        .mutation(api.games.core.roles.promoteToRightHand, {
-          gameId: s.gameId,
-          targetPlayerId: s.bySeat[3].playerId,
-        }),
-    ).rejects.toThrow();
-  });
-
-  it("rejects promoting a non-MAFIA target", async () => {
-    const t = convexTest(schema, modules);
-    const s = await seedGame(t, {
-      phase: "don_chooses_right_hand",
-      players: baseRoster,
-    });
-    await expect(
-      t
-        .withIdentity({ subject: s.byRole.DON.accountId })
-        .mutation(api.games.core.roles.promoteToRightHand, {
-          gameId: s.gameId,
-          targetPlayerId: s.bySeat[4].playerId, // DETECTIVE
-        }),
-    ).rejects.toThrow();
-  });
-
-  it("rejects a second promotion once a RIGHT_HAND exists", async () => {
-    const t = convexTest(schema, modules);
-    const s = await seedGame(t, {
-      phase: "don_chooses_right_hand",
-      players: [
-        { seat: 1, role: "DON" },
-        { seat: 2, role: "MAFIA" },
-        { seat: 3, role: "MAFIA_RIGHT_HAND" },
-      ],
-    });
-    await expect(
-      t
-        .withIdentity({ subject: s.byRole.DON.accountId })
-        .mutation(api.games.core.roles.promoteToRightHand, {
-          gameId: s.gameId,
-          targetPlayerId: s.bySeat[2].playerId,
-        }),
-    ).rejects.toThrow();
-  });
-
-  it("rejects promotion outside the don_chooses_right_hand phase", async () => {
-    const t = convexTest(schema, modules);
-    const s = await seedGame(t, {
-      phase: "mafia_meet",
-      players: baseRoster,
-    });
-    await expect(
-      t
-        .withIdentity({ subject: s.byRole.DON.accountId })
-        .mutation(api.games.core.roles.promoteToRightHand, {
-          gameId: s.gameId,
-          targetPlayerId: s.bySeat[2].playerId,
-        }),
     ).rejects.toThrow();
   });
 });
@@ -813,7 +795,7 @@ async function createVotingSession(
 describe("voting — window state", () => {
   it("startVoteWindow activates voting; a second start is rejected", async () => {
     const t = convexTest(schema, modules);
-    const s = await seedGame(t, { phase: "voting", players: VOTE_ROSTER });
+    const s = await seedGame(t, { phase: GamePhase.VOTING, players: VOTE_ROSTER });
     await createVotingSession(t, s, [2, 5]);
 
     await t
@@ -833,7 +815,7 @@ describe("voting — window state", () => {
 
   it("endVoteWindow deactivates; ending when inactive is rejected", async () => {
     const t = convexTest(schema, modules);
-    const s = await seedGame(t, { phase: "voting", players: VOTE_ROSTER });
+    const s = await seedGame(t, { phase: GamePhase.VOTING, players: VOTE_ROSTER });
     await createVotingSession(t, s, [2, 5]);
     await t
       .withIdentity({ subject: s.hostAccountId })
@@ -855,7 +837,7 @@ describe("voting — window state", () => {
 describe("voting — casting votes", () => {
   it("records a vote for the current candidate", async () => {
     const t = convexTest(schema, modules);
-    const s = await seedGame(t, { phase: "voting", players: VOTE_ROSTER });
+    const s = await seedGame(t, { phase: GamePhase.VOTING, players: VOTE_ROSTER });
     const vsId = await createVotingSession(t, s, [2, 5]); // currentCandidate = 2
 
     await t
@@ -874,7 +856,7 @@ describe("voting — casting votes", () => {
 
   it("rejects a duplicate vote from the same seat", async () => {
     const t = convexTest(schema, modules);
-    const s = await seedGame(t, { phase: "voting", players: VOTE_ROSTER });
+    const s = await seedGame(t, { phase: GamePhase.VOTING, players: VOTE_ROSTER });
     await createVotingSession(t, s, [2, 5]);
     await t
       .withIdentity({ subject: s.bySeat[1].accountId })
@@ -890,7 +872,7 @@ describe("voting — casting votes", () => {
   it("rejects a vote from a dead player", async () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
-      phase: "voting",
+      phase: GamePhase.VOTING,
       players: [
         { seat: 1, role: "CITIZEN", alive: false },
         { seat: 2, role: "CITIZEN" },
@@ -910,7 +892,7 @@ describe("voting — casting votes", () => {
 describe("voting — advanceCandidate auto-votes on the last candidate", () => {
   it("auto-votes every non-voter for the last candidate", async () => {
     const t = convexTest(schema, modules);
-    const s = await seedGame(t, { phase: "voting", players: VOTE_ROSTER });
+    const s = await seedGame(t, { phase: GamePhase.VOTING, players: VOTE_ROSTER });
     const vsId = await createVotingSession(t, s, [2, 5]);
 
     // Seat 1 votes for candidate 2 (the current candidate at index 0).
@@ -937,7 +919,7 @@ describe("voting — advanceCandidate auto-votes on the last candidate", () => {
 
   it("returns allDone once past the final candidate", async () => {
     const t = convexTest(schema, modules);
-    const s = await seedGame(t, { phase: "voting", players: VOTE_ROSTER });
+    const s = await seedGame(t, { phase: GamePhase.VOTING, players: VOTE_ROSTER });
     await createVotingSession(t, s, [2, 5]);
     // Park on the last candidate so the next advance runs off the end.
     await t.run(async (ctx) => {
@@ -956,7 +938,7 @@ describe("voting — advanceCandidate auto-votes on the last candidate", () => {
 
   it("rejects advancing while the vote window is active", async () => {
     const t = convexTest(schema, modules);
-    const s = await seedGame(t, { phase: "voting", players: VOTE_ROSTER });
+    const s = await seedGame(t, { phase: GamePhase.VOTING, players: VOTE_ROSTER });
     await createVotingSession(t, s, [2, 5]);
     await t
       .withIdentity({ subject: s.hostAccountId })
@@ -996,7 +978,7 @@ describe("voting — processResults tally", () => {
 
   it("declares a unique winner", async () => {
     const t = convexTest(schema, modules);
-    const s = await seedGame(t, { phase: "voting", players: VOTE_ROSTER });
+    const s = await seedGame(t, { phase: GamePhase.VOTING, players: VOTE_ROSTER });
     const vsId = await createVotingSession(t, s, [2, 5]);
     await seedVotes(t, vsId, [
       { voterSeat: 1, seatNumber: 2 },
@@ -1012,7 +994,7 @@ describe("voting — processResults tally", () => {
 
   it("reports a tie when the top candidates are level", async () => {
     const t = convexTest(schema, modules);
-    const s = await seedGame(t, { phase: "voting", players: VOTE_ROSTER });
+    const s = await seedGame(t, { phase: GamePhase.VOTING, players: VOTE_ROSTER });
     const vsId = await createVotingSession(t, s, [2, 5]);
     await seedVotes(t, vsId, [
       { voterSeat: 1, seatNumber: 2 },
@@ -1030,7 +1012,7 @@ describe("voting — processResults tally", () => {
 
   it("excludes both-leave votes from the tally", async () => {
     const t = convexTest(schema, modules);
-    const s = await seedGame(t, { phase: "voting", players: VOTE_ROSTER });
+    const s = await seedGame(t, { phase: GamePhase.VOTING, players: VOTE_ROSTER });
     const vsId = await createVotingSession(t, s, [2, 5]);
     await seedVotes(t, vsId, [
       { voterSeat: 1, seatNumber: 2 },
@@ -1049,7 +1031,7 @@ describe("voting — processResults tally", () => {
 describe("voting — tie-break vs both-leave", () => {
   it("first tie-break re-opens self-justification for the tied seats", async () => {
     const t = convexTest(schema, modules);
-    const s = await seedGame(t, { phase: "voting", players: VOTE_ROSTER });
+    const s = await seedGame(t, { phase: GamePhase.VOTING, players: VOTE_ROSTER });
     await createVotingSession(t, s, [2, 5]);
 
     const res = await t
@@ -1067,7 +1049,7 @@ describe("voting — tie-break vs both-leave", () => {
     expect(vs?.previousTiedCandidates).toEqual([2, 5]);
 
     const gs = await getSession(t, s.gameId);
-    expect(gs?.gamePhase).toBe("nominated_players_speak");
+    expect(gs?.gamePhase).toBe(GamePhase.NOMINATED_PLAYERS_SPEAK);
     expect(gs?.speakingOrder).toEqual([2, 5]);
     // QUEUED, not running: tallying a tie is an announcement, so no mic opens
     // and no clock runs until the host clicks Start.
@@ -1077,7 +1059,7 @@ describe("voting — tie-break vs both-leave", () => {
 
   it("the host's Start hands the floor to the first tied seat", async () => {
     const t = convexTest(schema, modules);
-    const s = await seedGame(t, { phase: "voting", players: VOTE_ROSTER });
+    const s = await seedGame(t, { phase: GamePhase.VOTING, players: VOTE_ROSTER });
     await createVotingSession(t, s, [2, 5]);
 
     const asHost = t.withIdentity({ subject: s.hostAccountId });
@@ -1096,7 +1078,7 @@ describe("voting — tie-break vs both-leave", () => {
 
   it("a repeated tie on the same seats escalates to a both-leave vote", async () => {
     const t = convexTest(schema, modules);
-    const s = await seedGame(t, { phase: "voting", players: VOTE_ROSTER });
+    const s = await seedGame(t, { phase: GamePhase.VOTING, players: VOTE_ROSTER });
     await createVotingSession(t, s, [2, 5]);
     await t
       .withIdentity({ subject: s.hostAccountId })
@@ -1138,7 +1120,7 @@ describe("voting — processBothLeaveResult threshold (>50%)", () => {
     const t = convexTest(schema, modules);
     // 4 alive non-host seats.
     const s = await seedGame(t, {
-      phase: "voting",
+      phase: GamePhase.VOTING,
       players: [1, 2, 3, 4].map((seat) => ({ seat, role: "CITIZEN" })),
     });
     const vsId = await createVotingSession(t, s, [2, 3]);
@@ -1153,7 +1135,7 @@ describe("voting — processBothLeaveResult threshold (>50%)", () => {
   it("does NOT pass at exactly half", async () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
-      phase: "voting",
+      phase: GamePhase.VOTING,
       players: [1, 2, 3, 4].map((seat) => ({ seat, role: "CITIZEN" })),
     });
     const vsId = await createVotingSession(t, s, [2, 3]);
@@ -1214,7 +1196,7 @@ describe("card-picking — start", () => {
       seat: i + 1,
       role: "CITIZEN",
     }));
-    const s = await seedGame(t, { phase: "night_phase", players });
+    const s = await seedGame(t, { phase: GamePhase.NIGHT_PHASE, players });
 
     await t
       .withIdentity({ subject: s.hostAccountId })
@@ -1230,12 +1212,12 @@ describe("card-picking — start", () => {
     );
 
     const gs = await getSession(t, s.gameId);
-    expect(gs?.gamePhase).toBe("picking_roles");
+    expect(gs?.gamePhase).toBe(GamePhase.PICKING_ROLES);
   });
 
   it("deals a subset deck for a partial lobby", async () => {
     const t = convexTest(schema, modules);
-    const s = await seedGame(t, { phase: "night_phase", players: PICK_ROSTER });
+    const s = await seedGame(t, { phase: GamePhase.NIGHT_PHASE, players: PICK_ROSTER });
     await t
       .withIdentity({ subject: s.hostAccountId })
       .mutation(api.games.core.cardPicking.start, { gameId: s.gameId });
@@ -1255,7 +1237,7 @@ describe("card-picking — start", () => {
       role: "CITIZEN",
     }));
     const s = await seedGame(t, {
-      phase: "night_phase",
+      phase: GamePhase.NIGHT_PHASE,
       gameType: "sports_mafia",
       players,
     });
@@ -1271,15 +1253,13 @@ describe("card-picking — start", () => {
     );
     // No Japanese-only roles leak into a Sports deck.
     for (const card of cs!.deck) {
-      expect(["SHOGUN", "YAKUZA", "DOCTOR", "MAFIA_RIGHT_HAND"]).not.toContain(
-        card.role,
-      );
+      expect(["SHOGUN", "YAKUZA", "DOCTOR"]).not.toContain(card.role);
     }
   });
 
   it("is idempotent — a second start returns the same session", async () => {
     const t = convexTest(schema, modules);
-    const s = await seedGame(t, { phase: "night_phase", players: PICK_ROSTER });
+    const s = await seedGame(t, { phase: GamePhase.NIGHT_PHASE, players: PICK_ROSTER });
     const first = await t
       .withIdentity({ subject: s.hostAccountId })
       .mutation(api.games.core.cardPicking.start, { gameId: s.gameId });
@@ -1291,7 +1271,7 @@ describe("card-picking — start", () => {
 
   it("rejects a non-host caller", async () => {
     const t = convexTest(schema, modules);
-    const s = await seedGame(t, { phase: "night_phase", players: PICK_ROSTER });
+    const s = await seedGame(t, { phase: GamePhase.NIGHT_PHASE, players: PICK_ROSTER });
     await expect(
       t
         .withIdentity({ subject: s.bySeat[1].accountId })
@@ -1303,7 +1283,7 @@ describe("card-picking — start", () => {
 describe("card-picking — pickCard turn contract", () => {
   it("claims a card in turn, writes the role, and advances the pick index", async () => {
     const t = convexTest(schema, modules);
-    const s = await seedGame(t, { phase: "night_phase", players: PICK_ROSTER });
+    const s = await seedGame(t, { phase: GamePhase.NIGHT_PHASE, players: PICK_ROSTER });
     await t
       .withIdentity({ subject: s.hostAccountId })
       .mutation(api.games.core.cardPicking.start, { gameId: s.gameId });
@@ -1328,7 +1308,7 @@ describe("card-picking — pickCard turn contract", () => {
 
   it("rejects an out-of-turn pick, an already-taken card, and an unknown card", async () => {
     const t = convexTest(schema, modules);
-    const s = await seedGame(t, { phase: "night_phase", players: PICK_ROSTER });
+    const s = await seedGame(t, { phase: GamePhase.NIGHT_PHASE, players: PICK_ROSTER });
     await t
       .withIdentity({ subject: s.hostAccountId })
       .mutation(api.games.core.cardPicking.start, { gameId: s.gameId });
@@ -1374,7 +1354,7 @@ describe("card-picking — pickCard turn contract", () => {
 
   it("marks the session complete after the last pick and rejects further picks", async () => {
     const t = convexTest(schema, modules);
-    const s = await seedGame(t, { phase: "night_phase", players: PICK_ROSTER });
+    const s = await seedGame(t, { phase: GamePhase.NIGHT_PHASE, players: PICK_ROSTER });
     await t
       .withIdentity({ subject: s.hostAccountId })
       .mutation(api.games.core.cardPicking.start, { gameId: s.gameId });
@@ -1404,7 +1384,7 @@ describe("card-picking — pickCard turn contract", () => {
 describe("card-picking — expireTurnInternal watchdog", () => {
   it("auto-picks an unclaimed card for the stalled seat and advances", async () => {
     const t = convexTest(schema, modules);
-    const s = await seedGame(t, { phase: "night_phase", players: PICK_ROSTER });
+    const s = await seedGame(t, { phase: GamePhase.NIGHT_PHASE, players: PICK_ROSTER });
     await t
       .withIdentity({ subject: s.hostAccountId })
       .mutation(api.games.core.cardPicking.start, { gameId: s.gameId });
@@ -1424,7 +1404,7 @@ describe("card-picking — expireTurnInternal watchdog", () => {
 
   it("is a no-op on a stale pick index", async () => {
     const t = convexTest(schema, modules);
-    const s = await seedGame(t, { phase: "night_phase", players: PICK_ROSTER });
+    const s = await seedGame(t, { phase: GamePhase.NIGHT_PHASE, players: PICK_ROSTER });
     await t
       .withIdentity({ subject: s.hostAccountId })
       .mutation(api.games.core.cardPicking.start, { gameId: s.gameId });
@@ -1446,7 +1426,7 @@ describe("card-picking — expireTurnInternal watchdog", () => {
 
   it("is a no-op when no card-picking session exists", async () => {
     const t = convexTest(schema, modules);
-    const s = await seedGame(t, { phase: "night_phase", players: PICK_ROSTER });
+    const s = await seedGame(t, { phase: GamePhase.NIGHT_PHASE, players: PICK_ROSTER });
     await expect(
       t.mutation(internal.games.core.cardPicking.expireTurnInternal, {
         gameId: s.gameId,
@@ -1459,7 +1439,7 @@ describe("card-picking — expireTurnInternal watchdog", () => {
 describe("card-picking — getState role visibility", () => {
   it("hides unclaimed/other roles from a non-host player but shows own + all to host", async () => {
     const t = convexTest(schema, modules);
-    const s = await seedGame(t, { phase: "night_phase", players: PICK_ROSTER });
+    const s = await seedGame(t, { phase: GamePhase.NIGHT_PHASE, players: PICK_ROSTER });
     await t
       .withIdentity({ subject: s.hostAccountId })
       .mutation(api.games.core.cardPicking.start, { gameId: s.gameId });
@@ -1542,7 +1522,7 @@ const giveFoul = (t: TestConvex<typeof schema>, s: Seeded, seatNumber: number) =
 describe("fouls — giveFoul", () => {
   it("increments the count without eliminating for fouls 1–3", async () => {
     const t = convexTest(schema, modules);
-    const s = await seedGame(t, { phase: "day_phase", players: WIN_SAFE_ROSTER });
+    const s = await seedGame(t, { phase: GamePhase.DAY_PHASE, players: WIN_SAFE_ROSTER });
 
     for (const expected of [1, 2, 3]) {
       const res = await giveFoul(t, s, 8);
@@ -1555,7 +1535,7 @@ describe("fouls — giveFoul", () => {
 
   it("eliminates on the 4th foul and sets foulEliminationOccurred", async () => {
     const t = convexTest(schema, modules);
-    const s = await seedGame(t, { phase: "day_phase", players: WIN_SAFE_ROSTER });
+    const s = await seedGame(t, { phase: GamePhase.DAY_PHASE, players: WIN_SAFE_ROSTER });
     await setFouls(t, s.gameId, 8, 3);
 
     const res = await giveFoul(t, s, 8);
@@ -1573,7 +1553,7 @@ describe("fouls — giveFoul", () => {
     const t = convexTest(schema, modules);
     // Removing the lone citizen leaves only mafia alive (N=2, m=2 → mafia).
     const s = await seedGame(t, {
-      phase: "day_phase",
+      phase: GamePhase.DAY_PHASE,
       players: [
         { seat: 1, role: "DON" },
         { seat: 2, role: "MAFIA" },
@@ -1591,14 +1571,14 @@ describe("fouls — giveFoul", () => {
 
   it("rejects a foul outside the allowed phases", async () => {
     const t = convexTest(schema, modules);
-    const s = await seedGame(t, { phase: "night_phase", players: WIN_SAFE_ROSTER });
+    const s = await seedGame(t, { phase: GamePhase.NIGHT_PHASE, players: WIN_SAFE_ROSTER });
     await expect(giveFoul(t, s, 8)).rejects.toThrow();
   });
 
   it("rejects fouling a dead player", async () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
-      phase: "day_phase",
+      phase: GamePhase.DAY_PHASE,
       players: [
         { seat: 1, role: "DON" },
         { seat: 8, role: "CITIZEN", alive: false },
@@ -1609,14 +1589,14 @@ describe("fouls — giveFoul", () => {
 
   it("rejects fouling a player already at the elimination threshold", async () => {
     const t = convexTest(schema, modules);
-    const s = await seedGame(t, { phase: "day_phase", players: WIN_SAFE_ROSTER });
+    const s = await seedGame(t, { phase: GamePhase.DAY_PHASE, players: WIN_SAFE_ROSTER });
     await setFouls(t, s.gameId, 8, 4);
     await expect(giveFoul(t, s, 8)).rejects.toThrow();
   });
 
   it("rejects a non-host caller", async () => {
     const t = convexTest(schema, modules);
-    const s = await seedGame(t, { phase: "day_phase", players: WIN_SAFE_ROSTER });
+    const s = await seedGame(t, { phase: GamePhase.DAY_PHASE, players: WIN_SAFE_ROSTER });
     await expect(
       t
         .withIdentity({ subject: s.bySeat[1].accountId })
@@ -1679,7 +1659,7 @@ describe("sports night — kill-selection window & selections", () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
       gameType: "sports_mafia",
-      phase: "mafia_chooses_target",
+      phase: GamePhase.MAFIA_CHOOSES_TARGET,
       players: SPORTS_NIGHT_ROSTER,
     });
 
@@ -1695,7 +1675,7 @@ describe("sports night — kill-selection window & selections", () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
       gameType: "sports_mafia",
-      phase: "mafia_chooses_target",
+      phase: GamePhase.MAFIA_CHOOSES_TARGET,
       players: SPORTS_NIGHT_ROSTER,
     });
     await openWindow(t, s);
@@ -1714,7 +1694,7 @@ describe("sports night — kill-selection window & selections", () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
       gameType: "sports_mafia",
-      phase: "mafia_chooses_target",
+      phase: GamePhase.MAFIA_CHOOSES_TARGET,
       players: SPORTS_NIGHT_ROSTER,
     });
     await openWindow(t, s);
@@ -1725,7 +1705,7 @@ describe("sports night — kill-selection window & selections", () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
       gameType: "sports_mafia",
-      phase: "mafia_chooses_target",
+      phase: GamePhase.MAFIA_CHOOSES_TARGET,
       players: SPORTS_NIGHT_ROSTER,
       night: { mafiaTargetWindowActive: false },
     });
@@ -1736,7 +1716,7 @@ describe("sports night — kill-selection window & selections", () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
       gameType: "sports_mafia",
-      phase: "mafia_chooses_target",
+      phase: GamePhase.MAFIA_CHOOSES_TARGET,
       players: [...SPORTS_NIGHT_ROSTER, { seat: 8, role: "CITIZEN", alive: false }],
     });
     await openWindow(t, s);
@@ -1747,7 +1727,7 @@ describe("sports night — kill-selection window & selections", () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
       gameType: "sports_mafia",
-      phase: "mafia_chooses_target",
+      phase: GamePhase.MAFIA_CHOOSES_TARGET,
       players: SPORTS_NIGHT_ROSTER,
     });
     await openWindow(t, s);
@@ -1773,7 +1753,7 @@ describe("sports night — kill-selection window & selections", () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
       gameType: "sports_mafia",
-      phase: "mafia_chooses_target",
+      phase: GamePhase.MAFIA_CHOOSES_TARGET,
       players: SPORTS_NIGHT_ROSTER,
     });
     await openWindow(t, s);
@@ -1802,7 +1782,7 @@ describe("sports night — kill-selection window & selections", () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
       gameType: "sports_mafia",
-      phase: "mafia_chooses_target",
+      phase: GamePhase.MAFIA_CHOOSES_TARGET,
       players: SPORTS_NIGHT_ROSTER,
     });
     await openWindow(t, s);
@@ -1827,7 +1807,7 @@ describe("sports night — dawn resolution via startFarewellSpeech", () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
       gameType: "sports_mafia",
-      phase: "detective_checks_for_mafia",
+      phase: GamePhase.DETECTIVE_CHECKS_FOR_MAFIA,
       // Night 2 so this stays a pure KILL-RESOLUTION test: a night-1 kill now
       // routes to `best_move` first (§6), which the best-move block below covers.
       currentNightNumber: 2,
@@ -1845,7 +1825,7 @@ describe("sports night — dawn resolution via startFarewellSpeech", () => {
     expect(res).toEqual({ skipToDay: false });
 
     const session = await getSession(t, s.gameId);
-    expect(session?.gamePhase).toBe("farewell_speech");
+    expect(session?.gamePhase).toBe(GamePhase.FAREWELL_SPEECH);
     expect(session?.speakingOrder).toEqual([5]);
   });
 
@@ -1853,7 +1833,7 @@ describe("sports night — dawn resolution via startFarewellSpeech", () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
       gameType: "sports_mafia",
-      phase: "detective_checks_for_mafia",
+      phase: GamePhase.DETECTIVE_CHECKS_FOR_MAFIA,
       players: SPORTS_NIGHT_ROSTER, // 7 alive → win check continues
       night: {
         mafiaTargetSelections: [
@@ -1866,14 +1846,14 @@ describe("sports night — dawn resolution via startFarewellSpeech", () => {
 
     const res = await startFarewell(t, s);
     expect(res).toEqual({ skipToDay: true });
-    expect((await getSession(t, s.gameId))?.gamePhase).toBe("day_phase");
+    expect((await getSession(t, s.gameId))?.gamePhase).toBe(GamePhase.DAY_PHASE);
   });
 
   it("no kill (→ day) when a lone mafia abstains", async () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
       gameType: "sports_mafia",
-      phase: "detective_checks_for_mafia",
+      phase: GamePhase.DETECTIVE_CHECKS_FOR_MAFIA,
       players: [
         { seat: 1, role: "DON" }, // lone living mafia
         { seat: 2, role: "CITIZEN" },
@@ -1886,14 +1866,14 @@ describe("sports night — dawn resolution via startFarewellSpeech", () => {
 
     const res = await startFarewell(t, s);
     expect(res).toEqual({ skipToDay: true });
-    expect((await getSession(t, s.gameId))?.gamePhase).toBe("day_phase");
+    expect((await getSession(t, s.gameId))?.gamePhase).toBe(GamePhase.DAY_PHASE);
   });
 
   it("kills when a lone mafia selects (trivially unanimous)", async () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
       gameType: "sports_mafia",
-      phase: "detective_checks_for_mafia",
+      phase: GamePhase.DETECTIVE_CHECKS_FOR_MAFIA,
       // Night 2 — see the note above; night 1 routes through `best_move`.
       currentNightNumber: 2,
       players: [
@@ -1909,7 +1889,7 @@ describe("sports night — dawn resolution via startFarewellSpeech", () => {
     const res = await startFarewell(t, s);
     expect(res).toEqual({ skipToDay: false });
     const session = await getSession(t, s.gameId);
-    expect(session?.gamePhase).toBe("farewell_speech");
+    expect(session?.gamePhase).toBe(GamePhase.FAREWELL_SPEECH);
     expect(session?.speakingOrder).toEqual([5]);
   });
 });
@@ -1942,7 +1922,7 @@ describe("best move — dawn routing (§6.1)", () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
       gameType: "sports_mafia",
-      phase: "detective_checks_for_mafia",
+      phase: GamePhase.DETECTIVE_CHECKS_FOR_MAFIA,
       players: SPORTS_NIGHT_ROSTER, // all alive → 0 day-1 eliminations
       night: { mafiaTargetSelections: UNANIMOUS_ON_5 },
     });
@@ -1951,7 +1931,7 @@ describe("best move — dawn routing (§6.1)", () => {
     expect(res).toEqual({ skipToDay: false, bestMove: true });
 
     const session = await getSession(t, s.gameId);
-    expect(session?.gamePhase).toBe("best_move");
+    expect(session?.gamePhase).toBe(GamePhase.BEST_MOVE);
     // The farewell speaker is already staged, so advancing later is a bare
     // gamePhase patch and the farewell flow needs no rework.
     expect(session?.speakingOrder).toEqual([5]);
@@ -1968,7 +1948,7 @@ describe("best move — dawn routing (§6.1)", () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
       gameType: "sports_mafia",
-      phase: "detective_checks_for_mafia",
+      phase: GamePhase.DETECTIVE_CHECKS_FOR_MAFIA,
       players: [
         ...SPORTS_NIGHT_ROSTER.filter((p) => p.seat !== 7),
         { seat: 7, role: "CITIZEN", alive: false }, // voted out on day 1
@@ -1978,7 +1958,7 @@ describe("best move — dawn routing (§6.1)", () => {
 
     const res = await startFarewell(t, s);
     expect(res).toEqual({ skipToDay: false, bestMove: true });
-    expect((await getSession(t, s.gameId))?.gamePhase).toBe("best_move");
+    expect((await getSession(t, s.gameId))?.gamePhase).toBe(GamePhase.BEST_MOVE);
     expect((await getNightRow(t, s.gameId))?.bestMoveSeat).toBe(5);
   });
 
@@ -1986,7 +1966,7 @@ describe("best move — dawn routing (§6.1)", () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
       gameType: "sports_mafia",
-      phase: "detective_checks_for_mafia",
+      phase: GamePhase.DETECTIVE_CHECKS_FOR_MAFIA,
       players: [
         ...SPORTS_NIGHT_ROSTER.filter((p) => p.seat !== 6 && p.seat !== 7),
         { seat: 6, role: "CITIZEN", alive: false }, // both-leave tie-break, or
@@ -1999,7 +1979,7 @@ describe("best move — dawn routing (§6.1)", () => {
     expect(res).toEqual({ skipToDay: false });
 
     const session = await getSession(t, s.gameId);
-    expect(session?.gamePhase).toBe("farewell_speech");
+    expect(session?.gamePhase).toBe(GamePhase.FAREWELL_SPEECH);
     expect(session?.speakingOrder).toEqual([5]);
     expect((await getNightRow(t, s.gameId))?.bestMoveSeat).toBeUndefined();
   });
@@ -2008,7 +1988,7 @@ describe("best move — dawn routing (§6.1)", () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
       gameType: "sports_mafia",
-      phase: "detective_checks_for_mafia",
+      phase: GamePhase.DETECTIVE_CHECKS_FOR_MAFIA,
       currentNightNumber: 2,
       players: SPORTS_NIGHT_ROSTER,
       night: { mafiaTargetSelections: UNANIMOUS_ON_5 },
@@ -2016,7 +1996,7 @@ describe("best move — dawn routing (§6.1)", () => {
 
     const res = await startFarewell(t, s);
     expect(res).toEqual({ skipToDay: false });
-    expect((await getSession(t, s.gameId))?.gamePhase).toBe("farewell_speech");
+    expect((await getSession(t, s.gameId))?.gamePhase).toBe(GamePhase.FAREWELL_SPEECH);
     expect(
       (await getNightRow(t, s.gameId, 2))?.bestMoveSeat,
     ).toBeUndefined();
@@ -2026,7 +2006,7 @@ describe("best move — dawn routing (§6.1)", () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
       gameType: "sports_mafia",
-      phase: "detective_checks_for_mafia",
+      phase: GamePhase.DETECTIVE_CHECKS_FOR_MAFIA,
       players: SPORTS_NIGHT_ROSTER,
       night: {
         mafiaTargetSelections: [
@@ -2039,21 +2019,21 @@ describe("best move — dawn routing (§6.1)", () => {
 
     const res = await startFarewell(t, s);
     expect(res).toEqual({ skipToDay: true });
-    expect((await getSession(t, s.gameId))?.gamePhase).toBe("day_phase");
+    expect((await getSession(t, s.gameId))?.gamePhase).toBe(GamePhase.DAY_PHASE);
     expect((await getNightRow(t, s.gameId))?.bestMoveSeat).toBeUndefined();
   });
 
   it("never grants a best move in a Japanese game (flag is off)", async () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
-      phase: "doctor_heals_player",
+      phase: GamePhase.DOCTOR_HEALS_PLAYER,
       players: WIN_SAFE_ROSTER,
       night: { mafiaTarget: 8 },
     });
 
     const res = await startFarewell(t, s);
     expect(res).toEqual({ skipToDay: false });
-    expect((await getSession(t, s.gameId))?.gamePhase).toBe("farewell_speech");
+    expect((await getSession(t, s.gameId))?.gamePhase).toBe(GamePhase.FAREWELL_SPEECH);
     expect((await getNightRow(t, s.gameId))?.bestMoveSeat).toBeUndefined();
   });
 });
@@ -2066,7 +2046,7 @@ describe("best move — the victim's picks (§6.2)", () => {
   ) =>
     seedGame(t, {
       gameType: "sports_mafia",
-      phase: "best_move",
+      phase: GamePhase.BEST_MOVE,
       // Staged by the dawn resolution before it routed here, so the farewell can
       // run straight after (or after a skip).
       speakingOrder: [5],
@@ -2171,7 +2151,7 @@ describe("best move — the victim's picks (§6.2)", () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
       gameType: "sports_mafia",
-      phase: "farewell_speech",
+      phase: GamePhase.FAREWELL_SPEECH,
       players: SPORTS_NIGHT_ROSTER,
       night: { bestMoveSeat: 5, bestMoveSuspects: [] },
     });
@@ -2183,7 +2163,7 @@ describe("best move — the victim's picks (§6.2)", () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
       gameType: "sports_mafia",
-      phase: "best_move",
+      phase: GamePhase.BEST_MOVE,
       players: SPORTS_NIGHT_ROSTER,
       night: {}, // no bestMoveSeat
     });
@@ -2206,11 +2186,11 @@ describe("best move — the victim's picks (§6.2)", () => {
       .withIdentity({ subject: s.hostAccountId })
       .mutation(api.games.core.sessions.update, {
         sessionId: (await getSession(t, s.gameId))!._id,
-        updates: { gamePhase: "farewell_speech" },
+        updates: { gamePhase: GamePhase.FAREWELL_SPEECH },
       });
 
     const session = await getSession(t, s.gameId);
-    expect(session?.gamePhase).toBe("farewell_speech");
+    expect(session?.gamePhase).toBe(GamePhase.FAREWELL_SPEECH);
     // The staged speaker survived the skip, so the farewell still runs.
     expect(session?.speakingOrder).toEqual([5]);
 
@@ -2241,7 +2221,7 @@ describe("sports win detection (recordWinnerIfDecided → definition)", () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
       gameType: "sports_mafia",
-      phase: "day_phase",
+      phase: GamePhase.DAY_PHASE,
       players: [
         { seat: 1, role: "DON" },
         { seat: 2, role: "MAFIA" },
@@ -2270,7 +2250,7 @@ describe("sports win detection (recordWinnerIfDecided → definition)", () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
       gameType: "sports_mafia",
-      phase: "day_phase",
+      phase: GamePhase.DAY_PHASE,
       players: [
         { seat: 1, role: "DON", alive: false },
         { seat: 4, role: "CITIZEN" },
@@ -2287,7 +2267,7 @@ describe("sports win detection (recordWinnerIfDecided → definition)", () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
       gameType: "sports_mafia",
-      phase: "day_phase",
+      phase: GamePhase.DAY_PHASE,
       players: [
         { seat: 1, role: "DON" },
         { seat: 4, role: "CITIZEN" },
@@ -2337,7 +2317,7 @@ describe("sports single-nominee day rule (startNominatedPlayersSpeaking)", () =>
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
       gameType: "sports_mafia",
-      phase: "day_phase",
+      phase: GamePhase.DAY_PHASE,
       currentNightNumber: 0, // first day
       players: SPORTS_NIGHT_ROSTER,
     });
@@ -2346,7 +2326,7 @@ describe("sports single-nominee day rule (startNominatedPlayersSpeaking)", () =>
     await startNominated(t, s);
 
     const session = await getSession(t, s.gameId);
-    expect(session?.gamePhase).toBe("night_phase");
+    expect(session?.gamePhase).toBe(GamePhase.NIGHT_PHASE);
     expect(session?.currentNightNumber).toBe(1); // night entered
     expect(session?.nominatedPlayers).toEqual([]); // cleared on night entry
     // The nominee is untouched — no elimination on day 1.
@@ -2359,7 +2339,7 @@ describe("sports single-nominee day rule (startNominatedPlayersSpeaking)", () =>
     // does not decide the game — the win check would otherwise pause on night.
     const s = await seedGame(t, {
       gameType: "sports_mafia",
-      phase: "day_phase",
+      phase: GamePhase.DAY_PHASE,
       currentNightNumber: 1, // second day
       players: [
         { seat: 1, role: "DON" },
@@ -2379,7 +2359,7 @@ describe("sports single-nominee day rule (startNominatedPlayersSpeaking)", () =>
     await startNominated(t, s);
 
     let session = await getSession(t, s.gameId);
-    expect(session?.gamePhase).toBe("farewell_speech");
+    expect(session?.gamePhase).toBe(GamePhase.FAREWELL_SPEECH);
     expect(session?.speakingOrder).toEqual([5]);
     // The nominee is not dead yet — farewell kills them on markDeadAndAdvance.
     expect((await getPlayerBySeat(t, s.gameId, 5))?.isAlive).toBe(true);
@@ -2398,7 +2378,7 @@ describe("sports single-nominee day rule (startNominatedPlayersSpeaking)", () =>
     });
 
     session = await getSession(t, s.gameId);
-    expect(session?.gamePhase).toBe("night_phase");
+    expect(session?.gamePhase).toBe(GamePhase.NIGHT_PHASE);
     expect((await getPlayerBySeat(t, s.gameId, 5))?.isAlive).toBe(false);
   });
 
@@ -2406,7 +2386,7 @@ describe("sports single-nominee day rule (startNominatedPlayersSpeaking)", () =>
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
       gameType: "sports_mafia",
-      phase: "day_phase",
+      phase: GamePhase.DAY_PHASE,
       currentNightNumber: 0,
       players: SPORTS_NIGHT_ROSTER,
     });
@@ -2415,7 +2395,7 @@ describe("sports single-nominee day rule (startNominatedPlayersSpeaking)", () =>
     await startNominated(t, s);
 
     const session = await getSession(t, s.gameId);
-    expect(session?.gamePhase).toBe("nominated_players_speak");
+    expect(session?.gamePhase).toBe(GamePhase.NOMINATED_PLAYERS_SPEAK);
     expect(session?.speakingOrder).toEqual([4, 5]);
     // Queued, not running — the host's Start opens the first mouth.
     expect(session?.currentSpeakerIndex).toBeUndefined();
@@ -2432,7 +2412,7 @@ describe("sports single-nominee day rule (startNominatedPlayersSpeaking)", () =>
   it("Japanese: a single nominee still goes to voting (flag off, unchanged)", async () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
-      phase: "day_phase",
+      phase: GamePhase.DAY_PHASE,
       currentNightNumber: 0,
       players: WIN_SAFE_ROSTER,
     });
@@ -2441,7 +2421,7 @@ describe("sports single-nominee day rule (startNominatedPlayersSpeaking)", () =>
     await startNominated(t, s);
 
     const session = await getSession(t, s.gameId);
-    expect(session?.gamePhase).toBe("voting");
+    expect(session?.gamePhase).toBe(GamePhase.VOTING);
   });
 });
 
@@ -2480,7 +2460,7 @@ describe("sports 3rd-foul speaking ban", () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
       gameType: "sports_mafia",
-      phase: "day_phase",
+      phase: GamePhase.DAY_PHASE,
       currentNightNumber: 0, // day round 1 → ban applies to round 2
       players: SPORTS_NIGHT_ROSTER,
     });
@@ -2498,7 +2478,7 @@ describe("sports 3rd-foul speaking ban", () => {
   it("Japanese: the 3rd foul does NOT stamp a ban (flag off)", async () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
-      phase: "day_phase",
+      phase: GamePhase.DAY_PHASE,
       currentNightNumber: 0,
       players: WIN_SAFE_ROSTER,
     });
@@ -2520,7 +2500,7 @@ describe("sports 3rd-foul speaking ban", () => {
     const t = convexTest(schema, modules);
     const s = await seedGame(t, {
       gameType: "sports_mafia",
-      phase: "farewell_speech", // enter day cleanly via the transition
+      phase: GamePhase.FAREWELL_SPEECH, // enter day cleanly via the transition
       currentNightNumber: 1, // day round 2
       players: SPORTS_NIGHT_ROSTER, // 7 alive, win-safe
     });

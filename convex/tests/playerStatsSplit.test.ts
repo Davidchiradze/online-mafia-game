@@ -5,6 +5,7 @@ import { describe, it, expect } from "vitest";
 import schema from "../schema";
 import type { Doc, Id } from "../_generated/dataModel";
 import { archiveGameLog, annulGameLog } from "../lib/games";
+import { GamePhase } from "../lib/constants";
 
 /**
  * CONVEX-TEST INTEGRATION — the per-variant player record
@@ -74,7 +75,7 @@ async function seedAndArchive(
     });
     await ctx.db.insert("gameSessions", {
       gameId,
-      gamePhase: "day_phase",
+      gamePhase: GamePhase.DAY_PHASE,
       isFinished: false,
       currentNightNumber: 1,
       nominatedPlayers: [],

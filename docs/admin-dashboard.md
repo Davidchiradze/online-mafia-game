@@ -120,8 +120,8 @@ accents. The shared pieces live in two files:
 - **`primitives.tsx`** — `DashboardCard` (the glass panel: gradient fill,
   `backdrop-blur`, hairline border, soft shadow, optional `accent` prop for the
   top line + corner glow), `CardTitle` (with optional lucide icon), `EmptyState`,
-  and `formatRole` (formats role constants like `MAFIA_RIGHT_HAND` →
-  "Mafia Right Hand", crash-safe vs. any unmapped role string).
+  and `formatRole` (formats role constants like `DETECTIVE` → "Detective",
+  crash-safe vs. any unmapped role string).
 
 Faction colors are centralized separately in
 **`src/shared/lib/constants/factions.ts`** (`FACTION_HEX` for Recharts, `FACTION_TEXT` /

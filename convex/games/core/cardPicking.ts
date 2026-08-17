@@ -10,7 +10,7 @@ import { getAuthenticatedUser } from "../../lib/auth";
 import { assertIsHost, getPlayersByGameId } from "../../lib/games";
 import { cardPicking as cardPickingRefs } from "../../refs/game";
 import { getGameDefinition } from "../registry";
-import { CARD_PICK, GAME_PHASES } from "../../lib/constants";
+import { CARD_PICK, GamePhase } from "../../lib/constants";
 
 // ============================================================================
 // HELPERS
@@ -198,7 +198,7 @@ export const start = mutation({
       isComplete: false,
     });
 
-    await ctx.db.patch(session._id, { gamePhase: GAME_PHASES[1] });
+    await ctx.db.patch(session._id, { gamePhase: GamePhase.PICKING_ROLES });
 
     await ctx.scheduler.runAfter(
       CARD_PICK.TIMEOUT_MS,

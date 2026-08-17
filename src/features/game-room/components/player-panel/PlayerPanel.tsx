@@ -1,13 +1,13 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { GAME_PHASES } from "@/shared/lib/constants/game";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 import HostPanel from "@/features/game-room/components/host-panel/HostPanel";
 import PlayerPhasePanel from "./PlayerPhasePanel";
 import PlayerPickingPanel from "./PlayerPickingPanel";
 import PlayerVotingPanel from "./PlayerVotingPanel";
 import PlayerEndGamePanel from "./PlayerEndGamePanel";
+import { GamePhase } from "@/shared/lib/constants/game";
 
 /**
  * The centre cell, for everyone who is not the host.
@@ -43,16 +43,13 @@ export default function PlayerPanel() {
     return <PlayerEndGamePanel outcome={gameSessionState.winner ?? null} />;
   }
 
-  if (gameSessionState.gamePhase === GAME_PHASES[1] /* picking_roles */) {
+  if (gameSessionState.gamePhase === GamePhase.PICKING_ROLES) {
     return <PlayerPickingPanel />;
   }
 
   // Until the voting session's first round trip lands there is nothing to vote
   // on, and the read-only phase panel is the honest thing to show.
-  if (
-    gameSessionState.gamePhase === GAME_PHASES[18] /* voting */ &&
-    votingSession
-  ) {
+  if (gameSessionState.gamePhase === GamePhase.VOTING && votingSession) {
     return <PlayerVotingPanel />;
   }
 

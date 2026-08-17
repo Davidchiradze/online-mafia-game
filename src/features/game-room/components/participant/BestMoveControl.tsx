@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { bestMove } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
-import { SPORTS } from "@/shared/lib/constants/game";
+import { SPORTS, GamePhase } from "@/shared/lib/constants/game";
 import BestMoveIndicator from "./BestMoveIndicator";
 
 /**
@@ -56,7 +56,7 @@ export default function BestMoveControl({
     [players, userId],
   );
 
-  const isBestMovePhase = gameSessionState?.gamePhase === "best_move";
+  const isBestMovePhase = gameSessionState?.gamePhase === GamePhase.BEST_MOVE;
   const suspects = nightPhaseSession?.bestMoveSuspects ?? [];
   const victimSeat = nightPhaseSession?.bestMoveSeat ?? null;
 

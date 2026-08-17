@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import type { Id } from "@convex/_generated/dataModel";
-import { CARD_PICK } from "@/shared/lib/constants/game";
+import { CARD_PICK, GamePhase } from "@/shared/lib/constants/game";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 import { useCardPicking } from "@/features/game-room/hooks/game";
 import { useCountdown } from "@/features/game-room/hooks/game/useCountdown";
@@ -43,7 +43,7 @@ export default function PlayerPickingPanel() {
 
   const descriptor: HostPanelDescriptor = {
     eyebrow: t("preGame"),
-    title: tPhases("picking_roles"),
+    title: tPhases(GamePhase.PICKING_ROLES),
     timer:
       !isComplete && turnStartedMs !== null
         ? {

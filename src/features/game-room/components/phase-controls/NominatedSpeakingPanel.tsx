@@ -6,7 +6,7 @@ import { dayPhase } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
 import { useTranslations } from "next-intl";
 import { dayRoundFromNightNumber } from "@convex/games/core/dayRound";
-import { NOMINATED_PLAYERS_SPEAKING } from "@/shared/lib/constants/game";
+import { NOMINATED_PLAYERS_SPEAKING, GamePhase } from "@/shared/lib/constants/game";
 import type { GameSessionState } from "@/features/game-room/context/gameRoomContext";
 import { useHostPanelTimer } from "@/features/game-room/hooks/game/useHostPanelTimer";
 import HostPanel from "@/features/game-room/components/host-panel/HostPanel";
@@ -74,7 +74,7 @@ export default function NominatedSpeakingPanel({
   const eyebrow = t("dayCounter", {
     day: dayRoundFromNightNumber(gameSessionState.currentNightNumber),
   });
-  const title = tPhases("nominated_players_speak");
+  const title = tPhases(GamePhase.NOMINATED_PLAYERS_SPEAK);
 
   // An EMPTY order is the only real dead end — the phase was entered with
   // nobody to run. A "not-started" run that still has seats in it is the queued

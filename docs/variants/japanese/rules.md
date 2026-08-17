@@ -39,9 +39,12 @@ For how a variant is resolved at runtime rather than branched on, see
 > The real deck is `MAFIA ×2` and `CITIZEN ×5`. That is exactly the kind of
 > drift generating the table removes.
 
-`MAFIA_RIGHT_HAND` is worth calling out: it is a real role but is **not in
-the deck**. It is reached in-game when the Don promotes a `MAFIA` during
-`don_chooses_right_hand`.
+Every role Japanese can hold is dealt from the deck above — there is no role
+reached by in-game promotion. `MAFIA_RIGHT_HAND` used to be one: the Don promoted
+a `MAFIA` during a `don_chooses_right_hand` phase. Both the role and the phase
+were removed. The deck did not change (it always dealt `MAFIA ×2`), so the mafia
+team is still three strong, and the kill now passes by seat order instead — see
+§ Night Phases.
 
 ## Game Phases
 
@@ -111,12 +114,42 @@ The primary function is `getVisibilityStateWithDeath()` which accounts for game 
 
 ### 4. Night Phases
 
-- Mafia meets and chooses target
+Night 1 is the round of meetings — each group wakes, sees itself, and sleeps
+again, with the neutral "everyone asleep" buffer between every hand-off:
+
+- Mafia meet (`mafia_meet`)
+- Don meets alone (`don_meet`) — the mafia sleep and only the host and the Don
+  see each other
+- Yakuza and Shogun meet (`yakuda_shogun_meet`)
+- Detective meets (`detective_meet`)
+- Doctor meets (`doctor_meet`)
+
+Every night after that is the round of actions:
+
+- Mafia chooses target
 - Don checks for Detective
-- Right Hand checks for Yakuza
-- Yakuza meets and chooses target
+- Yakuza and Shogun choose target
 - Detective checks for Mafia
 - Doctor heals a player
+
+#### Who picks the mafia kill
+
+Japanese is `single-authority`: exactly one mafia picks a target the whole team
+sees. That authority is:
+
+1. the **`DON`**, for as long as the Don is alive;
+2. otherwise the living mafia in the **next seat clockwise from the Don's**,
+   wrapping past the highest seat back to seat 1.
+
+The Don's seat still decides the order after the Don dies, so the successor is
+not "the lowest surviving mafia seat" — with the Don at seat 3 and mafia alive at
+seats 1 and 5, seat 5 inherits. If that player also dies, the walk continues
+clockwise.
+
+The rule is one pure function, `mafiaKillAuthority` in
+`convex/games/core/mafiaSuccession.ts`, used by both the server (which rejects a
+kill from anyone else) and the client (which decides whether to enable the
+button), so the two cannot disagree.
 
 ### 5. Day Phase
 

@@ -71,7 +71,6 @@ query | public | games/core/players:listByGame | eddbc4df9e94 | 74234e98afe7
 mutation | public | games/core/players:setReady | e04fcd6fa17a | 74234e98afe7
 mutation | public | games/core/roles:assign | f4c42b4ac117 | 74234e98afe7
 query | public | games/core/roles:getVisible | e14a5bc93093 | 74234e98afe7
-mutation | public | games/core/roles:promoteToRightHand | 01fe542a3666 | 74234e98afe7
 mutation | public | games/core/sessions:assignRandomRoles | eddbc4df9e94 | 74234e98afe7
 mutation | public | games/core/sessions:create | eddbc4df9e94 | 74234e98afe7
 mutation | public | games/core/sessions:finishGame | eddbc4df9e94 | 74234e98afe7

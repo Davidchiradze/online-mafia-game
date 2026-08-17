@@ -129,8 +129,19 @@ export type SeatLayout = {
   positionForSeat: (seat: number) => GridPosition;
 };
 
-/** One player as the night-authority computation needs them (role via `roleOf`). */
-export type NightAuthorityPlayer = { playerId: string; isAlive: boolean };
+/**
+ * One player as the night-authority computation needs them (role via `roleOf`).
+ *
+ * `seatNumber` is here because Japanese mafia succession walks the table
+ * clockwise from the Don's seat, so seat order — not database order — decides
+ * who inherits the kill.
+ */
+export type NightAuthorityPlayer = {
+  playerId: string;
+  isAlive: boolean;
+  /** Optional, mirroring `gamePlayers.seatNumber` — an unseated player cannot inherit. */
+  seatNumber?: number;
+};
 
 /** Everything a variant needs to decide who may act tonight (pure inputs). */
 export type NightAuthorityInput = {

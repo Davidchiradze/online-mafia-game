@@ -12,6 +12,7 @@ import type {
   HostPanelAction,
   HostPanelDescriptor,
 } from "@/features/game-room/lib/hostPanel";
+import { GamePhase } from "@/shared/lib/constants/game";
 
 type DayPhaseDonePanelProps = {
   gameId: string;
@@ -80,7 +81,7 @@ export default function DayPhaseDonePanel({
     eyebrow: t("dayCounter", {
       day: dayRoundFromNightNumber(gameSessionState.currentNightNumber),
     }),
-    title: tPhases("day_phase"),
+    title: tPhases(GamePhase.DAY_PHASE),
   };
 
   let descriptor: HostPanelDescriptor;

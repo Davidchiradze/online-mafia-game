@@ -11,6 +11,7 @@ import type {
   NightActionAuthority,
   NightAuthorityInput,
 } from "@/features/game-room/variants/core/types";
+import { GamePhase } from "@/shared/lib/constants/game";
 
 const MAFIA_ROLES: ReadonlySet<string> = new Set(SPORTS_MAFIA_TEAM_ROLES);
 
@@ -21,7 +22,7 @@ export function sportsNightAuthority({
   viewerRole,
   players,
 }: NightAuthorityInput): NightActionAuthority {
-  const isMafiaPhase = phase === "mafia_chooses_target";
+  const isMafiaPhase = phase === GamePhase.MAFIA_CHOOSES_TARGET;
 
   // Every living mafia acts (no priority). The viewer must be a living,
   // non-host mafia by role.

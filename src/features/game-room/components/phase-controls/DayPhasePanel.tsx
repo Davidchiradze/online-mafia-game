@@ -7,6 +7,7 @@ import { useSpeakingRunControls } from "@/features/game-room/hooks/game/useSpeak
 import HostPanel from "@/features/game-room/components/host-panel/HostPanel";
 import type { HostPanelDescriptor } from "@/features/game-room/lib/hostPanel";
 import DayPhaseDonePanel from "./DayPhaseDonePanel";
+import { GamePhase } from "@/shared/lib/constants/game";
 
 type DayPhasePanelProps = {
   gameId: string;
@@ -43,7 +44,7 @@ export default function DayPhasePanel({
     eyebrow: t("dayCounter", {
       day: dayRoundFromNightNumber(gameSessionState.currentNightNumber),
     }),
-    title: tPhases("day_phase"),
+    title: tPhases(GamePhase.DAY_PHASE),
     nominated:
       nominatedSeats.length > 0
         ? { label: t("nominatedLabel"), seats: nominatedSeats }

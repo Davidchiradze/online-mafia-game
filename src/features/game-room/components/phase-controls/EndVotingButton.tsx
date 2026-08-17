@@ -6,6 +6,7 @@ import { gameSessions } from "@convex/refs/game";
 import { useTranslations } from "next-intl";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 import { advanceUpdates } from "@/features/game-room/variants/japanese/phaseFlow";
+import { GamePhase } from "@/shared/lib/constants/game";
 
 type EndVotingButtonProps = {
   gameSessionState: NonNullable<ReturnType<typeof useGameRoom>["gameSessionState"]>;
@@ -28,7 +29,7 @@ const EndVotingButton = ({ gameSessionState }: EndVotingButtonProps) => {
       await updateSession({
         sessionId: gameSessionState._id,
         updates: {
-          ...advanceUpdates("voting"),
+          ...advanceUpdates(GamePhase.VOTING),
           nominatedPlayers: [], // Clear nominations after voting phase ends
         },
       });

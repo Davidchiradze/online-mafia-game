@@ -13,9 +13,9 @@
  * timer gate (which only the acting roles are).
  */
 
-import { GAME_PHASES } from "@/shared/lib/constants/game";
 import { dayRoundFromNightNumber } from "@convex/games/core/dayRound";
 import type { Role } from "@/shared/lib/game/visibility";
+import { GamePhase } from "@/shared/lib/constants/game";
 
 export type PhaseClockKind = "night" | "dawn" | "day";
 
@@ -24,28 +24,26 @@ export type PhaseClock = { kind: PhaseClockKind; value: number } | null;
 
 /** Every phase the night model owns — the meets, the actions, and the buffer. */
 const NIGHT_PHASES: ReadonlySet<string> = new Set<string>([
-  GAME_PHASES[2], // mafia_meet
-  GAME_PHASES[3], // don_chooses_right_hand
-  GAME_PHASES[4], // yakuda_shogun_meet
-  GAME_PHASES[5], // detective_meet
-  GAME_PHASES[6], // doctor_meet
-  GAME_PHASES[8], // night_phase
-  GAME_PHASES[9], // mafia_chooses_target
-  GAME_PHASES[10], // don_checks_for_detective
-  GAME_PHASES[11], // right_hand_checks_for_yakuza
-  GAME_PHASES[12], // yakuza_and_shogun_chooses_target
-  GAME_PHASES[13], // detective_checks_for_mafia
-  GAME_PHASES[14], // doctor_heals_player
-  GAME_PHASES[21], // phase_transition
-  GAME_PHASES[22], // don_meet
+  GamePhase.MAFIA_MEET,
+  GamePhase.YAKUDA_SHOGUN_MEET,
+  GamePhase.DETECTIVE_MEET,
+  GamePhase.DOCTOR_MEET,
+  GamePhase.NIGHT_PHASE,
+  GamePhase.MAFIA_CHOOSES_TARGET,
+  GamePhase.DON_CHECKS_FOR_DETECTIVE,
+  GamePhase.YAKUZA_AND_SHOGUN_CHOOSES_TARGET,
+  GamePhase.DETECTIVE_CHECKS_FOR_MAFIA,
+  GamePhase.DOCTOR_HEALS_PLAYER,
+  GamePhase.PHASE_TRANSITION,
+  GamePhase.DON_MEET,
 ]);
 
 /** Daylight: the table is talking, and the round number is the day's. */
 const DAY_PHASES: ReadonlySet<string> = new Set<string>([
-  GAME_PHASES[7], // introduction_phase
-  GAME_PHASES[16], // day_phase
-  GAME_PHASES[17], // nominated_players_speak
-  GAME_PHASES[18], // voting
+  GamePhase.INTRODUCTION_PHASE,
+  GamePhase.DAY_PHASE,
+  GamePhase.NOMINATED_PLAYERS_SPEAK,
+  GamePhase.VOTING,
 ]);
 
 /**
@@ -67,10 +65,10 @@ export function phaseClock(
   if (DAY_PHASES.has(phase)) {
     return { kind: "day", value: dayRoundFromNightNumber(nightNumber) };
   }
-  if (phase === GAME_PHASES[23] /* best_move */) {
+  if (phase === GamePhase.BEST_MOVE) {
     return { kind: "dawn", value: night };
   }
-  if (phase === GAME_PHASES[15] /* farewell_speech */) {
+  if (phase === GamePhase.FAREWELL_SPEECH) {
     return nominatedCount > 0
       ? { kind: "day", value: dayRoundFromNightNumber(nightNumber) }
       : { kind: "dawn", value: night };

@@ -3,7 +3,6 @@
 import type { Id } from "@convex/_generated/dataModel";
 import YakuzaKillButton from "@/features/game-room/components/actions/YakuzaKillButton";
 import DoctorHealButton from "@/features/game-room/components/actions/DoctorHealButton";
-import PromoteToRightHandButton from "@/features/game-room/components/actions/PromoteToRightHandButton";
 import YakuzaTargetIndicator from "./YakuzaTargetIndicator";
 import DoctorHealIndicator from "./DoctorHealIndicator";
 import NightActionWrapper from "./NightActionWrapper";
@@ -25,14 +24,13 @@ interface NightActionButtonsProps {
   canShowDoctorHealButton: boolean;
   isAlreadyHealed: boolean;
   shouldShowDoctorHealIndicator: boolean;
-  canShowPromoteRightHandButton: boolean;
 }
 
 /**
- * Yakuza kill, Doctor heal, and Don's-right-hand promotion controls for a tile.
- * The MAFIA kill is handled separately by `MafiaKillControl` (variant-dispatched
- * via the ruleset); yakuza/doctor/right-hand are Japanese-only, so they stay
- * here as plain flag-driven buttons.
+ * Yakuza kill and Doctor heal controls for a tile. The MAFIA kill is handled
+ * separately by `MafiaKillControl` (variant-dispatched via the ruleset);
+ * yakuza/doctor are Japanese-only, so they stay here as plain flag-driven
+ * buttons.
  */
 export default function NightActionButtons({
   seatNumber,
@@ -48,7 +46,6 @@ export default function NightActionButtons({
   canShowDoctorHealButton,
   isAlreadyHealed,
   shouldShowDoctorHealIndicator,
-  canShowPromoteRightHandButton,
 }: NightActionButtonsProps) {
   if (seatNumber == null) return null;
 
@@ -92,12 +89,6 @@ export default function NightActionButtons({
 
       {shouldShowDoctorHealIndicator && !canShowDoctorHealButton && (
         <DoctorHealIndicator />
-      )}
-
-      {canShowPromoteRightHandButton && targetPlayerId && (
-        <NightActionWrapper isSelected={false}>
-          <PromoteToRightHandButton targetPlayerId={targetPlayerId} />
-        </NightActionWrapper>
       )}
     </>
   );
