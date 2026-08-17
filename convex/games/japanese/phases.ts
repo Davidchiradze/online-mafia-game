@@ -25,7 +25,8 @@ export const JAPANESE_PHASES = GAME_PHASES;
 
 const HOST_ADVANCE: Record<string, Phase> = {
   [GamePhase.PICKING_ROLES]: GamePhase.MAFIA_MEET,
-  [GamePhase.MAFIA_MEET]: GamePhase.YAKUDA_SHOGUN_MEET,
+  [GamePhase.MAFIA_MEET]: GamePhase.DON_MEET,
+  [GamePhase.DON_MEET]: GamePhase.YAKUDA_SHOGUN_MEET,
   [GamePhase.YAKUDA_SHOGUN_MEET]: GamePhase.DETECTIVE_MEET,
   [GamePhase.DETECTIVE_MEET]: GamePhase.DOCTOR_MEET,
   [GamePhase.DOCTOR_MEET]: GamePhase.INTRODUCTION_PHASE,

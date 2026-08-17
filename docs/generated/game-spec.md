@@ -25,7 +25,7 @@
 | Roles | 4 | 7 |
 | Deck size | 10 | 12 |
 | Factions | mafia, citizens | mafia, yakuza, citizens |
-| Phases | 17 | 19 |
+| Phases | 17 | 20 |
 | Night model | `unanimous-vote` | `single-authority` |
 | `firstDaySingleNomineeSkipsToNight` | yes | — |
 | `hasBestMove` | yes | — |
@@ -94,23 +94,24 @@ under **Branching edges** below.
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `game_session_started` | Game Started | — | — | server-owned | — |
 | 2 | `picking_roles` | Picking Roles | — | — | `mafia_meet` | — |
-| 3 | `mafia_meet` | Mafia Meeting | 60s | `DON` `MAFIA` | `yakuda_shogun_meet` | yes |
-| 4 | `yakuda_shogun_meet` | Yakuza & Shogun Meeting | 40s | `YAKUZA` `SHOGUN` | `detective_meet` | yes |
-| 5 | `detective_meet` | Detective Meeting | 15s | `DETECTIVE` | `doctor_meet` | yes |
-| 6 | `doctor_meet` | Doctor Meeting | 15s | `DOCTOR` | `introduction_phase` | yes |
-| 7 | `introduction_phase` | Introduction | — | — | server-owned | — |
-| 8 | `night_phase` | Night Phase | — | — | `mafia_chooses_target` | — |
-| 9 | `mafia_chooses_target` | Mafia Chooses Target | 20s | `DON` `MAFIA` | `don_checks_for_detective` | — |
-| 10 | `don_checks_for_detective` | Don Checks for Detective | 15s | `DON` | `yakuza_and_shogun_chooses_target` | yes |
-| 11 | `yakuza_and_shogun_chooses_target` | Yakuza & Shogun Choose Target | 20s | `YAKUZA` `SHOGUN` | `detective_checks_for_mafia` | yes |
-| 12 | `detective_checks_for_mafia` | Detective Checks for Mafia | 15s | `DETECTIVE` | `doctor_heals_player` | yes |
-| 13 | `doctor_heals_player` | Doctor Heals | 15s | `DOCTOR` | `farewell_speech` | yes |
-| 14 | `farewell_speech` | Farewell Speech | — | — | server-owned | — |
-| 15 | `day_phase` | Day Phase | — | — | server-owned | — |
-| 16 | `nominated_players_speak` | Self-Justification | — | — | server-owned | — |
-| 17 | `voting` | Voting | — | — | `repeat` | — |
-| 18 | `repeat` | Next Round | — | — | server-owned | — |
-| 19 | `end_game` | Game Over | — | — | server-owned | — |
+| 3 | `mafia_meet` | Mafia Meeting | 60s | `DON` `MAFIA` | `don_meet` | yes |
+| 4 | `don_meet` | Don Meeting | — | `DON` | `yakuda_shogun_meet` | yes |
+| 5 | `yakuda_shogun_meet` | Yakuza & Shogun Meeting | 40s | `YAKUZA` `SHOGUN` | `detective_meet` | yes |
+| 6 | `detective_meet` | Detective Meeting | 15s | `DETECTIVE` | `doctor_meet` | yes |
+| 7 | `doctor_meet` | Doctor Meeting | 15s | `DOCTOR` | `introduction_phase` | yes |
+| 8 | `introduction_phase` | Introduction | — | — | server-owned | — |
+| 9 | `night_phase` | Night Phase | — | — | `mafia_chooses_target` | — |
+| 10 | `mafia_chooses_target` | Mafia Chooses Target | 20s | `DON` `MAFIA` | `don_checks_for_detective` | — |
+| 11 | `don_checks_for_detective` | Don Checks for Detective | 15s | `DON` | `yakuza_and_shogun_chooses_target` | yes |
+| 12 | `yakuza_and_shogun_chooses_target` | Yakuza & Shogun Choose Target | 20s | `YAKUZA` `SHOGUN` | `detective_checks_for_mafia` | yes |
+| 13 | `detective_checks_for_mafia` | Detective Checks for Mafia | 15s | `DETECTIVE` | `doctor_heals_player` | yes |
+| 14 | `doctor_heals_player` | Doctor Heals | 15s | `DOCTOR` | `farewell_speech` | yes |
+| 15 | `farewell_speech` | Farewell Speech | — | — | server-owned | — |
+| 16 | `day_phase` | Day Phase | — | — | server-owned | — |
+| 17 | `nominated_players_speak` | Self-Justification | — | — | server-owned | — |
+| 18 | `voting` | Voting | — | — | `repeat` | — |
+| 19 | `repeat` | Next Round | — | — | server-owned | — |
+| 20 | `end_game` | Game Over | — | — | server-owned | — |
 
 `server-owned` means `nextPhase` returns null: the next phase depends on
 database state, so a Convex mutation decides it. Those edges are listed
@@ -119,7 +120,7 @@ under **Branching edges** below.
 ## Phase universe
 
 Three phase lists exist and they are not the same length:
-`convex/lib/constants.ts` (19),
+`convex/lib/constants.ts` (20),
 `src/shared/lib/constants/game.ts` (22),
 and each variant's own `definition.phases`.
 
@@ -132,7 +133,7 @@ and each variant's own `definition.phases`.
 | `doctor_heals_player` | yes | yes | — | yes | variant-specific |
 | `doctor_meet` | yes | yes | — | yes | variant-specific |
 | `don_checks_for_detective` | yes | yes | yes | yes | shared |
-| `don_meet` | — | yes | yes | — | variant-specific |
+| `don_meet` | yes | yes | yes | yes | shared |
 | `end_game` | yes | yes | yes | yes | shared |
 | `farewell_speech` | yes | yes | yes | yes | shared |
 | `game_session_started` | yes | yes | yes | yes | shared |
@@ -179,7 +180,8 @@ stateDiagram-v2
 ```mermaid
 stateDiagram-v2
     picking_roles --> mafia_meet
-    mafia_meet --> yakuda_shogun_meet : via buffer
+    mafia_meet --> don_meet : via buffer
+    don_meet --> yakuda_shogun_meet : via buffer
     yakuda_shogun_meet --> detective_meet : via buffer
     detective_meet --> doctor_meet : via buffer
     doctor_meet --> introduction_phase : via buffer

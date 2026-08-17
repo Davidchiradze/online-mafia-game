@@ -117,6 +117,15 @@ export function canSeeParticipant(
     return false;
   }
 
+  // DON MEET: the mafia have gone back to sleep and the Don wakes alone, so only
+  // the Don (and the host) see anyone.
+  if (gamePhase === GamePhase.DON_MEET) {
+    if (isViewerHost) return true; // Host sees everyone
+    if (isTargetHost && viewerRole === "DON") return true; // Don sees host
+    if (viewerRole === "DON") return true; // Don sees everyone
+    return false;
+  }
+
   // YAKUZA & SHOGUN MEET: Yakuza and Shogun are awake — they see every player
   // (teammates fully, everyone else dimmed). Others see no one.
   if (gamePhase === GamePhase.YAKUDA_SHOGUN_MEET) {
@@ -210,6 +219,7 @@ export function getAwakeRoles(gamePhase: GamePhase): Role[] {
     case GamePhase.MAFIA_CHOOSES_TARGET:
       return ["DON", "MAFIA"];
 
+    case GamePhase.DON_MEET:
     case GamePhase.DON_CHECKS_FOR_DETECTIVE:
       return ["DON"];
 
@@ -239,6 +249,7 @@ export function isNightActivityPhase(gamePhase: GamePhase): boolean {
     GamePhase.NIGHT_PHASE,
     GamePhase.PHASE_TRANSITION,
     GamePhase.MAFIA_MEET,
+    GamePhase.DON_MEET,
     GamePhase.YAKUDA_SHOGUN_MEET,
     GamePhase.DETECTIVE_MEET,
     GamePhase.DOCTOR_MEET,

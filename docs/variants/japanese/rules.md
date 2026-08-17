@@ -114,9 +114,21 @@ The primary function is `getVisibilityStateWithDeath()` which accounts for game 
 
 ### 4. Night Phases
 
-- Mafia meets and chooses target
+Night 1 is the round of meetings — each group wakes, sees itself, and sleeps
+again, with the neutral "everyone asleep" buffer between every hand-off:
+
+- Mafia meet (`mafia_meet`)
+- Don meets alone (`don_meet`) — the mafia sleep and only the host and the Don
+  see each other
+- Yakuza and Shogun meet (`yakuda_shogun_meet`)
+- Detective meets (`detective_meet`)
+- Doctor meets (`doctor_meet`)
+
+Every night after that is the round of actions:
+
+- Mafia chooses target
 - Don checks for Detective
-- Yakuza meets and chooses target
+- Yakuza and Shogun choose target
 - Detective checks for Mafia
 - Doctor heals a player
 

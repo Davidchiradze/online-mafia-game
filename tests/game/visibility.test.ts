@@ -92,6 +92,7 @@ describe("canSeeParticipant — awake-role phases", () => {
     [GamePhase.DOCTOR_MEET, ["DOCTOR"]],
     [GamePhase.DOCTOR_HEALS_PLAYER, ["DOCTOR"]],
     [GamePhase.DON_CHECKS_FOR_DETECTIVE, ["DON"]],
+    [GamePhase.DON_MEET, ["DON"]],
   ];
 
   it.each(awakePhases)(
@@ -109,6 +110,7 @@ describe("getAwakeRoles", () => {
   const awake: Array<[GamePhase, Role[]]> = [
     [GamePhase.MAFIA_MEET, ["DON", "MAFIA"]],
     [GamePhase.MAFIA_CHOOSES_TARGET, ["DON", "MAFIA"]],
+    [GamePhase.DON_MEET, ["DON"]],
     [GamePhase.DON_CHECKS_FOR_DETECTIVE, ["DON"]],
     [GamePhase.YAKUDA_SHOGUN_MEET, ["YAKUZA", "SHOGUN"]],
     [GamePhase.YAKUZA_AND_SHOGUN_CHOOSES_TARGET, ["YAKUZA", "SHOGUN"]],
@@ -149,6 +151,7 @@ describe("isNightActivityPhase", () => {
     GamePhase.NIGHT_PHASE,
     GamePhase.PHASE_TRANSITION,
     GamePhase.MAFIA_MEET,
+    GamePhase.DON_MEET,
     GamePhase.YAKUDA_SHOGUN_MEET,
     GamePhase.DETECTIVE_MEET,
     GamePhase.DOCTOR_MEET,

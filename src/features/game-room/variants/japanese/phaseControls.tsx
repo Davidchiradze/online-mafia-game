@@ -43,6 +43,13 @@ export const JAPANESE_PHASE_CONTROLS: PhaseControlsMap = {
       labelKey="endMeeting"
     />
   ),
+  [GamePhase.DON_MEET]: ({ gameSessionState }) => (
+    <NightPhasePanel
+      gameSessionState={gameSessionState}
+      sourcePhase={GamePhase.DON_MEET}
+      labelKey="endMeeting"
+    />
+  ),
   [GamePhase.YAKUDA_SHOGUN_MEET]: ({ gameSessionState }) => (
     <NightPhasePanel
       gameSessionState={gameSessionState}

@@ -48,7 +48,8 @@ The decisions behind those numbers, which the table cannot express:
 
 What the tables do not say — the reasoning behind the diff:
 
-- **Added:** `don_meet` (the Don acts alone) and `best_move` (§6).
+- **Added:** `best_move` (§6). (`don_meet` started here but is now shared —
+  Japanese runs it too, after `mafia_meet`.)
 - **Removed:** every yakuza and doctor phase, plus `introduction_phase`.
 - **Kept identical to Japanese** wherever there was no reason to differ, so
   the shared engine keeps one implementation of the day/vote/farewell cycle.
@@ -333,11 +334,11 @@ Definition surface: add `hasBestMove: boolean` to `GameFlags`
 shared dawn seam reads a flag rather than a `gameType` literal (§8 guardrails in
 [game-types.md](../../engine/variant-architecture.md)).
 
-> **Registration note.** `best_move` must be **appended last** to `GAME_PHASES`
-> in `src/shared/lib/constants/game.ts` — the same treatment `phase_transition` and
-> `don_meet` got — so the positional `GAME_PHASES[0..20]` literals the Japanese
-> code still uses stay stable. (`convex/lib/constants.ts`'s `GAME_PHASES` is the
-> shorter Japanese-only list and needs no entry.) Labels go in
+> **Registration note.** Add `best_move` to `GAME_PHASES` in
+> `src/shared/lib/constants/game.ts` in **reading order** — nothing reads that
+> array positionally any more, so phases no longer have to be appended to keep
+> indices stable. (`convex/lib/constants.ts`'s `GAME_PHASES` is the shorter
+> Japanese-only list and needs no entry.) Labels go in
 > `GAME_PHASE_LABELS` plus `messages/en.json` / `messages/ka.json` under
 > `phases`: `"best_move": "Best Move"` / `"საუკეთესო სვლა"`.
 

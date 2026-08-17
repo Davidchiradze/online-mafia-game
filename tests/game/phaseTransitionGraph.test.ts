@@ -30,7 +30,8 @@ import { GAME_PHASES, GamePhase } from "@/shared/lib/constants/game";
 // source phase → next phase (transcribed from the End*/Start* buttons)
 const JAPANESE_HOST_ADVANCE: Record<string, string> = {
   [GamePhase.PICKING_ROLES]: GamePhase.MAFIA_MEET, // ConfirmRolesButton
-  [GamePhase.MAFIA_MEET]: GamePhase.YAKUDA_SHOGUN_MEET, // EndMafiaMeetButton*
+  [GamePhase.MAFIA_MEET]: GamePhase.DON_MEET, // EndMafiaMeetButton*
+  [GamePhase.DON_MEET]: GamePhase.YAKUDA_SHOGUN_MEET, // EndDonMeetButton*
   [GamePhase.YAKUDA_SHOGUN_MEET]: GamePhase.DETECTIVE_MEET, // EndYakuzaShogunMeetButton*
   [GamePhase.DETECTIVE_MEET]: GamePhase.DOCTOR_MEET, // EndDetectiveMeetButton*
   [GamePhase.DOCTOR_MEET]: GamePhase.INTRODUCTION_PHASE, // EndDoctorMeetButton*
@@ -49,6 +50,7 @@ const JAPANESE_HOST_ADVANCE: Record<string, string> = {
 // above. Documented so the refactor preserves the buffer behavior.
 const BUFFER_MEDIATED_SOURCES = new Set([
   GamePhase.MAFIA_MEET,
+  GamePhase.DON_MEET,
   GamePhase.YAKUDA_SHOGUN_MEET,
   GamePhase.DETECTIVE_MEET,
   GamePhase.DOCTOR_MEET,
@@ -92,6 +94,7 @@ describe("Japanese host-advance transition graph (spec)", () => {
     expect(walk).toEqual([
       GamePhase.PICKING_ROLES,
       GamePhase.MAFIA_MEET,
+      GamePhase.DON_MEET,
       GamePhase.YAKUDA_SHOGUN_MEET,
       GamePhase.DETECTIVE_MEET,
       GamePhase.DOCTOR_MEET,

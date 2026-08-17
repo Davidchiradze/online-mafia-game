@@ -109,7 +109,8 @@ describe("JAPANESE_DEFINITION.nextPhase — the deterministic host-advance graph
   // Exactly the deterministic edges in tests/game/phaseTransitionGraph.test.ts.
   const edges: Array<[string, string]> = [
     [GamePhase.PICKING_ROLES, GamePhase.MAFIA_MEET],
-    [GamePhase.MAFIA_MEET, GamePhase.YAKUDA_SHOGUN_MEET],
+    [GamePhase.MAFIA_MEET, GamePhase.DON_MEET],
+    [GamePhase.DON_MEET, GamePhase.YAKUDA_SHOGUN_MEET],
     [GamePhase.YAKUDA_SHOGUN_MEET, GamePhase.DETECTIVE_MEET],
     [GamePhase.DETECTIVE_MEET, GamePhase.DOCTOR_MEET],
     [GamePhase.DOCTOR_MEET, GamePhase.INTRODUCTION_PHASE],

@@ -97,7 +97,7 @@ describe("SPORTS_DEFINITION — phase graph (§3)", () => {
   const edges: Array<[string, string]> = [
     [GamePhase.PICKING_ROLES, GamePhase.MAFIA_MEET],
     [GamePhase.MAFIA_MEET, GamePhase.DON_MEET], // Sports adds the Don's solo meet after mafia_meet
-    [GamePhase.DON_MEET, GamePhase.DETECTIVE_MEET], // skips don_chooses_right_hand
+    [GamePhase.DON_MEET, GamePhase.DETECTIVE_MEET], // skips yakuda_shogun_meet
     [GamePhase.DETECTIVE_MEET, GamePhase.DAY_PHASE], // no introduction_phase
     [GamePhase.NIGHT_PHASE, GamePhase.MAFIA_CHOOSES_TARGET],
     [GamePhase.MAFIA_CHOOSES_TARGET, GamePhase.DON_CHECKS_FOR_DETECTIVE],

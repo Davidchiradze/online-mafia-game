@@ -99,12 +99,14 @@ export const JAPANESE_MAFIA_ROLE_LABEL: Record<DisplayableRole, string> = {
  * Sports-only phases the backend `GAME_PHASES` omits.
  *
  * Built from `GamePhase` so the names have exactly one definition; this array
- * only decides ORDER and membership.
+ * only decides ORDER and membership. Nothing reads it positionally, so a phase
+ * may be inserted in reading order rather than appended.
  */
 export const GAME_PHASES = [
   GamePhase.GAME_SESSION_STARTED,
   GamePhase.PICKING_ROLES,
   GamePhase.MAFIA_MEET,
+  GamePhase.DON_MEET,
   GamePhase.YAKUDA_SHOGUN_MEET,
   GamePhase.DETECTIVE_MEET,
   GamePhase.DOCTOR_MEET,
@@ -122,7 +124,6 @@ export const GAME_PHASES = [
   GamePhase.REPEAT,
   GamePhase.END_GAME,
   GamePhase.PHASE_TRANSITION,
-  GamePhase.DON_MEET,
   GamePhase.BEST_MOVE,
 ] as const;
 

@@ -21,12 +21,13 @@ import {
 
 describe("GAME_PHASES — frontend (src/lib/constants/game.ts)", () => {
   it("is the 22-phase Japanese sequence + the Sports-only phases, in order", () => {
-    // Indices 0..21 are the Japanese sequence (+ the phase_transition buffer at
-    // 21); Sports-only phases are appended after so those indices stay stable.
+    // Reading order, not a stable-index contract: nothing reads this array
+    // positionally, so a shared phase sits where it happens in a round.
     expect(SRC_GAME_PHASES).toEqual([
       GamePhase.GAME_SESSION_STARTED,
       GamePhase.PICKING_ROLES,
       GamePhase.MAFIA_MEET,
+      GamePhase.DON_MEET,
       GamePhase.YAKUDA_SHOGUN_MEET,
       GamePhase.DETECTIVE_MEET,
       GamePhase.DOCTOR_MEET,
@@ -44,7 +45,6 @@ describe("GAME_PHASES — frontend (src/lib/constants/game.ts)", () => {
       GamePhase.REPEAT,
       GamePhase.END_GAME,
       GamePhase.PHASE_TRANSITION,
-      GamePhase.DON_MEET,
       GamePhase.BEST_MOVE,
     ]);
   });
@@ -55,17 +55,17 @@ describe("GAME_PHASES — frontend (src/lib/constants/game.ts)", () => {
 });
 
 describe("GAME_PHASES — backend (convex/lib/constants.ts)", () => {
-  it("is the 19-phase list WITHOUT the phase_transition buffer", () => {
+  it("is the 20-phase list WITHOUT the phase_transition buffer", () => {
     // KNOWN DRIFT: the two GAME_PHASES lists are duplicated and out of sync —
     // the backend copy predates the phase_transition buffer. The refactor
     // collapses these into a single `definition.phases`. Documented here so the
     // consolidation is intentional, not a silent behavior change.
     expect(CONVEX_GAME_PHASES).not.toContain(GamePhase.PHASE_TRANSITION);
-    expect(CONVEX_GAME_PHASES).toHaveLength(19);
+    expect(CONVEX_GAME_PHASES).toHaveLength(20);
   });
 
-  it("shares its ordering with the first 19 frontend phases", () => {
-    expect(SRC_GAME_PHASES.slice(0, 19)).toEqual([...CONVEX_GAME_PHASES]);
+  it("shares its ordering with the first 20 frontend phases", () => {
+    expect(SRC_GAME_PHASES.slice(0, 20)).toEqual([...CONVEX_GAME_PHASES]);
   });
 });
 

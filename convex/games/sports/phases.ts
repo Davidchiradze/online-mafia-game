@@ -1,15 +1,14 @@
 /**
  * Sports Mafia phase list + deterministic host-advance graph
  * (docs/variants/sports/rules.md §3). Diff from Japanese: no `introduction_phase`,
- * `don_chooses_right_hand`, `yakuda_shogun_meet`, `doctor_meet`,
- * `right_hand_checks_for_yakuza`, `yakuza_and_shogun_chooses_target`, or
+ * `yakuda_shogun_meet`, `doctor_meet`, `yakuza_and_shogun_chooses_target`, or
  * `doctor_heals_player`. The two info checks (`don_checks_for_detective`,
- * `detective_checks_for_mafia`) are kept, identical to Japanese.
+ * `detective_checks_for_mafia`) and `don_meet` are kept, identical to Japanese.
  *
- * Sports adds a `don_meet` phase right after `mafia_meet`: the Don wakes alone so
- * the host and Don see each other (no right-hand pick — this is just the Don's
- * solo acknowledgement). Structurally it mirrors `don_checks_for_detective`
- * (awake role = DON, host + Don visible) but sits in the pre-day meet sequence.
+ * `don_meet` sits right after `mafia_meet` in both variants: the mafia sleep and
+ * the Don wakes alone so the host and Don see each other. Structurally it mirrors
+ * `don_checks_for_detective` (awake role = DON, host + Don visible) but sits in
+ * the pre-day meet sequence.
  *
  * Phase-2 note: this is authored as DATA/spec (unit-tested), not yet wired to
  * any UI — the Sports phase buttons + `advanceUpdates` land in Phase 4.

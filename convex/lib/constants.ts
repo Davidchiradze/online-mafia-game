@@ -24,6 +24,7 @@ export enum GamePhase {
   GAME_SESSION_STARTED = "game_session_started",
   PICKING_ROLES = "picking_roles",
   MAFIA_MEET = "mafia_meet",
+  DON_MEET = "don_meet",
   YAKUDA_SHOGUN_MEET = "yakuda_shogun_meet",
   DETECTIVE_MEET = "detective_meet",
   DOCTOR_MEET = "doctor_meet",
@@ -45,8 +46,6 @@ export enum GamePhase {
    * role changes across teams (and on Doctor→wake exits).
    */
   PHASE_TRANSITION = "phase_transition",
-  /** Sports-only: the Don's solo meet, inserted after `mafia_meet`. */
-  DON_MEET = "don_meet",
   /**
    * Sports-only: the first-night victim names 3 suspects before their farewell
    * (docs/variants/sports/rules.md §6).
@@ -65,6 +64,7 @@ export const GAME_PHASES = [
   GamePhase.GAME_SESSION_STARTED,
   GamePhase.PICKING_ROLES,
   GamePhase.MAFIA_MEET,
+  GamePhase.DON_MEET,
   GamePhase.YAKUDA_SHOGUN_MEET,
   GamePhase.DETECTIVE_MEET,
   GamePhase.DOCTOR_MEET,

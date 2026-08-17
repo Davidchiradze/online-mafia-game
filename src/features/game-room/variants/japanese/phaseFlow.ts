@@ -22,18 +22,17 @@ import { GamePhase } from "@/shared/lib/constants/game";
 /**
  * Sources whose host-advance sleeps through the neutral buffer first.
  *
- * The rule is "buffer whenever the awake team changes across the edge". When the
- * two right-hand phases were removed, the edges they used to absorb collapsed
- * onto their predecessors, so `mafia_meet` and `don_checks_for_detective` became
- * buffered: both now hand off from the mafia straight to the yakuza. Without the
- * buffer the yakuza would wake while the mafia were still watching.
+ * The rule is "buffer whenever the awake set changes across the edge" — whoever
+ * is about to wake must never see who was just awake. Every night edge Japanese
+ * has qualifies, which is why this is the whole night sequence.
  */
 const BUFFER_MEDIATED: ReadonlySet<string> = new Set([
-  GamePhase.MAFIA_MEET, // → yakuda_shogun_meet (mafia → yakuza)
+  GamePhase.MAFIA_MEET, // mafia sleep → don wakes alone
+  GamePhase.DON_MEET, // don sleeps → yakuza + shogun wake
   GamePhase.YAKUDA_SHOGUN_MEET,
   GamePhase.DETECTIVE_MEET,
   GamePhase.DOCTOR_MEET,
-  GamePhase.DON_CHECKS_FOR_DETECTIVE, // → yakuza_and_shogun (mafia → yakuza)
+  GamePhase.DON_CHECKS_FOR_DETECTIVE, // don sleeps → yakuza + shogun wake
   GamePhase.YAKUZA_AND_SHOGUN_CHOOSES_TARGET,
   GamePhase.DETECTIVE_CHECKS_FOR_MAFIA,
   GamePhase.DOCTOR_HEALS_PLAYER,

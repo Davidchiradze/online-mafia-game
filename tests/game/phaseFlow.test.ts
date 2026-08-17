@@ -32,8 +32,8 @@ describe("advanceUpdates — direct transitions (no buffer)", () => {
 
 describe("advanceUpdates — buffer-mediated transitions", () => {
   const cases: Array<[string, string]> = [
-    // mafia → yakuza: inherited the buffer when don_chooses_right_hand went away
-    [GamePhase.MAFIA_MEET, GamePhase.YAKUDA_SHOGUN_MEET], // EndMafiaMeetButton
+    [GamePhase.MAFIA_MEET, GamePhase.DON_MEET], // mafia sleep → don wakes alone
+    [GamePhase.DON_MEET, GamePhase.YAKUDA_SHOGUN_MEET], // don sleeps → yakuza wake
     [GamePhase.YAKUDA_SHOGUN_MEET, GamePhase.DETECTIVE_MEET], // EndYakuzaShogunMeetButton
     [GamePhase.DETECTIVE_MEET, GamePhase.DOCTOR_MEET], // EndDetectiveMeetButton
     [GamePhase.DOCTOR_MEET, GamePhase.INTRODUCTION_PHASE], // EndDoctorMeetButton

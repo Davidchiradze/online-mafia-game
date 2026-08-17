@@ -53,6 +53,7 @@ describe("phaseControls maps", () => {
       GamePhase.GAME_SESSION_STARTED,
       GamePhase.PICKING_ROLES,
       GamePhase.MAFIA_MEET,
+      GamePhase.DON_MEET,
       GamePhase.YAKUDA_SHOGUN_MEET,
       GamePhase.DETECTIVE_MEET,
       GamePhase.DOCTOR_MEET,
@@ -261,7 +262,7 @@ describe("JAPANESE_UI_RULESET.advanceUpdates — wraps phaseFlow", () => {
   it("produces the host-advance payload for a phase", () => {
     expect(JAPANESE_UI_RULESET.advanceUpdates(GamePhase.MAFIA_MEET)).toEqual({
       gamePhase: GamePhase.PHASE_TRANSITION,
-      nextPhase: GamePhase.YAKUDA_SHOGUN_MEET,
+      nextPhase: GamePhase.DON_MEET,
     });
   });
 });
