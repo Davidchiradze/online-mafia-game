@@ -132,7 +132,6 @@ mutation | public | lobby/joinRequests:request | eddbc4df9e94 | 74234e98afe7
 mutation | internal | migrations:backfillRatings | b89b2130c90d | 74234e98afe7
 mutation | internal | migrations:clearLegacyRoles | 5151b7eb8536 | 74234e98afe7
 mutation | internal | migrations:clearLegacyUsername | 5151b7eb8536 | 74234e98afe7
-mutation | internal | migrations:mergeRetiredRightHandRole | 2558a19a6fcd | 74234e98afe7
 mutation | internal | migrations:splitPlayerStatsByGameType | 2558a19a6fcd | 74234e98afe7
 mutation | public | presence:disconnect | 7a093977780b | 74234e98afe7
 mutation | public | presence:heartbeat | f026456986d5 | 74234e98afe7
