@@ -16,17 +16,16 @@ import { gameType } from "./games";
  */
 export const playerStats = defineTable({
   playerId: v.id("profiles"),
-  // TEMPORARILY OPTIONAL — revert to `gameType,` immediately after
-  // migrations:splitPlayerStatsByGameType has been applied on this deployment.
+  // REQUIRED since migrations:splitPlayerStatsByGameType ran. A row with no
+  // game type is a pre-split leftover, and this validator is what makes such a
+  // row impossible rather than merely unexpected — Convex rejects the deploy if
+  // one still exists.
   //
-  // It has to be loose for exactly one deploy: the required validator rejects
-  // every pre-split row, and the migration that stamps those rows ships in the
-  // same push. Loosening lets the code land so the migration can run at all.
-  //
-  // REQUIRED is the real state. A row with no game type is a pre-split
-  // leftover, and that validator is what makes such a row impossible rather
-  // than merely unexpected — Convex rejects the deploy if one still exists.
-  gameType: v.optional(gameType),
+  // Tightening this is a TWO-DEPLOY dance on any deployment that still holds
+  // pre-split rows: the validator rejects them, and the migration that fixes
+  // them ships in the same push. Loosen to `v.optional(gameType)`, deploy, run
+  // the migration, restore this line, deploy again.
+  gameType,
   totalMatches: v.number(),
   wins: v.number(),
   losses: v.number(),
