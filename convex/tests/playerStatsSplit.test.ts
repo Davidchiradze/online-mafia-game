@@ -112,9 +112,17 @@ function statsRows(t: TestConvex<typeof schema>, playerId: Id<"profiles">) {
   );
 }
 
-/** Picks a variant's row out of a per-variant set — stats or ratings alike. */
-const rowFor = <T extends { gameType: GameType }>(rows: T[], gameType: GameType) =>
-  rows.find((r) => r.gameType === gameType);
+/**
+ * Picks a variant's row out of a per-variant set — stats or ratings alike.
+ *
+ * `gameType` is optional in the constraint so this also compiles while the
+ * schema is transitionally loose during a migration deploy; a required field
+ * satisfies an optional constraint, so nothing is weakened for the normal case.
+ */
+const rowFor = <T extends { gameType?: GameType }>(
+  rows: T[],
+  gameType: GameType,
+) => rows.find((r) => r.gameType === gameType);
 
 describe("archiveGameLog — the record is per variant", () => {
   it("keeps one variant's result out of another's record", async () => {
