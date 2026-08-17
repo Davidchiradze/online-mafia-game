@@ -31,7 +31,6 @@ describe("roleToFaction (src/lib/game/roleDisplay) — mirrors the convex copy",
   const cases: Array<[string, "mafia" | "yakuza" | "citizens"]> = [
     ["DON", "mafia"],
     ["MAFIA", "mafia"],
-    ["MAFIA_RIGHT_HAND", "mafia"],
     ["YAKUZA", "yakuza"],
     ["SHOGUN", "yakuza"],
     ["CITIZEN", "citizens"],
@@ -64,7 +63,6 @@ describe("roleLabel", () => {
   const known: Array<[string, string]> = [
     ["DON", "Don"],
     ["MAFIA", "Mafia"],
-    ["MAFIA_RIGHT_HAND", "Don's Right Hand"],
     ["SHOGUN", "Shogun"],
     ["YAKUZA", "Yakuza"],
     ["DETECTIVE", "Detective"],

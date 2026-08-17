@@ -13,7 +13,6 @@ describe("roleToFaction — Japanese", () => {
     // mafia team
     ["DON", "mafia"],
     ["MAFIA", "mafia"],
-    ["MAFIA_RIGHT_HAND", "mafia"],
     // yakuza clan
     ["YAKUZA", "yakuza"],
     ["SHOGUN", "yakuza"],

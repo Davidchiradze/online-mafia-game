@@ -65,7 +65,7 @@ export function factionBadgeClass(faction: Faction): string {
   }
 }
 
-/** Human label for a role, e.g. `DON` → "Don", `MAFIA_RIGHT_HAND` → "Don's Right Hand". */
+/** Human label for a role, e.g. `DON` → "Don", `DOCTOR` → "Doctor". */
 export function roleLabel(role: string): string {
   const known =
     JAPANESE_MAFIA_ROLE_LABEL[role as keyof typeof JAPANESE_MAFIA_ROLE_LABEL];

@@ -54,36 +54,16 @@ export const JAPANESE_MAFIA_ROLES = [
   "DOCTOR",
 ] as const;
 
-/**
- * Roles no variant deals any more, kept ONLY so archived games still read
- * correctly. A live game can never produce one.
- *
- * `MAFIA_RIGHT_HAND` was reachable by in-game promotion until it was removed;
- * finished games still persist it in `gameLogPlayers.role` and
- * `playerStats.roleStats`, so it keeps its label, its faction and its i18n key.
- * It is absent from `JAPANESE_MAFIA_ROLES` — the list of what can be DEALT — so
- * nothing offers it to a live table.
- */
-export const RETIRED_ROLES = ["MAFIA_RIGHT_HAND"] as const;
-
-/** Any role that may need rendering: currently dealt, or held by an old game. */
-export type DisplayableRole =
-  | (typeof JAPANESE_MAFIA_ROLES)[number]
-  | (typeof RETIRED_ROLES)[number];
-
-/**
- * Mafia team roles - can see mafia target selection.
- *
- * Retains the retired `MAFIA_RIGHT_HAND` so `roleToFaction` still answers
- * "mafia" for archived rows; see the note on `MAFIA_TEAM_ROLES` in
- * `convex/lib/constants.ts`, which this mirrors.
- */
-export const MAFIA_TEAM_ROLES = ["DON", "MAFIA_RIGHT_HAND", "MAFIA"] as const;
+/** Mafia team roles - can see mafia target selection */
+export const MAFIA_TEAM_ROLES = ["DON", "MAFIA"] as const;
 
 /** Yakuza team roles - can see yakuza target selection */
 export const YAKUZA_TEAM_ROLES = ["YAKUZA", "SHOGUN"] as const;
 
-export const JAPANESE_MAFIA_ROLE_LABEL: Record<DisplayableRole, string> = {
+export const JAPANESE_MAFIA_ROLE_LABEL: Record<
+  (typeof JAPANESE_MAFIA_ROLES)[number],
+  string
+> = {
   DON: "Don",
   MAFIA: "Mafia",
   SHOGUN: "Shogun",
@@ -91,7 +71,6 @@ export const JAPANESE_MAFIA_ROLE_LABEL: Record<DisplayableRole, string> = {
   DETECTIVE: "Detective",
   CITIZEN: "Citizen",
   DOCTOR: "Doctor",
-  MAFIA_RIGHT_HAND: "Don's Right Hand",
 };
 
 /**

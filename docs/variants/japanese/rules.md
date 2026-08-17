@@ -46,6 +46,14 @@ were removed. The deck did not change (it always dealt `MAFIA ×2`), so the mafi
 team is still three strong, and the kill now passes by seat order instead — see
 § Night Phases.
 
+The role is gone from history too. `migrations:mergeRetiredRightHandRole`
+relabels it to plain `MAFIA` across `gameLogPlayers.role`,
+`gameLogs.players[].role`, `gameLogs.winMethod.decidedRole` and
+`playerStats.roleStats` (where a player's Right Hand games merge into their
+`MAFIA` entry). Stored `faction` is untouched — the Right Hand was always mafia
+— so no outcome, win rate or rating changes. Run it once per deployment; it is
+idempotent, and irreversible.
+
 ## Game Phases
 
 > **Generated.** Phase order, display labels, decision timers, which roles

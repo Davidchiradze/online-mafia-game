@@ -79,18 +79,8 @@ export default function RolePerformanceGrid({ stats, gameType }: Props) {
   const played = new Map<string, RoleStat>(
     stats.roleStats.map((r) => [r.role, r]),
   );
-  const dealable = getGameDefinition(gameType).roles;
-
-  // A role the player actually HELD but the variant no longer deals (e.g. the
-  // retired Right Hand) still gets a card. Keying the grid off the deck alone
-  // would silently drop those matches from a real record — the opposite failure
-  // from padding with roles that were never dealt.
-  const retiredButPlayed = stats.roleStats
-    .filter((r) => r.matches > 0 && !dealable.includes(r.role))
-    .map((r) => r.role);
-
-  const allRoles: RoleCardStat[] = [...dealable, ...retiredButPlayed]
-    .map((role) => ({
+  const allRoles: RoleCardStat[] = getGameDefinition(gameType)
+    .roles.map((role) => ({
       ...(played.get(role) ?? {
         role,
         matches: 0,
