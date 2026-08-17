@@ -7,6 +7,7 @@ import {
   recordWinnerIfDecided,
 } from "../../lib/games";
 import { computeSpeakingOrder } from "./speakingOrder";
+import { GamePhase } from "../../lib/constants";
 
 /**
  * Shared phase-transition helpers.
@@ -122,7 +123,7 @@ export async function enterNightPhase(ctx: MutationCtx, gameId: Id<"games">) {
   const newNightNumber = (session.currentNightNumber || 0) + 1;
 
   await db.patch(session._id, {
-    gamePhase: "night_phase",
+    gamePhase: GamePhase.NIGHT_PHASE,
     currentNightNumber: newNightNumber,
     speakingOrder: [],
     currentSpeakerIndex: undefined,
@@ -171,7 +172,7 @@ export async function enterVotingPhase(
   }
 
   await db.patch(session._id, {
-    gamePhase: "voting",
+    gamePhase: GamePhase.VOTING,
     currentSpeakerIndex: undefined,
     speakerStartedAt: undefined,
     speakingOrder: [],
@@ -214,7 +215,7 @@ export async function enterDayPhase(ctx: MutationCtx, gameId: Id<"games">) {
   );
 
   await db.patch(session._id, {
-    gamePhase: "day_phase",
+    gamePhase: GamePhase.DAY_PHASE,
     speakingOrder,
     dayRoundOpenerIndex: openerIndex,
     currentSpeakerIndex: undefined,

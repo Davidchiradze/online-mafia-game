@@ -3,8 +3,8 @@
 import { useTranslations } from "next-intl";
 import { useCardPicking } from "@/features/game-room/hooks/game";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
-import { GAME_PHASES } from "@/shared/lib/constants/game";
 import type { Id } from "@convex/_generated/dataModel";
+import { GamePhase } from "@/shared/lib/constants/game";
 
 /**
  * PickerIndicator
@@ -22,7 +22,7 @@ export default function PickerIndicator() {
   const { gameId, gameSessionState } = useGameRoom();
   const { state } = useCardPicking(gameId as Id<"games">);
 
-  if (gameSessionState?.gamePhase !== GAME_PHASES[1]) return null;
+  if (gameSessionState?.gamePhase !== GamePhase.PICKING_ROLES) return null;
   if (!state) return null;
 
   if (state.isComplete) {

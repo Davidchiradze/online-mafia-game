@@ -190,14 +190,20 @@
     "confirm": "Confirm",
     "save": "Save",
     "close": "Close",
-    "avatar": "Avatar"
+    "avatar": "Avatar",
+    "checkingAccess": "Checking access…"
   },
   "auth": {
     "accessDenied": "Access Denied",
     "authIssueTitle": "Authentication",
     "authIssueTitleHighlight": "Issue",
     "authIssueBody": "We couldn't verify your identity for this session. To enter the family's headquarters, please sign in again on mafia.ge.",
-    "signInOnSite": "Sign In on mafia.ge"
+    "signInOnSite": "Sign In on mafia.ge",
+    "signInToPlay": "Sign in to play",
+    "guestJoinTitle": "Sign in to join",
+    "guestJoinBody": "Taking a seat at a table needs a mafia.ge account. Sign in and we'll bring you straight back to the lobby.",
+    "guestSpectateTitle": "Sign in to watch",
+    "guestSpectateBody": "Watching a live game needs a mafia.ge account. Sign in and we'll bring you straight back to the lobby."
   },
   "notVerified": {
     "badge": "Account Not Verified",
@@ -401,7 +407,8 @@
     "levelTooltip": "{elo} ELO — Level {level}",
     "toNextLevel": "{points} to Level {level}",
     "tableAvgTooltip": "Table average: {avg}",
-    "tableAvgLabel": "Table avg"
+    "tableAvgLabel": "Table avg",
+    "statsForMode": "Stats for"
   },
   "leaderboard": {
     "pageTitle": "Leaderboard",
@@ -418,7 +425,8 @@
     "statBestStreak": "Best Streak",
     "onStreak": "{count} win streak",
     "topRole": "Top Role",
-    "you": "You"
+    "you": "You",
+    "emptyForMode": "No ranked {mode} players yet. Finish a game to claim the first spot."
   },
   "game": {
     "gameTypes": {
@@ -453,7 +461,6 @@
       "picking_roles": "Picking Roles",
       "mafia_meet": "Mafia Meeting",
       "don_meet": "Don Meeting",
-      "don_chooses_right_hand": "Don Chooses Right Hand",
       "yakuda_shogun_meet": "Yakuza & Shogun Meeting",
       "detective_meet": "Detective Meeting",
       "doctor_meet": "Doctor Meeting",
@@ -462,7 +469,6 @@
       "mafia_chooses_target": "Mafia Chooses Target",
       "mafia_meets_first_night": "Mafia Meets & Plans",
       "don_checks_for_detective": "Don Checks for Detective",
-      "right_hand_checks_for_yakuza": "Right Hand Checks for Yakuza",
       "yakuza_and_shogun_chooses_target": "Yakuza & Shogun Choose Target",
       "detective_checks_for_mafia": "Detective Checks for Mafia",
       "doctor_heals_player": "Doctor Heals",
@@ -494,7 +500,6 @@
     "readyToVote": "Ready to vote",
     "bothLeaveFarewellResult": "All {count} players farewell…",
     "bothLeaveFailResult": "Vote failed ({voteCount}/{totalVoters}). Night…",
-    "processingAction": "Processing…",
     "votingInProgress": "Voting in progress…",
     "tallyResults": "Tally Results",
     "nextCandidate": "Next",
@@ -508,7 +513,6 @@
     "candidateAutoVoted": "#{seat} • Auto-voted ({votes} votes)",
     "candidateVotes": "#{seat} • {votes} votes",
     "candidateProgress": "#{seat} ({current}/{total})",
-    "candidateDotTooltip": "#{seat}: {votes} votes",
     "pickingRolesHeading": "Picking roles",
     "yourRole": "Your role",
     "pickYourCard": "Pick your card",
@@ -534,29 +538,24 @@
       "endDonCheck": "End Don Check",
       "confirm": "Confirm",
       "waitingForDonPick": "Waiting for Don's pick…",
-      "donNotPromotedRightHand": "Don has not promoted Right Hand yet",
       "returnToLobby": "Return to Lobby",
       "endMafiaPhase": "End Mafia Phase",
       "waitingForMafia": "Waiting for Mafia…",
       "skipBestMove": "Skip Best Move",
       "startFarewellSpeech": "Start Farewell Speech",
-      "bestMoveChoosing": "is choosing ({count}/{total})",
+      "bestMoveProgress": "{count} of {total} named",
       "bestMoveComplete": "Best move chosen",
+      "bestMoveVictim": "Victim",
+      "suspectsLabel": "Suspects",
       "endCheck": "End Check",
       "endingVoting": "Ending…",
       "endVoting": "End Voting",
       "endYakuzaPhase": "End Yakuza Phase",
       "waitingForYakuza": "Waiting for Yakuza…",
       "noFarewellNeeded": "No farewell speeches needed",
-      "currentlySpeaking": "Currently speaking",
-      "waitingForTime": "Waiting for time",
-      "farewellCompleted": "Farewell completed (dead)",
-      "waiting": "Waiting",
-      "playerLabel": "Player",
-      "isSayingGoodbye": "is saying goodbye",
+      "sayingGoodbye": "Saying goodbye",
       "next": "Next:",
       "allFarewellCompleted": "All farewell speeches completed",
-      "advanceToNextPhase": "Advance to Next Phase",
       "playerEliminatedByFouls": "Player eliminated by fouls",
       "continueToNightPhase": "Continue to night phase",
       "speakerCanFinishThenNight": "Current speaker can finish, then continue to night phase",
@@ -573,14 +572,36 @@
       "openMafiaTargetWindow": "Open Kill Window (5s)",
       "mafiaChoosing": "Mafia choosing…",
       "startNight": "Start Night",
+      "startDay": "Start Day",
       "playerEliminatedByFoulsTitle": "Player eliminated by fouls",
       "noVotingThisRound": "No voting will occur this round",
       "noPlayersNominated": "No players nominated",
       "startVoting": "Start voting",
-      "startSelfJustification": "Start self-justification",
+      "goToSelfJustification": "Go to self-justification",
       "startingVoting": "Starting…",
       "startVotingPhase": "Start Voting Phase",
       "pickRoles": "Pick Roles",
+      "preGame": "Pre-game",
+      "rolesNotDealt": "Roles not dealt",
+      "pickedLabel": "Picked",
+      "readyStatus": "{ready} of {total} ready",
+      "waitingForAllReady": "Every player must be ready first",
+      "timerSeconds": "{seconds}s",
+      "expandControls": "Show controls",
+      "collapseControls": "Hide controls",
+      "dayCounter": "Day {day}",
+      "dawnCounter": "Dawn {night}",
+      "speakingNow": "Speaking",
+      "nextUp": "Next up",
+      "waitingToStart": "Waiting to start",
+      "allSpokenCount": "All players have spoken",
+      "allSpokenShort": "All have spoken",
+      "nominatedLabel": "Nominated",
+      "speakingOrderLabel": "Speaking order",
+      "nomineeSpeaking": "#{seat} speaking · {position} of {total}",
+      "nomineeNext": "Next: #{seat}",
+      "nightCounter": "Night {night}",
+      "mafiaPickedCount": "{picked} of {total} picked",
       "startGameTitle": "Start Game",
       "selfJustificationQuestion": "How should nominated players be handled before voting?",
       "withSelfJustification": "With self-justification",
@@ -699,8 +720,6 @@
       "selectAsTarget": "Select as target",
       "bestMoveCheck": "Mark as mafia",
       "bestMoveUncheck": "Remove mark",
-      "promote": "Promote",
-      "promoteToRightHand": "Promote to Right Hand",
       "foulSpeaking": "Speaking: {seconds}s left",
       "speakWithFoul": "Speak with foul",
       "secondsRemaining": "{seconds}s remaining",
@@ -711,7 +730,7 @@
       "shouldAllLeave": "Should all {count} leave?",
       "waitingForResults": "Waiting for results...",
       "lastCandidate": "Last Candidate",
-      "voteAgainst": "Vote against",
+      "voteAgainst": "Against nominee",
       "voted": "Voted",
       "autoVoted": "Auto-voted",
       "waitForHost": "Wait for host...",
@@ -723,13 +742,12 @@
     },
     "finishGame": {
       "buttonLabel": "Finish Game",
-      "ariaLabel": "Finish game",
       "modalTitle": "Finish Game?",
       "finishing": "Finishing…",
       "finish": "Finish",
       "camerasWillTurnOn": "Everyone's cameras will turn on",
       "rolesWillBeRevealed": "All roles will be revealed",
-      "roomWillBeDeleted": "The room will be deleted in 2 minutes"
+      "roomWillBeDeleted": "The room will be deleted in {seconds} seconds"
     },
     "joinRequests": {
       "drawerTitle": "Join Requests",
@@ -794,7 +812,11 @@
     },
     "phaseTimer": {
       "seconds": "{seconds}s"
-    }
+    },
+    "player": {
+      "waitingToStart": "Waiting for players"
+    },
+    "chooseLadder": "Choose ladder"
   },
   "errors": {
     "_fallback": "Something went wrong. Please try again.",
@@ -823,5 +845,11 @@
     "FORBIDDEN": "You do not have permission to do that.",
     "BROADCAST_EMPTY": "Message cannot be empty.",
     "BROADCAST_TOO_LONG": "Your message is too long."
+  },
+  "errorBoundary": {
+    "title": "Something went wrong",
+    "body": "We hit an unexpected error. Try again, or head back to the lobby.",
+    "retry": "Try again",
+    "home": "Back to lobby"
   }
 }

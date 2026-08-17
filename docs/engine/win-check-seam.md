@@ -35,7 +35,7 @@ getGameDefinition(game.gameType).describeWin(aliveRoles, context);
 | Variant | Rule module | Rules documented in |
 | --- | --- | --- |
 | `japanese_mafia` | `convex/games/japanese/winConditions.ts` | [variants/japanese/win-conditions.md](../variants/japanese/win-conditions.md) |
-| `sports_mafia` | `convex/games/sports/winConditions.ts` | [variants/sports.md](../variants/sports.md) §7 |
+| `sports_mafia` | `convex/games/sports/winConditions.ts` | [variants/sports/win-conditions.md](../variants/sports/win-conditions.md) |
 
 Dispatch happens in `recordWinnerIfDecided` (`convex/lib/games.ts`). Adding a
 variant means adding a `decideWinner` / `describeWin` pair to its definition —

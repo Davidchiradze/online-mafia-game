@@ -5,7 +5,7 @@ import type { PropsWithChildren } from "react";
 import { Room as LiveKitRoom } from "livekit-client";
 import { useQuery } from "convex/react";
 import { PERMISSIONS, roleHasPermission } from "@convex/lib/access";
-import { authProfiles, lobbyGames } from "@convex/refs/lobby";
+import { lobbyGames } from "@convex/refs/lobby";
 import {
   gameSessions,
   gamePlayers,
@@ -14,7 +14,7 @@ import {
   voting,
 } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
-import LoadingSpinner from "@/shared/ui/LoadingSpinner";
+import { useViewer } from "@/features/auth/hooks/useViewer";
 import { getUiRuleset } from "@/features/game-room/variants/registry";
 import type { UiRuleset } from "@/features/game-room/variants/core/types";
 import {
@@ -59,7 +59,7 @@ type ConvexGameSession = {
   withoutSelfJustification?: boolean;
   phaseStartedAt?: number;
   finishedAt?: number;
-  winner?: "mafia" | "yakuza" | "citizens";
+  winner?: "mafia" | "yakuza" | "citizens" | "no_contest";
 };
 
 type ConvexNightPhaseSession = {
@@ -187,8 +187,8 @@ export function GameRoomProvider({
   // ---------------------------------------------------------------------------
   // Current user (profile ID is the app-level identity)
   // ---------------------------------------------------------------------------
-  const currentProfile = useQuery(authProfiles.currentProfile);
-  const currentUserId = currentProfile?._id ?? null;
+  const viewer = useViewer();
+  const currentUserId = viewer.profile?._id ?? null;
   const userId = (currentUserId ?? "") as string;
 
   // ---------------------------------------------------------------------------
@@ -196,7 +196,7 @@ export function GameRoomProvider({
   // ---------------------------------------------------------------------------
   const canRevealRoles =
     isSpectator &&
-    roleHasPermission(currentProfile?.role, PERMISSIONS.GAME_REVEAL_ROLES);
+    roleHasPermission(viewer.profile?.role, PERMISSIONS.GAME_REVEAL_ROLES);
   const [hostVisionRequested, setHostVisionRequested] = useState(false);
   // Gate the toggle behind the privilege so it can never be on for a non-staff
   // viewer even if the state somehow flips.
@@ -252,7 +252,7 @@ export function GameRoomProvider({
       userId,
       isHost,
       hasPlayerRecord,
-      participantName: currentProfile?.nickname,
+      participantName: viewer.profile?.nickname,
     });
 
   // ---------------------------------------------------------------------------
@@ -378,15 +378,6 @@ export function GameRoomProvider({
       healedData,
     ],
   );
-
-  // Wait for auth to resolve before rendering children
-  if (currentUserId === undefined) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <LoadingSpinner message="Authenticating..." />
-      </div>
-    );
-  }
 
   return (
     <GameRoomContext.Provider value={value}>

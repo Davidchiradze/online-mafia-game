@@ -1,21 +1,25 @@
 import { v } from "convex/values";
 import { query } from "../../_generated/server";
-import { getAuthenticatedUser } from "../../lib/auth";
 import { gameType as gameTypeValidator } from "../../tables/games";
+import { getPlayerStatsRow } from "../../lib/playerStats";
 
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 100;
 
 /**
  * Public ELO leaderboard for one game type, read pre-sorted from the
- * `by_gameType_rating` index (see /docs/ranking-system.md). Signed-in only —
- * no permission/subscription gate by design. Players with no rated games have
- * no `playerRatings` row and are deliberately absent (they'd all tie at the
- * 1000 default and bury the board).
+ * `by_gameType_rating` index (see /docs/ranking-system.md). Anonymous-
+ * readable (see `GUEST_VIEWABLE_PATHS` in `convex/lib/access.ts`) — no auth,
+ * permission, or subscription gate; nothing downstream reads a caller
+ * identity. The "You" highlight is computed client-side from
+ * `currentProfile`, which returns `null` for a guest. Players with no rated
+ * games have no `playerRatings` row and are deliberately absent (they'd all
+ * tie at the 1000 default and bury the board).
  *
- * v1 caveat: `wins`/`losses`/`winRate` are joined from `playerStats`, which is
- * global across game types, not per-gameType — acceptable today because
- * effectively all archived games are `japanese_mafia`.
+ * Every number on a row belongs to THIS variant: the rating comes from its
+ * ladder and the record from its `playerStats` row. (Until the record was split
+ * per variant, the W/L columns were global — a Sports board would have shown
+ * Japanese results. /docs/ranking-system.md §12.)
  */
 export const getLeaderboard = query({
   args: {
@@ -23,7 +27,6 @@ export const getLeaderboard = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, { gameType, limit }) => {
-    await getAuthenticatedUser(ctx);
     const take = Math.min(limit ?? DEFAULT_LIMIT, MAX_LIMIT);
 
     const ratings = await ctx.db
@@ -35,10 +38,9 @@ export const getLeaderboard = query({
     return Promise.all(
       ratings.map(async (r) => {
         const profile = await ctx.db.get(r.playerId);
-        const stats = await ctx.db
-          .query("playerStats")
-          .withIndex("by_playerId", (q) => q.eq("playerId", r.playerId))
-          .unique();
+        // This variant's record only. A player who also plays another variant
+        // has a separate row for it, and it does not belong on this board.
+        const stats = await getPlayerStatsRow(ctx.db, r.playerId, gameType);
         const wins = stats?.wins ?? 0;
         const losses = stats?.losses ?? 0;
         const decided = wins + losses;

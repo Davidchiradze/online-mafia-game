@@ -1,17 +1,19 @@
 import { type NextRequest, NextResponse } from "next/server";
-import {
-  PHP_LOGIN_REDIRECT_URL,
-  PHP_SESSION_COOKIE_NAME,
-} from "@/features/auth/lib/constants";
+import { PHP_SESSION_COOKIE_NAME } from "@/features/auth/lib/constants";
 import {
   clearAuthCookie,
+  clearBridgeAttemptCookie,
   setBridgeAttemptCookie,
   isSafeRelativePath,
   setAuthCookie,
 } from "@/features/auth/lib/cookies";
 import { jwtMaxAgeSeconds, signConvexJwt } from "@/features/auth/lib/jwt";
+import { phpLoginUrl } from "@/features/auth/lib/phpLogin";
 import { fetchUserBySession } from "@/features/auth/lib/php";
-import { AUTH_ERROR_PATH } from "@/features/auth/middleware/constants";
+import {
+  AUTH_ERROR_PATH,
+  isGuestViewablePath,
+} from "@/features/auth/middleware/constants";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,7 +32,10 @@ export async function GET(req: NextRequest) {
 
   const sessionId = req.cookies.get(PHP_SESSION_COOKIE_NAME)?.value;
   if (!sessionId) {
-    const res = NextResponse.redirect(PHP_LOGIN_REDIRECT_URL);
+    const res = NextResponse.redirect(phpLoginUrl(destination));
+    // Heading to login: the cached "no user" verdict is about to be falsified,
+    // so it must not survive the round trip and suppress the return bridge.
+    clearBridgeAttemptCookie(res);
     clearAuthCookie(res);
     return res;
   }
@@ -38,9 +43,16 @@ export async function GET(req: NextRequest) {
   try {
     const user = await fetchUserBySession(sessionId);
     if (!user) {
-      const res = NextResponse.redirect(
-        new URL(AUTH_ERROR_PATH, req.nextUrl.origin),
-      );
+      // PHP hands a PHPSESSID to logged-out visitors too, so a null user here
+      // is the normal guest case, not an error. Marking the attempt is load-
+      // bearing, not an optimisation: without it, guest-viewable page ->
+      // middleware -> bridge -> guest-viewable page -> middleware -> bridge
+      // would repeat on every navigation.
+      const target = isGuestViewablePath(destination)
+        ? new URL(destination, req.nextUrl.origin)
+        : new URL(AUTH_ERROR_PATH, req.nextUrl.origin);
+      const res = NextResponse.redirect(target);
+      setBridgeAttemptCookie(res);
       clearAuthCookie(res);
       return res;
     }
@@ -57,7 +69,18 @@ export async function GET(req: NextRequest) {
     return res;
   } catch (err) {
     console.error("[auth/bridge] failed to bridge session", err);
-    const res = NextResponse.redirect(PHP_LOGIN_REDIRECT_URL);
+    // PHP being unreachable/erroring is not the same as PHP saying "invalid
+    // session" (the !user branch above), but a hard bounce to mafia.ge on a
+    // guest-viewable page during a PHP outage is a dead end — degrade to
+    // guest there too, same as an explicit invalid-session response would.
+    if (isGuestViewablePath(destination)) {
+      const res = NextResponse.redirect(new URL(destination, req.nextUrl.origin));
+      setBridgeAttemptCookie(res);
+      clearAuthCookie(res);
+      return res;
+    }
+    const res = NextResponse.redirect(phpLoginUrl(destination));
+    clearBridgeAttemptCookie(res);
     clearAuthCookie(res);
     return res;
   }

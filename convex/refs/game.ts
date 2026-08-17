@@ -260,16 +260,6 @@ export const gameRoles = {
     { gameId: Id<"games">; playerId: Id<"profiles">; role: string },
     null
   >("games/core/roles:assign"),
-  /**
-   * Don-only single-shot promotion of a MAFIA player to MAFIA_RIGHT_HAND
-   * during the `don_chooses_right_hand` phase. See `roles.ts` for full
-   * validation rules.
-   */
-  promoteToRightHand: makeFunctionReference<
-    "mutation",
-    { gameId: Id<"games">; targetPlayerId: Id<"profiles"> },
-    null
-  >("games/core/roles:promoteToRightHand"),
 };
 
 // ============================================================================
@@ -313,7 +303,7 @@ export const nightPhase = {
 };
 
 // ============================================================================
-// SPORTS NIGHT PHASE (unanimous-vote kill model — docs/variants/sports.md §5)
+// SPORTS NIGHT PHASE (unanimous-vote kill model — docs/variants/sports/rules.md §5)
 // ============================================================================
 
 export const sportsNightPhase = {
@@ -344,7 +334,7 @@ export const sportsNightPhase = {
 };
 
 // ============================================================================
-// BEST MOVE (Sports — docs/variants/sports.md §6)
+// BEST MOVE (Sports — docs/variants/sports/rules.md §6)
 // ============================================================================
 
 export const bestMove = {

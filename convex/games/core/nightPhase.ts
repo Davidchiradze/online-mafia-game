@@ -5,6 +5,8 @@ import { assertIsHost } from "../../lib/games";
 import { enterNightPhase } from "./phaseTransitions";
 import type { Id } from "../../_generated/dataModel";
 import type { DatabaseReader } from "../../_generated/server";
+import { GamePhase } from "../../lib/constants";
+import { mafiaKillAuthority } from "./mafiaSuccession";
 
 // ============================================================================
 // HELPERS
@@ -66,26 +68,32 @@ async function getAlivePlayers(db: DatabaseReader, gameId: Id<"games">) {
 }
 
 /**
- * Mafia kill authority: DON > MAFIA_RIGHT_HAND > MAFIA (first alive in priority).
+ * Mafia kill authority: the DON while alive, otherwise the living mafia in the
+ * next seat clockwise from the Don's. The rule itself is `mafiaKillAuthority`,
+ * shared with the client so the button and the server agree; this only feeds it
+ * the table.
+ *
+ * Reads EVERY player, not just the living ones — the rule needs the dead Don's
+ * seat to know where to start walking.
  */
 async function getMafiaKillAuthority(db: DatabaseReader, gameId: Id<"games">) {
-  const alive = await getAlivePlayers(db, gameId);
+  const players = await db
+    .query("gamePlayers")
+    .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
+    .collect();
   const roleMap = await getRoleMap(db, gameId);
 
-  const aliveMafia: { playerId: Id<"profiles">; role: string }[] = [];
-  for (const p of alive) {
-    const role = roleMap.get(p.playerId);
-    if (role === "DON" || role === "MAFIA_RIGHT_HAND" || role === "MAFIA") {
-      aliveMafia.push({ playerId: p.playerId, role });
-    }
-  }
-
-  return (
-    aliveMafia.find((m) => m.role === "DON") ??
-    aliveMafia.find((m) => m.role === "MAFIA_RIGHT_HAND") ??
-    aliveMafia.find((m) => m.role === "MAFIA") ??
-    null
+  const authority = mafiaKillAuthority(
+    players.map((p) => ({
+      playerId: p.playerId,
+      role: roleMap.get(p.playerId) ?? null,
+      seatNumber: p.seatNumber,
+      isAlive: p.isAlive,
+    })),
   );
+
+  if (!authority || authority.role === null) return null;
+  return { playerId: authority.playerId, role: authority.role };
 }
 
 /**
@@ -232,7 +240,7 @@ export const selectMafiaTarget = mutation({
     }
 
     const session = await getGameSession(ctx.db, gameId);
-    if (session.gamePhase !== "mafia_chooses_target") {
+    if (session.gamePhase !== GamePhase.MAFIA_CHOOSES_TARGET) {
       throw new ConvexError("Not in mafia target selection phase");
     }
 
@@ -272,7 +280,7 @@ export const selectYakuzaTarget = mutation({
     }
 
     const session = await getGameSession(ctx.db, gameId);
-    if (session.gamePhase !== "yakuza_and_shogun_chooses_target") {
+    if (session.gamePhase !== GamePhase.YAKUZA_AND_SHOGUN_CHOOSES_TARGET) {
       throw new ConvexError("Not in Yakuza target selection phase");
     }
 
@@ -312,7 +320,7 @@ export const healPlayer = mutation({
     }
 
     const session = await getGameSession(ctx.db, gameId);
-    if (session.gamePhase !== "doctor_heals_player") {
+    if (session.gamePhase !== GamePhase.DOCTOR_HEALS_PLAYER) {
       throw new ConvexError("Not in doctor heal phase");
     }
 

@@ -1,5 +1,5 @@
 /**
- * Shared "day round" derivation (docs/variants/sports.md §4.1 / §4.2).
+ * Shared "day round" derivation (docs/variants/sports/rules.md §4.1 / §4.2).
  *
  * The game stores no separate day counter; the day round is DERIVED from the
  * monotonic `currentNightNumber` the session already tracks. The first day phase

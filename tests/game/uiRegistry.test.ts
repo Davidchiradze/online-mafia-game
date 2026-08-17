@@ -12,6 +12,7 @@ import {
   getVisibilityStateWithDeath,
   VisibilityState,
 } from "@/shared/lib/game/visibility";
+import { GamePhase } from "@/shared/lib/constants/game";
 
 /**
  * CHARACTERIZATION TEST — the frontend UI ruleset registry (P1-T8).
@@ -49,28 +50,27 @@ describe("phaseControls maps", () => {
   it("Japanese covers every live phase incl. the yakuza/doctor branches", () => {
     const keys = Object.keys(JAPANESE_UI_RULESET.phaseControls);
     for (const phase of [
-      "game_session_started",
-      "picking_roles",
-      "mafia_meet",
-      "don_chooses_right_hand",
-      "yakuda_shogun_meet",
-      "detective_meet",
-      "doctor_meet",
-      "introduction_phase",
-      "night_phase",
-      "mafia_chooses_target",
-      "don_checks_for_detective",
-      "right_hand_checks_for_yakuza",
-      "yakuza_and_shogun_chooses_target",
-      "detective_checks_for_mafia",
-      "doctor_heals_player",
-      "farewell_speech",
-      "day_phase",
-      "nominated_players_speak",
-      "voting",
-      "repeat",
-      "end_game",
-      "phase_transition",
+      GamePhase.GAME_SESSION_STARTED,
+      GamePhase.PICKING_ROLES,
+      GamePhase.MAFIA_MEET,
+      GamePhase.DON_MEET,
+      GamePhase.YAKUDA_SHOGUN_MEET,
+      GamePhase.DETECTIVE_MEET,
+      GamePhase.DOCTOR_MEET,
+      GamePhase.INTRODUCTION_PHASE,
+      GamePhase.NIGHT_PHASE,
+      GamePhase.MAFIA_CHOOSES_TARGET,
+      GamePhase.DON_CHECKS_FOR_DETECTIVE,
+      GamePhase.YAKUZA_AND_SHOGUN_CHOOSES_TARGET,
+      GamePhase.DETECTIVE_CHECKS_FOR_MAFIA,
+      GamePhase.DOCTOR_HEALS_PLAYER,
+      GamePhase.FAREWELL_SPEECH,
+      GamePhase.DAY_PHASE,
+      GamePhase.NOMINATED_PLAYERS_SPEAK,
+      GamePhase.VOTING,
+      GamePhase.REPEAT,
+      GamePhase.END_GAME,
+      GamePhase.PHASE_TRANSITION,
     ]) {
       expect(keys).toContain(phase);
     }
@@ -79,34 +79,32 @@ describe("phaseControls maps", () => {
   it("Sports covers its phases and drops the yakuza/doctor/right-hand ones", () => {
     const controls = SPORTS_UI_RULESET.phaseControls;
     for (const phase of [
-      "game_session_started",
-      "picking_roles",
-      "mafia_meet",
-      "don_meet",
-      "detective_meet",
-      "day_phase",
-      "nominated_players_speak",
-      "voting",
-      "night_phase",
-      "mafia_chooses_target",
-      "don_checks_for_detective",
-      "detective_checks_for_mafia",
-      "best_move",
-      "farewell_speech",
-      "repeat",
-      "end_game",
-      "phase_transition",
+      GamePhase.GAME_SESSION_STARTED,
+      GamePhase.PICKING_ROLES,
+      GamePhase.MAFIA_MEET,
+      GamePhase.DON_MEET,
+      GamePhase.DETECTIVE_MEET,
+      GamePhase.DAY_PHASE,
+      GamePhase.NOMINATED_PLAYERS_SPEAK,
+      GamePhase.VOTING,
+      GamePhase.NIGHT_PHASE,
+      GamePhase.MAFIA_CHOOSES_TARGET,
+      GamePhase.DON_CHECKS_FOR_DETECTIVE,
+      GamePhase.DETECTIVE_CHECKS_FOR_MAFIA,
+      GamePhase.BEST_MOVE,
+      GamePhase.FAREWELL_SPEECH,
+      GamePhase.REPEAT,
+      GamePhase.END_GAME,
+      GamePhase.PHASE_TRANSITION,
     ]) {
       expect(controls[phase]).toBeTypeOf("function");
     }
     for (const dropped of [
-      "don_chooses_right_hand",
-      "yakuda_shogun_meet",
-      "doctor_meet",
-      "introduction_phase",
-      "right_hand_checks_for_yakuza",
-      "yakuza_and_shogun_chooses_target",
-      "doctor_heals_player",
+      GamePhase.YAKUDA_SHOGUN_MEET,
+      GamePhase.DOCTOR_MEET,
+      GamePhase.INTRODUCTION_PHASE,
+      GamePhase.YAKUZA_AND_SHOGUN_CHOOSES_TARGET,
+      GamePhase.DOCTOR_HEALS_PLAYER,
     ]) {
       expect(controls[dropped]).toBeUndefined();
     }
@@ -133,24 +131,24 @@ describe("SPORTS_UI_RULESET", () => {
     // tile covered), only the host monitors. Contrast Japanese, where mafia
     // see each other + the table during this phase.
     expect(
-      sports.canSeeParticipant("DON", "MAFIA", "mafia_chooses_target", false, false),
+      sports.canSeeParticipant("DON", "MAFIA", GamePhase.MAFIA_CHOOSES_TARGET, false, false),
     ).toBe(false);
     expect(
-      sports.canSeeParticipant("MAFIA", "CITIZEN", "mafia_chooses_target", false, false),
+      sports.canSeeParticipant("MAFIA", "CITIZEN", GamePhase.MAFIA_CHOOSES_TARGET, false, false),
     ).toBe(false);
     expect(
-      sports.canSeeParticipant(null, "MAFIA", "mafia_chooses_target", true, false),
+      sports.canSeeParticipant(null, "MAFIA", GamePhase.MAFIA_CHOOSES_TARGET, true, false),
     ).toBe(true); // host still monitors
 
     // But mafia DO meet face-to-face at mafia_meet.
     expect(
-      sports.canSeeParticipant("DON", "MAFIA", "mafia_meet", false, false),
+      sports.canSeeParticipant("DON", "MAFIA", GamePhase.MAFIA_MEET, false, false),
     ).toBe(true);
 
     // Awake roles are the Sports set (no yakuza/doctor/right-hand); mafia are
     // still "awake" at mafia_chooses_target so they see the 5s countdown badge.
-    expect(sports.getAwakeRoles("mafia_chooses_target")).toEqual(["DON", "MAFIA"]);
-    expect(sports.getAwakeRoles("detective_checks_for_mafia")).toEqual(["DETECTIVE"]);
+    expect(sports.getAwakeRoles(GamePhase.MAFIA_CHOOSES_TARGET)).toEqual(["DON", "MAFIA"]);
+    expect(sports.getAwakeRoles(GamePhase.DETECTIVE_CHECKS_FOR_MAFIA)).toEqual(["DETECTIVE"]);
   });
 
   it("declares the unanimous-vote mafia night model (§5.4)", () => {
@@ -161,36 +159,36 @@ describe("SPORTS_UI_RULESET", () => {
   it("routes the last night check through the buffer as the resolve-marker", () => {
     // detective_checks_for_mafia parks in phase_transition with nextPhase =
     // farewell_speech, which StartNextPhaseButton turns into startFarewellSpeech.
-    expect(sportsAdvanceUpdates("detective_checks_for_mafia")).toEqual({
-      gamePhase: "phase_transition",
-      nextPhase: "farewell_speech",
+    expect(sportsAdvanceUpdates(GamePhase.DETECTIVE_CHECKS_FOR_MAFIA)).toEqual({
+      gamePhase: GamePhase.PHASE_TRANSITION,
+      nextPhase: GamePhase.FAREWELL_SPEECH,
     });
   });
 
   it("advances the mafia-meet to the Don's solo meet (not the Japanese target)", () => {
-    expect(sportsAdvanceUpdates("mafia_meet")).toEqual({
-      gamePhase: "phase_transition",
-      nextPhase: "don_meet",
+    expect(sportsAdvanceUpdates(GamePhase.MAFIA_MEET)).toEqual({
+      gamePhase: GamePhase.PHASE_TRANSITION,
+      nextPhase: GamePhase.DON_MEET,
     });
   });
 
   it("advances the don-meet to the detective-meet", () => {
-    expect(sportsAdvanceUpdates("don_meet")).toEqual({
-      gamePhase: "phase_transition",
-      nextPhase: "detective_meet",
+    expect(sportsAdvanceUpdates(GamePhase.DON_MEET)).toEqual({
+      gamePhase: GamePhase.PHASE_TRANSITION,
+      nextPhase: GamePhase.DETECTIVE_MEET,
     });
   });
 
   // -------------------------------------------------------------------------
-  // Best move (docs/variants/sports.md §6)
+  // Best move (docs/variants/sports/rules.md §6)
   // -------------------------------------------------------------------------
 
   it("advances best_move straight to the farewell — NO sleep buffer", () => {
     // It is already dawn and everyone is awake, so parking in the neutral
     // "everyone asleep" buffer would be wrong. This edge is also the host's
     // always-enabled Skip (§6.3) — the deadlock guard.
-    expect(sportsAdvanceUpdates("best_move")).toEqual({
-      gamePhase: "farewell_speech",
+    expect(sportsAdvanceUpdates(GamePhase.BEST_MOVE)).toEqual({
+      gamePhase: GamePhase.FAREWELL_SPEECH,
     });
   });
 
@@ -203,28 +201,28 @@ describe("SPORTS_UI_RULESET", () => {
     it("keeps every player asleep — only the host sees", () => {
       for (const role of ["DON", "MAFIA", "DETECTIVE", "CITIZEN"] as const) {
         expect(
-          visibility.canSeeParticipant(role, "DON", "best_move", false, false),
+          visibility.canSeeParticipant(role, "DON", GamePhase.BEST_MOVE, false, false),
         ).toBe(false);
       }
       expect(
-        visibility.canSeeParticipant(null, "DON", "best_move", true, false),
+        visibility.canSeeParticipant(null, "DON", GamePhase.BEST_MOVE, true, false),
       ).toBe(true);
     });
 
     it("behaves as a night phase with nobody awake by role", () => {
-      expect(visibility.isNightActivityPhase("best_move")).toBe(true);
-      expect(visibility.getAwakeRoles("best_move")).toEqual([]);
+      expect(visibility.isNightActivityPhase(GamePhase.BEST_MOVE)).toBe(true);
+      expect(visibility.getAwakeRoles(GamePhase.BEST_MOVE)).toEqual([]);
     });
 
     it("shows the host the sleeping table, and covers it for players", () => {
       expect(
-        visibility.getVisibilityState(null, "CITIZEN", "best_move", true, false),
+        visibility.getVisibilityState(null, "CITIZEN", GamePhase.BEST_MOVE, true, false),
       ).toBe(VisibilityState.DIMMED);
       expect(
         visibility.getVisibilityState(
           "CITIZEN",
           "DON",
-          "best_move",
+          GamePhase.BEST_MOVE,
           false,
           false,
         ),
@@ -247,13 +245,12 @@ describe("JAPANESE_UI_RULESET.visibility — wraps the shared lib by reference",
   });
 
   it("answers awake-roles and night-phase questions identically", () => {
-    expect(visibility.getAwakeRoles("mafia_meet")).toEqual([
+    expect(visibility.getAwakeRoles(GamePhase.MAFIA_MEET)).toEqual([
       "DON",
       "MAFIA",
-      "MAFIA_RIGHT_HAND",
     ]);
-    expect(visibility.isNightActivityPhase("night_phase")).toBe(true);
-    expect(visibility.isNightActivityPhase("day_phase")).toBe(false);
+    expect(visibility.isNightActivityPhase(GamePhase.NIGHT_PHASE)).toBe(true);
+    expect(visibility.isNightActivityPhase(GamePhase.DAY_PHASE)).toBe(false);
   });
 });
 
@@ -263,8 +260,9 @@ describe("JAPANESE_UI_RULESET.advanceUpdates — wraps phaseFlow", () => {
   });
 
   it("produces the host-advance payload for a phase", () => {
-    expect(JAPANESE_UI_RULESET.advanceUpdates("mafia_meet")).toEqual({
-      gamePhase: "don_chooses_right_hand",
+    expect(JAPANESE_UI_RULESET.advanceUpdates(GamePhase.MAFIA_MEET)).toEqual({
+      gamePhase: GamePhase.PHASE_TRANSITION,
+      nextPhase: GamePhase.DON_MEET,
     });
   });
 });

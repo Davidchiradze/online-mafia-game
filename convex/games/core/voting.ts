@@ -4,7 +4,7 @@ import { getAuthenticatedUser } from "../../lib/auth";
 import { assertIsHost, getPlayerInGame } from "../../lib/games";
 import { enterNightPhase } from "./phaseTransitions";
 import { voting as votingRefs } from "../../refs/game";
-import { VOTING } from "../../lib/constants";
+import { VOTING, GamePhase } from "../../lib/constants";
 import type { Id } from "../../_generated/dataModel";
 import type { DatabaseReader, DatabaseWriter } from "../../_generated/server";
 
@@ -140,7 +140,7 @@ export const initializeVoting = mutation({
       .unique();
 
     if (!session) throw new ConvexError("Game session not found");
-    if (session.gamePhase !== "voting") throw new ConvexError("Not in voting phase");
+    if (session.gamePhase !== GamePhase.VOTING) throw new ConvexError("Not in voting phase");
 
     const candidates = session.nominatedPlayers ?? [];
     if (candidates.length === 0) throw new ConvexError("No candidates to vote on");
@@ -423,7 +423,14 @@ export const startTieBreak = mutation({
       votingStartedAt: undefined,
     });
 
-    // Update game session for tie-break justification
+    // Re-open self-justification for the tied seats — QUEUED, not running.
+    // Tallying a tie is an announcement first: the host has to name the tied
+    // seats before anyone defends themselves. Setting the cursor here would put
+    // the first seat on the clock in the same click, opening their mic
+    // (`useSpeakingAutoMute` unmutes on `currentSpeakerIndex === mySeat`) and
+    // burning their 30s while the host is still speaking. Leaving it unset
+    // mirrors `startVotingFarewell`; the host's Start —
+    // `dayPhase:advanceNominatedSpeaker` — opens the first mouth.
     const gameSession = await ctx.db
       .query("gameSessions")
       .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
@@ -431,10 +438,10 @@ export const startTieBreak = mutation({
 
     if (gameSession) {
       await ctx.db.patch(gameSession._id, {
-        gamePhase: "nominated_players_speak",
+        gamePhase: GamePhase.NOMINATED_PLAYERS_SPEAK,
         speakingOrder: tiedCandidates,
-        currentSpeakerIndex: tiedCandidates[0],
-        speakerStartedAt: new Date().toISOString(),
+        currentSpeakerIndex: undefined,
+        speakerStartedAt: undefined,
       });
     }
 
@@ -544,7 +551,7 @@ export const startVotingFarewell = mutation({
 
     if (gameSession) {
       await ctx.db.patch(gameSession._id, {
-        gamePhase: "farewell_speech",
+        gamePhase: GamePhase.FAREWELL_SPEECH,
         speakingOrder: [winnerSeatNumber],
         currentSpeakerIndex: undefined,
         speakerStartedAt: undefined,
@@ -575,7 +582,7 @@ export const startBothLeaveFarewell = mutation({
 
     if (gameSession) {
       await ctx.db.patch(gameSession._id, {
-        gamePhase: "farewell_speech",
+        gamePhase: GamePhase.FAREWELL_SPEECH,
         speakingOrder: candidates,
         currentSpeakerIndex: undefined,
         speakerStartedAt: undefined,

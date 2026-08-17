@@ -19,7 +19,7 @@ Everywhere else, read the resolved definition/ruleset. Never `if (gameType === �
 | --- | --- | --- |
 | Seats / factions | 12 / mafia, yakuza, citizens | 10 / mafia, citizens |
 | Night model | `single-authority` (one picker, shared target) | `unanimous-vote` (every living mafia picks **privately**) |
-| Variant extras | right-hand promotion, intro phase | best move, 3rd-foul speaking ban, day-1 single-nominee skip |
+| Variant extras | intro phase, seat-order kill succession | best move, 3rd-foul speaking ban, day-1 single-nominee skip |
 | Rated | yes | no — absent from `RATING_CONFIG`, so rating is skipped |
 
 `GameDefinition`: `id, seatCount, roles, roleDistribution, factions,
@@ -68,7 +68,7 @@ checked-in baseline that may only shrink.
 
 ## Rules you will otherwise break
 
-1. **Auth**: `getAuthenticatedUser(ctx)` from `convex/lib/auth.ts` (90 uses).
+1. **Auth**: `getAuthenticatedUser(ctx)` from `convex/lib/auth.ts` (88 uses).
    There is **no `getAuthUserId` and no `@convex-dev/auth`** in this repo — auth
    is a custom JWT bridge to an external PHP service. Gate with
    `requirePermission(...)` / `requireFeature(...)`, never a raw role compare.
@@ -85,7 +85,7 @@ checked-in baseline that may only shrink.
    no `"use server"` for game logic, no Socket.IO/Redis/custom WebRTC.
 6. **i18n**: every user-facing string needs a key in **both** `messages/en.json`
    and `messages/ka.json`. **`ka` is the default locale**, so an English-only key
-   ships a hole. 684 keys, currently at parity, and no test enforces it — a
+   ships a hole. 710 keys, currently at parity, and no test enforces it — a
    PostToolUse hook checks it on edit.
 
 ## Verify

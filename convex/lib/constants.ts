@@ -1,33 +1,94 @@
+// TYPE-ONLY, and it must stay that way: `lib/roles.ts` imports the team-role
+// constants from this file at run time. `import type` is erased, so the cycle
+// exists only for the type-checker, which handles it.
+import type { Faction } from "./roles";
+
+/**
+ * THE SINGLE SOURCE OF TRUTH for phase names — every phase string in the app,
+ * across both variants, is a member of this enum. Nothing else may write a
+ * phase name as a bare string literal.
+ *
+ * It lives in `convex/` because `convex/` may never import from `src/`, so the
+ * shared vocabulary has to sit on this side of the boundary;
+ * `src/shared/lib/constants/game.ts` re-exports it for the frontend.
+ *
+ * The values are the wire format: they are what `gameSessions.gamePhase`
+ * (`v.string()`) stores, so members stay assignable to `string` and a `string`
+ * read back from the DB is compared against a member, never cast wholesale.
+ *
+ * ORDER IS NOT MEANINGFUL HERE — this is a vocabulary, not a sequence. A
+ * variant's phase ORDER is its own ordered list (`GAME_PHASES` below for
+ * Japanese) and its transition graph is `definition.nextPhase`.
+ */
+export enum GamePhase {
+  GAME_SESSION_STARTED = "game_session_started",
+  PICKING_ROLES = "picking_roles",
+  MAFIA_MEET = "mafia_meet",
+  DON_MEET = "don_meet",
+  YAKUDA_SHOGUN_MEET = "yakuda_shogun_meet",
+  DETECTIVE_MEET = "detective_meet",
+  DOCTOR_MEET = "doctor_meet",
+  INTRODUCTION_PHASE = "introduction_phase",
+  NIGHT_PHASE = "night_phase",
+  MAFIA_CHOOSES_TARGET = "mafia_chooses_target",
+  DON_CHECKS_FOR_DETECTIVE = "don_checks_for_detective",
+  YAKUZA_AND_SHOGUN_CHOOSES_TARGET = "yakuza_and_shogun_chooses_target",
+  DETECTIVE_CHECKS_FOR_MAFIA = "detective_checks_for_mafia",
+  DOCTOR_HEALS_PLAYER = "doctor_heals_player",
+  FAREWELL_SPEECH = "farewell_speech",
+  DAY_PHASE = "day_phase",
+  NOMINATED_PLAYERS_SPEAK = "nominated_players_speak",
+  VOTING = "voting",
+  REPEAT = "repeat",
+  END_GAME = "end_game",
+  /**
+   * Neutral "everyone asleep" buffer inserted between meetings where the awake
+   * role changes across teams (and on Doctor→wake exits).
+   */
+  PHASE_TRANSITION = "phase_transition",
+  /**
+   * Sports-only: the first-night victim names 3 suspects before their farewell
+   * (docs/variants/sports/rules.md §6).
+   */
+  BEST_MOVE = "best_move",
+}
+
+/**
+ * Japanese Mafia's ordered phase list (`definition.phases`).
+ *
+ * A SUBSET of the vocabulary above — it deliberately omits the Sports-only
+ * phases. Order is the reading order of a round, not a state machine; the
+ * actual transitions are `japaneseNextPhase`.
+ */
 export const GAME_PHASES = [
-  "game_session_started",
-  "picking_roles",
-  "mafia_meet",
-  "don_chooses_right_hand",
-  "yakuda_shogun_meet",
-  "detective_meet",
-  "doctor_meet",
-  "introduction_phase",
-  "night_phase",
-  "mafia_chooses_target",
-  "don_checks_for_detective",
-  "right_hand_checks_for_yakuza",
-  "yakuza_and_shogun_chooses_target",
-  "detective_checks_for_mafia",
-  "doctor_heals_player",
-  "farewell_speech",
-  "day_phase",
-  "nominated_players_speak",
-  "voting",
-  "repeat",
-  "end_game",
+  GamePhase.GAME_SESSION_STARTED,
+  GamePhase.PICKING_ROLES,
+  GamePhase.MAFIA_MEET,
+  GamePhase.DON_MEET,
+  GamePhase.YAKUDA_SHOGUN_MEET,
+  GamePhase.DETECTIVE_MEET,
+  GamePhase.DOCTOR_MEET,
+  GamePhase.INTRODUCTION_PHASE,
+  GamePhase.NIGHT_PHASE,
+  GamePhase.MAFIA_CHOOSES_TARGET,
+  GamePhase.DON_CHECKS_FOR_DETECTIVE,
+  GamePhase.YAKUZA_AND_SHOGUN_CHOOSES_TARGET,
+  GamePhase.DETECTIVE_CHECKS_FOR_MAFIA,
+  GamePhase.DOCTOR_HEALS_PLAYER,
+  GamePhase.FAREWELL_SPEECH,
+  GamePhase.DAY_PHASE,
+  GamePhase.NOMINATED_PLAYERS_SPEAK,
+  GamePhase.VOTING,
+  GamePhase.REPEAT,
+  GamePhase.END_GAME,
 ] as const;
 
 /**
  * Initial card-pick deck for a 12-player Japanese Mafia game.
  *
- * Note: MAFIA_RIGHT_HAND is intentionally absent from the initial deck.
- * Two MAFIA cards are dealt, and during the `don_chooses_right_hand` phase
- * the Don promotes one of the MAFIA players to MAFIA_RIGHT_HAND.
+ * Every role Japanese can hold is dealt from here — there are no roles reached
+ * by in-game promotion. The two MAFIA cards give the mafia team its 3-strong
+ * size alongside the DON.
  */
 export const JAPANESE_MAFIA_ROLE_DISTRIBUTION = [
   "DON",
@@ -44,6 +105,16 @@ export const JAPANESE_MAFIA_ROLE_DISTRIBUTION = [
   "CITIZEN",
 ] as const;
 
+/**
+ * The mafia faction's roles, and the input to `roleToFaction`.
+ *
+ * `MAFIA_RIGHT_HAND` is RETIRED — no variant deals it and no live game can
+ * produce it — but it stays listed on purpose: finished games persist it in
+ * `gameLogPlayers.role` and `playerStats.roleStats`, and dropping it here would
+ * silently reclassify those archived rows as citizens. Keeping it costs nothing
+ * live (no player holds it, so every count is unchanged) and keeps match
+ * history honest.
+ */
 export const MAFIA_TEAM_ROLES = ["DON", "MAFIA_RIGHT_HAND", "MAFIA"] as const;
 export const YAKUZA_TEAM_ROLES = ["YAKUZA", "SHOGUN"] as const;
 
@@ -53,7 +124,7 @@ export const VOTING = {
 } as const;
 
 export const SPECTATOR = {
-  MAX_SPECTATORS_PER_GAME: 5,
+  MAX_SPECTATORS_PER_GAME: 10,
 } as const;
 
 export const SPEAKING_STATE = {
@@ -80,7 +151,7 @@ export const CARD_PICK = {
 
 export const SPORTS = {
   /**
-   * Sports mafia kill-selection window (docs/variants/sports.md §5.3): buttons
+   * Sports mafia kill-selection window (docs/variants/sports/rules.md §5.3): buttons
    * enable on phase entry and disable after 5s. The scheduler only CLOSES the
    * window (flips a boolean) — it does NOT advance the phase; the host advances
    * manually. Mirrors the voting-window shape.
@@ -88,7 +159,7 @@ export const SPORTS = {
   MAFIA_TARGET_WINDOW_MS: 5 * 1000,
   MAFIA_TARGET_WINDOW_SECONDS: 5,
   /**
-   * Sports "best move" (docs/variants/sports.md §6): the first-night victim names
+   * Sports "best move" (docs/variants/sports/rules.md §6): the first-night victim names
    * exactly this many suspects. Reaching the cap LOCKS the set — that is the
    * phase's completion signal (there is no confirm button).
    */
@@ -144,11 +215,11 @@ export const FOULS = {
   MAX_FOULS: 3,
   ELIMINATION_THRESHOLD: 4,
   ALLOWED_PHASES: [
-    "introduction_phase",
-    "farewell_speech",
-    "day_phase",
-    "nominated_players_speak",
-    "voting",
+    GamePhase.INTRODUCTION_PHASE,
+    GamePhase.FAREWELL_SPEECH,
+    GamePhase.DAY_PHASE,
+    GamePhase.NOMINATED_PLAYERS_SPEAK,
+    GamePhase.VOTING,
   ] as const,
 } as const;
 
@@ -158,35 +229,52 @@ export type RatingConfig = {
   /** Rating never drops below this; the clipped delta is what gets recorded. */
   floor: number;
   /**
-   * Faction-calibrated base payouts: the K × (S − E) ratios (E = the faction's
-   * observed win rate, see /docs/ranking-system.md §2–§3) scaled 2× — effective
-   * K = 80 — to widen level movement given the low games-per-player volume.
-   * Wins still pay ~2× losses because the average player wins only ~33.5% of
-   * games, and the average per-role EV stays ~zero.
+   * Base payouts for THIS variant's factions: the K × (S − E) ratios, where E
+   * is the faction's win rate **in this variant** (/docs/ranking-system.md
+   * §2–§3). Each variant's numbers, and how they were arrived at, live with
+   * the variant — /docs/variants/japanese/rating.md is measured from the
+   * archive, /docs/variants/sports/rating.md is declared symmetric.
+   *
+   * PARTIAL because `Faction` is a global union while a faction *set* is
+   * per-variant: a two-faction variant must carry no dead third row
+   * (/docs/ranking-system.md §13). A type cannot know which factions a
+   * definition declares, so exact coverage is a BUILD FAILURE instead —
+   * tests/structure/ratedVariants.test.ts checks every rated config against
+   * the registry.
    */
-  deltas: Record<
-    "mafia" | "citizens" | "yakuza",
-    { win: number; loss: number }
-  >;
+  deltas: Partial<Record<Faction, { win: number; loss: number }>>;
   /**
    * Symmetric table-strength term b = clamp(round((T − R) / divisor), ±cap).
    * divisor 20 is kept deliberately loose (a weaker spring than the K-linear
-   * value) so skilled players can separate; the cap scales with the base and
-   * stays below the smallest base number (yakuza loss 22) so a win can never
-   * pay ≤ 0 and a loss can never turn positive.
+   * value) so skilled players can separate.
+   *
+   * INVARIANT, checked per rated variant in tests/structure/ratedVariants.test.ts:
+   * the cap stays below that variant's smallest base payout, so a win can never
+   * pay ≤ 0 and a loss can never turn positive however lopsided the table.
    */
   tableAdjustment: { divisor: number; cap: number };
 };
 
 /**
+ * The game-type ids rating is keyed by — mirrors the `gameType` validator in
+ * `convex/tables/games.ts`. Declared here so `RATING_CONFIG` and
+ * `BACKFILL_POLICY` are keyed by the SAME union: adding a variant to the
+ * validator without answering both is then a compile error in one of them.
+ */
+type RatableGameType = "sports_mafia" | "city_mafia" | "japanese_mafia";
+
+/**
  * Per-game-type rating config — each game variant has its own ELO calculation
  * and ladder. A game type absent from this record is UNRATED: `archiveGameLog`
- * skips all rating logic for it. Calibrated from production data (2026-07,
- * 269 decided games); recalibrate E-derived deltas every ~200 decided games.
+ * skips all rating logic for it.
+ *
+ * Where an entry's numbers come from is per variant, and it decides whether
+ * recalibration applies: Japanese's E values are MEASURED (production data,
+ * 2026-07, 269 decided games — re-derive every ~200 decided games), Sports'
+ * are DECLARED and fixed. Each variant's rating doc under /docs/variants/ owns
+ * the derivation; this file only holds the result.
  */
-export const RATING_CONFIG: Partial<
-  Record<"sports_mafia" | "city_mafia" | "japanese_mafia", RatingConfig>
-> = {
+export const RATING_CONFIG: Partial<Record<RatableGameType, RatingConfig>> = {
   japanese_mafia: {
     start: 1000,
     floor: 100,
@@ -197,4 +285,45 @@ export const RATING_CONFIG: Partial<
     },
     tableAdjustment: { divisor: 20, cap: 16 },
   },
+  // DECLARED, not measured — the one calibration in here that is a rule rather
+  // than an observation, and the reason the recalibration cadence above does
+  // not apply to it (/docs/variants/sports/rating.md §2). A two-faction game is
+  // *defined* as a balanced contest, so E = 0.50 on both sides and K = 80 gives
+  // ±40: a win is worth exactly what a loss costs, whichever side the shuffle
+  // dealt. No yakuza row — Sports has no yakuza, and a dead row here is a build
+  // failure (tests/structure/ratedVariants.test.ts).
+  sports_mafia: {
+    start: 1000,
+    floor: 100,
+    deltas: {
+      mafia: { win: 40, loss: -40 }, // E = 0.500 (declared)
+      citizens: { win: 40, loss: -40 }, // E = 0.500 (declared)
+    },
+    // Same spring as Japanese, so the two ladders move at the same pace and the
+    // shared level brackets stay honest (/docs/variants/sports/rating.md §4).
+    tableAdjustment: { divisor: 20, cap: 16 },
+  },
+};
+
+/**
+ * Whether a variant's EXISTING archive may be replayed by
+ * `migrations:backfillRatings` (/docs/ranking-system.md §8).
+ *
+ * Backfilling is a per-variant DECISION, and the migration cannot infer it:
+ * "has a rating config" only says the variant is rated from now on, not that
+ * games played before it was rated should retroactively count. Sports is the
+ * case in point — its archive was played, and shown to players, as unrated
+ * (/docs/variants/sports/rating.md §5).
+ *
+ * TOTAL over `RatableGameType` on purpose: adding a variant is a compile error
+ * here until someone answers the question, which is the type-system catch the
+ * bare `RATING_CONFIG[gameType]` check never had.
+ */
+export const BACKFILL_POLICY: Record<RatableGameType, "replay" | "never"> = {
+  japanese_mafia: "replay",
+  // Played as unrated; the ladder starts empty and fills from the first game
+  // finished after the config shipped.
+  sports_mafia: "never",
+  // No definition registered, so there is no archive and no ladder.
+  city_mafia: "never",
 };

@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useTranslations } from "next-intl";
-import { GAME_PHASES, SPEAKING_STATE } from "@/shared/lib/constants/game";
+import { SPEAKING_STATE, GamePhase } from "@/shared/lib/constants/game";
 import PickerIndicator from "@/features/game-room/components/card-picking/PickerIndicator";
 import PhaseCountdown from "@/features/game-room/components/phase/PhaseCountdown";
 
@@ -19,7 +19,7 @@ const NIGHT_DEPENDENT_PHASE_LABELS: ReadonlyArray<{
   labelKey: string;
 }> = [
   {
-    phase: GAME_PHASES[9], // mafia_chooses_target
+    phase: GamePhase.MAFIA_CHOOSES_TARGET,
     appliesOn: (night) => night === 1,
     labelKey: "mafia_meets_first_night",
   },
@@ -47,10 +47,10 @@ function getPhaseTitle(
 ): string {
   // Neutral sleep buffer: the host sees where the game is headed; players only
   // see the generic "asleep" label (never the next phase — that would leak).
-  if (phase === GAME_PHASES[21] && isHost && nextPhase) {
+  if (phase === GamePhase.PHASE_TRANSITION && isHost && nextPhase) {
     // The Doctor→wake exit stores "farewell_speech" as a resolve-marker; the
     // real destination (farewell vs day) isn't known yet, so show "Day".
-    const nextKey = nextPhase === "farewell_speech" ? "day_phase" : nextPhase;
+    const nextKey = nextPhase === GamePhase.FAREWELL_SPEECH ? GamePhase.DAY_PHASE : nextPhase;
     const label = t.has(`phases.${nextKey}`) ? t(`phases.${nextKey}`) : nextKey;
     return t("phaseTitle.nextPhase", { label });
   }
@@ -64,13 +64,12 @@ function getPhaseTitle(
   const label = t.has(key) ? t(key) : phase;
 
   const nightPhases: string[] = [
-    GAME_PHASES[8],
-    GAME_PHASES[9],
-    GAME_PHASES[10],
-    GAME_PHASES[11],
-    GAME_PHASES[12],
-    GAME_PHASES[13],
-    GAME_PHASES[14],
+    GamePhase.NIGHT_PHASE,
+    GamePhase.MAFIA_CHOOSES_TARGET,
+    GamePhase.DON_CHECKS_FOR_DETECTIVE,
+    GamePhase.YAKUZA_AND_SHOGUN_CHOOSES_TARGET,
+    GamePhase.DETECTIVE_CHECKS_FOR_MAFIA,
+    GamePhase.DOCTOR_HEALS_PLAYER,
   ];
 
   if (nightPhases.includes(phase) && night > 0) {
@@ -78,10 +77,10 @@ function getPhaseTitle(
   }
 
   const dayPhases: string[] = [
-    GAME_PHASES[15],
-    GAME_PHASES[16],
-    GAME_PHASES[17],
-    GAME_PHASES[18],
+    GamePhase.FAREWELL_SPEECH,
+    GamePhase.DAY_PHASE,
+    GamePhase.NOMINATED_PLAYERS_SPEAK,
+    GamePhase.VOTING,
   ];
 
   if (dayPhases.includes(phase) && night > 0) {
@@ -103,8 +102,7 @@ function getSpeakerInfo(
   // `currentSpeakerIndex` unset until the host clicks Start. Show who opens.
   if (currentSpeaker == null) {
     const isSpeakingEntry =
-      gamePhase === GAME_PHASES[16] /* day_phase */ ||
-      gamePhase === GAME_PHASES[7] /* introduction_phase */;
+      gamePhase === GamePhase.DAY_PHASE || gamePhase === GamePhase.INTRODUCTION_PHASE;
     if (isSpeakingEntry) {
       return {
         text: t("phaseTitle.opensNext", { seat: speakingOrder[0] }),
@@ -182,7 +180,7 @@ export default function PhaseTitle(props: PhaseTitleProps) {
     speakingOrder,
     currentSpeakerIndex,
   );
-  const isPickingRolesPhase = gamePhase === GAME_PHASES[1];
+  const isPickingRolesPhase = gamePhase === GamePhase.PICKING_ROLES;
 
   // Only show nominated players to host
   const showNominated = isHost && nominatedPlayers.length > 0;

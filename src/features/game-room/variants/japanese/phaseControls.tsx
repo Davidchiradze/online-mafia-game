@@ -1,151 +1,168 @@
 /**
  * Japanese phase → host-controls map (docs/engine/variant-architecture.md §2.2, Phase 4).
  *
- * A byte-for-byte transcription of the `switch (currentPhase)` that used to live
- * in `GamePhaseControls`, re-keyed from positional `GAME_PHASES[n]` literals to
- * phase-NAME keys (§8). Same components, same conditional branches — no behavior
- * change. `GamePhaseControls` now looks the current phase up in the resolved
- * ruleset's map instead of branching on the Japanese phase order.
+ * A phase-NAME lookup (§8 "phases by name, never by index") that `GamePhaseControls`
+ * reads from the resolved ruleset, so shared UI never branches on the Japanese
+ * phase order.
+ *
+ * Most entries are now a full host panel that owns the whole centre cell,
+ * phase title included — see HOST_PANEL_PHASES in lib/hostPanel.ts. Every night
+ * state that is just "a role is awake, close the phase when they are done" is
+ * the same `NightPhasePanel` with a different label and gate; the three that
+ * are genuinely different get their own component.
  */
 
-import { SPEAKING_STATE } from "@/shared/lib/constants/game";
 import type { PhaseControlsMap } from "@/features/game-room/variants/core/types";
-import StartPickingRolesButton from "@/features/game-room/components/phase-controls/StartPickingRolesButton";
-import ConfirmRolesButton from "@/features/game-room/components/phase-controls/ConfirmRolesButton";
-import EndDonChooseRightHandButton from "@/features/game-room/components/phase-controls/EndDonChooseRightHandButton";
-import PhaseAdvanceButton from "@/features/game-room/components/phase-controls/PhaseAdvanceButton";
-import StartNightPhaseButton from "@/features/game-room/components/phase-controls/StartNightPhaseButton";
-import EndMafiaTargetButton from "@/features/game-room/components/phase-controls/EndMafiaTargetButton";
-import EndYakuzaTargetButton from "@/features/game-room/components/phase-controls/EndYakuzaTargetButton";
-import EndDoctorHealButton from "@/features/game-room/components/phase-controls/EndDoctorHealButton";
-import FarewellSpeechControls from "@/features/game-room/components/phase-controls/FarewellSpeechControls";
-import VotingPhaseControls from "@/features/game-room/components/voting/VotingPhaseControls";
+import SessionStartedPanel from "@/features/game-room/components/phase-controls/SessionStartedPanel";
+import PickingRolesPanel from "@/features/game-room/components/phase-controls/PickingRolesPanel";
+import IntroductionPanel from "@/features/game-room/components/phase-controls/IntroductionPanel";
+import DayPhasePanel from "@/features/game-room/components/phase-controls/DayPhasePanel";
+import NominatedSpeakingPanel from "@/features/game-room/components/phase-controls/NominatedSpeakingPanel";
+import NightPhasePanel from "@/features/game-room/components/phase-controls/NightPhasePanel";
+import PhaseTransitionPanel from "@/features/game-room/components/phase-controls/PhaseTransitionPanel";
+import FarewellSpeechPanel from "@/features/game-room/components/phase-controls/FarewellSpeechPanel";
+import VotingPanel from "@/features/game-room/components/phase-controls/VotingPanel";
 import ContinueNextRoundButton from "@/features/game-room/components/phase-controls/ContinueNextRoundButton";
-import EndGameControls from "@/features/game-room/components/phase-controls/EndGameControls";
-import DayPhaseSpeakingControls from "@/features/game-room/components/phase-controls/DayPhaseSpeakingControls";
-import StartNominatedPlayersSpeakButton from "@/features/game-room/components/phase-controls/StartNominatedPlayersSpeakButton";
-import StartVotingButton from "@/features/game-room/components/phase-controls/StartVotingButton";
-import NominatedPlayersSpeakingControls from "@/features/game-room/components/phase-controls/NominatedPlayersSpeakingControls";
-import StartNextPhaseButton from "@/features/game-room/components/phase-controls/StartNextPhaseButton";
-
-function isSpeakingComplete(
-  currentSpeakerIndex: number | null | undefined,
-): boolean {
-  return SPEAKING_STATE.isCompleted(currentSpeakerIndex ?? null);
-}
+import EndGamePanel from "@/features/game-room/components/phase-controls/EndGamePanel";
+import { GamePhase } from "@/shared/lib/constants/game";
 
 export const JAPANESE_PHASE_CONTROLS: PhaseControlsMap = {
-  game_session_started: ({ gameSessionState }) => (
-    <StartPickingRolesButton gameSessionState={gameSessionState} />
+  // ── Pre-game ─────────────────────────────────────────────────────────────
+  [GamePhase.GAME_SESSION_STARTED]: ({ gameSessionState }) => (
+    <SessionStartedPanel gameSessionState={gameSessionState} />
   ),
-  picking_roles: ({ gameSessionState }) => (
-    <ConfirmRolesButton gameSessionState={gameSessionState} />
+  [GamePhase.PICKING_ROLES]: ({ gameSessionState }) => (
+    <PickingRolesPanel gameSessionState={gameSessionState} />
   ),
-  mafia_meet: ({ gameSessionState }) => (
-    <PhaseAdvanceButton
+
+  // ── Night 1 meetings ─────────────────────────────────────────────────────
+  [GamePhase.MAFIA_MEET]: ({ gameSessionState }) => (
+    <NightPhasePanel
       gameSessionState={gameSessionState}
-      sourcePhase="mafia_meet"
+      sourcePhase={GamePhase.MAFIA_MEET}
       labelKey="endMeeting"
     />
   ),
-  don_chooses_right_hand: ({ gameSessionState }) => (
-    <EndDonChooseRightHandButton gameSessionState={gameSessionState} />
-  ),
-  yakuda_shogun_meet: ({ gameSessionState }) => (
-    <PhaseAdvanceButton
+  [GamePhase.DON_MEET]: ({ gameSessionState }) => (
+    <NightPhasePanel
       gameSessionState={gameSessionState}
-      sourcePhase="yakuda_shogun_meet"
+      sourcePhase={GamePhase.DON_MEET}
       labelKey="endMeeting"
     />
   ),
-  detective_meet: ({ gameSessionState }) => (
-    <PhaseAdvanceButton
+  [GamePhase.YAKUDA_SHOGUN_MEET]: ({ gameSessionState }) => (
+    <NightPhasePanel
       gameSessionState={gameSessionState}
-      sourcePhase="detective_meet"
+      sourcePhase={GamePhase.YAKUDA_SHOGUN_MEET}
       labelKey="endMeeting"
     />
   ),
-  doctor_meet: ({ gameSessionState }) => (
-    <PhaseAdvanceButton
+  [GamePhase.DETECTIVE_MEET]: ({ gameSessionState }) => (
+    <NightPhasePanel
       gameSessionState={gameSessionState}
-      sourcePhase="doctor_meet"
+      sourcePhase={GamePhase.DETECTIVE_MEET}
       labelKey="endMeeting"
     />
   ),
-  introduction_phase: ({ gameId, gameSessionState }) =>
-    isSpeakingComplete(gameSessionState.currentSpeakerIndex) ? (
-      <StartNightPhaseButton gameSessionState={gameSessionState} />
-    ) : (
-      <DayPhaseSpeakingControls
-        gameId={gameId}
-        gameSessionState={gameSessionState}
-      />
-    ),
-  night_phase: ({ gameSessionState }) => (
-    <PhaseAdvanceButton
+  [GamePhase.DOCTOR_MEET]: ({ gameSessionState }) => (
+    <NightPhasePanel
       gameSessionState={gameSessionState}
-      sourcePhase="night_phase"
+      sourcePhase={GamePhase.DOCTOR_MEET}
+      labelKey="endMeeting"
+    />
+  ),
+
+  // ── Speaking ─────────────────────────────────────────────────────────────
+  [GamePhase.INTRODUCTION_PHASE]: ({ gameId, gameSessionState }) => (
+    <IntroductionPanel gameId={gameId} gameSessionState={gameSessionState} />
+  ),
+  [GamePhase.DAY_PHASE]: ({ gameId, gameSessionState }) => (
+    <DayPhasePanel gameId={gameId} gameSessionState={gameSessionState} />
+  ),
+  [GamePhase.NOMINATED_PLAYERS_SPEAK]: ({ gameId, gameSessionState }) => (
+    <NominatedSpeakingPanel
+      gameId={gameId}
+      gameSessionState={gameSessionState}
+    />
+  ),
+
+  // ── Night actions ────────────────────────────────────────────────────────
+  [GamePhase.NIGHT_PHASE]: ({ gameSessionState }) => (
+    <NightPhasePanel
+      gameSessionState={gameSessionState}
+      sourcePhase={GamePhase.NIGHT_PHASE}
       labelKey="startMafiaPhase"
-    />
-  ),
-  mafia_chooses_target: ({ gameSessionState }) => (
-    <EndMafiaTargetButton gameSessionState={gameSessionState} />
-  ),
-  don_checks_for_detective: ({ gameSessionState }) => (
-    <PhaseAdvanceButton
-      gameSessionState={gameSessionState}
-      sourcePhase="don_checks_for_detective"
-      labelKey="endDonCheck"
       variant="primary"
     />
   ),
-  right_hand_checks_for_yakuza: ({ gameSessionState }) => (
-    <PhaseAdvanceButton
+  [GamePhase.MAFIA_CHOOSES_TARGET]: ({ gameSessionState }) => (
+    <NightPhasePanel
       gameSessionState={gameSessionState}
-      sourcePhase="right_hand_checks_for_yakuza"
-      labelKey="endCheck"
+      sourcePhase={GamePhase.MAFIA_CHOOSES_TARGET}
+      labelKey="finish"
+      gate="mafia"
+      waitingKey="waitingForMafia"
+    />
+  ),
+  [GamePhase.DON_CHECKS_FOR_DETECTIVE]: ({ gameSessionState }) => (
+    <NightPhasePanel
+      gameSessionState={gameSessionState}
+      sourcePhase={GamePhase.DON_CHECKS_FOR_DETECTIVE}
+      labelKey="finish"
       variant="primary"
     />
   ),
-  yakuza_and_shogun_chooses_target: ({ gameSessionState }) => (
-    <EndYakuzaTargetButton gameSessionState={gameSessionState} />
-  ),
-  detective_checks_for_mafia: ({ gameSessionState }) => (
-    <PhaseAdvanceButton
+  [GamePhase.YAKUZA_AND_SHOGUN_CHOOSES_TARGET]: ({ gameSessionState }) => (
+    <NightPhasePanel
       gameSessionState={gameSessionState}
-      sourcePhase="detective_checks_for_mafia"
-      labelKey="endDetectiveCheck"
+      sourcePhase={GamePhase.YAKUZA_AND_SHOGUN_CHOOSES_TARGET}
+      labelKey="finish"
+      gate="yakuza"
+      waitingKey="waitingForYakuza"
+    />
+  ),
+  [GamePhase.DETECTIVE_CHECKS_FOR_MAFIA]: ({ gameSessionState }) => (
+    <NightPhasePanel
+      gameSessionState={gameSessionState}
+      sourcePhase={GamePhase.DETECTIVE_CHECKS_FOR_MAFIA}
+      labelKey="finish"
       variant="primary"
     />
   ),
-  doctor_heals_player: () => <EndDoctorHealButton />,
-  farewell_speech: ({ gameSessionState }) => (
-    <FarewellSpeechControls gameSessionState={gameSessionState} />
+  [GamePhase.DOCTOR_HEALS_PLAYER]: ({ gameSessionState }) => (
+    <NightPhasePanel
+      gameSessionState={gameSessionState}
+      sourcePhase={GamePhase.DOCTOR_HEALS_PLAYER}
+      labelKey="finish"
+      variant="success"
+      gate="doctor"
+      waitingKey="waitingForDoctor"
+    />
   ),
-  day_phase: ({ gameId, gameSessionState }) => {
-    if (isSpeakingComplete(gameSessionState.currentSpeakerIndex)) {
-      return gameSessionState.withoutSelfJustification ? (
-        <StartVotingButton gameSessionState={gameSessionState} />
-      ) : (
-        <StartNominatedPlayersSpeakButton gameSessionState={gameSessionState} />
-      );
-    }
-    return (
-      <DayPhaseSpeakingControls
-        gameId={gameId}
-        gameSessionState={gameSessionState}
-      />
-    );
-  },
-  nominated_players_speak: ({ gameSessionState }) => (
-    <NominatedPlayersSpeakingControls gameSessionState={gameSessionState} />
+  [GamePhase.PHASE_TRANSITION]: ({ gameSessionState }) => (
+    <PhaseTransitionPanel gameSessionState={gameSessionState} />
   ),
-  voting: () => <VotingPhaseControls />,
-  repeat: ({ gameSessionState }) => (
+
+  // ── Dawn ─────────────────────────────────────────────────────────────────
+  [GamePhase.FAREWELL_SPEECH]: ({ gameSessionState }) => (
+    <FarewellSpeechPanel gameSessionState={gameSessionState} />
+  ),
+
+  // ── The vote ─────────────────────────────────────────────────────────────
+  [GamePhase.VOTING]: ({ gameSessionState }) => (
+    <VotingPanel gameSessionState={gameSessionState} />
+  ),
+
+  // ── Game over ────────────────────────────────────────────────────────────
+  // The real end screen is the `endGameState` guard in `GamePhaseControls`: an
+  // outcome is decided by the `winner` field, not by reaching a phase. This
+  // entry only fires if a session somehow lands on `end_game` with no outcome
+  // recorded at all, where there is nothing to confirm and the only thing the
+  // panel can honestly offer is the way out.
+  [GamePhase.END_GAME]: () => <EndGamePanel state={{ kind: "finished", outcome: null }} />,
+
+  // ── Not yet on the panel ─────────────────────────────────────────────────
+  [GamePhase.REPEAT]: ({ gameSessionState }) => (
     <ContinueNextRoundButton gameSessionState={gameSessionState} />
-  ),
-  end_game: () => <EndGameControls />,
-  phase_transition: ({ gameSessionState }) => (
-    <StartNextPhaseButton gameSessionState={gameSessionState} />
   ),
 };

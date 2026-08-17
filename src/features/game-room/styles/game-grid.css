@@ -1,0 +1,80 @@
+/* Game UI — the participant ring and its centre.
+
+   Everything here is about how much room the ring gets. The ring's SHAPE
+   (columns, rows, which cells the host and controls occupy) is data, not CSS —
+   it comes from `ruleset.seatLayout` and is applied as inline grid lines by
+   `RingCenter` / `PlayerCircle`. */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Grid container — landscape / short-viewport constraint
+
+   When height is the bottleneck (e.g. mobile landscape), cap the grid width
+   so tiles keep a reasonable aspect ratio instead of stretching too wide.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.game-grid-container {
+  margin: 0 auto;
+  padding: 15px;
+}
+
+@media (orientation: landscape) and (min-width: 600px) {
+  .game-grid-container {
+    max-width: calc(100dvh * 1.6);
+  }
+}
+@media (orientation: portrait) and (max-width: 600px) {
+  .game-grid-container {
+    padding:5px;
+  }
+}
+
+/* Portrait only: a "wide" ring (more columns than rows, e.g. Sports' 4×3)
+   doesn't need the full height, so cap it to ~65% and let the flex parent center
+   it as a compact block. A square ring (Japanese 4×4) is unaffected. The doubled
+   class beats Tailwind's `.h-full` on the same element. */
+@media (orientation: portrait) {
+  .game-grid-container.game-grid-container--wide {
+    height: 65%;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .game-grid-container {
+    max-width: calc(100dvh * 1.6);
+  }
+}
+
+@media (orientation: landscape) and (max-height: 400px) {
+  .game-grid-container {
+    max-width: calc(100dvh * 1.4);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Participant video — show the WHOLE camera frame (no crop)
+   LiveKit defaults landscape camera feeds to `object-fit: cover`, cropping them
+   to fill the tile. Force `contain` so the full frame is always visible; the
+   leftover space is the tile's own dark background (letterbox). Portrait feeds
+   already default to contain. Applies to every tile — Sports and Japanese, and
+   the host. The extra `[data-lk-theme]` scope beats LiveKit's own specificity.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+[data-lk-theme] .lk-participant-media-video,
+[data-lk-theme] .lk-participant-media-video[data-lk-orientation="landscape"] {
+  object-fit: contain;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Centre panel chrome
+
+   The surface only — `PlayerCircle` hands the cell over BARE so the host panel
+   can own the whole box (its padding is part of its container-query type
+   scale). Everything that is not the host panel opts back into padding via
+   `CENTER_PANEL_STACK_CLASS` in lib/centerPanel.ts.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.center-panel {
+  background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
+  border-color: rgba(255,255,255,0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255,255,255,0.1);
+}

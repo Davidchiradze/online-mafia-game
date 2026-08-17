@@ -1,5 +1,5 @@
 /**
- * Sports visibility ruleset (docs/engine/variant-architecture.md §2.4, docs/variants/sports.md §5.4).
+ * Sports visibility ruleset (docs/engine/variant-architecture.md §2.4, docs/variants/sports/rules.md §5.4).
  *
  * Authored as REAL Sports rules rather than the Phase-1 Japanese re-export. The
  * VisibilityState layering (COVERED/DIMMED/VISIBLE/DEAD) stays shared — built by
@@ -24,7 +24,7 @@
 import {
   VisibilityState,
   createVisibilityHelpers,
-  type GamePhase,
+  GamePhase,
   type Role,
 } from "@/shared/lib/game/visibility";
 import type { VisibilityRuleset } from "@/features/game-room/variants/core/types";
@@ -48,29 +48,29 @@ function canSeeParticipant(
 
   switch (gamePhase) {
     // Pre-role / daytime / public phases: everyone sees everyone.
-    case "game_session_started":
-    case "day_phase":
-    case "nominated_players_speak":
-    case "voting":
-    case "farewell_speech":
+    case GamePhase.GAME_SESSION_STARTED:
+    case GamePhase.DAY_PHASE:
+    case GamePhase.NOMINATED_PLAYERS_SPEAK:
+    case GamePhase.VOTING:
+    case GamePhase.FAREWELL_SPEECH:
       return true;
 
     // Only the host sees during role pickup and the neutral sleep buffer.
-    case "picking_roles":
-    case "phase_transition":
+    case GamePhase.PICKING_ROLES:
+    case GamePhase.PHASE_TRANSITION:
       return isViewerHost;
 
     // Full darkness.
-    case "night_phase":
+    case GamePhase.NIGHT_PHASE:
       return false;
 
     // Mafia meet: DON + MAFIA (and host) see everyone; others see no one.
-    case "mafia_meet":
+    case GamePhase.MAFIA_MEET:
       return isViewerHost || SPORTS_MAFIA_ROLES.includes(viewerRole);
 
     // Don meet: only the Don (and host) — the Don wakes alone so host and Don
     // see each other. Others see no one.
-    case "don_meet":
+    case GamePhase.DON_MEET:
       return isViewerHost || viewerRole === "DON";
 
     // Mafia choose target: PRIVATE. Only the host monitors — the acting mafia
@@ -80,20 +80,20 @@ function canSeeParticipant(
     // killed player who is picking. Only the host sees the players. The victim
     // gets their check buttons rendered above the covers, exactly as the mafia get
     // kill buttons here.
-    case "mafia_chooses_target":
-    case "best_move":
+    case GamePhase.MAFIA_CHOOSES_TARGET:
+    case GamePhase.BEST_MOVE:
       return isViewerHost;
 
     // Detective meet: only the detective (and host).
-    case "detective_meet":
+    case GamePhase.DETECTIVE_MEET:
       return isViewerHost || viewerRole === "DETECTIVE";
 
     // Don's night check: only the Don (and host).
-    case "don_checks_for_detective":
+    case GamePhase.DON_CHECKS_FOR_DETECTIVE:
       return isViewerHost || viewerRole === "DON";
 
     // Detective's night check: only the detective (and host).
-    case "detective_checks_for_mafia":
+    case GamePhase.DETECTIVE_CHECKS_FOR_MAFIA:
       return isViewerHost || viewerRole === "DETECTIVE";
 
     default:
@@ -109,14 +109,14 @@ function canSeeParticipant(
  */
 function getAwakeRoles(gamePhase: GamePhase): Role[] {
   switch (gamePhase) {
-    case "mafia_meet":
-    case "mafia_chooses_target":
+    case GamePhase.MAFIA_MEET:
+    case GamePhase.MAFIA_CHOOSES_TARGET:
       return ["DON", "MAFIA"];
-    case "don_meet":
-    case "don_checks_for_detective":
+    case GamePhase.DON_MEET:
+    case GamePhase.DON_CHECKS_FOR_DETECTIVE:
       return ["DON"];
-    case "detective_meet":
-    case "detective_checks_for_mafia":
+    case GamePhase.DETECTIVE_MEET:
+    case GamePhase.DETECTIVE_CHECKS_FOR_MAFIA:
       return ["DETECTIVE"];
     // `best_move` is deliberately ABSENT — during it EVERYONE sleeps, including
     // the killed player who is picking (§6.6). Only the host sees the players.
@@ -128,24 +128,24 @@ function getAwakeRoles(gamePhase: GamePhase): Role[] {
 /** Sports night/activity phases (subset of Japanese — no yakuza/doctor phases). */
 function isNightActivityPhase(gamePhase: GamePhase): boolean {
   const nightPhases: GamePhase[] = [
-    "picking_roles",
-    "night_phase",
-    "phase_transition",
-    "mafia_meet",
-    "don_meet",
-    "detective_meet",
-    "mafia_chooses_target",
-    "don_checks_for_detective",
-    "detective_checks_for_mafia",
+    GamePhase.PICKING_ROLES,
+    GamePhase.NIGHT_PHASE,
+    GamePhase.PHASE_TRANSITION,
+    GamePhase.MAFIA_MEET,
+    GamePhase.DON_MEET,
+    GamePhase.DETECTIVE_MEET,
+    GamePhase.MAFIA_CHOOSES_TARGET,
+    GamePhase.DON_CHECKS_FOR_DETECTIVE,
+    GamePhase.DETECTIVE_CHECKS_FOR_MAFIA,
     // Best move (§6): everyone is still asleep, so it behaves like any other
     // night phase — the host sees the table dimmed, everyone else is covered.
-    "best_move",
+    GamePhase.BEST_MOVE,
   ];
   return nightPhases.includes(gamePhase);
 }
 
 /**
- * Host-monitoring override (docs/variants/sports.md §5): during `mafia_chooses_target`
+ * Host-monitoring override (docs/variants/sports/rules.md §5): during `mafia_chooses_target`
  * the mafia see nothing (their tiles are covered via `canSeeParticipant`), but
  * the HOST watches the whole table — every player is shown CLEARLY (not dimmed),
  * so the moderator can observe the mafia making their private picks. Returns null
@@ -160,7 +160,7 @@ function visibilityStateOverride(
   isViewerHost: boolean,
   _isTargetHost: boolean,
 ): VisibilityState | null {
-  if (isViewerHost && gamePhase === "mafia_chooses_target") {
+  if (isViewerHost && gamePhase === GamePhase.MAFIA_CHOOSES_TARGET) {
     return VisibilityState.DIMMED;
   }
   return null;

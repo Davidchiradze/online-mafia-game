@@ -4,6 +4,7 @@ import { query } from "../../_generated/server";
 import { getAuthenticatedUser } from "../../lib/auth";
 import { winMethodLabel } from "./winConditions";
 import { getPlayerRatingValues } from "../../lib/playerRatings";
+import { getPlayerStatsRow } from "../../lib/playerStats";
 import { gameType as gameTypeValidator } from "../../tables/games";
 import type { Doc } from "../../_generated/dataModel";
 
@@ -20,6 +21,21 @@ function winRatePct(wins: number, losses: number): number {
   const decided = wins + losses;
   return decided === 0 ? 0 : Math.round((wins / decided) * 100);
 }
+
+/**
+ * What a variant a player has never touched reads as. Zeros, never null: the
+ * profile shows a real record of nothing played, matching the "no unranked
+ * state" rule that gives them the default rating too.
+ */
+const EMPTY_STATS = {
+  totalMatches: 0,
+  wins: 0,
+  losses: 0,
+  noContests: 0,
+  currentStreak: 0,
+  bestStreak: 0,
+  roleStats: [] as { role: string; matches: number; wins: number; losses: number }[],
+};
 
 /**
  * The current user's paginated match history (10/page), newest first, with an
@@ -101,49 +117,30 @@ export const getGameLog = query({
 });
 
 /**
- * The current user's aggregate statistics, read O(1) from the incrementally
- * maintained `playerStats` row. Win rates are derived here (no-contests
- * excluded). Returns zeros if the player has no finished games yet.
+ * The current user's statistics FOR ONE VARIANT, read O(1) from the
+ * incrementally maintained `playerStats` row. Win rates are derived here
+ * (no-contests excluded). Returns zeros if they have not played it yet.
  *
- * Also returns the player's `japanese_mafia` ELO — a missing `playerRatings`
- * row reads as the 1000 default (no "unranked" state, /docs/ranking-system.md).
+ * `gameType` is required rather than defaulted: a default is the same hardcoded
+ * variant one layer down, and this query used to hold exactly that
+ * (/docs/ranking-system.md §13). Its ELO comes from the same variant's ladder —
+ * a missing `playerRatings` row reads as the 1000 default (no "unranked"
+ * state).
  */
 export const getMyStats = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { gameType: gameTypeValidator },
+  handler: async (ctx, { gameType }) => {
     const userId = await getAuthenticatedUser(ctx);
 
-    const stats = await ctx.db
-      .query("playerStats")
-      .withIndex("by_playerId", (q) => q.eq("playerId", userId))
-      .unique();
+    // No row means they have not played this variant — zeros, not "unranked".
+    const row = await getPlayerStatsRow(ctx.db, userId, gameType);
+    const stats = row ?? EMPTY_STATS;
 
     const { rating, peakRating } = await getPlayerRatingValues(
       ctx.db,
       userId,
-      "japanese_mafia",
+      gameType,
     );
-
-    if (!stats) {
-      return {
-        totalMatches: 0,
-        wins: 0,
-        losses: 0,
-        noContests: 0,
-        winRate: 0,
-        currentStreak: 0,
-        bestStreak: 0,
-        rating,
-        peakRating,
-        roleStats: [] as Array<{
-          role: string;
-          matches: number;
-          wins: number;
-          losses: number;
-          winRate: number;
-        }>,
-      };
-    }
 
     return {
       totalMatches: stats.totalMatches,

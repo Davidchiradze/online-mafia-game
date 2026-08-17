@@ -11,15 +11,10 @@ import citizen from "@/features/game-room/assets/cards/citizen.png";
 /** Decorative back face used for face-down cards. */
 export const CARD_BACK_IMAGE: StaticImageData = cardBack;
 
-/**
- * Map of role keys to their face image.
- * MAFIA_RIGHT_HAND reuses mafia.png by design (the role is produced by
- * promotion during `don_chooses_right_hand` and shares the mafia art).
- */
+/** Map of role keys to their face image. */
 const ROLE_IMAGE_MAP: Record<string, StaticImageData> = {
   DON: don,
   MAFIA: mafia,
-  MAFIA_RIGHT_HAND: mafia,
   SHOGUN: shogun,
   YAKUZA: yakuza,
   DETECTIVE: detective,

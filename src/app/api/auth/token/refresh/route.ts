@@ -16,15 +16,17 @@ export const dynamic = "force-dynamic";
  * Called by the Convex auth bridge when `forceRefreshToken` is true
  * (i.e. the previous JWT expired and Convex requested a new one).
  *
- * On any failure (missing/invalid PHP session, PHP API error), clears
- * the auth cookie and returns `{ token: null, logout: true }` so the
- * client knows to redirect to logout immediately.
+bef * On any failure (missing/invalid PHP session, PHP API error), clears the
+ * auth cookie and returns `{ token: null }`. This endpoint doesn't know
+ * which page the caller is on, so it only reports the outcome — what
+ * happens next (drop to guest on a guest-viewable page, or redirect to
+ * logout anywhere else) is decided client-side in `authBridgeContext.tsx`.
  */
 export async function POST(req: NextRequest) {
   const sessionId = req.cookies.get(PHP_SESSION_COOKIE_NAME)?.value;
   if (!sessionId) {
     const res = NextResponse.json(
-      { token: null, logout: true },
+      { token: null },
       { status: 401, headers: { "Cache-Control": "no-store" } },
     );
     clearAuthCookie(res);
@@ -35,7 +37,7 @@ export async function POST(req: NextRequest) {
     const user = await fetchUserBySession(sessionId);
     if (!user) {
       const res = NextResponse.json(
-        { token: null, logout: true },
+        { token: null },
         { status: 401, headers: { "Cache-Control": "no-store" } },
       );
       clearAuthCookie(res);
@@ -53,7 +55,7 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error("[auth/token/refresh] failed", err);
     const res = NextResponse.json(
-      { token: null, logout: true },
+      { token: null },
       { status: 500, headers: { "Cache-Control": "no-store" } },
     );
     clearAuthCookie(res);

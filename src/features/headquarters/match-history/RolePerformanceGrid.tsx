@@ -12,18 +12,29 @@ import {
 import { UserCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/shared/lib/cn";
-import { JAPANESE_MAFIA_ROLES } from "@/shared/lib/constants/game";
+import { getGameDefinition } from "@convex/games/registry";
 import {
-  roleToFaction,
+  factionForRole,
   factionIcon,
   factionBadgeClass,
+  type Faction,
 } from "@/shared/lib/game/roleDisplay";
 import { useRoleLabel } from "@/shared/lib/game/useRoleLabel";
+import type { RatedGameType } from "@/shared/lib/ranking/ratedVariants";
 import type { PlayerStats, RoleStat } from "@convex/refs/history";
 
 interface Props {
   stats: PlayerStats | undefined;
+  gameType: RatedGameType;
 }
+
+/**
+ * A role card carries its own faction, resolved once from the variant when the
+ * list is built. The alternative is threading `gameType` down through the
+ * marquee wrappers to reach the card, which would make three layout components
+ * care about which game is being shown.
+ */
+type RoleCardStat = RoleStat & { faction: Faction };
 
 // Page background (see HeadquartersWrapper) — used so the cards dissolve into
 // the page at both edges of the marquee instead of hard-cutting.
@@ -39,9 +50,8 @@ const FLING_DECAY = 0.92;
 // Cap on fling speed (%/s) so a hard flick can't whip the row uncontrollably.
 const MAX_FLING = 220;
 
-export default function RolePerformanceGrid({ stats }: Props) {
+export default function RolePerformanceGrid({ stats, gameType }: Props) {
   const t = useTranslations("matchHistory");
-  const roleLabel = useRoleLabel();
 
   if (stats === undefined) {
     return (
@@ -59,15 +69,38 @@ export default function RolePerformanceGrid({ stats }: Props) {
   // Nothing to show until the player has finished at least one game.
   if (stats.totalMatches === 0) return null;
 
-  // Show every role — fill roles the player hasn't held with zeros — then float
-  // the most-played roles to the front (stable: unplayed stay in canonical order).
+  // Show every role in THIS variant's deck — fill roles the player hasn't held
+  // with zeros — then float the most-played roles to the front (stable:
+  // unplayed stay in canonical order).
+  //
+  // The role list comes from the definition, so switching ladders swaps the
+  // deck: Sports has no Doctor, Shogun or Yakuza to show, and padding its grid
+  // with roles it cannot deal would invent history.
   const played = new Map<string, RoleStat>(
     stats.roleStats.map((r) => [r.role, r]),
   );
-  const allRoles: RoleStat[] = JAPANESE_MAFIA_ROLES.map(
-    (role) =>
-      played.get(role) ?? { role, matches: 0, wins: 0, losses: 0, winRate: 0 },
-  ).sort((a, b) => b.matches - a.matches);
+  const dealable = getGameDefinition(gameType).roles;
+
+  // A role the player actually HELD but the variant no longer deals (e.g. the
+  // retired Right Hand) still gets a card. Keying the grid off the deck alone
+  // would silently drop those matches from a real record — the opposite failure
+  // from padding with roles that were never dealt.
+  const retiredButPlayed = stats.roleStats
+    .filter((r) => r.matches > 0 && !dealable.includes(r.role))
+    .map((r) => r.role);
+
+  const allRoles: RoleCardStat[] = [...dealable, ...retiredButPlayed]
+    .map((role) => ({
+      ...(played.get(role) ?? {
+        role,
+        matches: 0,
+        wins: 0,
+        losses: 0,
+        winRate: 0,
+      }),
+      faction: factionForRole(gameType, role),
+    }))
+    .sort((a, b) => b.matches - a.matches);
 
   return (
     <div className="mb-10">
@@ -79,7 +112,7 @@ export default function RolePerformanceGrid({ stats }: Props) {
   );
 }
 
-function RolePerformanceMarquee({ roles }: { roles: RoleStat[] }) {
+function RolePerformanceMarquee({ roles }: { roles: RoleCardStat[] }) {
   const reduceMotion = useReducedMotion();
 
   // Static, native-scrollable fallback for reduced-motion users.
@@ -96,7 +129,7 @@ function RolePerformanceMarquee({ roles }: { roles: RoleStat[] }) {
   return <AnimatedMarquee roles={roles} />;
 }
 
-function AnimatedMarquee({ roles }: { roles: RoleStat[] }) {
+function AnimatedMarquee({ roles }: { roles: RoleCardStat[] }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const baseX = useMotionValue(0);
 
@@ -197,10 +230,10 @@ function AnimatedMarquee({ roles }: { roles: RoleStat[] }) {
 function RoleCard({
   stat,
   ...rest
-}: { stat: RoleStat } & React.HTMLAttributes<HTMLDivElement>) {
+}: { stat: RoleCardStat } & React.HTMLAttributes<HTMLDivElement>) {
   const t = useTranslations("matchHistory");
   const roleLabel = useRoleLabel();
-  const faction = roleToFaction(stat.role);
+  const faction = stat.faction;
   const Icon = factionIcon(faction);
   return (
     <div

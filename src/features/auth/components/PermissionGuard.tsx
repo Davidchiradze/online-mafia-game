@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
+import { useTranslations } from "next-intl";
 import { useAccess } from "@/features/auth/hooks/useAccess";
 import type { Permission } from "@convex/lib/access";
 import LoadingSpinner from "@/shared/ui/LoadingSpinner";
@@ -28,6 +29,7 @@ export function PermissionGuard({
 }: PermissionGuardProps) {
   const { isLoading, can } = useAccess();
   const router = useRouter();
+  const t = useTranslations("common");
   const allowed = can(permission);
 
   useEffect(() => {
@@ -39,7 +41,7 @@ export function PermissionGuard({
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <LoadingSpinner message="Checking access…" />
+        <LoadingSpinner message={t("checkingAccess")} />
       </div>
     );
   }

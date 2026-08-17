@@ -128,10 +128,8 @@ const knownAbsentPaths = new Set(KNOWN_ABSENT.map((entry) => entry.path));
 
 const docs = docFiles();
 const sources = sourceFiles();
-const docBasenames = new Set(docs.map((d) => d.repoPath.split("/").pop()!));
-const headingsByBasename = new Map(
-  docs.map((d) => [d.repoPath.split("/").pop()!, numberedHeadings(d.text)] as const),
-);
+const docPaths = new Set(docs.map((d) => d.repoPath));
+const headingsByPath = new Map(docs.map((d) => [d.repoPath, numberedHeadings(d.text)] as const));
 
 describe("docs", () => {
   it("resolves every relative link between docs", () => {
@@ -171,7 +169,7 @@ describe("docs", () => {
   it("resolves every docs/*.md cited from source", () => {
     const missing: string[] = [];
     for (const { repoPath, text } of sources) {
-      for (const { doc } of docCitations(text, docBasenames)) {
+      for (const { doc } of docCitations(text, docPaths)) {
         const candidates = docs.filter((d) => d.repoPath.endsWith(`/${doc}`) || d.repoPath === doc);
         if (candidates.length === 0) missing.push(`${repoPath} → ${doc}`);
       }
@@ -182,13 +180,39 @@ describe("docs", () => {
     ).toEqual([]);
   });
 
+  it("cites every §section by a path that names exactly one file", () => {
+    // A basename stopped identifying a document once a second variant folder
+    // landed: docs/variants/japanese/rules.md and docs/variants/sports/rules.md
+    // are different files. A comment citing only the basename cannot have its
+    // `§N` anchors checked against anything — and reads as the wrong variant to
+    // a human too. Cite enough of the path to be unambiguous.
+    //
+    // Scoped to citations that CARRY a section, because that is where
+    // ambiguity does damage. A bare filename with no anchor is often not a
+    // citation at all — a placeholder like docs/variants/<id>/… , or a path
+    // assembled from a template — and failing those taught nothing.
+    const ambiguous: string[] = [];
+    for (const { repoPath, text } of sources) {
+      for (const citation of docCitations(text, docPaths)) {
+        if (citation.ambiguous && citation.sections.length > 0) {
+          ambiguous.push(`${repoPath} → ${citation.doc} §${citation.sections.join(", §")}`);
+        }
+      }
+    }
+    expect(
+      ambiguous,
+      "these §citations name a doc that exists in more than one folder — qualify them with the directory",
+    ).toEqual([]);
+  });
+
   it("resolves every §section cited from source", () => {
     // The highest-value check here. Gutting a doc body is safe; deleting or
     // renumbering its heading is not, and nothing else in the toolchain knows.
     const broken: string[] = [];
     for (const { repoPath, text } of sources) {
-      for (const { doc, sections } of docCitations(text, docBasenames)) {
-        const headings = headingsByBasename.get(doc);
+      for (const { doc, sections, ambiguous } of docCitations(text, docPaths)) {
+        if (ambiguous) continue; // reported by the check above
+        const headings = headingsByPath.get(doc);
         if (!headings) continue;
         for (const section of sections) {
           if (!headings.has(section)) broken.push(`${repoPath} → ${doc} §${section}`);

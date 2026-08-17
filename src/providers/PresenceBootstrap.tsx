@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useConvex, useMutation, useQuery } from "convex/react";
+import { useConvex, useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { PRESENCE } from "@convex/lib/constants";
+import { useViewer } from "@/features/auth/hooks/useViewer";
 
 /**
  * Site-wide presence heartbeat. Being authenticated and on ANY page counts as
@@ -20,14 +21,15 @@ import { PRESENCE } from "@convex/lib/constants";
  * for a list NOTHING in the app renders (the online panels use `listRoom`, not
  * `list`). So we keep only the write side here and never subscribe to `list`.
  *
- * Mounted once in the root layout. We only heartbeat once we have a profile,
- * because the heartbeat mutation derives identity from it — hooks can't be
- * called conditionally, so the gate lives in this outer component.
+ * Mounted once in the root layout. We only heartbeat for a settled member —
+ * `presence:heartbeat` calls `getAuthenticatedProfile` and throws for a guest
+ * or during the profile-sync window — and hooks can't be called
+ * conditionally, so the gate lives in this outer component.
  */
 export default function PresenceBootstrap() {
-  const profile = useQuery(api.auth.profiles.currentProfile);
-  if (!profile) return null;
-  return <PresenceHeartbeat userId={profile._id} />;
+  const viewer = useViewer();
+  if (!viewer.isMember) return null;
+  return <PresenceHeartbeat userId={viewer.profile._id} />;
 }
 
 function PresenceHeartbeat({ userId }: { userId: string }) {

@@ -17,17 +17,25 @@
  */
 
 import { japaneseNextPhase } from "@convex/games/japanese/phases";
+import { GamePhase } from "@/shared/lib/constants/game";
 
-/** Sources whose host-advance sleeps through the neutral buffer first. */
+/**
+ * Sources whose host-advance sleeps through the neutral buffer first.
+ *
+ * The rule is "buffer whenever the awake set changes across the edge" — whoever
+ * is about to wake must never see who was just awake. Every night edge Japanese
+ * has qualifies, which is why this is the whole night sequence.
+ */
 const BUFFER_MEDIATED: ReadonlySet<string> = new Set([
-  "don_chooses_right_hand",
-  "yakuda_shogun_meet",
-  "detective_meet",
-  "doctor_meet",
-  "right_hand_checks_for_yakuza",
-  "yakuza_and_shogun_chooses_target",
-  "detective_checks_for_mafia",
-  "doctor_heals_player",
+  GamePhase.MAFIA_MEET, // mafia sleep → don wakes alone
+  GamePhase.DON_MEET, // don sleeps → yakuza + shogun wake
+  GamePhase.YAKUDA_SHOGUN_MEET,
+  GamePhase.DETECTIVE_MEET,
+  GamePhase.DOCTOR_MEET,
+  GamePhase.DON_CHECKS_FOR_DETECTIVE, // don sleeps → yakuza + shogun wake
+  GamePhase.YAKUZA_AND_SHOGUN_CHOOSES_TARGET,
+  GamePhase.DETECTIVE_CHECKS_FOR_MAFIA,
+  GamePhase.DOCTOR_HEALS_PLAYER,
 ]);
 
 export type PhaseAdvanceUpdates = { gamePhase: string; nextPhase?: string };
@@ -48,7 +56,7 @@ export function advanceUpdates(phase: string): PhaseAdvanceUpdates {
     throw new Error(`No host-advance edge from phase "${phase}"`);
   }
   if (BUFFER_MEDIATED.has(phase)) {
-    return { gamePhase: "phase_transition", nextPhase: next };
+    return { gamePhase: GamePhase.PHASE_TRANSITION, nextPhase: next };
   }
   return { gamePhase: next };
 }

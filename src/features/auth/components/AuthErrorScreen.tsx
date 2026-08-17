@@ -3,11 +3,15 @@
 import { motion } from "motion/react";
 import { ShieldAlert, ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { PHP_LOGIN_REDIRECT_URL } from "@/features/auth/lib/constants";
+import { loginStartUrl } from "@/features/auth/lib/phpLogin";
 
 const BG_IMG = "https://www.mafia.ge/templates/newassets/img/mafiabg.jpg";
 
-export default function AuthErrorScreen() {
+type AuthErrorScreenProps = {
+  returnTo?: string | null;
+};
+
+export default function AuthErrorScreen({ returnTo }: AuthErrorScreenProps) {
   const t = useTranslations("auth");
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0a0a12] text-white">
@@ -126,7 +130,7 @@ export default function AuthErrorScreen() {
               className="flex w-full flex-col items-center justify-center gap-3 sm:flex-row"
             >
               <a
-                href={PHP_LOGIN_REDIRECT_URL}
+                href={loginStartUrl(returnTo)}
                 className="group relative flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-600 via-red-500 to-red-600 px-7 py-3.5 font-sans text-base font-semibold text-white shadow-[0_0_30px_rgba(220,38,38,0.4)] transition hover:shadow-[0_0_45px_rgba(220,38,38,0.65)] sm:w-auto"
               >
                 {t("signInOnSite")}

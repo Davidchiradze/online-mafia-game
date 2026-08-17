@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { GAME_PHASES } from "@/shared/lib/constants/game";
+import { GAME_PHASES, GamePhase } from "@/shared/lib/constants/game";
 
 /**
  * CHARACTERIZATION SPEC — the deterministic host-advance transition graph.
@@ -29,34 +29,35 @@ import { GAME_PHASES } from "@/shared/lib/constants/game";
 
 // source phase → next phase (transcribed from the End*/Start* buttons)
 const JAPANESE_HOST_ADVANCE: Record<string, string> = {
-  picking_roles: "mafia_meet", // ConfirmRolesButton
-  mafia_meet: "don_chooses_right_hand", // EndMafiaMeetButton
-  don_chooses_right_hand: "yakuda_shogun_meet", // EndDonChooseRightHandButton*
-  yakuda_shogun_meet: "detective_meet", // EndYakuzaShogunMeetButton*
-  detective_meet: "doctor_meet", // EndDetectiveMeetButton*
-  doctor_meet: "introduction_phase", // EndDoctorMeetButton*
-  night_phase: "mafia_chooses_target", // StartMafiaTargetButton
-  mafia_chooses_target: "don_checks_for_detective", // EndMafiaTargetButton
-  don_checks_for_detective: "right_hand_checks_for_yakuza", // EndDonCheckButton
-  right_hand_checks_for_yakuza: "yakuza_and_shogun_chooses_target", // EndRightHandCheckButton*
-  yakuza_and_shogun_chooses_target: "detective_checks_for_mafia", // EndYakuzaTargetButton*
-  detective_checks_for_mafia: "doctor_heals_player", // EndDetectiveCheckButton*
-  doctor_heals_player: "farewell_speech", // EndDoctorHealButton* (resolve-marker → startFarewellSpeech)
-  voting: "repeat", // EndVotingButton
+  [GamePhase.PICKING_ROLES]: GamePhase.MAFIA_MEET, // ConfirmRolesButton
+  [GamePhase.MAFIA_MEET]: GamePhase.DON_MEET, // EndMafiaMeetButton*
+  [GamePhase.DON_MEET]: GamePhase.YAKUDA_SHOGUN_MEET, // EndDonMeetButton*
+  [GamePhase.YAKUDA_SHOGUN_MEET]: GamePhase.DETECTIVE_MEET, // EndYakuzaShogunMeetButton*
+  [GamePhase.DETECTIVE_MEET]: GamePhase.DOCTOR_MEET, // EndDetectiveMeetButton*
+  [GamePhase.DOCTOR_MEET]: GamePhase.INTRODUCTION_PHASE, // EndDoctorMeetButton*
+  [GamePhase.NIGHT_PHASE]: GamePhase.MAFIA_CHOOSES_TARGET, // StartMafiaTargetButton
+  [GamePhase.MAFIA_CHOOSES_TARGET]: GamePhase.DON_CHECKS_FOR_DETECTIVE, // EndMafiaTargetButton
+  [GamePhase.DON_CHECKS_FOR_DETECTIVE]:
+    GamePhase.YAKUZA_AND_SHOGUN_CHOOSES_TARGET, // EndDonCheckButton*
+  [GamePhase.YAKUZA_AND_SHOGUN_CHOOSES_TARGET]: GamePhase.DETECTIVE_CHECKS_FOR_MAFIA, // EndYakuzaTargetButton*
+  [GamePhase.DETECTIVE_CHECKS_FOR_MAFIA]: GamePhase.DOCTOR_HEALS_PLAYER, // EndDetectiveCheckButton*
+  [GamePhase.DOCTOR_HEALS_PLAYER]: GamePhase.FAREWELL_SPEECH, // EndDoctorHealButton* (resolve-marker → startFarewellSpeech)
+  [GamePhase.VOTING]: GamePhase.REPEAT, // EndVotingButton
 };
 
 // Sources whose advance first parks the table in the neutral `phase_transition`
 // sleep buffer (StartNextPhaseButton then wakes the next group). Marked with *
 // above. Documented so the refactor preserves the buffer behavior.
 const BUFFER_MEDIATED_SOURCES = new Set([
-  "don_chooses_right_hand",
-  "yakuda_shogun_meet",
-  "detective_meet",
-  "doctor_meet",
-  "right_hand_checks_for_yakuza",
-  "yakuza_and_shogun_chooses_target",
-  "detective_checks_for_mafia",
-  "doctor_heals_player",
+  GamePhase.MAFIA_MEET,
+  GamePhase.DON_MEET,
+  GamePhase.YAKUDA_SHOGUN_MEET,
+  GamePhase.DETECTIVE_MEET,
+  GamePhase.DOCTOR_MEET,
+  GamePhase.DON_CHECKS_FOR_DETECTIVE,
+  GamePhase.YAKUZA_AND_SHOGUN_CHOOSES_TARGET,
+  GamePhase.DETECTIVE_CHECKS_FOR_MAFIA,
+  GamePhase.DOCTOR_HEALS_PLAYER,
 ]);
 
 describe("Japanese host-advance transition graph (spec)", () => {
@@ -83,21 +84,21 @@ describe("Japanese host-advance transition graph (spec)", () => {
 
   it("threads the full night meeting sequence in order", () => {
     // Walk from picking_roles through the meeting chain to introduction_phase.
-    const walk: string[] = ["picking_roles"];
-    let cur = "picking_roles";
+    const walk: string[] = [GamePhase.PICKING_ROLES];
+    let cur: string = GamePhase.PICKING_ROLES;
     while (JAPANESE_HOST_ADVANCE[cur] && walk.length < 20) {
       cur = JAPANESE_HOST_ADVANCE[cur];
       walk.push(cur);
-      if (cur === "introduction_phase") break;
+      if (cur === GamePhase.INTRODUCTION_PHASE) break;
     }
     expect(walk).toEqual([
-      "picking_roles",
-      "mafia_meet",
-      "don_chooses_right_hand",
-      "yakuda_shogun_meet",
-      "detective_meet",
-      "doctor_meet",
-      "introduction_phase",
+      GamePhase.PICKING_ROLES,
+      GamePhase.MAFIA_MEET,
+      GamePhase.DON_MEET,
+      GamePhase.YAKUDA_SHOGUN_MEET,
+      GamePhase.DETECTIVE_MEET,
+      GamePhase.DOCTOR_MEET,
+      GamePhase.INTRODUCTION_PHASE,
     ]);
   });
 

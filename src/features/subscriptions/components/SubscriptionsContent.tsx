@@ -1,12 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useQuery } from "convex/react";
 import { ArrowRight, Check } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { authProfiles } from "@convex/refs/lobby";
 import { cn } from "@/shared/lib/cn";
 import { PHP_API_BASE_URL } from "@/features/auth/lib/constants";
+import { useViewer } from "@/features/auth/hooks/useViewer";
 import {
   SUBSCRIPTIONS_CONFIG,
   packageConfigIdForTier,
@@ -33,7 +32,7 @@ export default function SubscriptionsContent() {
   // config. Note: this intentionally uses the raw subscription (not the
   // entitlements staff-override), so a staff member with no purchase still
   // sees the inactive state on their own billing page.
-  const profile = useQuery(authProfiles.currentProfile);
+  const { profile } = useViewer();
   const subscription = profile?.subscription;
   const activeConfigId = subscription?.active
     ? packageConfigIdForTier(subscription.packageId)

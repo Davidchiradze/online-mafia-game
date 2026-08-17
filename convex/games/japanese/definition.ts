@@ -25,13 +25,11 @@ import { japaneseNextPhase } from "./phases";
 /**
  * Every role Japanese can assign (mirrors `JAPANESE_MAFIA_ROLES` in
  * `src/lib/constants/game.ts`, pinned by tests/game/phases.test.ts).
- * MAFIA_RIGHT_HAND is included though it is not in the initial deck — it is
- * promoted in-game during `don_chooses_right_hand`.
+ * Every entry is dealt from the deck — there are no promoted-only roles.
  */
 const JAPANESE_ROLES: readonly Role[] = [
   "DON",
   "MAFIA",
-  "MAFIA_RIGHT_HAND",
   "SHOGUN",
   "YAKUZA",
   "DETECTIVE",
@@ -65,7 +63,6 @@ export const JAPANESE_DEFINITION: GameDefinition = {
   flags: {
     hasIntroductionPhase: true,
     hasFarewellSpeech: true,
-    hasRightHandPromotion: true,
     firstDaySingleNomineeSkipsToNight: false,
     thirdFoulSpeakingBan: false,
     hasBestMove: false,

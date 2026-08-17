@@ -3,7 +3,9 @@ import { query } from "../_generated/server";
 import { requirePermission } from "../lib/auth";
 import { PERMISSIONS } from "../lib/access";
 import { isSubscriptionActiveByDate } from "../lib/entitlements";
+import { mergePlayerStats } from "../lib/playerStats";
 import { winMethodLabel } from "../games/core/winConditions";
+import type { Doc, Id } from "../_generated/dataModel";
 
 /* ============================================================================
  * ADMIN DASHBOARD ANALYTICS
@@ -56,7 +58,9 @@ export const overviewKpis = query({
 
     return {
       totalUsers: profiles.length,
-      playersPlayed: stats.length,
+      // DISTINCT players, not rows: the record is kept per variant, so someone
+      // who has played two variants has two rows (/docs/ranking-system.md §12).
+      playersPlayed: new Set(stats.map((s) => s.playerId)).size,
       newThisWeek,
       banned,
       subscribers,
@@ -86,12 +90,24 @@ export const topPlayers = query({
 
     const stats = await ctx.db.query("playerStats").collect();
 
+    // The record is kept per variant, so fold a player's rows together before
+    // ranking — otherwise the same person appears once per variant they have
+    // played (/docs/ranking-system.md §12). This board stays cross-variant; a
+    // per-variant admin board would take a `gameType` filter instead.
+    const byPlayer = new Map<Id<"profiles">, Doc<"playerStats">[]>();
+    for (const row of stats) {
+      const existing = byPlayer.get(row.playerId);
+      if (existing) existing.push(row);
+      else byPlayer.set(row.playerId, [row]);
+    }
+
     const rows = await Promise.all(
-      stats.map(async (s) => {
+      [...byPlayer].map(async ([playerId, playerRows]) => {
+        const s = mergePlayerStats(playerRows);
         const decided = s.wins + s.losses;
-        const profile = await ctx.db.get(s.playerId);
+        const profile = await ctx.db.get(playerId);
         return {
-          playerId: s.playerId,
+          playerId,
           nickname: profile?.nickname ?? "Unknown",
           avatar: profile?.avatar ?? null,
           totalMatches: s.totalMatches,

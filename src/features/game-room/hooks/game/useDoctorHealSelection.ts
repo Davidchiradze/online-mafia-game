@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
+import { GamePhase } from "@/shared/lib/constants/game";
 
 type GameSessionState = NonNullable<
   ReturnType<typeof useGameRoom>["gameSessionState"]
@@ -59,7 +60,7 @@ export function useDoctorHealSelection(
   const isDoctorHealSelected = useMemo(() => {
     if (!gameSessionState || seatNumber === null) return false;
     const isInDoctorPhase =
-      gameSessionState.gamePhase === "doctor_heals_player";
+      gameSessionState.gamePhase === GamePhase.DOCTOR_HEALS_PLAYER;
     if (!isInDoctorPhase) return false;
 
     if (nightPhaseSession) {

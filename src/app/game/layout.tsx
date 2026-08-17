@@ -1,4 +1,4 @@
-import AuthGate from "@/features/headquarters/components/AuthGate";
+import { SignedInGuard } from "@/features/auth/components/SignedInGuard";
 import { SubscriptionRouteGuard } from "@/features/auth/components/SubscriptionRouteGuard";
 import { FEATURES } from "@convex/lib/entitlements";
 
@@ -23,13 +23,13 @@ export default function GameLayout({
       />
       <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black/80 pointer-events-none" />
       <div className="relative z-10 h-full">
-        <AuthGate>
+        <SignedInGuard>
           <SubscriptionRouteGuard
             anyOf={[FEATURES.PLAY_GAME, FEATURES.SPECTATE_GAME]}
           >
             {children}
           </SubscriptionRouteGuard>
-        </AuthGate>
+        </SignedInGuard>
       </div>
     </div>
   );

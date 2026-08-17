@@ -17,7 +17,7 @@
 > | --- | --- |
 > | Shared win-check mechanism | [engine/win-check-seam.md](./win-check-seam.md) |
 > | Japanese rules | [variants/japanese/rules.md](../variants/japanese/rules.md), [win-conditions.md](../variants/japanese/win-conditions.md) |
-> | Sports rules | [variants/sports.md](../variants/sports.md) |
+> | Sports rules | [variants/sports/rules.md](../variants/sports/rules.md), [win-conditions.md](../variants/sports/win-conditions.md) |
 
 ## 1. The problem (historical)
 
@@ -32,7 +32,7 @@ consulted `gameType`, and phases were referenced **positionally**
 codebase or threading `if (gameType === ...)` through dozens of files.
 
 Every concern that was hardwired — phase list, role deck, teams, night kill
-model, kill resolution, win detection, role deal, right-hand promotion, seat
+model, kill resolution, win detection, role deal, mafia kill succession, seat
 geometry — now resolves through one of the two registries in §2. The current
 per-variant values are generated into
 [generated/game-spec.md](../generated/game-spec.md); this section deliberately
@@ -231,7 +231,7 @@ For the wider layout see [architecture.md](../architecture.md).
 - Visibility ruleset + awake roles.
 - Host phase-controls map (which button per phase).
 - Seat layout geometry (12-ring vs 10-ring).
-- Special mechanics: right-hand promotion (Japanese), 3rd-foul speaking ban
+- Special mechanics: mafia kill succession (Japanese), 3rd-foul speaking ban
   (Sports), day-1 single-nominee rule (Sports).
 
 ## 5. Phased refactor plan (complete)
@@ -262,7 +262,8 @@ For the wider layout see [architecture.md](../architecture.md).
   through the ruleset. Fixed the `maxPlayers` plumbing (§6) and added the
   10-seat layout.
 - **Phase 5 — Enable.** `sports_mafia` un-filtered in `CreateGameModal` and
-  shipped **unrated** (absent from `RATING_CONFIG` → rating skipped).
+  shipped **unrated** (absent from `RATING_CONFIG` → rating skipped). Rating was
+  added afterwards as its own ladder — see the ranking docs.
 
 ### Remaining work
 
@@ -278,10 +279,13 @@ archived task tracker so this is the only place they live:
   mechanical move guarded by `tests/game/gameDefinition.test.ts` — import paths
   change, values must not.
 
-- **Sports is intentionally unrated.** `RATING_CONFIG` in
-  `convex/lib/constants.ts` has only a `japanese_mafia` entry; a missing entry
-  means ELO is skipped entirely. Add the Sports config and E-table once ~200
-  decided Sports games exist (see [ranking-system.md](../ranking-system.md) §9).
+- **Per-variant ladders are half-wired.** `playerRatings` is keyed by
+  `(playerId, gameType)` and `RATING_CONFIG` is keyed by game type, so the
+  backend already gives each variant its own ELO. What is not variant-aware yet:
+  `RATING_CONFIG.deltas` demands all three factions even for a two-faction
+  variant, `playerStats` is one global row per player, and both the profile
+  stats query and the leaderboard page name a game type literally. Analysis and
+  the full surface map: [ranking-system.md](../ranking-system.md) §10, §12.
 
 ## 6. Seat geometry
 
@@ -319,8 +323,10 @@ to 12, so a Sports room no longer renders a 12-seat ring.
   `gameSessions.winner` union already includes `citizens` and `mafia`, which are
   the only outcomes Sports emits — no schema change needed there.
 - **ELO ladders are per-`gameType`** (`playerRatings.by_gameType_rating`), so a
-  Sports ladder is automatically separate from Japanese once a `RATING_CONFIG`
-  entry is added. No cross-contamination.
+  variant's ladder is automatically separate from every other one once a
+  `RATING_CONFIG` entry exists. No cross-contamination. The **record** attached
+  to it (wins, streaks, per-role stats) is not split yet —
+  [ranking-system.md](../ranking-system.md) §12.
 
 ## 8. Guardrails
 

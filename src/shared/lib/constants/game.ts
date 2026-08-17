@@ -1,3 +1,13 @@
+import { GamePhase } from "@convex/lib/constants";
+
+/**
+ * Phase names come from the backend enum and are re-exported here so frontend
+ * code keeps importing them from this module. `convex/` may never import from
+ * `src/`, so the shared vocabulary has to be declared on that side — this is a
+ * pass-through, NOT a second copy.
+ */
+export { GamePhase };
+
 export const GAME_TYPES = [
   "sports_mafia",
   "city_mafia",
@@ -37,7 +47,6 @@ export const GAME_TYPE_MAX_PLAYER_NUMBER: Record<
 export const JAPANESE_MAFIA_ROLES = [
   "DON",
   "MAFIA",
-  "MAFIA_RIGHT_HAND",
   "SHOGUN",
   "YAKUZA",
   "DETECTIVE",
@@ -45,88 +54,103 @@ export const JAPANESE_MAFIA_ROLES = [
   "DOCTOR",
 ] as const;
 
-/** Mafia team roles - can see mafia target selection */
+/**
+ * Roles no variant deals any more, kept ONLY so archived games still read
+ * correctly. A live game can never produce one.
+ *
+ * `MAFIA_RIGHT_HAND` was reachable by in-game promotion until it was removed;
+ * finished games still persist it in `gameLogPlayers.role` and
+ * `playerStats.roleStats`, so it keeps its label, its faction and its i18n key.
+ * It is absent from `JAPANESE_MAFIA_ROLES` — the list of what can be DEALT — so
+ * nothing offers it to a live table.
+ */
+export const RETIRED_ROLES = ["MAFIA_RIGHT_HAND"] as const;
+
+/** Any role that may need rendering: currently dealt, or held by an old game. */
+export type DisplayableRole =
+  | (typeof JAPANESE_MAFIA_ROLES)[number]
+  | (typeof RETIRED_ROLES)[number];
+
+/**
+ * Mafia team roles - can see mafia target selection.
+ *
+ * Retains the retired `MAFIA_RIGHT_HAND` so `roleToFaction` still answers
+ * "mafia" for archived rows; see the note on `MAFIA_TEAM_ROLES` in
+ * `convex/lib/constants.ts`, which this mirrors.
+ */
 export const MAFIA_TEAM_ROLES = ["DON", "MAFIA_RIGHT_HAND", "MAFIA"] as const;
 
 /** Yakuza team roles - can see yakuza target selection */
 export const YAKUZA_TEAM_ROLES = ["YAKUZA", "SHOGUN"] as const;
 
-export const JAPANESE_MAFIA_ROLE_LABEL: Record<
-  (typeof JAPANESE_MAFIA_ROLES)[number],
-  string
-> = {
+export const JAPANESE_MAFIA_ROLE_LABEL: Record<DisplayableRole, string> = {
   DON: "Don",
   MAFIA: "Mafia",
-  MAFIA_RIGHT_HAND: "Don's Right Hand",
   SHOGUN: "Shogun",
   YAKUZA: "Yakuza",
   DETECTIVE: "Detective",
   CITIZEN: "Citizen",
   DOCTOR: "Doctor",
+  MAFIA_RIGHT_HAND: "Don's Right Hand",
 };
 
+/**
+ * Every phase the APP knows, in reading order — the Japanese list plus the
+ * Sports-only phases the backend `GAME_PHASES` omits.
+ *
+ * Built from `GamePhase` so the names have exactly one definition; this array
+ * only decides ORDER and membership. Nothing reads it positionally, so a phase
+ * may be inserted in reading order rather than appended.
+ */
 export const GAME_PHASES = [
-  "game_session_started",
-  "picking_roles",
-  "mafia_meet",
-  "don_chooses_right_hand",
-  "yakuda_shogun_meet",
-  "detective_meet",
-  "doctor_meet",
-  "introduction_phase",
-  "night_phase",
-  "mafia_chooses_target",
-  "don_checks_for_detective",
-  "right_hand_checks_for_yakuza",
-  "yakuza_and_shogun_chooses_target",
-  "detective_checks_for_mafia",
-  "doctor_heals_player",
-  "farewell_speech",
-  "day_phase",
-  "nominated_players_speak",
-  "voting",
-  "repeat",
-  "end_game",
-  // Neutral "everyone asleep" buffer inserted between meetings where the awake
-  // role changes across teams (and on Doctor→wake exits). Appended last so the
-  // numeric GAME_PHASES[0..20] indices used across the app stay stable.
-  "phase_transition",
-  // Sports-only: the Don's solo meet (host + Don see each other) that Sports
-  // inserts after `mafia_meet`. Appended after the shared indices so the
-  // GAME_PHASES[0..20] literals used across the app stay stable.
-  "don_meet",
-  // Sports-only: the first-night victim names 3 suspects before their farewell
-  // (docs/variants/sports.md §6). Entered only at dawn of night 1 when the kill
-  // qualifies. Appended last for the same index-stability reason as above.
-  "best_move",
+  GamePhase.GAME_SESSION_STARTED,
+  GamePhase.PICKING_ROLES,
+  GamePhase.MAFIA_MEET,
+  GamePhase.DON_MEET,
+  GamePhase.YAKUDA_SHOGUN_MEET,
+  GamePhase.DETECTIVE_MEET,
+  GamePhase.DOCTOR_MEET,
+  GamePhase.INTRODUCTION_PHASE,
+  GamePhase.NIGHT_PHASE,
+  GamePhase.MAFIA_CHOOSES_TARGET,
+  GamePhase.DON_CHECKS_FOR_DETECTIVE,
+  GamePhase.YAKUZA_AND_SHOGUN_CHOOSES_TARGET,
+  GamePhase.DETECTIVE_CHECKS_FOR_MAFIA,
+  GamePhase.DOCTOR_HEALS_PLAYER,
+  GamePhase.FAREWELL_SPEECH,
+  GamePhase.DAY_PHASE,
+  GamePhase.NOMINATED_PLAYERS_SPEAK,
+  GamePhase.VOTING,
+  GamePhase.REPEAT,
+  GamePhase.END_GAME,
+  GamePhase.PHASE_TRANSITION,
+  GamePhase.BEST_MOVE,
 ] as const;
 
 /** Human-readable labels for each game phase */
-export const GAME_PHASE_LABELS: Record<(typeof GAME_PHASES)[number], string> = {
-  game_session_started: "Game Started",
-  picking_roles: "Picking Roles",
-  mafia_meet: "Mafia Meeting",
-  don_chooses_right_hand: "Don Chooses Right Hand",
-  yakuda_shogun_meet: "Yakuza & Shogun Meeting",
-  detective_meet: "Detective Meeting",
-  doctor_meet: "Doctor Meeting",
-  introduction_phase: "Introduction",
-  night_phase: "Night Phase",
-  mafia_chooses_target: "Mafia Chooses Target",
-  don_checks_for_detective: "Don Checks for Detective",
-  right_hand_checks_for_yakuza: "Right Hand Checks for Yakuza",
-  yakuza_and_shogun_chooses_target: "Yakuza & Shogun Choose Target",
-  detective_checks_for_mafia: "Detective Checks for Mafia",
-  doctor_heals_player: "Doctor Heals",
-  farewell_speech: "Farewell Speech",
-  day_phase: "Day Phase",
-  nominated_players_speak: "Self-Justification",
-  voting: "Voting",
-  repeat: "Next Round",
-  end_game: "Game Over",
-  phase_transition: "Everyone Asleep",
-  don_meet: "Don Meeting",
-  best_move: "Best Move",
+export const GAME_PHASE_LABELS: Record<GamePhase, string> = {
+  [GamePhase.GAME_SESSION_STARTED]: "Game Started",
+  [GamePhase.PICKING_ROLES]: "Picking Roles",
+  [GamePhase.MAFIA_MEET]: "Mafia Meeting",
+  [GamePhase.YAKUDA_SHOGUN_MEET]: "Yakuza & Shogun Meeting",
+  [GamePhase.DETECTIVE_MEET]: "Detective Meeting",
+  [GamePhase.DOCTOR_MEET]: "Doctor Meeting",
+  [GamePhase.INTRODUCTION_PHASE]: "Introduction",
+  [GamePhase.NIGHT_PHASE]: "Night Phase",
+  [GamePhase.MAFIA_CHOOSES_TARGET]: "Mafia Chooses Target",
+  [GamePhase.DON_CHECKS_FOR_DETECTIVE]: "Don Checks for Detective",
+  [GamePhase.YAKUZA_AND_SHOGUN_CHOOSES_TARGET]: "Yakuza & Shogun Choose Target",
+  [GamePhase.DETECTIVE_CHECKS_FOR_MAFIA]: "Detective Checks for Mafia",
+  [GamePhase.DOCTOR_HEALS_PLAYER]: "Doctor Heals",
+  [GamePhase.FAREWELL_SPEECH]: "Farewell Speech",
+  [GamePhase.DAY_PHASE]: "Day Phase",
+  [GamePhase.NOMINATED_PLAYERS_SPEAK]: "Self-Justification",
+  [GamePhase.VOTING]: "Voting",
+  [GamePhase.REPEAT]: "Next Round",
+  [GamePhase.END_GAME]: "Game Over",
+  [GamePhase.PHASE_TRANSITION]: "Everyone Asleep",
+  [GamePhase.DON_MEET]: "Don Meeting",
+  [GamePhase.BEST_MOVE]: "Best Move",
 };
 
 // Day Phase Speaking Constants
@@ -136,7 +160,7 @@ export const DAY_PHASE_SPEAKING = {
   /** Maximum speaking time per player in seconds */
   MAX_SPEAKING_TIME_SECONDS: 60,
   /**
-   * Sports final-day carve-out (docs/variants/sports.md §4.2): on the last day
+   * Sports final-day carve-out (docs/variants/sports/rules.md §4.2): on the last day
    * phase (≤ 4 alive) a 3rd-foul-banned player still speaks, but for 30 seconds
    * instead of 60. See `hasShortenedFinalDaySpeech` in `lib/game/speakingBan`.
    */
@@ -189,11 +213,11 @@ export const FOULS = {
   FOUL_SPEAK_DURATION_SECONDS: 5,
   /** Phases where fouls can be given and foul speaking is allowed */
   ALLOWED_PHASES: [
-    "introduction_phase",
-    "farewell_speech",
-    "day_phase",
-    "nominated_players_speak",
-    "voting",
+    GamePhase.INTRODUCTION_PHASE,
+    GamePhase.FAREWELL_SPEECH,
+    GamePhase.DAY_PHASE,
+    GamePhase.NOMINATED_PLAYERS_SPEAK,
+    GamePhase.VOTING,
   ] as const,
 } as const;
 
@@ -233,20 +257,18 @@ export const VOTING = {
 export const PHASE_TIMERS: Partial<
   Record<(typeof GAME_PHASES)[number], number>
 > = {
-  mafia_meet: 60 * 1000,
-  don_chooses_right_hand: 20 * 1000,
-  yakuda_shogun_meet: 40 * 1000,
-  detective_meet: 15 * 1000,
-  doctor_meet: 15 * 1000,
-  mafia_chooses_target: 20 * 1000,
-  don_checks_for_detective: 15 * 1000,
-  right_hand_checks_for_yakuza: 15 * 1000,
-  yakuza_and_shogun_chooses_target: 20 * 1000,
-  detective_checks_for_mafia: 15 * 1000,
-  doctor_heals_player: 15 * 1000,
+  [GamePhase.MAFIA_MEET]: 60 * 1000,
+  [GamePhase.YAKUDA_SHOGUN_MEET]: 40 * 1000,
+  [GamePhase.DETECTIVE_MEET]: 15 * 1000,
+  [GamePhase.DOCTOR_MEET]: 15 * 1000,
+  [GamePhase.MAFIA_CHOOSES_TARGET]: 20 * 1000,
+  [GamePhase.DON_CHECKS_FOR_DETECTIVE]: 15 * 1000,
+  [GamePhase.YAKUZA_AND_SHOGUN_CHOOSES_TARGET]: 20 * 1000,
+  [GamePhase.DETECTIVE_CHECKS_FOR_MAFIA]: 15 * 1000,
+  [GamePhase.DOCTOR_HEALS_PLAYER]: 15 * 1000,
   // Sports best move (§6.3): shown to all living players + the host, since the
   // whole table watches the victim's clock. Visual only — the host advances.
-  best_move: 30 * 1000,
+  [GamePhase.BEST_MOVE]: 30 * 1000,
 } as const;
 
 // Sports Mafia night constants (mirrors convex/lib/constants.ts SPORTS).

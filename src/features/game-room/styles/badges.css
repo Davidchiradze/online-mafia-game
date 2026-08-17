@@ -1,0 +1,125 @@
+/* Game UI — badges and pills.
+
+   Small status chips used across participant tiles, the phase title and the
+   host's night summary. Colour carries meaning here and is deliberately
+   consistent: emerald speaks, amber waits, rose is mafia/nominated, sky is a
+   timer, violet is yakuza. */
+
+@reference "tailwindcss";
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Badges
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.badge {
+  @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium;
+  font-family: var(--font-inter), var(--font-noto-georgian), sans-serif;
+}
+
+.badge-speaker-active {
+  @apply bg-gradient-to-r from-emerald-500/20 to-emerald-600/20
+         border border-emerald-500/40 text-emerald-400;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.15);
+}
+
+.badge-speaker-paused {
+  @apply bg-gradient-to-r from-amber-500/20 to-amber-600/20
+         border border-amber-500/40 text-amber-400;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.15);
+}
+
+.badge-nominated {
+  @apply bg-gradient-to-r from-rose-500/20 to-red-600/20
+         border border-rose-500/40 text-rose-400;
+  box-shadow: 0 0 8px rgba(244, 63, 94, 0.15);
+}
+
+/* Colour only — the host panel's countdown pill pairs these with its own
+   container-query sizing (`.host-panel__timer`). */
+.badge-timer {
+  @apply bg-gradient-to-r from-sky-500/20 to-blue-600/20
+         border border-sky-500/40 text-sky-300;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.15);
+}
+
+.badge-timer-urgent {
+  @apply bg-gradient-to-r from-red-500/25 to-red-600/25
+         border border-red-500/50 text-red-300;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.25);
+  animation: timer-pulse 1s ease-in-out infinite;
+}
+
+@keyframes timer-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.badge-voted {
+  background: linear-gradient(135deg, rgba(52,211,153,0.15) 0%, rgba(16,185,129,0.2) 100%);
+  border: 1px solid rgba(52,211,153,0.35);
+  @apply px-4 py-2 rounded-lg text-emerald-300 font-semibold;
+}
+
+.badge-auto-voted {
+  background: linear-gradient(135deg, rgba(245,158,11,0.15) 0%, rgba(217,119,6,0.2) 100%);
+  border: 1px solid rgba(245,158,11,0.35);
+  @apply px-4 py-2 rounded-lg text-amber-300 font-semibold;
+}
+
+.badge-waiting {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  @apply px-4 py-2 rounded-lg text-white/40;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Night Action Pills
+
+   The host-only "who targeted whom" strip. `-active` is the role currently
+   choosing, `-value` is a recorded pick, `-empty` is nothing yet.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.night-action-pill {
+  @apply px-3 py-1.5 rounded-full border transition;
+}
+
+/* Rose (Mafia) */
+.night-action-pill-rose-active {
+  background: linear-gradient(135deg, rgba(244,63,94,0.3) 0%, rgba(225,29,72,0.35) 100%);
+  border-color: rgba(244,63,94,0.5);
+  box-shadow: 0 0 15px rgba(244,63,94,0.4);
+}
+
+.night-action-pill-rose-value {
+  background: rgba(244,63,94,0.15);
+  border-color: rgba(244,63,94,0.3);
+}
+
+/* Violet (Yakuza) */
+.night-action-pill-violet-active {
+  background: linear-gradient(135deg, rgba(139,92,246,0.3) 0%, rgba(124,58,237,0.35) 100%);
+  border-color: rgba(139,92,246,0.5);
+  box-shadow: 0 0 15px rgba(139,92,246,0.4);
+}
+
+.night-action-pill-violet-value {
+  background: rgba(139,92,246,0.15);
+  border-color: rgba(139,92,246,0.3);
+}
+
+/* Emerald (Doctor) */
+.night-action-pill-emerald-active {
+  background: linear-gradient(135deg, rgba(52,211,153,0.3) 0%, rgba(16,185,129,0.35) 100%);
+  border-color: rgba(52,211,153,0.5);
+  box-shadow: 0 0 15px rgba(52,211,153,0.4);
+}
+
+.night-action-pill-emerald-value {
+  background: rgba(52,211,153,0.15);
+  border-color: rgba(52,211,153,0.3);
+}
+
+.night-action-pill-empty {
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.1);
+}

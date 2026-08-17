@@ -18,26 +18,26 @@
  * the destinations below are the LOGICAL next phase.
  */
 
-import { GAME_PHASES } from "../../lib/constants";
+import { GAME_PHASES, GamePhase } from "../../lib/constants";
 import type { Phase, PhaseContext } from "../core/types";
 
 export const JAPANESE_PHASES = GAME_PHASES;
 
 const HOST_ADVANCE: Record<string, Phase> = {
-  picking_roles: "mafia_meet",
-  mafia_meet: "don_chooses_right_hand",
-  don_chooses_right_hand: "yakuda_shogun_meet",
-  yakuda_shogun_meet: "detective_meet",
-  detective_meet: "doctor_meet",
-  doctor_meet: "introduction_phase",
-  night_phase: "mafia_chooses_target",
-  mafia_chooses_target: "don_checks_for_detective",
-  don_checks_for_detective: "right_hand_checks_for_yakuza",
-  right_hand_checks_for_yakuza: "yakuza_and_shogun_chooses_target",
-  yakuza_and_shogun_chooses_target: "detective_checks_for_mafia",
-  detective_checks_for_mafia: "doctor_heals_player",
-  doctor_heals_player: "farewell_speech",
-  voting: "repeat",
+  [GamePhase.PICKING_ROLES]: GamePhase.MAFIA_MEET,
+  [GamePhase.MAFIA_MEET]: GamePhase.DON_MEET,
+  [GamePhase.DON_MEET]: GamePhase.YAKUDA_SHOGUN_MEET,
+  [GamePhase.YAKUDA_SHOGUN_MEET]: GamePhase.DETECTIVE_MEET,
+  [GamePhase.DETECTIVE_MEET]: GamePhase.DOCTOR_MEET,
+  [GamePhase.DOCTOR_MEET]: GamePhase.INTRODUCTION_PHASE,
+  [GamePhase.NIGHT_PHASE]: GamePhase.MAFIA_CHOOSES_TARGET,
+  [GamePhase.MAFIA_CHOOSES_TARGET]: GamePhase.DON_CHECKS_FOR_DETECTIVE,
+  [GamePhase.DON_CHECKS_FOR_DETECTIVE]:
+    GamePhase.YAKUZA_AND_SHOGUN_CHOOSES_TARGET,
+  [GamePhase.YAKUZA_AND_SHOGUN_CHOOSES_TARGET]: GamePhase.DETECTIVE_CHECKS_FOR_MAFIA,
+  [GamePhase.DETECTIVE_CHECKS_FOR_MAFIA]: GamePhase.DOCTOR_HEALS_PLAYER,
+  [GamePhase.DOCTOR_HEALS_PLAYER]: GamePhase.FAREWELL_SPEECH,
+  [GamePhase.VOTING]: GamePhase.REPEAT,
 };
 
 export function japaneseNextPhase(

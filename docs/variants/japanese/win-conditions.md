@@ -7,7 +7,8 @@
 >
 > Implemented in `convex/games/japanese/winConditions.ts` (`decideWinner` /
 > `describeWin`, both pure). Sports has its own rules — a flat parity rule with
-> no context sensitivity — in [variants/sports.md](../sports.md) §7.
+> no context sensitivity — in
+> [variants/sports/win-conditions.md](../sports/win-conditions.md).
 >
 > Section numbers here are load-bearing: `convex/games/japanese/winConditions.ts`
 > cites §7. Do not renumber.
@@ -28,7 +29,7 @@
 The notation used throughout the rest of this document — it is what the
 generated decision table's columns mean:
 
-- **`m`** = alive Mafia-faction players (`DON` + `MAFIA_RIGHT_HAND` + `MAFIA`).
+- **`m`** = alive Mafia-faction players (`DON` + `MAFIA` ×2).
 - **`YA`** = the `YAKUZA` is alive.
 - **`SH`** = the `SHOGUN` is alive.
 - **Town** = `DETECTIVE` / `DOCTOR` / `CITIZEN` (Citizens faction).
@@ -141,7 +142,7 @@ These were confirmed and are baked into the rules above:
 - **Doctor exceptions use role presence only.** "Doctor alive" is sufficient for the
   `N=5 DOC+YA` and `N=4 DOC+Mafia` exceptions; per-player heal availability is **not**
   considered. The `N=4` exception fires for Doctor + **any one Mafia member**
-  (`DON` / `MAFIA_RIGHT_HAND` / `MAFIA`), since any of them can kill.
+  (`DON` / `MAFIA`), since any of them can kill.
 - **Detective has zero impact** on win detection (counts purely as Town).
 - **Winner is recorded.** Add `winner: v.union("mafia", "yakuza", "citizens")` (optional)
   to `gameSessions` and set it on auto-finish, reusing `finishGame`'s cleanup scheduling.

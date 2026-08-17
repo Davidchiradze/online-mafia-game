@@ -5,10 +5,8 @@ export const PHP_API_BASE_URL = IS_LOCAL
   ? "http://localhost:8000"
   : "https://mafia.ge";
 
-const ONLINE_MAFIA_ORIGIN = process.env.NEXT_PUBLIC_ONLINE_MAFIA_ORIGIN;
+export const ONLINE_MAFIA_ORIGIN = process.env.NEXT_PUBLIC_ONLINE_MAFIA_ORIGIN;
 
-const PHP_LOGIN_PATH = `/ka/accounts/login/?from=${ONLINE_MAFIA_ORIGIN}`;
-export const PHP_LOGIN_REDIRECT_URL = `${PHP_API_BASE_URL}${PHP_LOGIN_PATH}`;
 export const PHP_LOGOUT_REDIRECT_URL = `${PHP_API_BASE_URL}/ka/accounts/logout`;
 export const LOGOUT_ENDPOINT = "/api/auth/logout";
 

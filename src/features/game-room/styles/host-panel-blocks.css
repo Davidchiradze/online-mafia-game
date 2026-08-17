@@ -1,0 +1,387 @@
+/* Game UI — host controls panel: the data-zone blocks.
+
+   The content vocabulary a `HostPanelDescriptor` can put in the flexing middle
+   zone, in the order `HostPanelData` renders them: standing facts (nominated)
+   above live state (who is speaking) above exceptions (a note) above the run
+   and the one-line status. Every size is a `cqh`/`cqw` clamp against the panel
+   container declared in host-panel.css. */
+
+@reference "tailwindcss";
+
+/* ── Nominated seats ─────────────────────────────────────────────────────────
+   A standing fact for the whole day, so a capsule of its own rather than
+   another chip run that could be mistaken for the speaking order. */
+
+/* Wraps rather than overflows: a narrow cell late in a day can be holding six
+   nominated seats, and `.host-panel__data` hides its horizontal overflow — the
+   capsule would silently lose its last seats off the right edge. */
+.host-panel__nominated {
+  @apply flex max-w-full flex-wrap items-center justify-center border;
+  gap: clamp(4px, 1.6cqw, 11px);
+  padding: clamp(2px, 1cqh, 6px) clamp(5px, 1.8cqw, 10px) clamp(2px, 1cqh, 6px)
+    clamp(6px, 2cqw, 12px);
+  background: linear-gradient(135deg, rgba(244,63,94,0.14) 0%, rgba(225,29,72,0.08) 100%);
+  border-color: rgba(244, 63, 94, 0.34);
+  border-radius: 5px;
+}
+
+.host-panel__nominated-label {
+  @apply min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-bold uppercase;
+  font-size: clamp(6px, calc(1.9cqh + 0.7cqw), 10px);
+  letter-spacing: 0.18em;
+  color: #fda4af;
+}
+
+.host-panel__nominated-seats {
+  @apply flex flex-wrap justify-center;
+  gap: clamp(3px, 1cqw, 6px);
+}
+
+.host-panel__nominated-seat {
+  @apply flex items-center justify-center rounded-full border font-extrabold;
+  min-width: clamp(14px, calc(7cqh + 2cqw), 28px);
+  height: clamp(14px, calc(7cqh + 2cqw), 28px);
+  padding: 0 clamp(2px, 0.7cqw, 5px);
+  box-sizing: border-box;
+  background: linear-gradient(135deg, rgba(244,63,94,0.4) 0%, rgba(225,29,72,0.3) 100%);
+  border-color: rgba(244, 63, 94, 0.6);
+  font-size: clamp(7px, calc(3.4cqh + 1cqw), 14px);
+  line-height: 1;
+  color: #ffe4e6;
+}
+
+/* ── Now / next speaker ──────────────────────────────────────────────────────
+   The seat number is the largest thing in the data zone because it is the
+   single fact the host reads while running a day. */
+
+.host-panel__speakers {
+  @apply flex max-w-full flex-wrap justify-center;
+  gap: clamp(4px, 1.6cqw, 12px);
+}
+
+.host-panel__speaker {
+  @apply flex items-center rounded-full border-[1.5px];
+  gap: clamp(4px, 1.4cqw, 9px);
+  padding: clamp(2px, 1cqh, 6px) clamp(6px, 2cqw, 13px);
+}
+
+.host-panel__speaker--now {
+  background: linear-gradient(135deg, rgba(52,211,153,0.34) 0%, rgba(16,185,129,0.28) 100%);
+  border-color: rgba(52, 211, 153, 0.8);
+  box-shadow: 0 0 16px rgba(52, 211, 153, 0.34);
+}
+
+.host-panel__speaker--next {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.55);
+}
+
+.host-panel__speaker-label {
+  @apply font-bold uppercase;
+  font-size: clamp(6px, calc(1.9cqh + 0.7cqw), 10px);
+  letter-spacing: 0.16em;
+}
+
+.host-panel__speaker--now .host-panel__speaker-label {
+  color: #a7f3d0;
+}
+
+.host-panel__speaker--next .host-panel__speaker-label {
+  color: #fcd34d;
+}
+
+.host-panel__speaker-seat {
+  @apply font-extrabold;
+  font-size: clamp(9px, calc(3.6cqh + 1.2cqw), 22px);
+  line-height: 1;
+}
+
+.host-panel__speaker--now .host-panel__speaker-seat {
+  color: #ecfdf5;
+}
+
+.host-panel__speaker--next .host-panel__speaker-seat {
+  color: #fde68a;
+}
+
+/* ── Note ────────────────────────────────────────────────────────────────────
+   Exceptions get a pill so the status line can stay exactly one line. */
+
+.host-panel__note {
+  @apply max-w-full rounded-lg border font-bold uppercase;
+  padding: clamp(2px, 1.1cqh, 7px) clamp(6px, 2cqw, 14px);
+  font-size: clamp(7px, calc(2.3cqh + 0.85cqw), 12px);
+  line-height: 1.25;
+  letter-spacing: 0.12em;
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+}
+
+.host-panel__note--amber {
+  background: linear-gradient(135deg, rgba(245,158,11,0.2) 0%, rgba(217,119,6,0.24) 100%);
+  border-color: rgba(245, 158, 11, 0.5);
+  color: #fcd34d;
+}
+
+.host-panel__note--rose {
+  background: linear-gradient(135deg, rgba(244,63,94,0.18) 0%, rgba(225,29,72,0.22) 100%);
+  border-color: rgba(244, 63, 94, 0.45);
+  color: #fda4af;
+}
+
+.host-panel__note--emerald {
+  background: linear-gradient(135deg, rgba(52,211,153,0.16) 0%, rgba(16,185,129,0.2) 100%);
+  border-color: rgba(52, 211, 153, 0.4);
+  color: #6ee7b7;
+}
+
+/* ── Labelled chip run ───────────────────────────────────────────────────── */
+
+.host-panel__chips {
+  @apply flex w-full flex-col items-center;
+  gap: clamp(2px, 1cqh, 7px);
+}
+
+.host-panel__chips-label {
+  @apply font-bold uppercase text-slate-500;
+  font-size: clamp(6px, calc(1.9cqh + 0.7cqw), 10px);
+  letter-spacing: 0.2em;
+}
+
+.host-panel__chips-run {
+  @apply flex w-full flex-wrap justify-center;
+  gap: clamp(3px, 1.2cqw, 9px);
+}
+
+/* ── Night summary pills ─────────────────────────────────────────────────────
+   What the night has recorded so far: label → value, one pill per acting role
+   (Japanese M/Y/H) or per living mafia (Sports' private picks). `--active` is
+   the role currently choosing; the tones match the night-action palette in
+   badges.css so the panel and the participant grid agree on what rose means. */
+
+.host-panel__meta {
+  @apply flex max-w-full flex-wrap justify-center;
+  gap: clamp(3px, 1.2cqw, 8px);
+}
+
+.host-panel__meta-pill {
+  @apply flex items-center rounded-full border;
+  gap: clamp(2px, 0.7cqw, 5px);
+  padding: clamp(1px, 0.9cqh, 5px) clamp(4px, 1.4cqw, 10px);
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.host-panel__meta-label {
+  @apply font-bold;
+  font-size: clamp(6px, calc(2cqh + 0.7cqw), 10px);
+  letter-spacing: 0.1em;
+  color: #94a3b8;
+}
+
+.host-panel__meta-value {
+  @apply font-extrabold;
+  font-size: clamp(7px, calc(2.4cqh + 0.85cqw), 12px);
+  color: #f1f5f9;
+}
+
+.host-panel__meta-icon {
+  @apply shrink-0;
+  width: clamp(7px, calc(2.4cqh + 0.85cqw), 13px);
+  height: clamp(7px, calc(2.4cqh + 0.85cqw), 13px);
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.host-panel__meta-pill--rose {
+  background: rgba(244, 63, 94, 0.15);
+  border-color: rgba(244, 63, 94, 0.35);
+}
+
+.host-panel__meta-pill--rose .host-panel__meta-label,
+.host-panel__meta-pill--rose .host-panel__meta-icon {
+  color: #fda4af;
+}
+
+.host-panel__meta-pill--violet {
+  background: rgba(139, 92, 246, 0.15);
+  border-color: rgba(139, 92, 246, 0.35);
+}
+
+.host-panel__meta-pill--violet .host-panel__meta-label {
+  color: #c4b5fd;
+}
+
+.host-panel__meta-pill--emerald {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: rgba(52, 211, 153, 0.35);
+}
+
+.host-panel__meta-pill--emerald .host-panel__meta-label {
+  color: #6ee7b7;
+}
+
+/* Whose turn is open right now. Deliberately a glow rather than a different
+   hue: the hue already means "which role", and overloading it would lose that. */
+.host-panel__meta-pill--active {
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.14);
+  border-width: 1.5px;
+}
+
+.host-panel__meta-pill--rose.host-panel__meta-pill--active {
+  border-color: rgba(244, 63, 94, 0.75);
+  box-shadow: 0 0 14px rgba(244, 63, 94, 0.4);
+}
+
+.host-panel__meta-pill--violet.host-panel__meta-pill--active {
+  border-color: rgba(139, 92, 246, 0.75);
+  box-shadow: 0 0 14px rgba(139, 92, 246, 0.4);
+}
+
+.host-panel__meta-pill--emerald.host-panel__meta-pill--active {
+  border-color: rgba(52, 211, 153, 0.75);
+  box-shadow: 0 0 14px rgba(52, 211, 153, 0.4);
+}
+
+/* ── Emphasised meta: the vote tally ─────────────────────────────────────────
+   Same model, different job. A night pill annotates a role the host reads once
+   ("M ⌖ #7"), so its value tops out at 12px. The vote tally is the live
+   scoreboard of an entire phase — hosts reported they simply could not read it,
+   because the annotation ceiling meant a 520x300 desktop centre cell still drew
+   the counts at 12px.
+
+   So a strong pill stops being a pill: label over value, the value on its own
+   ramp that runs to 32px, sitting just under the phase title in the hierarchy.
+   Stacking is what buys the size — side by side, `#1 0` was also ambiguous at a
+   glance, two near-identical numbers 3px apart reading as one token. */
+
+.host-panel__meta-pill--strong {
+  @apply flex-col justify-center;
+  gap: clamp(0px, 0.5cqh, 3px);
+  min-width: clamp(40px, calc(6cqh + 6cqw), 84px);
+  padding: clamp(3px, 1.6cqh, 10px) clamp(6px, 2.2cqw, 14px);
+  border-radius: clamp(9px, 2.8cqh, 16px);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.host-panel__meta-pill--strong .host-panel__meta-label {
+  font-size: clamp(9px, calc(2.6cqh + 1.1cqw), 17px);
+  line-height: 1;
+  letter-spacing: 0.04em;
+  color: #cbd5e1;
+}
+
+/* `tabular-nums` so a count ticking 9 → 10 mid-window widens the card instead
+   of reflowing the whole run sideways under the host's eye. */
+.host-panel__meta-pill--strong .host-panel__meta-value {
+  @apply tabular-nums;
+  font-size: clamp(15px, calc(5.4cqh + 2.2cqw), 32px);
+  line-height: 1;
+  color: #f8fafc;
+}
+
+/* On the clock. Hue alone was doing this job at 12px and losing; at score-card
+   size it can afford a filled surface, a heavier border and a wider glow. */
+.host-panel__meta-pill--strong.host-panel__meta-pill--rose {
+  background: linear-gradient(135deg, rgba(244,63,94,0.3) 0%, rgba(225,29,72,0.2) 100%);
+  border-color: rgba(244, 63, 94, 0.7);
+}
+
+.host-panel__meta-pill--strong.host-panel__meta-pill--rose .host-panel__meta-label {
+  color: #fecdd3;
+}
+
+.host-panel__meta-pill--strong.host-panel__meta-pill--rose .host-panel__meta-value {
+  color: #fff1f2;
+}
+
+.host-panel__meta-pill--strong.host-panel__meta-pill--active {
+  border-width: 2px;
+  box-shadow: 0 0 clamp(10px, 4cqh, 22px) rgba(244, 63, 94, 0.45);
+}
+
+/* Counted. Same dim slate as `.seat-chip--done`, so "already been through" is
+   one colour across the panel whether it is a speaking run or a vote queue. */
+.host-panel__meta-pill--done {
+  background: rgba(148, 163, 184, 0.08);
+  border-color: rgba(148, 163, 184, 0.22);
+}
+
+.host-panel__meta-pill--done .host-panel__meta-label {
+  color: #64748b;
+}
+
+.host-panel__meta-pill--done .host-panel__meta-value {
+  color: #94a3b8;
+}
+
+/* ── Status line and progress ────────────────────────────────────────────── */
+
+/* Slate-300 rather than -400, and a ceiling well above the old 13px: this line
+   carries the queue position ("#1 (1/3)") during the vote, and it was capped
+   small and dim enough that it read as a caption on the score cards rather than
+   as the fact telling the host how far through the queue they are. */
+.host-panel__status {
+  @apply max-w-full font-semibold uppercase tabular-nums text-slate-300;
+  font-size: clamp(8px, calc(2.6cqh + 1cqw), 16px);
+  line-height: 1.25;
+  letter-spacing: 0.13em;
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+}
+
+.host-panel__progress {
+  @apply w-full overflow-hidden rounded-full bg-white/10;
+  height: clamp(3px, 1.4cqh, 6px);
+}
+
+.host-panel__progress-fill {
+  @apply h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500;
+  transition: width 300ms ease;
+}
+
+/* ── Seat chips ──────────────────────────────────────────────────────────────
+   Distinct tones rather than two greens, so the run reads at a glance: who is
+   up now, who is next, who is done, who is waiting. */
+
+.seat-chip {
+  @apply flex items-center justify-center rounded-full border-[1.5px] font-bold;
+  width: clamp(15px, calc(10cqh + 2.6cqw), 38px);
+  height: clamp(15px, calc(10cqh + 2.6cqw), 38px);
+  box-sizing: border-box;
+  font-size: clamp(7px, calc(4.2cqh + 1cqw), 16px);
+  line-height: 1;
+}
+
+.seat-chip--active {
+  background: linear-gradient(135deg, rgba(52,211,153,0.4) 0%, rgba(16,185,129,0.45) 100%);
+  border-color: rgba(52, 211, 153, 0.85);
+  box-shadow: 0 0 14px rgba(52, 211, 153, 0.5);
+  color: #d1fae5;
+}
+
+.seat-chip--next {
+  background: rgba(245, 158, 11, 0.14);
+  border-color: rgba(245, 158, 11, 0.6);
+  color: #fcd34d;
+}
+
+.seat-chip--done {
+  background: rgba(148, 163, 184, 0.1);
+  border-color: rgba(148, 163, 184, 0.26);
+  color: #64748b;
+}
+
+.seat-chip--idle {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.14);
+  color: #8b93a7;
+}
+
+/* Only reached via the collapsed line, where the nominated capsule cannot fit
+   and its seats fold into the chip run — same rose, chip-shaped. */
+.seat-chip--nominated {
+  background: linear-gradient(135deg, rgba(244,63,94,0.4) 0%, rgba(225,29,72,0.3) 100%);
+  border-color: rgba(244, 63, 94, 0.6);
+  color: #ffe4e6;
+}

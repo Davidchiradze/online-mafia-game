@@ -1,6 +1,9 @@
+import { ConvexError, v } from "convex/values";
 import { internalMutation } from "./_generated/server";
-import { RATING_CONFIG } from "./lib/constants";
+import { BACKFILL_POLICY, RATING_CONFIG } from "./lib/constants";
 import { computeRatingDelta } from "./lib/ratings";
+import { aggregateHistory } from "./lib/playerStats";
+import { gameType } from "./tables/games";
 import type { Doc } from "./_generated/dataModel";
 
 /**
@@ -66,6 +69,136 @@ export const clearLegacyUsername = internalMutation({
 });
 
 /**
+ * Split `playerStats` into one row per (player, game variant) —
+ * /docs/ranking-system.md §12.
+ *
+ * REBUILDS FROM `gameLogPlayers` rather than patching rows in place, for the
+ * reason the split exists at all: one global row holds two variants' games
+ * mixed together, and nothing can separate them except the archive they came
+ * from. Stamping a game type onto the existing row would just relabel the mix.
+ *
+ * It also reuses `aggregateHistory`, the same function the live annul path
+ * uses, so a rebuilt row cannot disagree with an incrementally maintained one.
+ * Idempotent by construction: the output is a pure function of the archive, so
+ * a re-run converges and any pre-existing skew is corrected rather than kept.
+ *
+ * Run order (/docs/ranking-system.md §12):
+ *   1. Deploy this + the per-variant write path.
+ *   2. `npx convex run migrations:splitPlayerStatsByGameType` — DRY RUN. Read
+ *      `playersWithMultipleVariants` and `byGameType` before going further:
+ *      that is the check on "every existing row is really Japanese history".
+ *   3. Re-run with `'{"apply":true}'`.
+ *   4. Only then tighten `playerStats.gameType` to required and deploy.
+ *
+ * Scale: reads all of `gameLogPlayers` (~3.4k docs) and writes ~one row per
+ * player-variant pair — a few hundred, well inside the 8,192-write budget. The
+ * binding limit is the read side (~16k docs scanned); past that, chunk by
+ * player-id range, which is safe here because the aggregation is per-player and
+ * order-independent ACROSS players (unlike `backfillRatings`).
+ */
+export const splitPlayerStatsByGameType = internalMutation({
+  args: {
+    /** Omitted or false = dry run: compute and report, write nothing. */
+    apply: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const apply = args.apply ?? false;
+
+    const history = await ctx.db.query("gameLogPlayers").collect();
+    const existing = await ctx.db.query("playerStats").collect();
+
+    // 1. Target state: one entry per (player, variant) that has any history.
+    const byKey = new Map<string, Doc<"gameLogPlayers">[]>();
+    for (const row of history) {
+      const key = `${row.playerId}:${row.gameType}`;
+      const group = byKey.get(key);
+      if (group) group.push(row);
+      else byKey.set(key, [row]);
+    }
+
+    const targets = new Map<
+      string,
+      {
+        playerId: Doc<"gameLogPlayers">["playerId"];
+        gameType: Doc<"gameLogPlayers">["gameType"];
+        fields: ReturnType<typeof aggregateHistory>;
+      }
+    >();
+    for (const [key, group] of byKey) {
+      targets.set(key, {
+        playerId: group[0].playerId,
+        gameType: group[0].gameType,
+        fields: aggregateHistory(group),
+      });
+    }
+
+    // 2. Reconcile against what is stored — never blind-insert, so a re-run
+    //    converges instead of duplicating.
+    let legacyRemoved = 0;
+    let patched = 0;
+    let inserted = 0;
+    let orphansRemoved = 0;
+    const seen = new Set<string>();
+
+    for (const row of existing) {
+      // Pre-split row: it has no game type, and its counters live on in the
+      // per-variant rows rebuilt below.
+      if (!row.gameType) {
+        if (apply) await ctx.db.delete(row._id);
+        legacyRemoved++;
+        continue;
+      }
+      const key = `${row.playerId}:${row.gameType}`;
+      // A row for a variant with no history left (all games annulled away, or a
+      // duplicate) has nothing to hold.
+      if (!targets.has(key) || seen.has(key)) {
+        if (apply) await ctx.db.delete(row._id);
+        orphansRemoved++;
+        continue;
+      }
+      seen.add(key);
+      if (apply) await ctx.db.patch(row._id, targets.get(key)!.fields);
+      patched++;
+    }
+
+    for (const [key, target] of targets) {
+      if (seen.has(key)) continue;
+      if (apply) {
+        await ctx.db.insert("playerStats", {
+          playerId: target.playerId,
+          gameType: target.gameType,
+          ...target.fields,
+        });
+      }
+      inserted++;
+    }
+
+    // 3. The numbers worth reading before applying.
+    const variantsPerPlayer = new Map<string, Set<string>>();
+    const byGameType: Record<string, number> = {};
+    for (const target of targets.values()) {
+      const set = variantsPerPlayer.get(target.playerId) ?? new Set<string>();
+      set.add(target.gameType);
+      variantsPerPlayer.set(target.playerId, set);
+      byGameType[target.gameType] = (byGameType[target.gameType] ?? 0) + 1;
+    }
+
+    return {
+      mode: apply ? "applied" : "dry-run",
+      legacyRemoved,
+      patched,
+      inserted,
+      orphansRemoved,
+      playersTouched: variantsPerPlayer.size,
+      playersWithMultipleVariants: [...variantsPerPlayer.values()].filter(
+        (s) => s.size > 1,
+      ).length,
+      byGameType,
+    };
+  },
+});
+
+/**
  * ELO backfill: replay every archived rated game in global chronological
  * order and rebuild all rating state (see /docs/ranking-system.md §8).
  *
@@ -87,25 +220,58 @@ export const clearLegacyUsername = internalMutation({
  * rows ≈ half the 8,192-write budget). Past ~7k rated player rows, convert to
  * an internalAction driving chunked internalMutations.
  *
- * Run: `npx convex run migrations:backfillRatings` (add `--prod` for prod).
+ * SCOPED AND DRY-RUN BY DEFAULT, because this is a destructive replay that
+ * starts by DELETING rating rows. `gameTypes` is required — there is no "all"
+ * — so a variant whose archive must stay unrated can never be swept in by a
+ * forgotten flag, and `BACKFILL_POLICY` refuses it a second time even if it is
+ * named explicitly. Without `apply: true` nothing is written; the returned
+ * counts are what a real run WOULD do.
+ *
+ * Run: `npx convex run migrations:backfillRatings '{"gameTypes":["japanese_mafia"]}'`
+ * to preview, then add `"apply":true` (and `--prod` for prod).
  */
 export const backfillRatings = internalMutation({
-  args: {},
-  handler: async (ctx) => {
-    // 1. Wipe current ratings for rated game types.
+  args: {
+    /** Archives to replay. Required, and checked against `BACKFILL_POLICY`. */
+    gameTypes: v.array(gameType),
+    /** Omitted or false = dry run: compute and report, write nothing. */
+    apply: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const apply = args.apply ?? false;
+
+    // 0. Refuse before touching data. An empty list is a mistake, not a no-op:
+    //    silently doing nothing reads as "ran fine" to whoever typed it.
+    if (args.gameTypes.length === 0) {
+      throw new ConvexError(
+        "backfillRatings needs an explicit gameTypes list — e.g. {\"gameTypes\":[\"japanese_mafia\"]}",
+      );
+    }
+    const refused = args.gameTypes.filter(
+      (t) => BACKFILL_POLICY[t] !== "replay" || !RATING_CONFIG[t],
+    );
+    if (refused.length > 0) {
+      throw new ConvexError(
+        `Refusing to replay: ${refused.join(", ")}. BACKFILL_POLICY says these archives stay as they were played, or the type is unrated (/docs/ranking-system.md §8).`,
+      );
+    }
+    const requested = new Set(args.gameTypes);
+
+    // 1. Wipe current ratings for the requested game types. Ladders not named
+    //    are untouched — a scoped replay must not disturb its neighbours.
     const existingRatings = await ctx.db.query("playerRatings").collect();
     let ratingsDeleted = 0;
     for (const r of existingRatings) {
-      if (RATING_CONFIG[r.gameType]) {
-        await ctx.db.delete(r._id);
+      if (requested.has(r.gameType)) {
+        if (apply) await ctx.db.delete(r._id);
         ratingsDeleted++;
       }
     }
 
-    // 2. Load rated games in global chronological order. No finishedAt index
-    //    on gameLogs — collect() + in-memory sort is fine at this volume.
+    // 2. Load requested games in global chronological order. No finishedAt
+    //    index on gameLogs — collect() + in-memory sort is fine at this volume.
     const logs = (await ctx.db.query("gameLogs").collect())
-      .filter((l) => RATING_CONFIG[l.gameType])
+      .filter((l) => requested.has(l.gameType))
       .sort(
         (a, b) =>
           a.finishedAt - b.finishedAt || a._creationTime - b._creationTime,
@@ -144,11 +310,15 @@ export const backfillRatings = internalMutation({
           rating,
           tableAvg,
         );
-        await ctx.db.patch(row._id, {
-          ratingDelta: delta,
-          ratingAfter: after,
-          tableAvgRating: Math.round(tableAvg),
-        });
+        if (apply) {
+          await ctx.db.patch(row._id, {
+            ratingDelta: delta,
+            ratingAfter: after,
+            tableAvgRating: Math.round(tableAvg),
+          });
+        }
+        // Updated even in a dry run: the replay is order-dependent, so the
+        // reported numbers are only faithful if the state advances.
         state.set(key(log.gameType, row.playerId), {
           rating: after,
           peak: Math.max(peak, after),
@@ -161,18 +331,22 @@ export const backfillRatings = internalMutation({
     let ratingsCreated = 0;
     for (const [k, { rating, peak }] of state) {
       const sep = k.indexOf(":");
-      const gameType = k.slice(0, sep) as Doc<"playerRatings">["gameType"];
+      const replayedType = k.slice(0, sep) as Doc<"playerRatings">["gameType"];
       const playerId = k.slice(sep + 1) as Doc<"playerRatings">["playerId"];
-      await ctx.db.insert("playerRatings", {
-        playerId,
-        gameType,
-        rating,
-        peakRating: peak,
-      });
+      if (apply) {
+        await ctx.db.insert("playerRatings", {
+          playerId,
+          gameType: replayedType,
+          rating,
+          peakRating: peak,
+        });
+      }
       ratingsCreated++;
     }
 
     return {
+      mode: apply ? "applied" : "dry-run",
+      gameTypes: [...requested],
       ratingsDeleted,
       gamesProcessed: logs.length,
       rowsStamped,

@@ -4,8 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import {
   DAY_PHASE_SPEAKING,
   NOMINATED_PLAYERS_SPEAKING,
-  FAREWELL_SPEECH,
-} from "@/shared/lib/constants/game";
+  FAREWELL_SPEECH, GamePhase } from "@/shared/lib/constants/game";
 import { calculateRemainingTime } from "@/shared/lib/game/speakingOrder";
 import { playSound } from "@/shared/lib/audio/audioUnlock";
 import { useServerTime } from "@/shared/lib/time/serverTime";
@@ -15,12 +14,12 @@ import { useServerTime } from "@/shared/lib/time/serverTime";
  */
 function getSpeakingDuration(gamePhase: string | null | undefined): number {
   switch (gamePhase) {
-    case "nominated_players_speak":
+    case GamePhase.NOMINATED_PLAYERS_SPEAK:
       return NOMINATED_PLAYERS_SPEAKING.MAX_SPEAKING_TIME_MS;
-    case "farewell_speech":
+    case GamePhase.FAREWELL_SPEECH:
       return FAREWELL_SPEECH.MAX_SPEAKING_TIME_MS;
-    case "day_phase":
-    case "introduction_phase":
+    case GamePhase.DAY_PHASE:
+    case GamePhase.INTRODUCTION_PHASE:
     default:
       return DAY_PHASE_SPEAKING.MAX_SPEAKING_TIME_MS;
   }
@@ -36,7 +35,7 @@ function getSpeakingDuration(gamePhase: string | null | undefined): number {
  */
 function getCountdownLeadMs(gamePhase: string | null | undefined): number {
   switch (gamePhase) {
-    case "nominated_players_speak":
+    case GamePhase.NOMINATED_PLAYERS_SPEAK:
       return 5 * 1000;
     default:
       return 10 * 1000;
@@ -49,7 +48,7 @@ function getCountdownLeadMs(gamePhase: string | null | undefined): number {
  */
 function getCountdownSoundSrc(gamePhase: string | null | undefined): string {
   switch (gamePhase) {
-    case "nominated_players_speak":
+    case GamePhase.NOMINATED_PLAYERS_SPEAK:
       return "/audio/five-seconds-sound.m4a";
     default:
       return "/audio/ten-second-sound.mp3";
@@ -68,7 +67,7 @@ export function useSpeakingProgress(
   /**
    * Overrides the phase's default length for this speaker only — used by the
    * Sports final-day carve-out, where a 3rd-foul-banned player gets a 30s day
-   * speech instead of the phase's 60s (docs/variants/sports.md §4.2).
+   * speech instead of the phase's 60s (docs/variants/sports/rules.md §4.2).
    */
   durationOverrideMs?: number | null,
 ): number {

@@ -15,8 +15,6 @@ export type { YakuzaTargetSelectionResult } from "./useYakuzaTargetSelection";
 export { useDoctorHealSelection } from "./useDoctorHealSelection";
 export type { DoctorHealSelectionResult } from "./useDoctorHealSelection";
 
-export { useRightHandPromotion } from "./useRightHandPromotion";
-export type { RightHandPromotionResult } from "./useRightHandPromotion";
 
 export { useVotingButton } from "./useVotingButton";
 export { useVoteIndicator } from "./useVoteIndicator";

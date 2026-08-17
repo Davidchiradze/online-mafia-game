@@ -9,12 +9,28 @@ import {
   pointsToNextLevel,
 } from "@/shared/lib/ranking/levels";
 import type { PlayerStats } from "@convex/refs/history";
+import type { RatedGameType } from "@/shared/lib/ranking/ratedVariants";
+import RatedVariantTabs from "../components/RatedVariantTabs";
 
 interface Props {
   stats: PlayerStats | undefined;
+  gameType: RatedGameType;
+  onGameTypeChange: (gameType: RatedGameType) => void;
 }
 
-export default function StatsHeader({ stats }: Props) {
+/**
+ * Page heading plus the ELO/win-rate/matches cards for ONE ladder.
+ *
+ * The switcher lives here rather than on the page because these three cards are
+ * the only thing it changes. It is independent of the match-list filter below —
+ * that filter offers "all" and unrated variants, neither of which has a record
+ * to show, so they cannot be the same control (/docs/ranking-system.md §12).
+ */
+export default function StatsHeader({
+  stats,
+  gameType,
+  onGameTypeChange,
+}: Props) {
   const t = useTranslations("matchHistory");
 
   return (
@@ -28,31 +44,43 @@ export default function StatsHeader({ stats }: Props) {
         </p>
       </div>
 
-      <div className="flex shrink-0 flex-wrap gap-4">
-        <RatingCard stats={stats} />
-        <StatCard
-          icon={<Crosshair className="h-3.5 w-3.5" />}
-          label={t("overallWinRate")}
-          value={stats === undefined ? "—" : `${stats.winRate}%`}
-          accent="bg-[#00ff66]/80 shadow-[0_0_10px_rgba(0,255,102,0.8)]"
-        />
-        <StatCard
-          icon={<Gamepad2 className="h-3.5 w-3.5" />}
-          label={t("totalMatches")}
-          value={stats === undefined ? "—" : String(stats.totalMatches)}
-          accent="bg-blue-500/80 shadow-[0_0_10px_rgba(59,130,246,0.8)]"
-        />
+      <div className="flex shrink-0 flex-col gap-3">
+        {/* Says which ladder the cards below belong to — without it the W/L and
+            total-matches numbers read as lifetime totals across every game. */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <span className="font-inter text-[0.65rem] font-bold uppercase tracking-widest text-zinc-500">
+            {t("statsForMode")}
+          </span>
+          <RatedVariantTabs value={gameType} onChange={onGameTypeChange} />
+        </div>
+
+        <div className="flex flex-wrap gap-4">
+          <RatingCard stats={stats} />
+          <StatCard
+            icon={<Crosshair className="h-3.5 w-3.5" />}
+            label={t("overallWinRate")}
+            value={stats === undefined ? "—" : `${stats.winRate}%`}
+            accent="bg-[#00ff66]/80 shadow-[0_0_10px_rgba(0,255,102,0.8)]"
+          />
+          <StatCard
+            icon={<Gamepad2 className="h-3.5 w-3.5" />}
+            label={t("totalMatches")}
+            value={stats === undefined ? "—" : String(stats.totalMatches)}
+            accent="bg-blue-500/80 shadow-[0_0_10px_rgba(59,130,246,0.8)]"
+          />
+        </div>
       </div>
     </div>
   );
 }
 
 /**
- * Current ELO + level badge + progress toward the next level (japanese_mafia
- * ladder, see /docs/ranking-system.md). Players with no rated games show the
+ * Current ELO + level badge + progress toward the next level, for whichever
+ * ladder produced `stats` — the query is scoped to one variant upstream
+ * (/docs/ranking-system.md §12). Players with no rated games in it show the
  * 1000 default — never "unranked".
  */
-export function RatingCard({ stats }: Props) {
+export function RatingCard({ stats }: { stats: PlayerStats | undefined }) {
   const t = useTranslations("matchHistory");
   const level = stats === undefined ? null : getLevelForRating(stats.rating);
   const toNext = stats === undefined ? null : pointsToNextLevel(stats.rating);

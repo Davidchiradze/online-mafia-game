@@ -6,6 +6,13 @@ export const metadata: Metadata = {
   description: "Sign in on mafia.ge to continue.",
 };
 
-export default function AuthRequiredPage() {
-  return <AuthErrorScreen />;
+type AuthRequiredPageProps = {
+  searchParams: Promise<{ next?: string }>;
+};
+
+export default async function AuthRequiredPage({
+  searchParams,
+}: AuthRequiredPageProps) {
+  const { next } = await searchParams;
+  return <AuthErrorScreen returnTo={next} />;
 }

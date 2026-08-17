@@ -22,16 +22,15 @@
 | | `sports_mafia` | `japanese_mafia` |
 | --- | --- | --- |
 | Seats | 10 | 12 |
-| Roles | 4 | 8 |
+| Roles | 4 | 7 |
 | Deck size | 10 | 12 |
 | Factions | mafia, citizens | mafia, yakuza, citizens |
-| Phases | 17 | 21 |
+| Phases | 17 | 20 |
 | Night model | `unanimous-vote` | `single-authority` |
 | `firstDaySingleNomineeSkipsToNight` | yes | — |
 | `hasBestMove` | yes | — |
 | `hasFarewellSpeech` | yes | yes |
 | `hasIntroductionPhase` | — | yes |
-| `hasRightHandPromotion` | — | yes |
 | `thirdFoulSpeakingBan` | yes | — |
 
 ## Roles
@@ -53,7 +52,6 @@ Deck is 10 cards for 10 seats.
 | --- | --- | --- | --- |
 | `DON` | ×1 | mafia | yes |
 | `MAFIA` | ×2 | mafia | yes |
-| `MAFIA_RIGHT_HAND` | — (promoted in game) | mafia | yes |
 | `SHOGUN` | ×1 | yakuza | yes |
 | `YAKUZA` | ×1 | yakuza | yes |
 | `DETECTIVE` | ×1 | citizens | yes |
@@ -96,25 +94,24 @@ under **Branching edges** below.
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `game_session_started` | Game Started | — | — | server-owned | — |
 | 2 | `picking_roles` | Picking Roles | — | — | `mafia_meet` | — |
-| 3 | `mafia_meet` | Mafia Meeting | 60s | `DON` `MAFIA` `MAFIA_RIGHT_HAND` | `don_chooses_right_hand` | — |
-| 4 | `don_chooses_right_hand` | Don Chooses Right Hand | 20s | `DON` `MAFIA` `MAFIA_RIGHT_HAND` | `yakuda_shogun_meet` | yes |
+| 3 | `mafia_meet` | Mafia Meeting | 60s | `DON` `MAFIA` | `don_meet` | yes |
+| 4 | `don_meet` | Don Meeting | — | `DON` | `yakuda_shogun_meet` | yes |
 | 5 | `yakuda_shogun_meet` | Yakuza & Shogun Meeting | 40s | `YAKUZA` `SHOGUN` | `detective_meet` | yes |
 | 6 | `detective_meet` | Detective Meeting | 15s | `DETECTIVE` | `doctor_meet` | yes |
 | 7 | `doctor_meet` | Doctor Meeting | 15s | `DOCTOR` | `introduction_phase` | yes |
 | 8 | `introduction_phase` | Introduction | — | — | server-owned | — |
 | 9 | `night_phase` | Night Phase | — | — | `mafia_chooses_target` | — |
-| 10 | `mafia_chooses_target` | Mafia Chooses Target | 20s | `DON` `MAFIA` `MAFIA_RIGHT_HAND` | `don_checks_for_detective` | — |
-| 11 | `don_checks_for_detective` | Don Checks for Detective | 15s | `DON` | `right_hand_checks_for_yakuza` | — |
-| 12 | `right_hand_checks_for_yakuza` | Right Hand Checks for Yakuza | 15s | `MAFIA_RIGHT_HAND` | `yakuza_and_shogun_chooses_target` | yes |
-| 13 | `yakuza_and_shogun_chooses_target` | Yakuza & Shogun Choose Target | 20s | `YAKUZA` `SHOGUN` | `detective_checks_for_mafia` | yes |
-| 14 | `detective_checks_for_mafia` | Detective Checks for Mafia | 15s | `DETECTIVE` | `doctor_heals_player` | yes |
-| 15 | `doctor_heals_player` | Doctor Heals | 15s | `DOCTOR` | `farewell_speech` | yes |
-| 16 | `farewell_speech` | Farewell Speech | — | — | server-owned | — |
-| 17 | `day_phase` | Day Phase | — | — | server-owned | — |
-| 18 | `nominated_players_speak` | Self-Justification | — | — | server-owned | — |
-| 19 | `voting` | Voting | — | — | `repeat` | — |
-| 20 | `repeat` | Next Round | — | — | server-owned | — |
-| 21 | `end_game` | Game Over | — | — | server-owned | — |
+| 10 | `mafia_chooses_target` | Mafia Chooses Target | 20s | `DON` `MAFIA` | `don_checks_for_detective` | — |
+| 11 | `don_checks_for_detective` | Don Checks for Detective | 15s | `DON` | `yakuza_and_shogun_chooses_target` | yes |
+| 12 | `yakuza_and_shogun_chooses_target` | Yakuza & Shogun Choose Target | 20s | `YAKUZA` `SHOGUN` | `detective_checks_for_mafia` | yes |
+| 13 | `detective_checks_for_mafia` | Detective Checks for Mafia | 15s | `DETECTIVE` | `doctor_heals_player` | yes |
+| 14 | `doctor_heals_player` | Doctor Heals | 15s | `DOCTOR` | `farewell_speech` | yes |
+| 15 | `farewell_speech` | Farewell Speech | — | — | server-owned | — |
+| 16 | `day_phase` | Day Phase | — | — | server-owned | — |
+| 17 | `nominated_players_speak` | Self-Justification | — | — | server-owned | — |
+| 18 | `voting` | Voting | — | — | `repeat` | — |
+| 19 | `repeat` | Next Round | — | — | server-owned | — |
+| 20 | `end_game` | Game Over | — | — | server-owned | — |
 
 `server-owned` means `nextPhase` returns null: the next phase depends on
 database state, so a Convex mutation decides it. Those edges are listed
@@ -123,8 +120,8 @@ under **Branching edges** below.
 ## Phase universe
 
 Three phase lists exist and they are not the same length:
-`convex/lib/constants.ts` (21),
-`src/shared/lib/constants/game.ts` (24),
+`convex/lib/constants.ts` (20),
+`src/shared/lib/constants/game.ts` (22),
 and each variant's own `definition.phases`.
 
 | Phase | backend list | UI list | `sports_mafia` | `japanese_mafia` | verdict |
@@ -136,8 +133,7 @@ and each variant's own `definition.phases`.
 | `doctor_heals_player` | yes | yes | — | yes | variant-specific |
 | `doctor_meet` | yes | yes | — | yes | variant-specific |
 | `don_checks_for_detective` | yes | yes | yes | yes | shared |
-| `don_chooses_right_hand` | yes | yes | — | yes | variant-specific |
-| `don_meet` | — | yes | yes | — | variant-specific |
+| `don_meet` | yes | yes | yes | yes | shared |
 | `end_game` | yes | yes | yes | yes | shared |
 | `farewell_speech` | yes | yes | yes | yes | shared |
 | `game_session_started` | yes | yes | yes | yes | shared |
@@ -149,7 +145,6 @@ and each variant's own `definition.phases`.
 | `phase_transition` | — | yes | yes | — | ⚠️ reachable in a flow that omits it |
 | `picking_roles` | yes | yes | yes | yes | shared |
 | `repeat` | yes | yes | yes | yes | shared |
-| `right_hand_checks_for_yakuza` | yes | yes | — | yes | variant-specific |
 | `voting` | yes | yes | yes | yes | shared |
 | `yakuda_shogun_meet` | yes | yes | — | yes | variant-specific |
 | `yakuza_and_shogun_chooses_target` | yes | yes | — | yes | variant-specific |
@@ -185,15 +180,14 @@ stateDiagram-v2
 ```mermaid
 stateDiagram-v2
     picking_roles --> mafia_meet
-    mafia_meet --> don_chooses_right_hand
-    don_chooses_right_hand --> yakuda_shogun_meet : via buffer
+    mafia_meet --> don_meet : via buffer
+    don_meet --> yakuda_shogun_meet : via buffer
     yakuda_shogun_meet --> detective_meet : via buffer
     detective_meet --> doctor_meet : via buffer
     doctor_meet --> introduction_phase : via buffer
     night_phase --> mafia_chooses_target
     mafia_chooses_target --> don_checks_for_detective
-    don_checks_for_detective --> right_hand_checks_for_yakuza
-    right_hand_checks_for_yakuza --> yakuza_and_shogun_chooses_target : via buffer
+    don_checks_for_detective --> yakuza_and_shogun_chooses_target : via buffer
     yakuza_and_shogun_chooses_target --> detective_checks_for_mafia : via buffer
     detective_checks_for_mafia --> doctor_heals_player : via buffer
     doctor_heals_player --> farewell_speech : via buffer
@@ -259,7 +253,7 @@ that is a derived result, not an assumption: those are exactly the roles
 whose presence changes the answer.
 
 `N` = alive players, `m` = alive mafia-faction players.
-**81 of 280 rows disagree with naive parity** (`2m ≥ N`),
+**54 of 224 rows disagree with naive parity** (`2m ≥ N`),
 which is why a parity rule cannot be used as a shortcut.
 
 | N | m | YAKUZA | SHOGUN | DOCTOR | beforeNight | beforeDay | naive parity | ≠ |
@@ -329,7 +323,6 @@ which is why a parity rule cannot be used as a shortcut.
 | 4 | 3 | — | — | yes | mafia | mafia | mafia |  |
 | 4 | 3 | — | yes | — | mafia | mafia | mafia |  |
 | 4 | 3 | yes | — | — | mafia | mafia | mafia |  |
-| 4 | 4 | — | — | — | mafia | mafia | mafia |  |
 | 5 | 0 | — | — | — | citizens | citizens | citizens |  |
 | 5 | 0 | — | — | yes | citizens | citizens | citizens |  |
 | 5 | 0 | — | yes | — | continue | continue | citizens | ⚠️ |
@@ -361,10 +354,6 @@ which is why a parity rule cannot be used as a shortcut.
 | 5 | 3 | yes | — | — | mafia | mafia | mafia |  |
 | 5 | 3 | yes | — | yes | continue | mafia | mafia | ⚠️ |
 | 5 | 3 | yes | yes | — | mafia | mafia | mafia |  |
-| 5 | 4 | — | — | — | continue | continue | mafia | ⚠️ |
-| 5 | 4 | — | — | yes | continue | continue | mafia | ⚠️ |
-| 5 | 4 | — | yes | — | continue | continue | mafia | ⚠️ |
-| 5 | 4 | yes | — | — | continue | continue | mafia | ⚠️ |
 | 6 | 0 | — | — | — | citizens | citizens | citizens |  |
 | 6 | 0 | — | — | yes | citizens | citizens | citizens |  |
 | 6 | 0 | — | yes | — | continue | continue | citizens | ⚠️ |
@@ -397,13 +386,6 @@ which is why a parity rule cannot be used as a shortcut.
 | 6 | 3 | yes | — | yes | continue | continue | mafia | ⚠️ |
 | 6 | 3 | yes | yes | — | continue | continue | mafia | ⚠️ |
 | 6 | 3 | yes | yes | yes | continue | continue | mafia | ⚠️ |
-| 6 | 4 | — | — | — | continue | continue | mafia | ⚠️ |
-| 6 | 4 | — | — | yes | continue | continue | mafia | ⚠️ |
-| 6 | 4 | — | yes | — | continue | continue | mafia | ⚠️ |
-| 6 | 4 | — | yes | yes | continue | continue | mafia | ⚠️ |
-| 6 | 4 | yes | — | — | continue | continue | mafia | ⚠️ |
-| 6 | 4 | yes | — | yes | continue | continue | mafia | ⚠️ |
-| 6 | 4 | yes | yes | — | continue | continue | mafia | ⚠️ |
 | 7 | 0 | — | — | yes | citizens | citizens | citizens |  |
 | 7 | 0 | — | yes | — | continue | continue | citizens | ⚠️ |
 | 7 | 0 | — | yes | yes | continue | continue | citizens | ⚠️ |
@@ -435,14 +417,6 @@ which is why a parity rule cannot be used as a shortcut.
 | 7 | 3 | yes | — | yes | continue | continue | continue |  |
 | 7 | 3 | yes | yes | — | continue | continue | continue |  |
 | 7 | 3 | yes | yes | yes | continue | continue | continue |  |
-| 7 | 4 | — | — | — | continue | continue | mafia | ⚠️ |
-| 7 | 4 | — | — | yes | continue | continue | mafia | ⚠️ |
-| 7 | 4 | — | yes | — | continue | continue | mafia | ⚠️ |
-| 7 | 4 | — | yes | yes | continue | continue | mafia | ⚠️ |
-| 7 | 4 | yes | — | — | continue | continue | mafia | ⚠️ |
-| 7 | 4 | yes | — | yes | continue | continue | mafia | ⚠️ |
-| 7 | 4 | yes | yes | — | continue | continue | mafia | ⚠️ |
-| 7 | 4 | yes | yes | yes | continue | continue | mafia | ⚠️ |
 | 8 | 0 | — | yes | yes | continue | continue | citizens | ⚠️ |
 | 8 | 0 | yes | — | yes | continue | continue | citizens | ⚠️ |
 | 8 | 0 | yes | yes | — | continue | continue | citizens | ⚠️ |
@@ -470,14 +444,6 @@ which is why a parity rule cannot be used as a shortcut.
 | 8 | 3 | yes | — | yes | continue | continue | continue |  |
 | 8 | 3 | yes | yes | — | continue | continue | continue |  |
 | 8 | 3 | yes | yes | yes | continue | continue | continue |  |
-| 8 | 4 | — | — | — | continue | continue | mafia | ⚠️ |
-| 8 | 4 | — | — | yes | continue | continue | mafia | ⚠️ |
-| 8 | 4 | — | yes | — | continue | continue | mafia | ⚠️ |
-| 8 | 4 | — | yes | yes | continue | continue | mafia | ⚠️ |
-| 8 | 4 | yes | — | — | continue | continue | mafia | ⚠️ |
-| 8 | 4 | yes | — | yes | continue | continue | mafia | ⚠️ |
-| 8 | 4 | yes | yes | — | continue | continue | mafia | ⚠️ |
-| 8 | 4 | yes | yes | yes | continue | continue | mafia | ⚠️ |
 | 9 | 0 | yes | yes | yes | continue | continue | citizens | ⚠️ |
 | 9 | 1 | — | yes | yes | continue | continue | continue |  |
 | 9 | 1 | yes | — | yes | continue | continue | continue |  |
@@ -498,14 +464,6 @@ which is why a parity rule cannot be used as a shortcut.
 | 9 | 3 | yes | — | yes | continue | continue | continue |  |
 | 9 | 3 | yes | yes | — | continue | continue | continue |  |
 | 9 | 3 | yes | yes | yes | continue | continue | continue |  |
-| 9 | 4 | — | — | — | continue | continue | continue |  |
-| 9 | 4 | — | — | yes | continue | continue | continue |  |
-| 9 | 4 | — | yes | — | continue | continue | continue |  |
-| 9 | 4 | — | yes | yes | continue | continue | continue |  |
-| 9 | 4 | yes | — | — | continue | continue | continue |  |
-| 9 | 4 | yes | — | yes | continue | continue | continue |  |
-| 9 | 4 | yes | yes | — | continue | continue | continue |  |
-| 9 | 4 | yes | yes | yes | continue | continue | continue |  |
 | 10 | 1 | yes | yes | yes | continue | continue | continue |  |
 | 10 | 2 | — | yes | yes | continue | continue | continue |  |
 | 10 | 2 | yes | — | yes | continue | continue | continue |  |
@@ -518,32 +476,12 @@ which is why a parity rule cannot be used as a shortcut.
 | 10 | 3 | yes | — | yes | continue | continue | continue |  |
 | 10 | 3 | yes | yes | — | continue | continue | continue |  |
 | 10 | 3 | yes | yes | yes | continue | continue | continue |  |
-| 10 | 4 | — | — | — | continue | continue | continue |  |
-| 10 | 4 | — | — | yes | continue | continue | continue |  |
-| 10 | 4 | — | yes | — | continue | continue | continue |  |
-| 10 | 4 | — | yes | yes | continue | continue | continue |  |
-| 10 | 4 | yes | — | — | continue | continue | continue |  |
-| 10 | 4 | yes | — | yes | continue | continue | continue |  |
-| 10 | 4 | yes | yes | — | continue | continue | continue |  |
-| 10 | 4 | yes | yes | yes | continue | continue | continue |  |
 | 11 | 2 | yes | yes | yes | continue | continue | continue |  |
 | 11 | 3 | — | yes | yes | continue | continue | continue |  |
 | 11 | 3 | yes | — | yes | continue | continue | continue |  |
 | 11 | 3 | yes | yes | — | continue | continue | continue |  |
 | 11 | 3 | yes | yes | yes | continue | continue | continue |  |
-| 11 | 4 | — | — | yes | continue | continue | continue |  |
-| 11 | 4 | — | yes | — | continue | continue | continue |  |
-| 11 | 4 | — | yes | yes | continue | continue | continue |  |
-| 11 | 4 | yes | — | — | continue | continue | continue |  |
-| 11 | 4 | yes | — | yes | continue | continue | continue |  |
-| 11 | 4 | yes | yes | — | continue | continue | continue |  |
-| 11 | 4 | yes | yes | yes | continue | continue | continue |  |
 | 12 | 3 | yes | yes | yes | continue | continue | continue |  |
-| 12 | 4 | — | yes | yes | continue | continue | continue |  |
-| 12 | 4 | yes | — | yes | continue | continue | continue |  |
-| 12 | 4 | yes | yes | — | continue | continue | continue |  |
-| 12 | 4 | yes | yes | yes | continue | continue | continue |  |
-| 13 | 4 | yes | yes | yes | continue | continue | continue |  |
 
 ## Night model
 
@@ -563,7 +501,7 @@ Kind: `unanimous-vote`. Acting roles: `DON`, `MAFIA`, `DETECTIVE`.
 
 ### `japanese_mafia`
 
-Kind: `single-authority`. Acting roles: `DON`, `MAFIA_RIGHT_HAND`, `MAFIA`, `SHOGUN`, `YAKUZA`, `DETECTIVE`, `DOCTOR`.
+Kind: `single-authority`. Acting roles: `DON`, `MAFIA`, `SHOGUN`, `YAKUZA`, `DETECTIVE`, `DOCTOR`.
 
 | Night state | Resolves to seats |
 | --- | --- |

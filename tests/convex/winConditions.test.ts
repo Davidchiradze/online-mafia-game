@@ -17,7 +17,7 @@ import {
  * assertions. If an assertion must change to stay green, that is a behavior
  * change, not a refactor.
  *
- * Roles: mafia team = DON / MAFIA / MAFIA_RIGHT_HAND; yakuza clan = YAKUZA /
+ * Roles: mafia team = DON / MAFIA; yakuza clan = YAKUZA /
  * SHOGUN; everything else (CITIZEN / DETECTIVE / DOCTOR) is town.
  */
 
@@ -43,7 +43,7 @@ describe("decideWinner — Japanese", () => {
     ],
     [
       "only mafia alive → mafia (N=3)",
-      ["DON", "MAFIA", "MAFIA_RIGHT_HAND"],
+      ["DON", "MAFIA", "MAFIA"],
       "beforeDay",
       "mafia",
     ],
@@ -64,13 +64,13 @@ describe("decideWinner — Japanese", () => {
     // ── N = 6 ──
     [
       "N=6, m=3, no yakuza → mafia",
-      ["DON", "MAFIA", "MAFIA_RIGHT_HAND", "CITIZEN", "CITIZEN", "DOCTOR"],
+      ["DON", "MAFIA", "MAFIA", "CITIZEN", "CITIZEN", "DOCTOR"],
       "beforeDay",
       "mafia",
     ],
     [
       "N=6, m=3, yakuza alive → continue (lone shogun can't tip it)",
-      ["DON", "MAFIA", "MAFIA_RIGHT_HAND", "YAKUZA", "CITIZEN", "DOCTOR"],
+      ["DON", "MAFIA", "MAFIA", "YAKUZA", "CITIZEN", "DOCTOR"],
       "beforeDay",
       null,
     ],
@@ -84,19 +84,19 @@ describe("decideWinner — Japanese", () => {
     // ── N = 5 — the Doctor+Yakuza beforeNight exception ──
     [
       "N=5, m=3, others exactly {DOCTOR, YAKUZA}, beforeNight → continue (exception)",
-      ["DON", "MAFIA", "MAFIA_RIGHT_HAND", "DOCTOR", "YAKUZA"],
+      ["DON", "MAFIA", "MAFIA", "DOCTOR", "YAKUZA"],
       "beforeNight",
       null,
     ],
     [
       "N=5, m=3, others exactly {DOCTOR, YAKUZA}, beforeDay → mafia (exception is night-only)",
-      ["DON", "MAFIA", "MAFIA_RIGHT_HAND", "DOCTOR", "YAKUZA"],
+      ["DON", "MAFIA", "MAFIA", "DOCTOR", "YAKUZA"],
       "beforeDay",
       "mafia",
     ],
     [
       "N=5, m=3, others {CITIZEN, YAKUZA} (not the exception), beforeNight → mafia",
-      ["DON", "MAFIA", "MAFIA_RIGHT_HAND", "CITIZEN", "YAKUZA"],
+      ["DON", "MAFIA", "MAFIA", "CITIZEN", "YAKUZA"],
       "beforeNight",
       "mafia",
     ],
@@ -110,7 +110,7 @@ describe("decideWinner — Japanese", () => {
     // ── N = 4 ──
     [
       "N=4, m=3 → mafia",
-      ["DON", "MAFIA", "MAFIA_RIGHT_HAND", "CITIZEN"],
+      ["DON", "MAFIA", "MAFIA", "CITIZEN"],
       "beforeDay",
       "mafia",
     ],
@@ -202,7 +202,7 @@ describe("decideWinner — Japanese", () => {
 describe("describeWin — structured snapshot", () => {
   it("returns the endgame snapshot for a decided mafia win", () => {
     const result = describeWin(
-      ["DON", "MAFIA", "MAFIA_RIGHT_HAND", "CITIZEN", "CITIZEN", "DOCTOR"],
+      ["DON", "MAFIA", "MAFIA", "CITIZEN", "CITIZEN", "DOCTOR"],
       "beforeDay",
     );
     expect(result).toEqual<WinMethod>({
@@ -234,7 +234,7 @@ describe("describeWin — structured snapshot", () => {
   it("returns null while the game continues", () => {
     expect(
       describeWin(
-        ["DON", "MAFIA", "MAFIA_RIGHT_HAND", "CITIZEN", "CITIZEN", "DETECTIVE", "DOCTOR"],
+        ["DON", "MAFIA", "MAFIA", "CITIZEN", "CITIZEN", "DETECTIVE", "DOCTOR"],
         "beforeDay",
       ),
     ).toBeNull();

@@ -6,12 +6,12 @@ import { useTranslations } from "next-intl";
 import { bestMove } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
-import { SPORTS } from "@/shared/lib/constants/game";
+import { SPORTS, GamePhase } from "@/shared/lib/constants/game";
 import BestMoveIndicator from "./BestMoveIndicator";
 
 /**
  * The Sports best-move suspect control for one participant tile
- * (docs/variants/sports.md §6).
+ * (docs/variants/sports/rules.md §6).
  *
  * A single centered round check button per tile:
  *  - the VICTIM gets an interactive circle they check / uncheck;
@@ -56,7 +56,7 @@ export default function BestMoveControl({
     [players, userId],
   );
 
-  const isBestMovePhase = gameSessionState?.gamePhase === "best_move";
+  const isBestMovePhase = gameSessionState?.gamePhase === GamePhase.BEST_MOVE;
   const suspects = nightPhaseSession?.bestMoveSuspects ?? [];
   const victimSeat = nightPhaseSession?.bestMoveSeat ?? null;
 
