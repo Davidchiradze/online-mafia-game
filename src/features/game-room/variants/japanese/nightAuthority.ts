@@ -2,10 +2,9 @@
  * Japanese night-action authority (docs/variants/japanese/rules.md).
  *
  * A SINGLE kill authority per team: for the mafia the DON while the DON lives,
- * then the living mafia in the next seat clockwise from the Don's (wrapping past
- * the highest seat); SHOGUN > YAKUZA for the yakuza (a lone SHOGUN cannot kill);
- * and the DOCTOR heals. The hook gathers the room context and delegates here via
- * `ruleset.nightAuthority`.
+ * then the living mafia in the lowest-numbered seat; SHOGUN > YAKUZA for the
+ * yakuza (a lone SHOGUN cannot kill); and the DOCTOR heals. The hook gathers the
+ * room context and delegates here via `ruleset.nightAuthority`.
  *
  * The mafia rule is NOT reimplemented here — it is `mafiaKillAuthority`, the
  * same pure function the server enforces in `selectMafiaTarget`. A second copy

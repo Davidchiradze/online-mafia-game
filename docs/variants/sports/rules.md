@@ -103,8 +103,8 @@ Proposed model (Phase 3):
 ## 5. Night — mafia kill by unanimous vote (biggest change)
 
 Japanese uses a **single kill authority** (the DON, then the living mafia in the
-next seat clockwise from the Don's) that picks one target, and the host cannot
-advance until a target is chosen.
+lowest-numbered seat) that picks one target, and the host cannot advance until a
+target is chosen.
 Sports replaces this entirely.
 
 ### 5.1 Behaviour (confirmed)

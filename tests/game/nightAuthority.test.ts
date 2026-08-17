@@ -8,10 +8,10 @@ import { GamePhase } from "@/shared/lib/constants/game";
  * CHARACTERIZATION TEST — night-action authority per variant (P4-T3).
  *
  * The Japanese cases pin the SINGLE-authority logic: the DON while alive, then
- * the living mafia in the next SEAT clockwise from the Don's (wrapping);
- * SHOGUN > YAKUZA with a lone SHOGUN unable to kill; DOCTOR heals; host never
- * acts. The Sports cases pin the §5 rule: EVERY living mafia acts during
- * `mafia_chooses_target`, and there is no yakuza/doctor.
+ * the living mafia in the LOWEST-numbered SEAT; SHOGUN > YAKUZA with a lone
+ * SHOGUN unable to kill; DOCTOR heals; host never acts. The Sports cases pin the
+ * §5 rule: EVERY living mafia acts during `mafia_chooses_target`, and there is
+ * no yakuza/doctor.
  */
 
 // A roster keyed by label → player. The label is the role unless `role` says
@@ -66,25 +66,10 @@ describe("japaneseNightAuthority — single kill authority", () => {
     expect(mafia.hasMafiaKillAuthority).toBe(false);
   });
 
-  it("falls to the mafia in the next seat after a dead DON, not the lowest seat", () => {
-    // DON sits at 3; living mafia at 1 and 5. Clockwise reaches 5 first.
+  it("falls to the lowest living mafia seat once the DON is dead", () => {
+    // DON sits at 3, between the living mafia at 1 and 5 — so the Don's seat
+    // being higher than seat 1 must not push authority round to seat 5.
     const dead = { ...roster, DON: { id: "u1", seat: 3, alive: false } };
-    const seat5 = japaneseNightAuthority(
-      makeInput(dead, { viewerId: "u3", phase: GamePhase.MAFIA_CHOOSES_TARGET }),
-    );
-    const seat1 = japaneseNightAuthority(
-      makeInput(dead, { viewerId: "u2", phase: GamePhase.MAFIA_CHOOSES_TARGET }),
-    );
-    expect(seat5.hasMafiaKillAuthority).toBe(true);
-    expect(seat1.hasMafiaKillAuthority).toBe(false);
-  });
-
-  it("wraps to the lowest seat when every living mafia sits before the DON", () => {
-    const dead = {
-      ...roster,
-      DON: { id: "u1", seat: 9, alive: false },
-      CITIZEN: { id: "u7", seat: 3 },
-    };
     const seat1 = japaneseNightAuthority(
       makeInput(dead, { viewerId: "u2", phase: GamePhase.MAFIA_CHOOSES_TARGET }),
     );
@@ -95,16 +80,16 @@ describe("japaneseNightAuthority — single kill authority", () => {
     expect(seat5.hasMafiaKillAuthority).toBe(false);
   });
 
-  it("skips a dead successor and keeps walking clockwise", () => {
+  it("moves up to the next-lowest seat when the lowest mafia dies too", () => {
     const dead = {
       ...roster,
       DON: { id: "u1", seat: 3, alive: false },
-      MAFIA_B: { id: "u3", seat: 5, role: "MAFIA", alive: false },
+      MAFIA_A: { id: "u2", seat: 1, role: "MAFIA", alive: false },
     };
-    const seat1 = japaneseNightAuthority(
-      makeInput(dead, { viewerId: "u2", phase: GamePhase.MAFIA_CHOOSES_TARGET }),
+    const seat5 = japaneseNightAuthority(
+      makeInput(dead, { viewerId: "u3", phase: GamePhase.MAFIA_CHOOSES_TARGET }),
     );
-    expect(seat1.hasMafiaKillAuthority).toBe(true);
+    expect(seat5.hasMafiaKillAuthority).toBe(true);
   });
 
   it("SHOGUN kills when a YAKUZA is alive; a lone SHOGUN cannot", () => {

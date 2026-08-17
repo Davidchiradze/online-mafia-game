@@ -69,18 +69,11 @@ async function getAlivePlayers(db: DatabaseReader, gameId: Id<"games">) {
 
 /**
  * Mafia kill authority: the DON while alive, otherwise the living mafia in the
- * next seat clockwise from the Don's. The rule itself is `mafiaKillAuthority`,
- * shared with the client so the button and the server agree; this only feeds it
- * the table.
- *
- * Reads EVERY player, not just the living ones — the rule needs the dead Don's
- * seat to know where to start walking.
+ * lowest-numbered seat. The rule itself is `mafiaKillAuthority`, shared with the
+ * client so the button and the server agree; this only feeds it the table.
  */
 async function getMafiaKillAuthority(db: DatabaseReader, gameId: Id<"games">) {
-  const players = await db
-    .query("gamePlayers")
-    .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
-    .collect();
+  const players = await getAlivePlayers(db, gameId);
   const roleMap = await getRoleMap(db, gameId);
 
   const authority = mafiaKillAuthority(
