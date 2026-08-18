@@ -7,9 +7,8 @@ description: Checklist for adding or changing a game variant - the definition mo
 
 Rare, and expensive to get wrong: a variant touches two registries, ~14
 modules, the schema, and rating. The trap is already set — `city_mafia` exists
-in the `GameType` union, in `GAME_TYPES`, and in `GAME_TYPE_MAX_PLAYER_NUMBER`,
-with **no definition registered**. It is half-declared, so the compiler will not
-tell you what is missing.
+in the `GameType` union and in `GAME_TYPES` with **no definition registered**.
+It is half-declared, so the compiler will not tell you what is missing.
 
 Work from `sports_mafia`, not `japanese_mafia`. Sports was authored *after* the
 abstraction and owns its own `roles.ts`; Japanese still reads its deck and teams
@@ -54,9 +53,11 @@ generator both import them.
     (measured from ~200 decided games, or declared), whether the archive is
     backfilled, and check K lands in the shared level brackets' volatility band.
     Full contract: `docs/ranking-system.md` §13.
-11. **Labels** — `GAME_TYPE_LABEL` and `GAME_TYPE_MAX_PLAYER_NUMBER` in
-    `src/shared/lib/constants/game.ts`, and the creatability filter in
-    `CreateGameModal`.
+11. **Labels** — `GAME_TYPE_LABEL` in `src/shared/lib/constants/game.ts`, and
+    the creatability filter in `CreateGameModal`. **Table size is not declared
+    here** — `create` in `convex/lobby/games.ts` reads `definition.seatCount`,
+    so an unregistered type is rejected with `INVALID_GAME_TYPE` rather than
+    creating a game nobody can play.
 12. **i18n** — keys in **both** `messages/en.json` and `messages/ka.json`.
 13. **Docs** — `docs/variants/<slug>/` (a folder; a bare `<slug>.md` also
     satisfies the guard). This is **enforced**:

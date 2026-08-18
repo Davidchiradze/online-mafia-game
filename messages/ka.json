@@ -454,7 +454,8 @@
       "YAKUZA": "იაკუძა",
       "DETECTIVE": "დეტექტივი",
       "CITIZEN": "მოქალაქე",
-      "DOCTOR": "ექიმი"
+      "DOCTOR": "ექიმი",
+      "SERIAL_KILLER": "სერიული მკვლელი"
     },
     "phases": {
       "game_session_started": "თამაში დაიწყო",

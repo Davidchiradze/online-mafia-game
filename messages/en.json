@@ -454,7 +454,8 @@
       "YAKUZA": "Yakuza",
       "DETECTIVE": "Detective",
       "CITIZEN": "Citizen",
-      "DOCTOR": "Doctor"
+      "DOCTOR": "Doctor",
+      "SERIAL_KILLER": "Serial Killer"
     },
     "phases": {
       "game_session_started": "Game Started",

@@ -10,7 +10,7 @@ import {
   type Winner,
   type GameOutcome,
 } from "../games/core/winConditions";
-import { roleToFaction } from "./roles";
+import { roleToFaction, type Faction } from "./roles";
 import { getGameDefinition } from "../games/registry";
 import {
   applyPlayerRating,
@@ -299,6 +299,21 @@ export async function archiveGameLog(ctx: MutationCtx, gameId: Id<"games">) {
     roster.map((p) => p.playerId),
   );
 
+  // Faction comes from the VARIANT's mapping, not the shared one. The shared
+  // `roleToFaction` answers "citizens" for every role it does not recognise, so
+  // the moment a variant introduces a role it would archive that whole faction
+  // as town — wrong outcome, wrong ELO, wrong stats, and no error anywhere.
+  //
+  // Falls back to the shared map for a game type with no registered definition
+  // (`city_mafia`). This is the finish-game path: a throw here would leave the
+  // game permanently unfinishable.
+  let factionOf: (role: string) => Faction = roleToFaction;
+  try {
+    factionOf = getGameDefinition(game.gameType).roleToFaction;
+  } catch {
+    // No definition registered — keep the shared fallback.
+  }
+
   const gameLogId = await ctx.db.insert("gameLogs", {
     gameId,
     gameCode: game.code,
@@ -314,7 +329,7 @@ export async function archiveGameLog(ctx: MutationCtx, gameId: Id<"games">) {
   });
 
   for (const p of roster) {
-    const faction = roleToFaction(p.role);
+    const faction = factionOf(p.role);
     const outcome: "win" | "loss" | "no_contest" =
       winner === null ? "no_contest" : faction === winner ? "win" : "loss";
 

@@ -35,15 +35,6 @@ export const GAME_STATUS_LABEL: Record<(typeof GAME_STATUSES)[number], string> =
     finished: "Finished",
   };
 
-export const GAME_TYPE_MAX_PLAYER_NUMBER: Record<
-  (typeof GAME_TYPES)[number],
-  number
-> = {
-  sports_mafia: 10,
-  city_mafia: 12,
-  japanese_mafia: 12,
-};
-
 export const JAPANESE_MAFIA_ROLES = [
   "DON",
   "MAFIA",
@@ -53,6 +44,20 @@ export const JAPANESE_MAFIA_ROLES = [
   "CITIZEN",
   "DOCTOR",
 ] as const;
+
+/**
+ * Every role ANY variant can deal — the frontend's role vocabulary.
+ *
+ * `Role` in `src/shared/lib/game/visibility.ts` is built from this, so a role
+ * missing here is not assignable and gets cast away at the boundary instead of
+ * type-checked. It was the JAPANESE tuple, which happened to work only because
+ * Sports' deck is a strict subset of Japanese's.
+ *
+ * Not derivable from the registry: that yields runtime values, and this has to
+ * be a literal-typed tuple. Composed from the Japanese tuple plus each later
+ * variant's additions so the shared roles still have exactly one definition.
+ */
+export const ALL_ROLES = [...JAPANESE_MAFIA_ROLES, "SERIAL_KILLER"] as const;
 
 /** Mafia team roles - can see mafia target selection */
 export const MAFIA_TEAM_ROLES = ["DON", "MAFIA"] as const;
