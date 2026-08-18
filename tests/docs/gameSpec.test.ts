@@ -16,6 +16,7 @@
 
 import { describe, expect, it } from "vitest";
 
+import type { GameDefinition } from "@convex/games/core/types";
 import {
   BRANCHING_EDGES,
   brokenBranchGuards,
@@ -58,6 +59,56 @@ describe("win-condition tables", () => {
       "these keys map to more than one outcome — the win rule now reads something the key omits, so the generated table is no longer sufficient",
     ).toEqual([]);
     expect(table.rows.length, "no rows enumerated — the roster walk is broken").toBeGreaterThan(0);
+  });
+
+  /**
+   * The state axis is machinery no REGISTERED variant exercises yet — Japanese
+   * and Sports both ignore `WinStateContext`, so without these it would sit
+   * untested until the first variant depended on it, which is exactly when a
+   * silent hole costs the most.
+   *
+   * The hole it closes: `decideWinner(roles, ctx)` used to be called with
+   * `state` undefined. A rule reading `state` answers once per roster, every
+   * key maps to one outcome, `ambiguous` stays empty, and the generated table
+   * is confidently WRONG while this whole file passes.
+   */
+  describe("state axis", () => {
+    const base = variants.find((v) => v.id === "sports_mafia")!.def;
+
+    /** Same roster, two answers — decided purely by the unspent shot. */
+    const stateful: GameDefinition = {
+      ...base,
+      decideWinner: (roles, _ctx, state) =>
+        roles.length === 0
+          ? "no_contest"
+          : state?.serialKillerHasShot
+            ? null
+            : "mafia",
+    };
+
+    it("stays collapsed for a variant whose rules ignore state", () => {
+      expect(winTable(base).columns).toEqual(["beforeNight", "beforeDay"]);
+    });
+
+    it("splits each context across state once a rule reads it", () => {
+      expect(winTable(stateful).columns).toEqual([
+        "beforeNight (shot held)",
+        "beforeDay (shot held)",
+        "beforeNight (shot spent)",
+        "beforeDay (shot spent)",
+      ]);
+    });
+
+    it("publishes both answers instead of one arbitrary one", () => {
+      const table = winTable(stateful);
+      const row = table.rows.find((r) => r.n > 0)!;
+
+      expect(row.outcomes["beforeDay (shot held)"]).toBe("continue");
+      expect(row.outcomes["beforeDay (shot spent)"]).toBe("mafia");
+      // Enumerating the variable is what keeps the key sufficient. Left out, a
+      // key would map to two outcomes and this table would be a lie.
+      expect(table.ambiguous).toEqual([]);
+    });
   });
 
   it("still disagrees with naive parity where it matters", () => {

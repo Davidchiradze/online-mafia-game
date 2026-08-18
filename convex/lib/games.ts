@@ -7,9 +7,11 @@ import {
 import { Doc, Id } from "../_generated/dataModel";
 import {
   type WinContext,
+  type WinStateContext,
   type Winner,
   type GameOutcome,
 } from "../games/core/winConditions";
+import { isSerialKillerShotSpent } from "./nightSessions";
 import { roleToFaction, type Faction } from "./roles";
 import { getGameDefinition } from "../games/registry";
 import {
@@ -205,7 +207,16 @@ export async function recordWinnerIfDecided(
   const definition = getGameDefinition(game.gameType);
 
   const aliveRoles = await getAliveRoles(ctx.db, gameId);
-  const result = definition.describeWin(aliveRoles, context);
+
+  // State the alive roster cannot express. Read unconditionally rather than
+  // gated on the variant: the shared seam stays variant-blind, and the cost is
+  // one indexed query over at most a handful of night rows, a few times a game.
+  // A variant that ignores `state` is unaffected — Japanese and Sports both do.
+  const state: WinStateContext = {
+    serialKillerHasShot: !(await isSerialKillerShotSpent(ctx.db, gameId)),
+  };
+
+  const result = definition.describeWin(aliveRoles, context, state);
   if (!result) return null;
 
   // Total mutual elimination — nobody left alive. Pause on the banner as a

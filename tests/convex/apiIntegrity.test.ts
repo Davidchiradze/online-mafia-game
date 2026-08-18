@@ -370,8 +370,8 @@ describe("_generated drift", () => {
     ).toEqual({ missingFromGenerated: [], staleInGenerated: [] });
   });
 
-  it("has 86 modules in the bundler set", () => {
-    expect(convexModulePaths().length).toBe(86);
+  it("has 87 modules in the bundler set", () => {
+    expect(convexModulePaths().length).toBe(87);
   });
 
   it("never lets convex/games acquire a nested convex.config.ts", () => {

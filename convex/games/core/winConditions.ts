@@ -11,6 +11,30 @@
 
 export type WinContext = "beforeNight" | "beforeDay";
 export type Winner = "mafia" | "yakuza" | "citizens" | "serial_killer";
+
+/**
+ * Facts a win rule may read that the ALIVE ROSTER cannot express.
+ *
+ * Optional and additive, exactly like `NightResolveContext`: a variant that
+ * ignores it keeps its two-parameter `decideWinner`/`describeWin` and still
+ * satisfies `GameDefinition`. Japanese and Sports read nothing here.
+ *
+ * This is the first fact in the engine that two identical rosters can disagree
+ * on. Every rule so far has been a function of who is alive — the Doctor rides
+ * along in `aliveRoles` for free — so the alive roster was a sufficient key.
+ * A single-use ability breaks that: the same eleven seats mean different things
+ * depending on whether the bullet is still in the gun.
+ */
+export type WinStateContext = {
+  /**
+   * The Serial Killer still holds their one unspent kill.
+   *
+   * Derived from the night sessions rather than stored — see
+   * `isSerialKillerShotSpent` in `convex/lib/nightSessions.ts`. Absent means
+   * "not applicable", which is how Japanese and Sports see it.
+   */
+  serialKillerHasShot?: boolean;
+};
 /**
  * A finished-game outcome: a faction win, or a `"no_contest"` — a total mutual
  * elimination where no player is left alive (e.g. the last survivors all voted

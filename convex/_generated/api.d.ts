@@ -58,6 +58,7 @@ import type * as lib_auth from "../lib/auth.js";
 import type * as lib_constants from "../lib/constants.js";
 import type * as lib_entitlements from "../lib/entitlements.js";
 import type * as lib_games from "../lib/games.js";
+import type * as lib_nightSessions from "../lib/nightSessions.js";
 import type * as lib_playerRatings from "../lib/playerRatings.js";
 import type * as lib_playerStats from "../lib/playerStats.js";
 import type * as lib_profiles from "../lib/profiles.js";
@@ -152,6 +153,7 @@ declare const fullApi: ApiFromModules<{
   "lib/constants": typeof lib_constants;
   "lib/entitlements": typeof lib_entitlements;
   "lib/games": typeof lib_games;
+  "lib/nightSessions": typeof lib_nightSessions;
   "lib/playerRatings": typeof lib_playerRatings;
   "lib/playerStats": typeof lib_playerStats;
   "lib/profiles": typeof lib_profiles;

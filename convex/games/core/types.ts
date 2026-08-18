@@ -19,9 +19,14 @@
  */
 
 import type { Faction } from "../../lib/roles";
-import type { WinContext, GameOutcome, WinMethod } from "./winConditions";
+import type {
+  WinContext,
+  WinStateContext,
+  GameOutcome,
+  WinMethod,
+} from "./winConditions";
 
-export type { Faction, WinContext, WinMethod };
+export type { Faction, WinContext, WinStateContext, WinMethod };
 
 /** Roles and phases are string ids across the engine — never referenced by index. */
 export type Role = string;
@@ -58,6 +63,8 @@ export type NightState = {
   healedPlayer?: number;
   // Sports `unanimous-vote` selections (added in Phase 3).
   mafiaTargetSelections?: { mafiaSeat: number; targetSeat: number }[];
+  // Serial Killer's shot for this night, if they fired one.
+  serialKillerTarget?: number;
 };
 
 export type NightKind = "single-authority" | "unanimous-vote";
@@ -152,8 +159,19 @@ export interface GameDefinition {
 
   night: NightModel;
 
-  /** Generalizes `decideWinner`; each variant ships its own tables. */
-  decideWinner: (aliveRoles: Role[], context: WinContext) => Outcome | null;
+  /**
+   * Generalizes `decideWinner`; each variant ships its own tables.
+   *
+   * `state` carries facts the alive roster cannot express (a single-use
+   * ability that is spent or not). It is optional, so a variant whose rules are
+   * a pure function of the roster declares the two-parameter form and still
+   * satisfies this interface — Japanese and Sports both do.
+   */
+  decideWinner: (
+    aliveRoles: Role[],
+    context: WinContext,
+    state?: WinStateContext,
+  ) => Outcome | null;
 
   /**
    * Structured endgame snapshot (or `"no_contest"` / `null`) recorded on the
@@ -165,6 +183,7 @@ export interface GameDefinition {
   describeWin: (
     aliveRoles: Role[],
     context: WinContext,
+    state?: WinStateContext,
   ) => WinMethod | "no_contest" | null;
 
   flags: GameFlags;

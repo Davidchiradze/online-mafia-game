@@ -301,11 +301,17 @@ delegating to it. Three things must land first:
      `convex/games/core/nightPhase.ts` runs for the Doctor
      ([rules.md §5.1](./rules.md)). This does make the seam read night sessions,
      which today it does not.
-   - **The spec generator needs a non-role key dimension.** It grows the smallest
-     *role-presence* key until it predicts the outcome and fails the build when
-     one key maps to two outcomes — which `2 mafia + SK + 1 town` now does
-     (§5.3). That alarm is correct; teach the generator the extra column rather
-     than weaken the check.
+   - **The spec generator needs a non-role key dimension — and its alarm will
+     NOT fire on its own.** It grows the smallest *role-presence* key until it
+     predicts the outcome and fails the build when one key maps to two outcomes.
+     It is tempting to expect that alarm at `2 mafia + SK + 1 town` (§5.3). It
+     will not come: the enumeration called `def.decideWinner(roles, context)`
+     and left `state` undefined, so a bullet-dependent rule answers **once** per
+     roster, every key stays pure, `tests/docs/gameSpec.test.ts` passes, and the
+     table is published confidently wrong. An ambiguity check cannot detect a
+     variable it never varies. The fix is to **enumerate** the state as a second
+     axis, which is what `WIN_STATES` in `tests/support/gameSpec.ts` now does —
+     not to trust a guard that was never watching.
 
 3. **`WinMethod` needs a Serial Killer term**, plus a matching branch in
    `winMethodLabel` for the `1vs0` / `1vs1` labels. Recording whether the shot
