@@ -176,7 +176,8 @@
       "faction": {
         "mafia": "Mafia",
         "yakuza": "Yakuza",
-        "citizens": "Citizens"
+        "citizens": "Citizens",
+        "serial_killer": "Serial Killer"
       }
     },
     "errors": {
@@ -773,6 +774,7 @@
       "mafiaWinner": "Mafia",
       "yakuzaWinner": "Yakuza and Shogun",
       "citizensWinner": "Citizens",
+      "serialKillerWinner": "Serial Killer",
       "roomClosing": "Room closes in {seconds}s"
     },
     "livekit": {

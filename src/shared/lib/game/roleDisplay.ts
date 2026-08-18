@@ -1,4 +1,4 @@
-import { Skull, Swords, Shield, type LucideIcon } from "lucide-react";
+import { Axe, Skull, Swords, Shield, type LucideIcon } from "lucide-react";
 import {
   MAFIA_TEAM_ROLES,
   YAKUZA_TEAM_ROLES,
@@ -6,7 +6,7 @@ import {
 } from "@/shared/lib/constants/game";
 import { getGameDefinition } from "@convex/games/registry";
 
-export type Faction = "mafia" | "yakuza" | "citizens";
+export type Faction = "mafia" | "yakuza" | "citizens" | "serial_killer";
 
 const MAFIA_ROLE_SET = new Set<string>(MAFIA_TEAM_ROLES);
 const YAKUZA_ROLE_SET = new Set<string>(YAKUZA_TEAM_ROLES);
@@ -41,13 +41,20 @@ export function factionForRole(gameType: string, role: string): Faction {
   }
 }
 
-/** Lucide icon for a faction — render as `const Icon = factionIcon(f); <Icon />`. */
+/**
+ * Lucide icon for a faction — render as `const Icon = factionIcon(f); <Icon />`.
+ *
+ * The `default` arm is Citizens, so every non-town faction must be named
+ * explicitly or it silently renders as town.
+ */
 export function factionIcon(faction: Faction): LucideIcon {
   switch (faction) {
     case "mafia":
       return Skull;
     case "yakuza":
       return Swords;
+    case "serial_killer":
+      return Axe;
     default:
       return Shield;
   }
@@ -60,6 +67,8 @@ export function factionBadgeClass(faction: Faction): string {
       return "bg-zinc-800/80 text-zinc-200 border-zinc-700/50";
     case "yakuza":
       return "bg-purple-900/30 text-purple-300 border-purple-700/40";
+    case "serial_killer":
+      return "bg-amber-900/30 text-amber-300 border-amber-700/40";
     default:
       return "bg-rose-900/30 text-rose-300 border-rose-800/40";
   }

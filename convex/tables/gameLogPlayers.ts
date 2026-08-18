@@ -28,6 +28,7 @@ export const gameLogPlayers = defineTable({
     v.literal("mafia"),
     v.literal("yakuza"),
     v.literal("citizens"),
+    v.literal("serial_killer"),
   ),
   outcome: v.union(
     v.literal("win"),
@@ -40,6 +41,7 @@ export const gameLogPlayers = defineTable({
     v.literal("mafia"),
     v.literal("yakuza"),
     v.literal("citizens"),
+    v.literal("serial_killer"),
     v.null(),
   ),
   gameType,

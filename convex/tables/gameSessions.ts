@@ -32,6 +32,7 @@ export const gameSessions = defineTable({
       v.literal("mafia"),
       v.literal("yakuza"),
       v.literal("citizens"),
+      v.literal("serial_killer"),
       v.literal("no_contest"),
     ),
   ),

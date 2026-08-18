@@ -176,7 +176,8 @@
       "faction": {
         "mafia": "მაფია",
         "yakuza": "იაკუძა",
-        "citizens": "მოქალაქეები"
+        "citizens": "მოქალაქეები",
+        "serial_killer": "სერიული მკვლელი"
       }
     },
     "errors": {
@@ -773,6 +774,7 @@
       "mafiaWinner": "მაფია",
       "yakuzaWinner": "იაკუძა და შოგუნი",
       "citizensWinner": "მოქალაქეები",
+      "serialKillerWinner": "სერიული მკვლელი",
       "roomClosing": "ოთახი დაიხურება {seconds} წამში"
     },
     "livekit": {

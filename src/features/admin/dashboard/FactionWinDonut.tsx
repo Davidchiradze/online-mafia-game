@@ -14,7 +14,7 @@ export default function FactionWinDonut() {
   const t = useTranslations("admin");
   const data = useQuery(api.admin.stats.gameAnalytics);
 
-  const factions: Faction[] = ["mafia", "citizens", "yakuza"];
+  const factions: Faction[] = ["mafia", "citizens", "yakuza", "serial_killer"];
   const slices = data
     ? [
         ...factions.map((f) => ({

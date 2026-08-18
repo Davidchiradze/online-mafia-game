@@ -10,7 +10,7 @@
  */
 
 export type WinContext = "beforeNight" | "beforeDay";
-export type Winner = "mafia" | "yakuza" | "citizens";
+export type Winner = "mafia" | "yakuza" | "citizens" | "serial_killer";
 /**
  * A finished-game outcome: a faction win, or a `"no_contest"` — a total mutual
  * elimination where no player is left alive (e.g. the last survivors all voted
@@ -41,6 +41,8 @@ export type WinMethod = {
  * per-faction difference is how many survivors make up the winning clan:
  *   - mafia:  the alive mafia team
  *   - yakuza: only the surviving Yakuza + Shogun
+ *   - serial_killer: always exactly 1 — the faction is one player, and a win
+ *     requires them alive, so this needs no extra snapshot field
  *   - citizens: a sweep, so every survivor is town
  */
 export function winMethodLabel(method: WinMethod): string {
@@ -51,13 +53,9 @@ export function winMethodLabel(method: WinMethod): string {
       ? mafiaAlive
       : faction === "yakuza"
         ? (yakuzaAlive ? 1 : 0) + (shogunAlive ? 1 : 0)
-        : aliveTotal;
-  const factionLabel =
-    faction === "mafia"
-      ? "Mafia"
-      : faction === "yakuza"
-        ? "Yakuza and Shogun"
-        : "Citizens";
+        : faction === "serial_killer"
+          ? 1
+          : aliveTotal;
 
   return `${clanAlive}vs${aliveTotal - clanAlive}`;
 }
