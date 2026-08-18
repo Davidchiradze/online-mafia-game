@@ -5,8 +5,10 @@ import { nightPhase } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 import { useNightActionAuthority } from "@/features/game-room/hooks/game/useNightActionAuthority";
+import { shouldShowSerialKillIndicator } from "@/features/game-room/lib/serialKillerTarget";
 import SerialKillerKillButton from "@/features/game-room/components/actions/SerialKillerKillButton";
 import NightActionWrapper from "./NightActionWrapper";
+import SerialKillIndicator from "./SerialKillIndicator";
 
 interface SerialKillerKillControlProps {
   seatNumber: number;
@@ -27,13 +29,18 @@ interface SerialKillerKillControlProps {
  * here. It comes from the server's `canFire`, the same answer
  * `selectSerialKillerTarget` enforces, so the button cannot offer a shot the
  * mutation will reject.
+ *
+ * The CONFIRMATION is a full-tile `SerialKillIndicator`, matching the mafia,
+ * yakuza and doctor marks, and its audience comes from
+ * `shouldShowSerialKillIndicator` — see that module for why the rule lives in
+ * `lib/` with tests instead of inline here.
  */
 export default function SerialKillerKillControl({
   seatNumber,
   isTargetHost,
   isPlayerAlive,
 }: SerialKillerKillControlProps) {
-  const { gameId, nightPhaseSession } = useGameRoom();
+  const { gameId, isHost, nightPhaseSession } = useGameRoom();
   const { isSerialKillerPhase, hasSerialKillerAuthority } =
     useNightActionAuthority();
 
@@ -44,16 +51,18 @@ export default function SerialKillerKillControl({
       : "skip",
   );
 
-  const isSelected = nightPhaseSession?.serialKillerTarget === seatNumber;
-
-  // Once the target is locked in, only the chosen tile keeps its marker — the
-  // shot is one per GAME, so there is nothing to change afterwards.
-  if (isSelected) {
-    return (
-      <NightActionWrapper isSelected>
-        <SerialKillerKillButton seatNumber={seatNumber} isSelected />
-      </NightActionWrapper>
-    );
+  // Once the shot is fired only the chosen tile keeps a mark — it is one per
+  // GAME, so there is nothing left to change and no button to show anywhere.
+  if (
+    shouldShowSerialKillIndicator({
+      isSerialKillerPhase,
+      isViewerHost: isHost,
+      hasSerialKillerAuthority,
+      serialKillerTarget: nightPhaseSession?.serialKillerTarget,
+      seatNumber,
+    })
+  ) {
+    return <SerialKillIndicator />;
   }
 
   if (
@@ -69,7 +78,7 @@ export default function SerialKillerKillControl({
 
   return (
     <NightActionWrapper isSelected={false}>
-      <SerialKillerKillButton seatNumber={seatNumber} isSelected={false} />
+      <SerialKillerKillButton seatNumber={seatNumber} />
     </NightActionWrapper>
   );
 }

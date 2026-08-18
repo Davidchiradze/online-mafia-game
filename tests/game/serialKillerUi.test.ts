@@ -16,6 +16,7 @@ import { SERIAL_KILLER_UI_RULESET } from "@/features/game-room/variants/serialki
 import { SERIAL_KILLER_SEAT_LAYOUT } from "@/features/game-room/variants/serialkiller/seatLayout";
 import { JAPANESE_SEAT_LAYOUT } from "@/features/game-room/variants/japanese/seatLayout";
 import { serialKillerNightAuthority } from "@/features/game-room/variants/serialkiller/nightAuthority";
+import { shouldShowSerialKillIndicator } from "@/features/game-room/lib/serialKillerTarget";
 import { serialKillerAdvanceUpdates } from "@/features/game-room/variants/serialkiller/phaseFlow";
 import {
   canSeeParticipant,
@@ -205,6 +206,76 @@ describe("serialKillerAdvanceUpdates", () => {
 
   it("throws rather than guessing on a state-dependent edge", () => {
     expect(() => serialKillerAdvanceUpdates(GamePhase.DAY_PHASE)).toThrow();
+  });
+});
+
+describe("shouldShowSerialKillIndicator — who sees the mark", () => {
+  // Shipped as a leak: the first version painted the confirmation before any
+  // phase or viewer check ran, so the whole room saw the Serial Killer's target
+  // — on top of the night cover, which is a lower z-index than the marker.
+  const base = {
+    isSerialKillerPhase: true,
+    isViewerHost: false,
+    hasSerialKillerAuthority: true,
+    serialKillerTarget: 7 as number | undefined,
+    seatNumber: 7,
+  };
+
+  it("shows it to the Serial Killer on the seat they shot", () => {
+    expect(shouldShowSerialKillIndicator(base)).toBe(true);
+  });
+
+  it("shows it to the host, who monitors every night action", () => {
+    // The host never holds authority (`!isHost` in serialKillerNightAuthority),
+    // so the two halves of the audience cannot be collapsed into one check.
+    expect(
+      shouldShowSerialKillIndicator({
+        ...base,
+        isViewerHost: true,
+        hasSerialKillerAuthority: false,
+      }),
+    ).toBe(true);
+  });
+
+  it("hides it from every other player — a solo faction has no teammates", () => {
+    expect(
+      shouldShowSerialKillIndicator({
+        ...base,
+        isViewerHost: false,
+        hasSerialKillerAuthority: false,
+      }),
+    ).toBe(false);
+  });
+
+  it("hides it outside the Serial Killer's phase", () => {
+    // `serialKillerTarget` stays on the night row once fired, so the phase gate
+    // is the only thing stopping the mark bleeding into the detective and
+    // doctor phases and on into dawn. Both audience members lose it too.
+    for (const viewer of [
+      { isViewerHost: true, hasSerialKillerAuthority: false },
+      { isViewerHost: false, hasSerialKillerAuthority: true },
+    ]) {
+      expect(
+        shouldShowSerialKillIndicator({
+          ...base,
+          ...viewer,
+          isSerialKillerPhase: false,
+        }),
+      ).toBe(false);
+    }
+  });
+
+  it("marks only the seat that was shot", () => {
+    expect(shouldShowSerialKillIndicator({ ...base, seatNumber: 8 })).toBe(false);
+  });
+
+  it("marks nothing before the shot is fired", () => {
+    expect(
+      shouldShowSerialKillIndicator({
+        ...base,
+        serialKillerTarget: undefined,
+      }),
+    ).toBe(false);
   });
 });
 
