@@ -20,6 +20,7 @@ component-file-pascalcase | src/features/game-room/context/gameRoomContext.tsx
 component-file-pascalcase | src/features/game-room/hooks/game/useGameBroadcasts.tsx
 component-file-pascalcase | src/features/game-room/hooks/game/useJoinRequestNotification.tsx
 component-file-pascalcase | src/features/game-room/variants/japanese/phaseControls.tsx
+component-file-pascalcase | src/features/game-room/variants/serialkiller/phaseControls.tsx
 component-file-pascalcase | src/features/game-room/variants/sports/phaseControls.tsx
 component-file-pascalcase | src/features/headquarters/hooks/useMyJoinRequestNotifications.tsx
 component-file-pascalcase | src/providers/theme-provider.tsx

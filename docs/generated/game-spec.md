@@ -137,18 +137,18 @@ under **Branching edges** below.
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `game_session_started` | Game Started | — | — | server-owned | — |
 | 2 | `picking_roles` | Picking Roles | — | — | `mafia_meet` | — |
-| 3 | `mafia_meet` | Mafia Meeting | 60s | — | `don_meet` | — |
-| 4 | `don_meet` | Don Meeting | — | — | `serial_killer_meet` | — |
-| 5 | `serial_killer_meet` | Serial Killer Meeting | — | — | `detective_meet` | — |
-| 6 | `detective_meet` | Detective Meeting | 15s | — | `doctor_meet` | — |
-| 7 | `doctor_meet` | Doctor Meeting | 15s | — | `introduction_phase` | — |
+| 3 | `mafia_meet` | Mafia Meeting | 60s | `DON` `MAFIA` | `don_meet` | yes |
+| 4 | `don_meet` | Don Meeting | — | `DON` | `serial_killer_meet` | yes |
+| 5 | `serial_killer_meet` | Serial Killer Meeting | 40s | `SERIAL_KILLER` | `detective_meet` | yes |
+| 6 | `detective_meet` | Detective Meeting | 15s | `DETECTIVE` | `doctor_meet` | yes |
+| 7 | `doctor_meet` | Doctor Meeting | 15s | `DOCTOR` | `introduction_phase` | yes |
 | 8 | `introduction_phase` | Introduction | — | — | server-owned | — |
 | 9 | `night_phase` | Night Phase | — | — | `mafia_chooses_target` | — |
-| 10 | `mafia_chooses_target` | Mafia Chooses Target | 20s | — | `don_checks_for_detective` | — |
-| 11 | `don_checks_for_detective` | Don Checks for Detective | 15s | — | `serial_killer_chooses_target` | — |
-| 12 | `serial_killer_chooses_target` | Serial Killer Chooses Target | — | — | `detective_checks_for_mafia` | — |
-| 13 | `detective_checks_for_mafia` | Detective Checks for Mafia | 15s | — | `doctor_heals_player` | — |
-| 14 | `doctor_heals_player` | Doctor Heals | 15s | — | `farewell_speech` | — |
+| 10 | `mafia_chooses_target` | Mafia Chooses Target | 20s | `DON` `MAFIA` | `don_checks_for_detective` | — |
+| 11 | `don_checks_for_detective` | Don Checks for Detective | 15s | `DON` | `serial_killer_chooses_target` | yes |
+| 12 | `serial_killer_chooses_target` | Serial Killer Chooses Target | 20s | `SERIAL_KILLER` | `detective_checks_for_mafia` | yes |
+| 13 | `detective_checks_for_mafia` | Detective Checks for Mafia | 15s | `DETECTIVE` | `doctor_heals_player` | yes |
+| 14 | `doctor_heals_player` | Doctor Heals | 15s | `DOCTOR` | `farewell_speech` | yes |
 | 15 | `farewell_speech` | Farewell Speech | — | — | server-owned | — |
 | 16 | `day_phase` | Day Phase | — | — | server-owned | — |
 | 17 | `nominated_players_speak` | Self-Justification | — | — | server-owned | — |
@@ -248,17 +248,17 @@ stateDiagram-v2
 ```mermaid
 stateDiagram-v2
     picking_roles --> mafia_meet
-    mafia_meet --> don_meet
-    don_meet --> serial_killer_meet
-    serial_killer_meet --> detective_meet
-    detective_meet --> doctor_meet
-    doctor_meet --> introduction_phase
+    mafia_meet --> don_meet : via buffer
+    don_meet --> serial_killer_meet : via buffer
+    serial_killer_meet --> detective_meet : via buffer
+    detective_meet --> doctor_meet : via buffer
+    doctor_meet --> introduction_phase : via buffer
     night_phase --> mafia_chooses_target
     mafia_chooses_target --> don_checks_for_detective
-    don_checks_for_detective --> serial_killer_chooses_target
-    serial_killer_chooses_target --> detective_checks_for_mafia
-    detective_checks_for_mafia --> doctor_heals_player
-    doctor_heals_player --> farewell_speech
+    don_checks_for_detective --> serial_killer_chooses_target : via buffer
+    serial_killer_chooses_target --> detective_checks_for_mafia : via buffer
+    detective_checks_for_mafia --> doctor_heals_player : via buffer
+    doctor_heals_player --> farewell_speech : via buffer
     voting --> repeat
 ```
 

@@ -40,5 +40,8 @@ export function sportsNightAuthority({
     isYakuzaPhase: false,
     hasDoctorHealAuthority: false,
     isDoctorPhase: false,
+    // No Serial Killer in this variant.
+    hasSerialKillerAuthority: false,
+    isSerialKillerPhase: false,
   };
 }

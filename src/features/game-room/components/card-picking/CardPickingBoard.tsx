@@ -39,10 +39,17 @@ export default function CardPickingBoard() {
   const { gameId, gameSessionState, gameData } = useGameRoom();
   const { state, pickCard } = useCardPicking(gameId as Id<"games">);
 
-  // Sports Mafia has a fixed 10-card deck that we lay out as 5 top / 5 bottom
-  // and size to fill the viewport. Other variants keep the compact,
-  // scrollable grid (they can carry up to 12 cards).
-  const isSports = gameData?.gameType === "sports_mafia";
+  // A 10-card deck lays out as 5 top / 5 bottom, sized to fill the viewport.
+  // Bigger decks (Japanese 12, Serial Killer 11) keep the compact scrollable
+  // grid, which is the only one they fit in.
+  //
+  // Driven by the DECK SIZE, not by `gameType` — that literal was the one live
+  // violation of "never branch on a variant" left in the room. `maxPlayers` is
+  // the variant's `seatCount`, and `tests/docs/gameSpec.test.ts` pins deck
+  // length to it, so this is the deck size without a second source. Read from
+  // the game rather than `state.cards`, which shrinks as cards are picked and
+  // would flip the layout mid-round.
+  const isTwoRowDeck = gameData?.maxPlayers === 10;
 
   const [pickedCardId, setPickedCardId] = useState<string | null>(null);
   const [isPicking, setIsPicking] = useState(false);
@@ -111,7 +118,7 @@ export default function CardPickingBoard() {
 
         <div
           className={
-            isSports
+            isTwoRowDeck
               ? "mt-6 grid w-full max-w-[1280px] grid-cols-5 place-items-center gap-3 overflow-y-auto px-2 sm:gap-5 sm:px-4"
               : "mt-6 grid w-full max-w-6xl grid-cols-3 gap-3 sm:grid-cols-4 sm:gap-4 lg:grid-cols-6 lg:gap-6 overflow-y-auto p-4"
           }

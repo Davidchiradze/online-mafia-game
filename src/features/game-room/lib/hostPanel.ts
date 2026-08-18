@@ -197,7 +197,13 @@ export type HostPanelNote = { text: string; tone: HostPanelNoteTone };
  * one private pick per living mafia. Both resolve to label→value pills, so the
  * panel renders them identically and only `ruleset.useNightSummary` differs.
  */
-export type HostPanelMetaTone = "rose" | "violet" | "emerald" | "slate";
+// `amber` is the Serial Killer faction hue (see shared/lib/constants/factions).
+export type HostPanelMetaTone =
+  | "rose"
+  | "violet"
+  | "emerald"
+  | "amber"
+  | "slate";
 
 /**
  * How loudly the pill's VALUE is read.

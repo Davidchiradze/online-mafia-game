@@ -254,9 +254,11 @@ export const PHASE_TIMERS: Partial<
   [GamePhase.YAKUDA_SHOGUN_MEET]: 40 * 1000,
   [GamePhase.DETECTIVE_MEET]: 15 * 1000,
   [GamePhase.DOCTOR_MEET]: 15 * 1000,
+  [GamePhase.SERIAL_KILLER_MEET]: 40 * 1000,
   [GamePhase.MAFIA_CHOOSES_TARGET]: 20 * 1000,
   [GamePhase.DON_CHECKS_FOR_DETECTIVE]: 15 * 1000,
   [GamePhase.YAKUZA_AND_SHOGUN_CHOOSES_TARGET]: 20 * 1000,
+  [GamePhase.SERIAL_KILLER_CHOOSES_TARGET]: 20 * 1000,
   [GamePhase.DETECTIVE_CHECKS_FOR_MAFIA]: 15 * 1000,
   [GamePhase.DOCTOR_HEALS_PLAYER]: 15 * 1000,
   // Sports best move (§6.3): shown to all living players + the host, since the

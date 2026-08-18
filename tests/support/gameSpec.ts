@@ -38,8 +38,10 @@ import {
   PHASE_TIMERS, GamePhase } from "@/shared/lib/constants/game";
 import { advanceUpdates } from "@/features/game-room/variants/japanese/phaseFlow";
 import { sportsAdvanceUpdates } from "@/features/game-room/variants/sports/phaseFlow";
+import { serialKillerAdvanceUpdates } from "@/features/game-room/variants/serialkiller/phaseFlow";
 import { JAPANESE_VISIBILITY } from "@/features/game-room/variants/japanese/visibility";
 import { SPORTS_VISIBILITY } from "@/features/game-room/variants/sports/visibility";
+import { SERIAL_KILLER_VISIBILITY } from "@/features/game-room/variants/serialkiller/visibility";
 import type { VisibilityRuleset } from "@/features/game-room/variants/core/types";
 
 const REPO_ROOT = new URL("../../", import.meta.url).pathname;
@@ -64,6 +66,10 @@ const UI_BY_ID: Record<
 > = {
   japanese_mafia: { advance: advanceUpdates, visibility: JAPANESE_VISIBILITY },
   sports_mafia: { advance: sportsAdvanceUpdates, visibility: SPORTS_VISIBILITY },
+  serial_killer_mafia: {
+    advance: serialKillerAdvanceUpdates,
+    visibility: SERIAL_KILLER_VISIBILITY,
+  },
 };
 
 export type Variant = {
