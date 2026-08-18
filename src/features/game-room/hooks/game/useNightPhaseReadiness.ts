@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 import { MAFIA_TEAM_ROLES } from "@/shared/lib/constants/game";
+import { useGameFlags } from "./useGameFlags";
 
 /**
  * Determines whether the host can end each night action phase.
@@ -19,11 +20,21 @@ export function useNightPhaseReadiness() {
     healedPlayers,
     hostUserId,
   } = useGameRoom();
+  const { mafiaKillsOnFirstNight } = useGameFlags();
 
-  const isFirstNight = nightPhaseSession?.nightNumber === 1;
+  /**
+   * A first night on which the mafia only meet — there is no target to wait
+   * for, so the host may advance immediately.
+   *
+   * This used to be a bare `nightNumber === 1`, which is the Japanese rule
+   * applied to every variant. A variant that DOES kill on night 1 would let the
+   * host skip past a kill the mafia are entitled to make.
+   */
+  const isNonKillingFirstNight =
+    nightPhaseSession?.nightNumber === 1 && !mafiaKillsOnFirstNight;
 
   const canEndMafiaPhase = useMemo(() => {
-    if (isFirstNight) return true;
+    if (isNonKillingFirstNight) return true;
 
     const hasAliveMafia = players.some(
       (p) =>
@@ -36,7 +47,12 @@ export function useNightPhaseReadiness() {
     if (!hasAliveMafia) return true;
 
     return nightPhaseSession?.mafiaTarget !== undefined;
-  }, [isFirstNight, players, playerRolesMap, nightPhaseSession?.mafiaTarget]);
+  }, [
+    isNonKillingFirstNight,
+    players,
+    playerRolesMap,
+    nightPhaseSession?.mafiaTarget,
+  ]);
 
   const canEndYakuzaPhase = useMemo(() => {
     const hasAliveYakuza = players.some(

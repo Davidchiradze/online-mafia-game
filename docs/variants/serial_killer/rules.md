@@ -209,37 +209,46 @@ mafia kill, and this variant inverts it: **the mafia may kill on night 1, the
 Serial Killer may not.**
 
 Japanese's half of that is real, but it is **not enforced on the server** and it
-is **not owned by the variant**. It is two hardcoded UI facts:
+was **not owned by the variant**. It was three hardcoded UI facts:
 
 - `src/features/game-room/lib/nightPhase.ts` → `nightPhaseLabelKey` relabels
   `mafia_chooses_target` as `mafia_meets_first_night` whenever
   `nightNumber === 1`;
+- `PhaseTitle.tsx` → `NIGHT_DEPENDENT_PHASE_LABELS`, a **second, independent
+  copy** of that same relabelling;
 - `useNightPhaseReadiness` → `canEndMafiaPhase` returns `true` unconditionally on
   night 1, so the host can advance with no target recorded.
 
 `selectMafiaTarget` in `convex/games/core/nightPhase.ts` has no night-1 guard at
 all. So "mafia may kill on night 1" costs no server work — it is a flag on the
-definition that those two call sites read instead of hardcoding `1`.
+definition that those call sites read instead of hardcoding `1`.
 
-> **Pre-existing bug, worth fixing in the same change.** Both call sites are
-> **shared** — `useNightPanelFields` and `usePlayerPanelFields` under
-> `src/features/game-room/hooks/game/`, reached by every variant. Sports grants
-> its Best Move to the night-1 victim, which requires a night-1 mafia kill
-> (`convex/games/sports/bestMove.ts` gates on `nightNumber === 1`), yet a Sports
-> host on night 1 sees "Mafia Meets & Plans" and an advance button that never
-> waits for a target. A Japanese rule is leaking into Sports today. The flag
-> this variant needs is the fix.
-
-Proposed flag on `GameFlags` in `convex/games/core/types.ts`:
+Flag on `GameFlags` in `convex/games/core/types.ts`:
 
 ```ts
 /** Whether the mafia's kill is live on the first night. */
 mafiaKillsOnFirstNight: boolean;   // japanese false, sports true, serial killer true
 ```
 
-Sports flipping from its current *de facto* `false` to `true` is a **behaviour
-change**, not a refactor — `tests/game/` is a characterization suite, so expect
-assertions to move and confirm that is intended before updating them.
+> **Pre-existing bug in Sports, fixed by the same flag — but smaller than it
+> looks.** The two label copies are **shared**, reached by every variant through
+> `useNightPanelFields` / `usePlayerPanelFields`. Sports grants its Best Move to
+> the night-1 victim, which requires a night-1 mafia kill
+> (`convex/games/sports/bestMove.ts` gates on `nightNumber === 1`), yet a Sports
+> host on night 1 read "Mafia Meets & Plans" — on the one night the whole
+> mechanic depends on the mafia having shot.
+>
+> The **advance gate does not reach Sports.** `useNightPhaseReadiness` is
+> consumed only by `NightPhasePanel`, and Sports routes `mafia_chooses_target`
+> to `SportsMafiaTargetPanel` instead, so `canEndMafiaPhase` never runs there.
+> The Sports bug is therefore label-only and cosmetic; the kill always resolved.
+> The gate matters for **this** variant, which is Japanese-shaped and uses
+> `NightPhasePanel` with `gate="mafia"` — there an always-enabled advance would
+> let the host skip a kill the mafia are entitled to make.
+
+Sports flipping from its *de facto* `false` to a declared `true` is a
+**behaviour change**, not a refactor — `tests/game/` is a characterization
+suite, so assertions move and that has to be intended, not bulk-updated.
 
 ## 6. Day phase, voting, fouls
 

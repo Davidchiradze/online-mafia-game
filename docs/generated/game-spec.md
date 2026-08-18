@@ -31,6 +31,7 @@
 | `hasBestMove` | yes | — |
 | `hasFarewellSpeech` | yes | yes |
 | `hasIntroductionPhase` | — | yes |
+| `mafiaKillsOnFirstNight` | yes | — |
 | `thirdFoulSpeakingBan` | yes | — |
 
 ## Roles

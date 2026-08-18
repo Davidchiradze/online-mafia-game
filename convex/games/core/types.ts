@@ -108,6 +108,19 @@ export type GameFlags = {
    * dawn seam (`farewellSpeech:startFarewellSpeech`) so it never names a variant.
    */
   hasBestMove: boolean;
+  /**
+   * Whether the mafia's night-1 target selection is a real kill.
+   *
+   * Japanese `false` — the first night is a meeting and the mafia only plan
+   * (docs/variants/japanese/rules.md §4). Sports `true` — the first night kills,
+   * which is precisely what `hasBestMove` exists to follow up on.
+   *
+   * This is a UI-facing fact, NOT an engine gate: `selectMafiaTarget` has never
+   * had a night-1 guard on the server. It replaces a hardcoded
+   * `nightNumber === 1` in the phase label and in the host's advance gate, both
+   * of which gave every variant the Japanese answer.
+   */
+  mafiaKillsOnFirstNight: boolean;
 };
 
 /**

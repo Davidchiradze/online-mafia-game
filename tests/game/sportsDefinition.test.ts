@@ -64,6 +64,10 @@ describe("SPORTS_DEFINITION — roles, deck, factions (§2)", () => {
       firstDaySingleNomineeSkipsToNight: true,
       thirdFoulSpeakingBan: true,
       hasBestMove: true,
+      // Sports DOES kill on night 1 — `hasBestMove` exists precisely because
+      // the first night produces a victim (docs/variants/sports/rules.md §6).
+      // The UI was labelling that phase "Mafia Meets & Plans" regardless.
+      mafiaKillsOnFirstNight: true,
     });
   });
 });
