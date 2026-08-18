@@ -6,7 +6,7 @@
  */
 
 import { GamePhase } from "@/shared/lib/constants/game";
-import type { JAPANESE_MAFIA_ROLES } from "@/shared/lib/constants/game";
+import type { ALL_ROLES } from "@/shared/lib/constants/game";
 
 /**
  * Re-exported so the many `import type { GamePhase, Role } from ".../visibility"`
@@ -14,7 +14,16 @@ import type { JAPANESE_MAFIA_ROLES } from "@/shared/lib/constants/game";
  * `convex/lib/constants.ts`.
  */
 export { GamePhase };
-export type Role = (typeof JAPANESE_MAFIA_ROLES)[number] | null;
+
+/**
+ * Any role the app can be handed, across every variant.
+ *
+ * Built from `ALL_ROLES`, not the Japanese tuple: the server returns roles as
+ * bare strings and the visibility hooks cast `as Role` at that boundary, so a
+ * role outside this union is not caught — it is silently coerced and then
+ * misclassified by whatever `switch` reads it.
+ */
+export type Role = (typeof ALL_ROLES)[number] | null;
 
 /**
  * Visibility state for a participant — the single source of truth

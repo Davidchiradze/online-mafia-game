@@ -178,10 +178,17 @@ export const startFarewellSpeech = mutation({
         { livingMafiaSeats },
       );
     } else {
-      // Japanese (single-authority): unchanged — read the scalar targets.
+      // Single-authority (Japanese, Serial Killer): read the scalar targets.
+      //
+      // This literal is the variant-blind seam's ONE silent failure mode: a
+      // night field that exists on the schema but is not listed here is dropped
+      // before `resolveKills` ever sees it, so the kill it encodes simply never
+      // happens — no error, no log, a shot that vanishes. Every scalar the
+      // single-authority `NightState` declares must appear below.
       killedPlayers = definition.night.resolveKills({
         mafiaTarget: nightSession.mafiaTarget,
         yakuzaTarget: nightSession.yakuzaTarget,
+        serialKillerTarget: nightSession.serialKillerTarget,
         healedPlayer: nightSession.healedPlayer,
       });
     }

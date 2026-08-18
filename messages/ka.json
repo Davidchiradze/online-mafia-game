@@ -176,7 +176,8 @@
       "faction": {
         "mafia": "მაფია",
         "yakuza": "იაკუძა",
-        "citizens": "მოქალაქეები"
+        "citizens": "მოქალაქეები",
+        "serial_killer": "სერიული მკვლელი"
       }
     },
     "errors": {
@@ -432,7 +433,8 @@
     "gameTypes": {
       "sports_mafia": "სპორტული",
       "city_mafia": "სერიული",
-      "japanese_mafia": "იაკუძა"
+      "japanese_mafia": "იაკუძა",
+      "serial_killer_mafia": "სერიული მკვლელი"
     },
     "phaseTitle": {
       "nightLabel": "ღამე {night} — {label}",
@@ -453,7 +455,8 @@
       "YAKUZA": "იაკუძა",
       "DETECTIVE": "დეტექტივი",
       "CITIZEN": "მოქალაქე",
-      "DOCTOR": "ექიმი"
+      "DOCTOR": "ექიმი",
+      "SERIAL_KILLER": "სერიული მკვლელი"
     },
     "phases": {
       "game_session_started": "თამაში დაიწყო",
@@ -478,7 +481,9 @@
       "voting": "კენჭისყრა",
       "repeat": "შემდეგი რაუნდი",
       "end_game": "თამაში დასრულდა",
-      "phase_transition": "ყველას სძინავს"
+      "phase_transition": "ყველას სძინავს",
+      "serial_killer_meet": "სერიული მკვლელის შეხვედრა",
+      "serial_killer_chooses_target": "სერიული მკვლელი ირჩევს სამიზნეს"
     },
     "killConfirmTitle": "მოთამაშის მოკვლა",
     "killConfirmBody": "დარწმუნებული ხართ, რომ გსურთ მოკლათ მოთამაშე {seatNumber}? ეს მოქმედება შეუქცევადია.",
@@ -551,6 +556,7 @@
       "endVoting": "კენჭისყრის დასრულება",
       "endYakuzaPhase": "იაკუძას ფაზის დასრულება",
       "waitingForYakuza": "ელოდება იაკუძას…",
+      "waitingForSerialKiller": "სერიული მკვლელის მოლოდინში…",
       "noFarewellNeeded": "გამომშვიდობება საჭირო არ არის",
       "sayingGoodbye": "ემშვიდობება",
       "next": "შემდეგი:",
@@ -773,6 +779,7 @@
       "mafiaWinner": "მაფია",
       "yakuzaWinner": "იაკუძა და შოგუნი",
       "citizensWinner": "მოქალაქეები",
+      "serialKillerWinner": "სერიული მკვლელი",
       "roomClosing": "ოთახი დაიხურება {seconds} წამში"
     },
     "livekit": {

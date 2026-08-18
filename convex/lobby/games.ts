@@ -12,6 +12,7 @@ import {
   deleteGameAndRelations,
 } from "../lib/games";
 import { getLiveTableAvgRating } from "../lib/playerRatings";
+import { getGameDefinition } from "../games/registry";
 import { gameType } from "../tables/games";
 import type { QueryCtx } from "../_generated/server";
 import type { Doc } from "../_generated/dataModel";
@@ -46,13 +47,27 @@ async function withRosterAvatars(
   };
 }
 
-const GAME_TYPE_MAX_PLAYERS: Record<string, number> = {
-  sports_mafia: 10,
-  city_mafia: 12,
-  japanese_mafia: 12,
-};
-
 const MAX_CODE_ATTEMPTS = 5;
+
+/**
+ * Table size for a game type, or `null` when the type has no rules.
+ *
+ * `definition.seatCount` is the single source — a variant declares how many
+ * players it seats once, next to the deck that has to match it. The old local
+ * `Record<string, number>` was a second copy whose keys `tsc` never checked
+ * against the registry.
+ *
+ * `null` is reachable: `city_mafia` sits in the `gameType` validator union with
+ * no definition registered, so this doubles as the SERVER-side gate on creating
+ * an unbuilt variant. `CreateGameModal` only hides it from the dropdown.
+ */
+function seatCountFor(gameType: string): number | null {
+  try {
+    return getGameDefinition(gameType).seatCount;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Anonymous-readable (see `GUEST_VIEWABLE_PATHS` in `convex/lib/access.ts`) —
@@ -122,8 +137,8 @@ export const create = mutation({
       throw new ConvexError({ code: "GAME_NAME_REQUIRED", message: "Game name is required" });
     }
 
-    const maxPlayers = GAME_TYPE_MAX_PLAYERS[gameType];
-    if (!maxPlayers) {
+    const maxPlayers = seatCountFor(gameType);
+    if (maxPlayers === null) {
       throw new ConvexError({ code: "INVALID_GAME_TYPE", message: "Invalid game type" });
     }
 

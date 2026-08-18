@@ -85,6 +85,10 @@ describe("JAPANESE_DEFINITION — data mirrors the legacy constants", () => {
       firstDaySingleNomineeSkipsToNight: false,
       thirdFoulSpeakingBan: false,
       hasBestMove: false,
+      // Japanese night 1 is a meeting: the mafia plan but do not shoot
+      // (docs/variants/japanese/rules.md §4). Unchanged behaviour — this flag
+      // just stops the rule being assumed for every other variant.
+      mafiaKillsOnFirstNight: false,
     });
   });
 });

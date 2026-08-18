@@ -12,6 +12,7 @@ export const winMethodValidator = v.object({
     v.literal("mafia"),
     v.literal("yakuza"),
     v.literal("citizens"),
+    v.literal("serial_killer"),
   ),
   aliveTotal: v.number(), // N — total alive players when decided
   mafiaAlive: v.number(), // m — alive mafia-team members
@@ -38,6 +39,7 @@ export const gameLogs = defineTable({
     v.literal("mafia"),
     v.literal("yakuza"),
     v.literal("citizens"),
+    v.literal("serial_killer"),
     v.null(), // incomplete / no decided winner
   ),
   winMethod: v.optional(winMethodValidator), // absent when incomplete

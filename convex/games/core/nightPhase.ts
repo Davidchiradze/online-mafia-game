@@ -6,6 +6,7 @@ import { enterNightPhase } from "./phaseTransitions";
 import type { Id } from "../../_generated/dataModel";
 import type { DatabaseReader } from "../../_generated/server";
 import { GamePhase } from "../../lib/constants";
+import { isSerialKillerShotSpent } from "../../lib/nightSessions";
 import { mafiaKillAuthority } from "./mafiaSuccession";
 
 // ============================================================================
@@ -201,6 +202,55 @@ export const checkDoctorAuthority = query({
   },
 });
 
+/**
+ * Who may fire the Serial Killer's shot — the living SERIAL_KILLER, or nobody.
+ *
+ * Unlike the mafia's, this authority has NO succession: the faction is one
+ * player and the ability dies with them
+ * (docs/variants/serial_killer/rules.md §4).
+ */
+async function getSerialKillerAuthority(
+  db: DatabaseReader,
+  gameId: Id<"games">,
+) {
+  const alive = await getAlivePlayers(db, gameId);
+  const roleMap = await getRoleMap(db, gameId);
+
+  for (const p of alive) {
+    if (roleMap.get(p.playerId) === "SERIAL_KILLER") {
+      return { playerId: p.playerId, role: "SERIAL_KILLER" };
+    }
+  }
+  return null;
+}
+
+/**
+ * Whether the caller may fire tonight, and why not if they may not.
+ *
+ * `canFire` folds together all three reasons the button should be dead — not
+ * the Serial Killer, first night, or shot already spent — so the client never
+ * re-derives a rule the server owns and then disagrees with it.
+ */
+export const checkSerialKillerAuthority = query({
+  args: { gameId: v.id("games") },
+  handler: async (ctx, { gameId }) => {
+    const userId = await getAuthenticatedUser(ctx);
+    const authority = await getSerialKillerAuthority(ctx.db, gameId);
+    const session = await getGameSession(ctx.db, gameId);
+    const shotSpent = await isSerialKillerShotSpent(ctx.db, gameId);
+    const isFirstNight = session.currentNightNumber === 1;
+    const hasAuthority = authority?.playerId === userId;
+
+    return {
+      hasAuthority,
+      role: authority?.role ?? null,
+      shotSpent,
+      isFirstNight,
+      canFire: hasAuthority && !shotSpent && !isFirstNight,
+    };
+  },
+});
+
 // ============================================================================
 // MUTATIONS
 // ============================================================================
@@ -296,6 +346,69 @@ export const selectYakuzaTarget = mutation({
     }
 
     await ctx.db.patch(nightSession._id, { yakuzaTarget: targetSeatNumber });
+  },
+});
+
+/**
+ * Fire the Serial Killer's one shot (docs/variants/serial_killer/rules.md §5).
+ *
+ * Sits beside `selectYakuzaTarget` because it is the same `single-authority`
+ * shape, with two guards no other night action has:
+ *
+ * - **Never on night 1.** The inverse of the mafia, whose kill IS live on night
+ *   one in this variant.
+ * - **Once per game.** Derived from the night rows, so a shot the Doctor saved
+ *   still counts — the bullet left the gun.
+ *
+ * Both are enforced HERE, on the server. The UI hides the button, but the rule
+ * is a rule regardless of what the client believes.
+ */
+export const selectSerialKillerTarget = mutation({
+  args: {
+    gameId: v.id("games"),
+    targetSeatNumber: v.number(),
+  },
+  handler: async (ctx, { gameId, targetSeatNumber }) => {
+    const userId = await getAuthenticatedUser(ctx);
+
+    const authority = await getSerialKillerAuthority(ctx.db, gameId);
+    if (!authority || authority.playerId !== userId) {
+      throw new ConvexError("You don't have authority to kill");
+    }
+
+    const session = await getGameSession(ctx.db, gameId);
+    if (session.gamePhase !== GamePhase.SERIAL_KILLER_CHOOSES_TARGET) {
+      throw new ConvexError("Not in serial killer target phase");
+    }
+
+    const nightNumber = session.currentNightNumber;
+    if (!nightNumber) throw new ConvexError("No active night");
+    if (nightNumber === 1) {
+      throw new ConvexError("The serial killer cannot kill on the first night");
+    }
+
+    if (await isSerialKillerShotSpent(ctx.db, gameId)) {
+      throw new ConvexError("Your one kill has already been used this game");
+    }
+
+    await verifyTargetAlive(ctx.db, gameId, targetSeatNumber);
+
+    let nightSession = await getNightSession(ctx.db, gameId, nightNumber);
+    if (!nightSession) {
+      const id = await ctx.db.insert("nightPhaseSessions", {
+        gameId,
+        nightNumber,
+      });
+      nightSession = (await ctx.db.get(id))!;
+    }
+
+    if (nightSession.serialKillerTarget !== undefined) {
+      throw new ConvexError("Target already selected - cannot change decision");
+    }
+
+    await ctx.db.patch(nightSession._id, {
+      serialKillerTarget: targetSeatNumber,
+    });
   },
 });
 

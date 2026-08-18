@@ -66,5 +66,6 @@ export const JAPANESE_DEFINITION: GameDefinition = {
     firstDaySingleNomineeSkipsToNight: false,
     thirdFoulSpeakingBan: false,
     hasBestMove: false,
+    mafiaKillsOnFirstNight: false,
   },
 };

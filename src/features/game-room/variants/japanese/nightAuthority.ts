@@ -82,5 +82,8 @@ export function japaneseNightAuthority({
     isYakuzaPhase,
     hasDoctorHealAuthority,
     isDoctorPhase,
+    // No Serial Killer in this variant.
+    hasSerialKillerAuthority: false,
+    isSerialKillerPhase: false,
   };
 }

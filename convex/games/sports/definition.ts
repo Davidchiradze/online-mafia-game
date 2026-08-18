@@ -47,5 +47,6 @@ export const SPORTS_DEFINITION: GameDefinition = {
     firstDaySingleNomineeSkipsToNight: true,
     thirdFoulSpeakingBan: true,
     hasBestMove: true,
+    mafiaKillsOnFirstNight: true,
   },
 };

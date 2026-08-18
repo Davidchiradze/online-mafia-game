@@ -19,9 +19,14 @@
  */
 
 import type { Faction } from "../../lib/roles";
-import type { WinContext, GameOutcome, WinMethod } from "./winConditions";
+import type {
+  WinContext,
+  WinStateContext,
+  GameOutcome,
+  WinMethod,
+} from "./winConditions";
 
-export type { Faction, WinContext, WinMethod };
+export type { Faction, WinContext, WinStateContext, WinMethod };
 
 /** Roles and phases are string ids across the engine — never referenced by index. */
 export type Role = string;
@@ -31,7 +36,11 @@ export type Phase = string;
 export type Outcome = GameOutcome;
 
 /** The game variants the registry can resolve (mirrors the schema validator). */
-export type GameType = "japanese_mafia" | "sports_mafia" | "city_mafia";
+export type GameType =
+  | "japanese_mafia"
+  | "sports_mafia"
+  | "city_mafia"
+  | "serial_killer_mafia";
 
 /**
  * State the host-advance graph may branch on. Deterministic edges ignore it;
@@ -58,6 +67,8 @@ export type NightState = {
   healedPlayer?: number;
   // Sports `unanimous-vote` selections (added in Phase 3).
   mafiaTargetSelections?: { mafiaSeat: number; targetSeat: number }[];
+  // Serial Killer's shot for this night, if they fired one.
+  serialKillerTarget?: number;
 };
 
 export type NightKind = "single-authority" | "unanimous-vote";
@@ -108,6 +119,19 @@ export type GameFlags = {
    * dawn seam (`farewellSpeech:startFarewellSpeech`) so it never names a variant.
    */
   hasBestMove: boolean;
+  /**
+   * Whether the mafia's night-1 target selection is a real kill.
+   *
+   * Japanese `false` — the first night is a meeting and the mafia only plan
+   * (docs/variants/japanese/rules.md §4). Sports `true` — the first night kills,
+   * which is precisely what `hasBestMove` exists to follow up on.
+   *
+   * This is a UI-facing fact, NOT an engine gate: `selectMafiaTarget` has never
+   * had a night-1 guard on the server. It replaces a hardcoded
+   * `nightNumber === 1` in the phase label and in the host's advance gate, both
+   * of which gave every variant the Japanese answer.
+   */
+  mafiaKillsOnFirstNight: boolean;
 };
 
 /**
@@ -139,8 +163,19 @@ export interface GameDefinition {
 
   night: NightModel;
 
-  /** Generalizes `decideWinner`; each variant ships its own tables. */
-  decideWinner: (aliveRoles: Role[], context: WinContext) => Outcome | null;
+  /**
+   * Generalizes `decideWinner`; each variant ships its own tables.
+   *
+   * `state` carries facts the alive roster cannot express (a single-use
+   * ability that is spent or not). It is optional, so a variant whose rules are
+   * a pure function of the roster declares the two-parameter form and still
+   * satisfies this interface — Japanese and Sports both do.
+   */
+  decideWinner: (
+    aliveRoles: Role[],
+    context: WinContext,
+    state?: WinStateContext,
+  ) => Outcome | null;
 
   /**
    * Structured endgame snapshot (or `"no_contest"` / `null`) recorded on the
@@ -152,6 +187,7 @@ export interface GameDefinition {
   describeWin: (
     aliveRoles: Role[],
     context: WinContext,
+    state?: WinStateContext,
   ) => WinMethod | "no_contest" | null;
 
   flags: GameFlags;

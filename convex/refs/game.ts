@@ -34,7 +34,7 @@ type GameSessionDoc = {
   nominatedPlayers: number[];
   speakerStartedAt?: string;
   speakingOrder: number[];
-  winner?: "mafia" | "yakuza" | "citizens";
+  winner?: "mafia" | "yakuza" | "citizens" | "serial_killer";
 } | null;
 
 type NightPhaseSessionDoc = {
@@ -49,6 +49,12 @@ type NightPhaseSessionDoc = {
   // omitted from the client shape — it is private per mafia (§5.4).
   mafiaTargetWindowActive?: boolean;
   mafiaTargetWindowStartedAt?: string;
+  // Serial Killer's shot for this night, so they can see their own locked-in
+  // pick. NOTE: `getCurrent` returns the night row wholesale, so this field —
+  // like `mafiaTarget` and `yakuzaTarget` before it — is readable by any
+  // authenticated caller. Declaring it here does not widen that; omitting it
+  // would only hide an exposure that already exists.
+  serialKillerTarget?: number;
 } | null;
 
 type VotingSessionDoc = {
@@ -91,7 +97,21 @@ type DoctorAuthorityCheck = AuthorityCheck & {
   healedPlayers: number[];
 };
 
-type GameType = "sports_mafia" | "city_mafia" | "japanese_mafia";
+/**
+ * The Serial Killer's standing tonight. `canFire` is the server's own AND of
+ * all three reasons, so the client never re-derives the rule and disagrees.
+ */
+type SerialKillerAuthorityCheck = AuthorityCheck & {
+  shotSpent: boolean;
+  isFirstNight: boolean;
+  canFire: boolean;
+};
+
+type GameType =
+  | "sports_mafia"
+  | "city_mafia"
+  | "japanese_mafia"
+  | "serial_killer_mafia";
 type GameStatus = "not_started" | "playing" | "finished";
 
 type GameWithRelations = {
@@ -300,6 +320,17 @@ export const nightPhase = {
     { gameId: Id<"games">; targetSeatNumber: number },
     null
   >("games/core/nightPhase:healPlayer"),
+  /** Serial Killer Mafia only (docs/variants/serial_killer/rules.md §5). */
+  checkSerialKillerAuthority: makeFunctionReference<
+    "query",
+    { gameId: Id<"games"> },
+    SerialKillerAuthorityCheck
+  >("games/core/nightPhase:checkSerialKillerAuthority"),
+  selectSerialKillerTarget: makeFunctionReference<
+    "mutation",
+    { gameId: Id<"games">; targetSeatNumber: number },
+    null
+  >("games/core/nightPhase:selectSerialKillerTarget"),
 };
 
 // ============================================================================

@@ -20,6 +20,7 @@ component-file-pascalcase | src/features/game-room/context/gameRoomContext.tsx
 component-file-pascalcase | src/features/game-room/hooks/game/useGameBroadcasts.tsx
 component-file-pascalcase | src/features/game-room/hooks/game/useJoinRequestNotification.tsx
 component-file-pascalcase | src/features/game-room/variants/japanese/phaseControls.tsx
+component-file-pascalcase | src/features/game-room/variants/serialkiller/phaseControls.tsx
 component-file-pascalcase | src/features/game-room/variants/sports/phaseControls.tsx
 component-file-pascalcase | src/features/headquarters/hooks/useMyJoinRequestNotifications.tsx
 component-file-pascalcase | src/providers/theme-provider.tsx
@@ -34,6 +35,7 @@ no-inline-svg | src/features/game-room/components/participant/BestMoveIndicator.
 no-inline-svg | src/features/game-room/components/participant/DoctorHealIndicator.tsx
 no-inline-svg | src/features/game-room/components/participant/MafiaTargetIndicator.tsx
 no-inline-svg | src/features/game-room/components/participant/SeatIndicator.tsx
+no-inline-svg | src/features/game-room/components/participant/SerialKillIndicator.tsx
 no-inline-svg | src/features/game-room/components/participant/YakuzaTargetIndicator.tsx
 no-inline-svg | src/features/game-room/components/participant/player-states/DeadCover.tsx
 no-inline-svg | src/features/game-room/components/participant/player-states/NightCover.tsx

@@ -14,7 +14,12 @@
  * what the end was, and only the pair distinguishes the three screens.
  */
 
-export type EndGameOutcome = "mafia" | "yakuza" | "citizens" | "no_contest";
+export type EndGameOutcome =
+  | "mafia"
+  | "yakuza"
+  | "citizens"
+  | "serial_killer"
+  | "no_contest";
 
 export type EndGameState =
   /** Decided, not yet committed: the host still has to confirm the end. */

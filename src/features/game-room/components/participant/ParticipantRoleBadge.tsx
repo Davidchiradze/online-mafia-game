@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import {
-  JAPANESE_MAFIA_ROLES,
+  ALL_ROLES,
   MAFIA_TEAM_ROLES,
   YAKUZA_TEAM_ROLES,
 } from "@/shared/lib/constants/game";
@@ -10,7 +10,9 @@ import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 
 const MAFIA_ROLE_SET = new Set<string>(MAFIA_TEAM_ROLES);
 const YAKUZA_ROLE_SET = new Set<string>(YAKUZA_TEAM_ROLES);
-const KNOWN_ROLES = new Set<string>(JAPANESE_MAFIA_ROLES);
+// Every variant's roles, not just Japanese's — an unlisted role renders no
+// badge at all, which reads as "no role assigned" rather than as a bug.
+const KNOWN_ROLES = new Set<string>(ALL_ROLES);
 
 const BADGE_BASE =
   "font-inter text-[7px] tsm:text-[9px] tlg:text-[11px] font-medium shrink-0 px-1 py-0.5 tsm:px-1.5 rounded";
@@ -52,7 +54,7 @@ export default function ParticipantRoleBadge({
   if (!playerRole) return null;
 
   const label = KNOWN_ROLES.has(playerRole)
-    ? tg(`roles.${playerRole as (typeof JAPANESE_MAFIA_ROLES)[number]}`)
+    ? tg(`roles.${playerRole as (typeof ALL_ROLES)[number]}`)
     : playerRole;
 
   // The host and staff spectators with host-vision already receive every role

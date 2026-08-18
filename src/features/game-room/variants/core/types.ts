@@ -166,6 +166,13 @@ export type NightActionAuthority = {
   isYakuzaPhase: boolean;
   hasDoctorHealAuthority: boolean;
   isDoctorPhase: boolean;
+  /**
+   * Serial Killer only. REQUIRED, not optional: a new night action that every
+   * variant may silently omit is a button that never appears, with no error.
+   * Japanese and Sports answer `false` explicitly.
+   */
+  hasSerialKillerAuthority: boolean;
+  isSerialKillerPhase: boolean;
 };
 
 /**

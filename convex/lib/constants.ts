@@ -51,6 +51,19 @@ export enum GamePhase {
    * (docs/variants/sports/rules.md §6).
    */
   BEST_MOVE = "best_move",
+  /**
+   * Serial-Killer-only: the pre-day meeting where the Serial Killer wakes alone
+   * (docs/variants/serial_killer/rules.md §3). Occupies the slot Japanese gives
+   * `yakuda_shogun_meet` — they have no teammate to meet, so this is purely the
+   * host seeing them and them seeing the table's size.
+   */
+  SERIAL_KILLER_MEET = "serial_killer_meet",
+  /**
+   * Serial-Killer-only: their one-per-game kill (docs/variants/serial_killer/rules.md §5).
+   * Skipped on night 1, and skipped for the rest of the game once the shot is
+   * spent.
+   */
+  SERIAL_KILLER_CHOOSES_TARGET = "serial_killer_chooses_target",
 }
 
 /**
@@ -252,7 +265,11 @@ export type RatingConfig = {
  * `BACKFILL_POLICY` are keyed by the SAME union: adding a variant to the
  * validator without answering both is then a compile error in one of them.
  */
-type RatableGameType = "sports_mafia" | "city_mafia" | "japanese_mafia";
+type RatableGameType =
+  | "sports_mafia"
+  | "city_mafia"
+  | "japanese_mafia"
+  | "serial_killer_mafia";
 
 /**
  * Per-game-type rating config — each game variant has its own ELO calculation
@@ -317,4 +334,8 @@ export const BACKFILL_POLICY: Record<RatableGameType, "replay" | "never"> = {
   sports_mafia: "never",
   // No definition registered, so there is no archive and no ladder.
   city_mafia: "never",
+  // Launched UNRATED by decision (docs/variants/serial_killer/rating.md §1):
+  // a solo faction has no comparable ladder to calibrate E against until there
+  // is production data. Absent from RATING_CONFIG, so nothing to backfill.
+  serial_killer_mafia: "never",
 };
