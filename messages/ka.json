@@ -433,7 +433,8 @@
     "gameTypes": {
       "sports_mafia": "სპორტული",
       "city_mafia": "სერიული",
-      "japanese_mafia": "იაკუძა"
+      "japanese_mafia": "იაკუძა",
+      "serial_killer_mafia": "სერიული მკვლელი"
     },
     "phaseTitle": {
       "nightLabel": "ღამე {night} — {label}",
@@ -480,7 +481,9 @@
       "voting": "კენჭისყრა",
       "repeat": "შემდეგი რაუნდი",
       "end_game": "თამაში დასრულდა",
-      "phase_transition": "ყველას სძინავს"
+      "phase_transition": "ყველას სძინავს",
+      "serial_killer_meet": "სერიული მკვლელის შეხვედრა",
+      "serial_killer_chooses_target": "სერიული მკვლელი ირჩევს სამიზნეს"
     },
     "killConfirmTitle": "მოთამაშის მოკვლა",
     "killConfirmBody": "დარწმუნებული ხართ, რომ გსურთ მოკლათ მოთამაშე {seatNumber}? ეს მოქმედება შეუქცევადია.",

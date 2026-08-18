@@ -1,7 +1,8 @@
 # Serial Killer Mafia — Rating (ELO)
 
-> **Status: DESIGNED — NOT BUILT.** The variant is unregistered, so it is
-> neither rated nor ratable today. Rest of the design: [rules.md](./rules.md),
+> **Status: BUILT, and deliberately UNRATED.** The variant is registered but
+> absent from `RATING_CONFIG`, so `archiveGameLog` skips ELO entirely — a
+> decision, not an oversight (§1). Rest of the design: [rules.md](./rules.md),
 > [win-conditions.md](./win-conditions.md).
 >
 > This doc owns one question — is the variant rated, and on what numbers. The

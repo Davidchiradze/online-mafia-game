@@ -20,7 +20,7 @@ import {
  */
 
 describe("GAME_PHASES — frontend (src/lib/constants/game.ts)", () => {
-  it("is the 22-phase Japanese sequence + the Sports-only phases, in order", () => {
+  it("is the 24-phase Japanese sequence + every variant-only phase, in order", () => {
     // Reading order, not a stable-index contract: nothing reads this array
     // positionally, so a shared phase sits where it happens in a round.
     expect(SRC_GAME_PHASES).toEqual([
@@ -46,6 +46,8 @@ describe("GAME_PHASES — frontend (src/lib/constants/game.ts)", () => {
       GamePhase.END_GAME,
       GamePhase.PHASE_TRANSITION,
       GamePhase.BEST_MOVE,
+      GamePhase.SERIAL_KILLER_MEET,
+      GamePhase.SERIAL_KILLER_CHOOSES_TARGET,
     ]);
   });
 

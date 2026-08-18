@@ -36,7 +36,11 @@ export type Phase = string;
 export type Outcome = GameOutcome;
 
 /** The game variants the registry can resolve (mirrors the schema validator). */
-export type GameType = "japanese_mafia" | "sports_mafia" | "city_mafia";
+export type GameType =
+  | "japanese_mafia"
+  | "sports_mafia"
+  | "city_mafia"
+  | "serial_killer_mafia";
 
 /**
  * State the host-advance graph may branch on. Deterministic edges ignore it;

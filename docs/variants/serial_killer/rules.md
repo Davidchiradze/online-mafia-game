@@ -1,15 +1,10 @@
 # Serial Killer Mafia — Rules
 
-> **Status: DESIGNED — NOT BUILT.** Nothing in this document exists in code. No
-> definition is registered, no `gameType` literal is in the schema, and the
-> variant **cannot be created**. Unlike its siblings in this folder, every
-> statement below is a proposal.
->
-> It sits under `docs/variants/` anyway, so one variant's documentation is not
-> split across two folders. `tests/structure/variantDocs.test.ts` normally fails
-> the build on a variant folder the registry cannot resolve; the exemption is
-> earned by the "not built" banner above, and the test forces the exemption to be
-> deleted the moment a definition registers.
+> **Status: BUILT — backend registered, UI pending.** The definition is
+> registered as `serial_killer_mafia`, the deck and phases are real, and the
+> `gameType` literal is in the schema. The **frontend UI ruleset is not wired
+> yet**, so the variant is not playable end-to-end and stays filtered out of
+> `CreateGameModal` until it is.
 >
 > Read [japanese/rules.md](../japanese/rules.md) and
 > [japanese/win-conditions.md](../japanese/win-conditions.md) first. Like Sports,

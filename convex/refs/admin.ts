@@ -9,7 +9,11 @@ import type { Id } from "../_generated/dataModel";
  */
 
 type AccessRole = "user" | "moderator" | "admin";
-type GameType = "sports_mafia" | "city_mafia" | "japanese_mafia";
+type GameType =
+  | "sports_mafia"
+  | "city_mafia"
+  | "japanese_mafia"
+  | "serial_killer_mafia";
 type Faction = "mafia" | "yakuza" | "citizens" | "serial_killer";
 
 export type AdminUserRow = {

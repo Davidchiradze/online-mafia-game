@@ -1,7 +1,8 @@
 # Serial Killer Mafia — Win Conditions
 
-> **Status: DESIGNED — NOT BUILT.** The variant is unregistered
-> ([rules.md](./rules.md)). The rules are **decided** as of 2026-08-18.
+> **Status: BUILT.** Implemented in
+> `convex/games/serialkiller/winConditions.ts`, which is the authority; the
+> tables below are the design record. Decided 2026-08-18.
 >
 > *When* the check runs and what happens when one fires is variant-agnostic:
 > [engine/win-check-seam.md](../../engine/win-check-seam.md).
@@ -280,7 +281,7 @@ went into it:
 If either assumption is rejected, the parity rows with the shot still live are
 the ones to re-examine.
 
-## 8. Implementation (not built)
+## 8. Implementation
 
 The variant-owned piece is a pure `winConditions.ts` under this variant's folder
 in `convex/games/`, with `describeWin` implementing §6 and `decideWinner`

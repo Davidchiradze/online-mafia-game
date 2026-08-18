@@ -38,7 +38,11 @@ describe("generated game spec", () => {
 
   it("covers every registered variant", () => {
     // Guards the guard: an empty registry would make every check below vacuous.
-    expect(variants.map((v) => v.id).sort()).toEqual(["japanese_mafia", "sports_mafia"]);
+    expect(variants.map((v) => v.id).sort()).toEqual([
+      "japanese_mafia",
+      "serial_killer_mafia",
+      "sports_mafia",
+    ]);
   });
 
   it("keeps each deck the same size as its seat count", () => {

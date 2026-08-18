@@ -1,7 +1,11 @@
 import { makeFunctionReference } from "convex/server";
 import type { Id } from "../_generated/dataModel";
 
-type GameType = "sports_mafia" | "city_mafia" | "japanese_mafia";
+type GameType =
+  | "sports_mafia"
+  | "city_mafia"
+  | "japanese_mafia"
+  | "serial_killer_mafia";
 type GameStatus = "not_started" | "playing" | "finished";
 
 type GamePlayer = {

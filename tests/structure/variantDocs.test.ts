@@ -71,12 +71,7 @@ const docSlug = (id: string) => id.replace(/_mafia$/, "");
  * TO ADD: a variant with a written design and no definition yet.
  * TO REMOVE: the moment it registers — enforced as a stale entry below.
  */
-const UNREGISTERED_VARIANT_DOCS = new Map<string, string>([
-  [
-    "serial_killer",
-    "designed 2026-08-18; win formula deliberately TBD, and it is the first variant to ADD a faction, which is schema work before anything can be registered",
-  ],
-]);
+const UNREGISTERED_VARIANT_DOCS = new Map<string, string>([]);
 
 /** The banner that earns a slot in the map above. */
 const UNBUILT_BANNER = /\bnot built\b/i;
@@ -92,7 +87,7 @@ describe("variant documentation coverage", () => {
     expect(
       registered.map((v) => v.id).sort(),
       "the registry probe found no variants — the firewall below would be vacuous",
-    ).toEqual(["japanese_mafia", "sports_mafia"]);
+    ).toEqual(["japanese_mafia", "serial_killer_mafia", "sports_mafia"]);
   });
 
   it("documents every registered variant", () => {
@@ -221,7 +216,12 @@ describe("engine docs stay variant-agnostic", () => {
   it("derives the banned vocabulary from the registry", () => {
     // Pinned so the firewall cannot quietly become a no-op. If a variant gains
     // or loses a role, this is where you find out.
-    expect(VARIANT_ROLES).toEqual(["DOCTOR", "SHOGUN", "YAKUZA"]);
+    expect(VARIANT_ROLES).toEqual([
+      "DOCTOR",
+      "SERIAL_KILLER",
+      "SHOGUN",
+      "YAKUZA",
+    ]);
     expect(bannedPhases.length, "no variant-specific phases derived — firewall would be toothless")
       .toBeGreaterThan(0);
   });

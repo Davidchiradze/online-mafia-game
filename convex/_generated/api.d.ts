@@ -43,6 +43,11 @@ import type * as games_japanese_nightModel from "../games/japanese/nightModel.js
 import type * as games_japanese_phases from "../games/japanese/phases.js";
 import type * as games_japanese_winConditions from "../games/japanese/winConditions.js";
 import type * as games_registry from "../games/registry.js";
+import type * as games_serialkiller_definition from "../games/serialkiller/definition.js";
+import type * as games_serialkiller_nightModel from "../games/serialkiller/nightModel.js";
+import type * as games_serialkiller_phases from "../games/serialkiller/phases.js";
+import type * as games_serialkiller_roles from "../games/serialkiller/roles.js";
+import type * as games_serialkiller_winConditions from "../games/serialkiller/winConditions.js";
 import type * as games_sports_bestMove from "../games/sports/bestMove.js";
 import type * as games_sports_definition from "../games/sports/definition.js";
 import type * as games_sports_nightModel from "../games/sports/nightModel.js";
@@ -138,6 +143,11 @@ declare const fullApi: ApiFromModules<{
   "games/japanese/phases": typeof games_japanese_phases;
   "games/japanese/winConditions": typeof games_japanese_winConditions;
   "games/registry": typeof games_registry;
+  "games/serialkiller/definition": typeof games_serialkiller_definition;
+  "games/serialkiller/nightModel": typeof games_serialkiller_nightModel;
+  "games/serialkiller/phases": typeof games_serialkiller_phases;
+  "games/serialkiller/roles": typeof games_serialkiller_roles;
+  "games/serialkiller/winConditions": typeof games_serialkiller_winConditions;
   "games/sports/bestMove": typeof games_sports_bestMove;
   "games/sports/definition": typeof games_sports_definition;
   "games/sports/nightModel": typeof games_sports_nightModel;

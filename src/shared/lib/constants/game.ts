@@ -12,6 +12,7 @@ export const GAME_TYPES = [
   "sports_mafia",
   "city_mafia",
   "japanese_mafia",
+  "serial_killer_mafia",
 ] as const;
 
 export const GAME_STATUSES = ["not_started", "playing", "finished"] as const;
@@ -26,6 +27,7 @@ export const GAME_TYPE_LABEL: Record<(typeof GAME_TYPES)[number], string> = {
   sports_mafia: "Sports Mafia",
   city_mafia: "City mafia",
   japanese_mafia: "Japanese",
+  serial_killer_mafia: "Serial Killer",
 };
 
 export const GAME_STATUS_LABEL: Record<(typeof GAME_STATUSES)[number], string> =
@@ -109,6 +111,11 @@ export const GAME_PHASES = [
   GamePhase.END_GAME,
   GamePhase.PHASE_TRANSITION,
   GamePhase.BEST_MOVE,
+  // Appended, not inserted in reading order: `tests/game/phases.test.ts` pins
+  // the first 20 entries against the backend list, so a variant-only phase must
+  // land past that prefix.
+  GamePhase.SERIAL_KILLER_MEET,
+  GamePhase.SERIAL_KILLER_CHOOSES_TARGET,
 ] as const;
 
 /** Human-readable labels for each game phase */
@@ -135,6 +142,8 @@ export const GAME_PHASE_LABELS: Record<GamePhase, string> = {
   [GamePhase.PHASE_TRANSITION]: "Everyone Asleep",
   [GamePhase.DON_MEET]: "Don Meeting",
   [GamePhase.BEST_MOVE]: "Best Move",
+  [GamePhase.SERIAL_KILLER_MEET]: "Serial Killer Meeting",
+  [GamePhase.SERIAL_KILLER_CHOOSES_TARGET]: "Serial Killer Chooses Target",
 };
 
 // Day Phase Speaking Constants

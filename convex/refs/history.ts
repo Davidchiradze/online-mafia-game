@@ -4,7 +4,11 @@ import type { Id } from "../_generated/dataModel";
 
 type Faction = "mafia" | "yakuza" | "citizens" | "serial_killer";
 type Outcome = "win" | "loss" | "no_contest";
-type GameType = "sports_mafia" | "city_mafia" | "japanese_mafia";
+type GameType =
+  | "sports_mafia"
+  | "city_mafia"
+  | "japanese_mafia"
+  | "serial_killer_mafia";
 
 export type WinMethod = {
   faction: Faction;

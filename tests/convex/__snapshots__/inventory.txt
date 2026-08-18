@@ -1,5 +1,5 @@
 mutation | public | admin/gameLogs:annulGame | 18c69bcf4bfb | 74234e98afe7
-query | public | admin/gameLogs:listAllGameLogs | 4abb38ce1632 | 74234e98afe7
+query | public | admin/gameLogs:listAllGameLogs | e9b7ec34a397 | 74234e98afe7
 mutation | public | admin/games:forceEndGame | eddbc4df9e94 | 74234e98afe7
 query | public | admin/games:listGames | 5151b7eb8536 | 74234e98afe7
 action | public | admin/games:refundGame | 9009ff07333c | 74234e98afe7
@@ -49,17 +49,19 @@ mutation | public | games/core/farewellSpeech:grantFarewellTime | eddbc4df9e94 |
 mutation | public | games/core/farewellSpeech:markDeadAndAdvance | eddbc4df9e94 | 74234e98afe7
 mutation | public | games/core/farewellSpeech:startFarewellSpeech | eddbc4df9e94 | 74234e98afe7
 query | public | games/core/gameLogs:getGameLog | 18c69bcf4bfb | 74234e98afe7
-query | public | games/core/gameLogs:getMyStats | 7b0aeb6e568a | 74234e98afe7
-query | public | games/core/gameLogs:listMyGameLogs | 3f39b9e015e6 | 74234e98afe7
-query | public | games/core/leaderboard:getLeaderboard | 1a3d9f9349a0 | 74234e98afe7
+query | public | games/core/gameLogs:getMyStats | 64069c2f435f | 74234e98afe7
+query | public | games/core/gameLogs:listMyGameLogs | db576b21042b | 74234e98afe7
+query | public | games/core/leaderboard:getLeaderboard | 59a254e985d2 | 74234e98afe7
 query | public | games/core/nightPhase:checkDoctorAuthority | eddbc4df9e94 | 74234e98afe7
 query | public | games/core/nightPhase:checkMafiaAuthority | eddbc4df9e94 | 74234e98afe7
+query | public | games/core/nightPhase:checkSerialKillerAuthority | eddbc4df9e94 | 74234e98afe7
 query | public | games/core/nightPhase:checkYakuzaAuthority | eddbc4df9e94 | 74234e98afe7
 mutation | public | games/core/nightPhase:enterNight | eddbc4df9e94 | 74234e98afe7
 query | public | games/core/nightPhase:getCurrent | eddbc4df9e94 | 74234e98afe7
 query | public | games/core/nightPhase:getHealedPlayers | eddbc4df9e94 | 74234e98afe7
 mutation | public | games/core/nightPhase:healPlayer | 621801e94ba0 | 74234e98afe7
 mutation | public | games/core/nightPhase:selectMafiaTarget | 621801e94ba0 | 74234e98afe7
+mutation | public | games/core/nightPhase:selectSerialKillerTarget | 621801e94ba0 | 74234e98afe7
 mutation | public | games/core/nightPhase:selectYakuzaTarget | 621801e94ba0 | 74234e98afe7
 query | public | games/core/players:isPlayer | eddbc4df9e94 | 74234e98afe7
 mutation | public | games/core/players:join | eddbc4df9e94 | 74234e98afe7
@@ -112,7 +114,7 @@ mutation | public | games/sports/nightPhase:selectMafiaTarget | 621801e94ba0 | 7
 mutation | public | games/sports/nightPhase:startMafiaTargetWindow | eddbc4df9e94 | 74234e98afe7
 query | internal | integrations/playerStats:byAccountIds | 06a0f03bbe49 | 74234e98afe7
 httpAction | public | integrations/playerStats:handleGetPlayerStats | - | -
-mutation | public | lobby/games:create | 0c7b5579adad | 74234e98afe7
+mutation | public | lobby/games:create | dbf07c43184f | 74234e98afe7
 query | public | lobby/games:getById | eddbc4df9e94 | 74234e98afe7
 query | public | lobby/games:list | 5151b7eb8536 | 74234e98afe7
 mutation | public | lobby/games:remove | eddbc4df9e94 | 74234e98afe7
@@ -129,7 +131,7 @@ query | public | lobby/joinRequests:myActiveRequests | 5151b7eb8536 | 74234e98af
 query | public | lobby/joinRequests:myStatus | eddbc4df9e94 | 74234e98afe7
 mutation | public | lobby/joinRequests:reject | e7fede0e4e63 | 74234e98afe7
 mutation | public | lobby/joinRequests:request | eddbc4df9e94 | 74234e98afe7
-mutation | internal | migrations:backfillRatings | b89b2130c90d | 74234e98afe7
+mutation | internal | migrations:backfillRatings | d9d716b3923a | 74234e98afe7
 mutation | internal | migrations:clearLegacyRoles | 5151b7eb8536 | 74234e98afe7
 mutation | internal | migrations:clearLegacyUsername | 5151b7eb8536 | 74234e98afe7
 mutation | internal | migrations:splitPlayerStatsByGameType | 2558a19a6fcd | 74234e98afe7

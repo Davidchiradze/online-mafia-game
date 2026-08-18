@@ -433,7 +433,8 @@
     "gameTypes": {
       "sports_mafia": "Sports Mafia",
       "city_mafia": "City mafia",
-      "japanese_mafia": "Japanese"
+      "japanese_mafia": "Japanese",
+      "serial_killer_mafia": "Serial Killer"
     },
     "phaseTitle": {
       "nightLabel": "N{night} — {label}",
@@ -480,7 +481,9 @@
       "voting": "Voting",
       "repeat": "Next Round",
       "end_game": "Game Over",
-      "phase_transition": "Everyone is asleep"
+      "phase_transition": "Everyone is asleep",
+      "serial_killer_meet": "Serial Killer Meeting",
+      "serial_killer_chooses_target": "Serial Killer Chooses Target"
     },
     "killConfirmTitle": "Kill Player",
     "killConfirmBody": "Are you sure you want to kill Player {seatNumber}? This action cannot be undone.",
