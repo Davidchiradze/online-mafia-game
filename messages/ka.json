@@ -822,7 +822,16 @@
     "player": {
       "waitingToStart": "ველოდებით მოთამაშეებს"
     },
-    "chooseLadder": "აირჩიე რეიტინგი"
+    "chooseLadder": "აირჩიე რეიტინგი",
+    "variantSelector": {
+      "chooseVariant": "აირჩიე რეჟიმი",
+      "allVariants": "ყველა",
+      "seats": "{seatCount} ადგილი",
+      "rated": "რეიტინგული",
+      "unrated": "არარეიტინგული",
+      "unratedHint": "ამ რეჟიმს ჯერ არ აქვს რეიტინგი",
+      "unbuiltHint": "ეს რეჟიმი ჯერ მიუწვდომელია"
+    }
   },
   "errors": {
     "_fallback": "რაღაც შეცდომა მოხდა. გთხოვთ სცადოთ თავიდან.",
