@@ -4,11 +4,19 @@
  * Japanese's map with the two yakuza entries replaced. A phase-NAME lookup, so
  * shared UI never branches on a variant's phase order.
  *
- * The Serial Killer's kill phase carries `gate="serial_killer"`: the host may
- * not advance past a shot the Serial Killer is entitled to take. Unlike the
- * other gates, this one also opens when the shot is unavailable — night 1, or
- * already spent — because there is then nothing to wait for and a permanently
- * disabled button would hang the game.
+ * The Serial Killer's kill phase carries `gate="serial_killer"`, and that gate
+ * is currently ALWAYS OPEN — see `canEndSerialKillerPhase` in
+ * `hooks/game/useNightPhaseReadiness.ts`. The single shot is optional, tonight
+ * and for the whole game (docs/variants/serial_killer/rules.md §5.1), so the
+ * host must always be able to close the phase; a gate that waits for a target
+ * strands them on a disabled button whenever the Serial Killer holds their fire.
+ *
+ * The wiring stays in place rather than being deleted so the gate has somewhere
+ * to go if the shot ever gains a condition worth waiting for. `waitingKey` is
+ * unreachable while the gate is open, and kept for the same reason.
+ *
+ * The shot itself is still enforced where it belongs: `selectSerialKillerTarget`
+ * rejects a second one, and rejects night 1.
  */
 
 import type { PhaseControlsMap } from "@/features/game-room/variants/core/types";

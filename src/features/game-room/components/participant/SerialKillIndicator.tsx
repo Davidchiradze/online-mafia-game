@@ -1,38 +1,37 @@
 "use client";
 
+/** Polar point on the seal's centre (140, 96). */
+const pt = (deg: number, r: number): [number, number] => [
+  140 + Math.cos((deg * Math.PI) / 180) * r,
+  96 + Math.sin((deg * Math.PI) / 180) * r,
+];
+
 /**
  * SerialKillIndicator
- * Three amber claw slashes, a faceted brass seal holding the single tally
- * stroke of the one-shot kill, and drifting embers. No background, no borders.
+ * Crimson aim: a crosshair reticle centred on the tile, inside the same r50
+ * seal with 12 ticks that the mafia/yakuza/doctor indicators use. Fully
+ * static — no animation. No background, no borders.
  *
- * Amber is the faction hue (`src/shared/lib/constants/factions.ts`). The seal is
- * a rotated square rather than a circle for the same reason the colour differs:
- * on a small tile, shape carries further than hue, so this cannot be mistaken
- * for the yakuza's round hanko or the doctor's round ward.
- *
- * One tally stroke, not a count — the Serial Killer fires once per GAME
- * (docs/variants/serial_killer/rules.md §5).
+ * The reticle is the tell, not the hue: crimson is close to the mafia and
+ * yakuza reds, so on a small tile the crosshair is what separates this from
+ * them. Static-vs-breathing is the second cue — every other indicator pulses.
  *
  * WHO SEES THIS is decided by `shouldShowSerialKillIndicator` in
  * `lib/serialKillerTarget.ts`, never here. This component is pure paint.
  */
 export default function SerialKillIndicator() {
-  // Perpendicular offsets along the claw's normal, so the three cuts stay
-  // parallel instead of fanning out.
-  const claws = [
-    { dx: -29, dy: 28 },
-    { dx: 0, dy: 0 },
-    { dx: 29, dy: -28 },
+  // Reticle arms — gap at the centre, reaching to r30.
+  const arms = [
+    [140, 66, 140, 84], [140, 108, 140, 126],
+    [110, 96, 128, 96], [152, 96, 170, 96],
   ];
 
-  const embers = [
-    { x: 46, y: 52 }, { x: 62, y: 34 }, { x: 240, y: 46 }, { x: 226, y: 64 },
-    { x: 40, y: 120 }, { x: 244, y: 124 }, { x: 54, y: 156 }, { x: 233, y: 150 },
-    { x: 88, y: 26 }, { x: 198, y: 22 }, { x: 74, y: 172 }, { x: 213, y: 166 },
-    { x: 110, y: 20 }, { x: 176, y: 178 }, { x: 34, y: 90 }, { x: 246, y: 96 },
+  const specks = [
+    { x: 44, y: 50 }, { x: 60, y: 35 }, { x: 242, y: 45 }, { x: 228, y: 62 },
+    { x: 38, y: 118 }, { x: 246, y: 122 }, { x: 52, y: 155 }, { x: 235, y: 148 },
+    { x: 85, y: 28 }, { x: 200, y: 24 }, { x: 72, y: 170 }, { x: 215, y: 168 },
+    { x: 108, y: 22 }, { x: 175, y: 21 }, { x: 36, y: 88 }, { x: 248, y: 94 },
   ];
-
-  const CLAW = "M 48 26 C 92 62 128 98 168 150";
 
   return (
     <div className="absolute inset-0 z-[28] pointer-events-none overflow-hidden rounded-xl">
@@ -43,81 +42,70 @@ export default function SerialKillIndicator() {
         fill="none"
       >
         <defs>
-          <filter id="sk-cut" x="-6%" y="-6%" width="112%" height="112%">
-            <feGaussianBlur stdDeviation="1.1" result="blur" />
-            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-          </filter>
           <filter id="sk-seal-glow" x="-35%" y="-35%" width="170%" height="170%">
             <feGaussianBlur stdDeviation="6" result="blur" />
             <feColorMatrix type="matrix"
-              values="1.6 0 0 0 0.15  1.0 0 0 0 0.5  0 0 0 0 0.05  0 0 0 0.85 0"
+              values="1.6 0 0 0 0.08  0 0 0 0 0  0 0 0 0 0  0 0 0 0.85 0"
               in="blur" result="glow" />
             <feMerge><feMergeNode in="glow" /><feMergeNode in="SourceGraphic" /></feMerge>
           </filter>
+          {/* userSpaceOnUse: an objectBoundingBox region collapses on
+              zero-width/height geometry and renders nothing. The reticle arms
+              are exactly that — perfectly horizontal and vertical lines. */}
+          <filter id="sk-edge" filterUnits="userSpaceOnUse" x="0" y="0" width="280" height="200">
+            <feGaussianBlur stdDeviation="1" result="blur" />
+            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
         </defs>
 
-        {/* Three claw slashes */}
-        {claws.map(({ dx, dy }, i) => (
-          <g key={i} transform={`translate(${dx},${dy})`} opacity={i === 1 ? 1 : 0.82}>
-            <path d={CLAW}
-              stroke="rgba(120,62,0,0.26)" strokeWidth="22" strokeLinecap="round" fill="none" />
-            <path d={CLAW}
-              stroke="rgba(180,100,0,0.34)" strokeWidth="13" strokeLinecap="round" fill="none" />
-            <path d={CLAW}
-              stroke="rgba(245,158,11,0.85)" strokeWidth="7" strokeLinecap="round" fill="none"
-              filter="url(#sk-cut)" />
-            <path d={CLAW}
-              stroke="rgba(254,215,140,0.30)" strokeWidth="2.2" strokeLinecap="round" fill="none" />
+        {/* Crimson seal */}
+        <circle cx="140" cy="96" r="56" fill="rgba(185,15,15,0.09)" />
+        <circle cx="140" cy="96" r="50"
+          fill="rgba(40,0,0,0.26)"
+          stroke="rgba(220,38,38,0.88)" strokeWidth="3.4"
+          filter="url(#sk-seal-glow)" />
+        <circle cx="140" cy="96" r="44"
+          fill="none" stroke="rgba(220,38,38,0.4)" strokeWidth="1.2" />
+
+        {Array.from({ length: 12 }).map((_, i) => {
+          const [x1, y1] = pt(i * 30, 37);
+          const [x2, y2] = pt(i * 30, 42);
+          return (
+            <line key={i} x1={x1} y1={y1} x2={x2} y2={y2}
+              stroke="rgba(248,113,113,0.55)" strokeWidth="1.5" strokeLinecap="round" />
+          );
+        })}
+
+        {/* Reticle ring and its diagonal ticks */}
+        <circle cx="140" cy="96" r="30"
+          fill="none" stroke="rgba(220,38,38,0.6)" strokeWidth="1.8" />
+
+        {[45, 135, 225, 315].map((a, i) => {
+          const [x1, y1] = pt(a, 24);
+          const [x2, y2] = pt(a, 30);
+          return (
+            <line key={i} x1={x1} y1={y1} x2={x2} y2={y2}
+              stroke="rgba(220,38,38,0.5)" strokeWidth="1.6" strokeLinecap="round" />
+          );
+        })}
+
+        {arms.map(([x1, y1, x2, y2], i) => (
+          <g key={i}>
+            <line x1={x1} y1={y1} x2={x2} y2={y2}
+              stroke="rgba(60,0,0,0.55)" strokeWidth="5" strokeLinecap="round" />
+            <line x1={x1} y1={y1} x2={x2} y2={y2}
+              stroke="rgba(220,38,38,0.9)" strokeWidth="2.2" strokeLinecap="round"
+              filter="url(#sk-edge)" />
           </g>
         ))}
 
-        {/* Faceted brass seal */}
-        <g transform="rotate(45, 140, 96)">
-          <rect x="98" y="54" width="84" height="84" rx="9"
-            fill="rgba(70,38,0,0.32)"
-            stroke="rgba(251,191,36,0.88)" strokeWidth="3.4"
-            filter="url(#sk-seal-glow)" />
-          <rect x="105" y="61" width="70" height="70" rx="7"
-            fill="none" stroke="rgba(251,191,36,0.52)" strokeWidth="1.2" />
-          <rect x="111" y="67" width="58" height="58" rx="5"
-            fill="none" stroke="rgba(251,191,36,0.22)" strokeWidth="0.7" />
-        </g>
+        <circle cx="140" cy="96" r="4.5" fill="rgba(60,0,0,0.6)" />
+        <circle cx="140" cy="96" r="3" fill="rgba(248,113,113,0.95)" />
 
-        {/* Corner ticks on the seal's axes */}
-        {[
-          { x: 140, y: 36 }, { x: 140, y: 156 },
-          { x: 80, y: 96 }, { x: 200, y: 96 },
-        ].map(({ x, y }, i) => (
-          <circle key={i} cx={x} cy={y} r="2.4" fill="rgba(252,211,77,0.7)" />
-        ))}
-
-        <rect x="86" y="42" width="108" height="108" rx="14"
-          fill="rgba(245,158,11,0.07)">
-          <animate attributeName="opacity" values="0.55;0.12;0.55" dur="2.3s" repeatCount="indefinite" />
-        </rect>
-
-        {/* The single tally stroke — one shot, one mark */}
-        <g transform="rotate(-8, 140, 96)">
-          <rect x="134" y="66" width="12" height="60" rx="4" fill="rgba(60,30,0,0.45)" />
-          <rect x="135.5" y="68" width="9" height="56" rx="3.5"
-            fill="rgba(251,191,36,0.9)" filter="url(#sk-cut)" />
-          <rect x="137" y="70" width="3.5" height="52" rx="1.6"
-            fill="rgba(255,255,255,0.22)" />
-          <rect x="135.5" y="68" width="9" height="56" rx="3.5" fill="rgba(254,240,190,0.16)">
-            <animate attributeName="opacity" values="0.15;0.55;0.15" dur="2.3s" repeatCount="indefinite" />
-          </rect>
-        </g>
-
-        {/* Drifting embers */}
-        {embers.map(({ x, y }, i) => (
+        {/* Powder burn */}
+        {specks.map(({ x, y }, i) => (
           <circle key={i} cx={x} cy={y} r={i % 3 === 0 ? 2.2 : 1.4}
-            fill="rgba(251,191,36,0.6)">
-            <animate attributeName="opacity"
-              values="0.1;0.65;0.1"
-              dur={`${1.5 + (i * 0.31) % 2.1}s`}
-              begin={`${(i * 0.21) % 1.5}s`}
-              repeatCount="indefinite" />
-          </circle>
+            fill={`rgba(248,113,113,${(0.3 + (i % 4) * 0.08).toFixed(2)})`} />
         ))}
       </svg>
     </div>

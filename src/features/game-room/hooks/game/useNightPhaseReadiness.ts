@@ -1,11 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import { useQuery } from "convex/react";
-import { nightPhase } from "@convex/refs/game";
-import type { Id } from "@convex/_generated/dataModel";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
-import { GamePhase, MAFIA_TEAM_ROLES } from "@/shared/lib/constants/game";
+import { MAFIA_TEAM_ROLES } from "@/shared/lib/constants/game";
 import { useGameFlags } from "./useGameFlags";
 
 /**
@@ -14,11 +11,13 @@ import { useGameFlags } from "./useGameFlags";
  * A phase button is disabled when the responsible player is alive but
  * has not yet submitted their action. Once the action is recorded in
  * `nightPhaseSession`, the reactive query fires and the button enables.
+ *
+ * That bargain only holds for an action the role is OBLIGED to take. An optional
+ * ability has no "not yet" state to wait out, so its gate stays open — see
+ * `canEndSerialKillerPhase` below.
  */
 export function useNightPhaseReadiness() {
   const {
-    gameId,
-    gameSessionState,
     nightPhaseSession,
     players,
     playerRolesMap,
@@ -26,17 +25,6 @@ export function useNightPhaseReadiness() {
     hostUserId,
   } = useGameRoom();
   const { mafiaKillsOnFirstNight } = useGameFlags();
-
-  // "Has the one shot been fired" spans every night of the game, so only the
-  // server can answer it. Skipped outside the Serial Killer's phase, which is
-  // the only place it is read — Japanese and Sports never subscribe.
-  const serialKillerState = useQuery(
-    nightPhase.checkSerialKillerAuthority,
-    gameSessionState?.gamePhase === GamePhase.SERIAL_KILLER_CHOOSES_TARGET
-      ? { gameId: gameId as Id<"games"> }
-      : "skip",
-  );
-  const serialKillerShotSpent = serialKillerState?.shotSpent ?? false;
 
   /**
    * A first night on which the mafia only meet — there is no target to wait
@@ -118,37 +106,20 @@ export function useNightPhaseReadiness() {
   ]);
 
   /**
-   * The Serial Killer's phase closes when there is nothing left to wait for.
+   * The Serial Killer's phase is ALWAYS closable — the host may skip it.
    *
-   * Three ways that happens, and only the first is unique to this ability:
-   * the shot is already spent, it is night 1 (they may not fire at all), or
-   * they are dead. Each is a night the host would otherwise sit on a disabled
-   * button forever.
+   * Unconditional on purpose, not an oversight. Every other gate here asks "is
+   * this role still owed an action", and the Serial Killer never is: the single
+   * shot is optional tonight and optional for the whole game
+   * (docs/variants/serial_killer/rules.md §5.1). Enumerating the cases where
+   * there is provably nothing to wait for — dead, night 1, shot already spent —
+   * still leaves the ordinary one, alive with the shot in hand and choosing not
+   * to fire, waiting on a target that is never coming.
    *
-   * "Spent" is derived from the night rows, so a shot the Doctor saved still
-   * counts — the same answer the server gives `selectSerialKillerTarget`.
+   * Kept as a gate the panel reads rather than dropped, so re-tightening later
+   * is a change to this one function.
    */
-  const canEndSerialKillerPhase = useMemo(() => {
-    if (nightPhaseSession?.nightNumber === 1) return true;
-
-    const hasAliveSerialKiller = players.some(
-      (p) =>
-        p.isAlive &&
-        p.playerId &&
-        playerRolesMap.get(p.playerId as string) === "SERIAL_KILLER",
-    );
-    if (!hasAliveSerialKiller) return true;
-
-    if (serialKillerShotSpent) return true;
-
-    return nightPhaseSession?.serialKillerTarget !== undefined;
-  }, [
-    players,
-    playerRolesMap,
-    nightPhaseSession?.nightNumber,
-    nightPhaseSession?.serialKillerTarget,
-    serialKillerShotSpent,
-  ]);
+  const canEndSerialKillerPhase = true;
 
   return {
     canEndMafiaPhase,

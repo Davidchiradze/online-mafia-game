@@ -193,9 +193,17 @@ The enforcement points mirror the Doctor's:
   one, and when the night number is 1.
 - The **host's advance button** is always enabled for this phase — the Serial
   Killer may decline to fire, tonight or ever, so the host must never be able to
-  get stuck waiting. This is the Doctor's `canEndDoctorPhase` logic in
-  `src/features/game-room/hooks/game/useNightPhaseReadiness.ts`, minus the
-  "every alive seat already healed" branch.
+  get stuck waiting.
+
+  The phase still renders with `gate="serial_killer"`; that gate's
+  `canEndSerialKillerPhase` in
+  `src/features/game-room/hooks/game/useNightPhaseReadiness.ts` is
+  **unconditionally `true`**, keeping the wiring in place for a future condition
+  without ever blocking the host today. Modelling it on the Doctor's
+  `canEndDoctorPhase` is the trap: enumerating the cases where there is provably
+  nothing to wait for — dead, night 1, shot already spent — still leaves the
+  ordinary one, alive with the shot in hand and choosing not to fire, waiting on
+  a target that is never coming.
 
 ### 5.2 The first-night inversion — and the shared-UI bug in the way
 
