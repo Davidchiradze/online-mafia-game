@@ -1,10 +1,11 @@
 # Serial Killer Mafia — Rules
 
-> **Status: BUILT — backend registered, UI pending.** The definition is
-> registered as `serial_killer_mafia`, the deck and phases are real, and the
-> `gameType` literal is in the schema. The **frontend UI ruleset is not wired
-> yet**, so the variant is not playable end-to-end and stays filtered out of
-> `CreateGameModal` until it is.
+> **Status: BUILT and playable.** The definition is registered as
+> `serial_killer_mafia`, the deck and phases are real, the `gameType` literal is
+> in the schema, and the frontend ruleset is wired
+> (`src/features/game-room/variants/serialkiller/`). `CreateGameModal` offers it
+> — `city_mafia` is now the only hidden type. **Rated since 2026-08-19**
+> ([rating.md](./rating.md)).
 >
 > Read [japanese/rules.md](../japanese/rules.md) and
 > [japanese/win-conditions.md](../japanese/win-conditions.md) first. Like Sports,
@@ -335,8 +336,17 @@ A third faction is the opposite, and
 work, not config work.
 
 **The `Faction` / `Winner` union is declared in 15 places.** Four are schema
-validators, and until every one is widened a Serial Killer win **cannot be
-stored**:
+validators, and until every one was widened a Serial Killer win **could not be
+stored**.
+
+> **DONE — every site below carries `serial_killer`, including both locale
+> files.** Kept as the inventory rather than deleted, because it is the list to
+> walk for the *next* new faction and the only written record of how far a
+> `Faction` reaches. The one thing it does not buy: `roleToFaction` in
+> `convex/lib/roles.ts` still answers `"citizens"` for `SERIAL_KILLER` by design
+> (it is variant-blind), so display code must use
+> `factionForRole(gameType, role)`. Rating was unblocked by this work and shipped
+> 2026-08-19 ([rating.md](./rating.md)).
 
 | Where | What it is |
 | --- | --- |
@@ -357,15 +367,17 @@ The four local re-declarations are the dangerous ones: they are copies, not
 imports, so widening `convex/lib/roles.ts` will not produce a compile error at
 any of them.
 
-**Two more shapes assume Japanese's factions:**
+**Two more shapes assumed Japanese's factions — both resolved, neither
+generalised:**
 
-- `WinMethod` carries `yakuzaAlive` / `shogunAlive` booleans. Sports fills them
-  `false`; this variant needs a `serialKillerAlive` equivalent, or the snapshot
-  generalises to a faction-keyed map.
-- `NightActionAuthority` in `src/features/game-room/variants/core/types.ts` is a
-  fixed record of `hasMafiaKillAuthority` / `hasYakuzaKillAuthority` /
-  `hasDoctorHealAuthority` and their phase flags. It needs a Serial Killer pair,
-  or to become a map keyed by action.
+- `WinMethod` carries `yakuzaAlive` / `shogunAlive` booleans.
+  `describeSerialKillerWin` fills both `false` and reports the Serial Killer
+  through `decidedRole` instead. The faction-keyed map is still the cleaner
+  shape; it was not worth the migration for one variant.
+- `NightActionAuthority` in `src/features/game-room/variants/core/types.ts` grew
+  `hasSerialKillerAuthority` / `isSerialKillerPhase` alongside the mafia and
+  yakuza pairs, rather than becoming a map keyed by action. A fourth killing role
+  is the point at which that stops scaling.
 
 **An 11-seat ring is new geometry** — decided in §10.1 below.
 

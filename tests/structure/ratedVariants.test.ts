@@ -51,7 +51,7 @@ describe("rated variants", () => {
     expect(
       rated.map((v) => v.id).sort(),
       "the rated-variant set changed — confirm the new variant's calibration was decided, not copied",
-    ).toEqual(["japanese_mafia", "sports_mafia"]);
+    ).toEqual(["japanese_mafia", "serial_killer_mafia", "sports_mafia"]);
   });
 
   it("registers every rated variant", () => {
@@ -93,10 +93,17 @@ describe("rated variants", () => {
     // Belt and braces over the check above, from the other end: the deck is
     // what the shuffle actually produces.
     //
-    // Both mappers are exercised on purpose. `archiveGameLog` computes the
-    // faction with the SHARED `roleToFaction` from convex/lib/roles.ts, not
-    // with `definition.roleToFaction` — they agree for every variant today,
-    // and this is the assertion that keeps them agreeing.
+    // Both mappers are exercised on purpose, and they do NOT agree any more:
+    // `SERIAL_KILLER` is `serial_killer` via its definition and `citizens` via
+    // the shared map (convex/lib/roles.ts documents why it stays variant-blind).
+    // `archiveGameLog` resolves the definition FIRST and only falls back to the
+    // shared map for a gameType the registry cannot resolve — impossible for a
+    // game that was actually played — so the definition is what rates a seat.
+    //
+    // This check therefore is not a parity check. It asserts the weaker thing
+    // that still matters: whichever mapper answers, the faction it names has a
+    // payout. Both arms are kept because the fallback arm is the one nobody
+    // would think to price.
     const unpriced: string[] = [];
     for (const { id, config } of rated) {
       const def = getGameDefinition(id);
