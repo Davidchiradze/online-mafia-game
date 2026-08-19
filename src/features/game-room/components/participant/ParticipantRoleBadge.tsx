@@ -1,11 +1,13 @@
 "use client";
 
+import Image from "next/image";
 import { useTranslations } from "next-intl";
 import {
   ALL_ROLES,
   MAFIA_TEAM_ROLES,
   YAKUZA_TEAM_ROLES,
 } from "@/shared/lib/constants/game";
+import { getRoleIcon } from "@/features/game-room/lib/roleIcons";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 
 const MAFIA_ROLE_SET = new Set<string>(MAFIA_TEAM_ROLES);
@@ -16,6 +18,17 @@ const KNOWN_ROLES = new Set<string>(ALL_ROLES);
 
 const BADGE_BASE =
   "font-inter text-[7px] tsm:text-[9px] tlg:text-[11px] font-medium shrink-0 px-1 py-0.5 tsm:px-1.5 rounded";
+
+/**
+ * Holds the icon and the text pill as siblings so CSS can pick one. The pill's
+ * own padding/background live on the inner span, not here — below `tsm` only
+ * the bare icon shows, and a pill around it would clip the diamond's corners.
+ */
+const REVEALED_WRAPPER = "shrink-0 inline-flex items-center";
+
+/** Sized to match `SeatIndicator`'s dial, its neighbour in the same info bar. */
+const ROLE_ICON =
+  "w-4 h-4 tsm:hidden drop-shadow-[0_1px_2px_rgba(0,0,0,0.7)]";
 
 function getRoleColorClass(role: string): string {
   if (MAFIA_ROLE_SET.has(role))
@@ -79,6 +92,25 @@ export default function ParticipantRoleBadge({
     );
   }
 
+  const icon = getRoleIcon(playerRole);
+
+  // Below `tsm` a tile is too small for a 7px label to be legible, so the role
+  // shows as its icon and the text pill is dropped. Both are rendered and
+  // swapped in CSS rather than picked in JS: `tsm` gates on viewport *height*
+  // as well as width (see globals.css), so a JS media query would have to
+  // re-measure on every resize, once per tile, for a purely visual choice.
+  // A role with no artwork keeps its label at every size instead of vanishing.
+  const revealed = (
+    <>
+      {icon && <Image src={icon} alt={label} className={ROLE_ICON} />}
+      <span
+        className={`${icon ? "hidden tsm:inline-block" : "inline-block"} ${BADGE_BASE} ${getRoleColorClass(playerRole)}`}
+      >
+        {label}
+      </span>
+    </>
+  );
+
   // Revealed via opt-in: the local player can toggle back to hidden. When roles
   // are always visible (host / game end) the label stays static.
   if (isLocal && !alwaysVisible) {
@@ -89,17 +121,13 @@ export default function ParticipantRoleBadge({
           e.stopPropagation();
           setRolesRevealed(false);
         }}
-        className={`${BADGE_BASE} cursor-pointer transition hover:brightness-110 active:scale-95 ${getRoleColorClass(playerRole)}`}
+        className={`${REVEALED_WRAPPER} cursor-pointer transition hover:brightness-110 active:scale-95`}
       >
-        {label}
+        {revealed}
       </button>
     );
   }
 
   // Teammates' badges (and everyone's at game end) are static labels.
-  return (
-    <span className={`${BADGE_BASE} ${getRoleColorClass(playerRole)}`}>
-      {label}
-    </span>
-  );
+  return <span className={REVEALED_WRAPPER}>{revealed}</span>;
 }
