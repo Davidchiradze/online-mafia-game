@@ -7,12 +7,14 @@ import { useTranslations } from "next-intl";
 import { gameLogs as historyRefs } from "@convex/refs/history";
 import { useInfiniteScroll } from "@/shared/hooks/useInfiniteScroll";
 import MatchRow from "./MatchRow";
-import type { OutcomeFilter, GameTypeFilter } from "./MatchFilters";
+import type { OutcomeFilter } from "./MatchFilters";
+import type { RatedGameType } from "@/shared/lib/ranking/ratedVariants";
 import type { Id } from "@convex/_generated/dataModel";
 
 interface Props {
   outcome: OutcomeFilter;
-  gameType: GameTypeFilter;
+  /** Always a concrete mode — the page's hero switcher owns this scope. */
+  gameType: RatedGameType;
   currentPlayerId: Id<"profiles"> | undefined;
 }
 
@@ -28,7 +30,7 @@ export default function MatchHistoryList({
 
   const { results, status, loadMore } = usePaginatedQuery(
     historyRefs.listMine,
-    { outcome, gameType: gameType === "all" ? undefined : gameType },
+    { outcome, gameType },
     { initialNumItems: PAGE_SIZE },
   );
 
@@ -52,7 +54,10 @@ export default function MatchHistoryList({
   }
 
   if (results.length === 0) {
-    const filtersActive = outcome !== "all" || gameType !== "all";
+    // Outcome only. `gameType` is now the page's always-set scope rather than a
+    // filter, so counting it here would make this permanently true and tell a
+    // brand-new player with no games at all to "try adjusting the filters".
+    const filtersActive = outcome !== "all";
     return (
       <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/10 bg-[#13131a]/60 px-6 py-16 text-center">
         <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-zinc-500">

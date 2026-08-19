@@ -383,7 +383,6 @@
     "rolePerformance": "Role Performance",
     "plays": "Plays",
     "winRate": "Win Rate",
-    "filterAllModes": "All Modes",
     "filterAllOutcomes": "All Outcomes",
     "filterVictories": "Victories",
     "filterDefeats": "Defeats",
@@ -408,8 +407,7 @@
     "levelTooltip": "{elo} ELO — Level {level}",
     "toNextLevel": "{points} to Level {level}",
     "tableAvgTooltip": "Table average: {avg}",
-    "tableAvgLabel": "Table avg",
-    "statsForMode": "Stats for"
+    "tableAvgLabel": "Table avg"
   },
   "leaderboard": {
     "pageTitle": "Leaderboard",

@@ -47,5 +47,9 @@ export type VariantBadgeOption = Pick<
 /** Card density: `card` is a tall tile with copy, `row` a compact list item. */
 export type VariantCardDensity = "card" | "row";
 
-/** Control scale. `sm` for dense toolbars and table rows, `md` for page-level. */
-export type VariantControlSize = "sm" | "md";
+/**
+ * Control scale. `sm` for dense toolbars and table rows, `md` for page-level,
+ * `lg` where the control is the page's primary affordance — a centred hero
+ * switcher that scopes everything below it.
+ */
+export type VariantControlSize = "sm" | "md" | "lg";

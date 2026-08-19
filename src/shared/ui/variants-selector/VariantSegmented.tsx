@@ -10,6 +10,7 @@ import type { VariantControlSize, VariantOption } from "./types";
 const SEGMENT_CLASS = {
   sm: "px-1 py-2 text-[0.78rem]",
   md: "px-1.5 py-[9px] text-[0.82rem]",
+  lg: "px-4 py-3 text-[0.95rem]",
 } as const satisfies Record<VariantControlSize, string>;
 
 type VariantSegmentedProps<TValue extends string> = {

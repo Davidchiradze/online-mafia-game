@@ -7,6 +7,7 @@ import type { VariantControlSize } from "./types";
 const CHIP_CLASS = {
   sm: "gap-[7px] px-[13px] py-[7px] text-[0.76rem]",
   md: "gap-2 px-3.5 py-2 text-[0.8rem]",
+  lg: "gap-2.5 px-4 py-2.5 text-[0.875rem]",
 } as const satisfies Record<VariantControlSize, string>;
 
 type VariantChipProps = {

@@ -7,14 +7,16 @@ import type { VariantBadgeOption, VariantControlSize } from "./types";
 const BADGE_CLASS = {
   sm: "gap-1.5 rounded-[7px] px-[9px] py-1 text-[0.54rem] tracking-[0.12em]",
   md: "gap-[7px] rounded-lg px-2.5 py-[5px] text-[0.58rem] tracking-[0.14em]",
+  lg: "gap-2 rounded-lg px-3 py-1.5 text-[0.66rem] tracking-[0.14em]",
 } as const satisfies Record<VariantControlSize, string>;
 
 const GLYPH_CLASS = {
   sm: "text-[0.66rem]",
   md: "text-[0.72rem]",
+  lg: "text-[0.82rem]",
 } as const satisfies Record<VariantControlSize, string>;
 
-const ICON_PX = { sm: 10, md: 12 } as const satisfies Record<
+const ICON_PX = { sm: 10, md: 12, lg: 14 } as const satisfies Record<
   VariantControlSize,
   number
 >;

@@ -9,9 +9,9 @@ import { GamePhase } from "@convex/lib/constants";
 export { GamePhase };
 
 export const GAME_TYPES = [
+  "japanese_mafia",
   "sports_mafia",
   "city_mafia",
-  "japanese_mafia",
   "serial_killer_mafia",
 ] as const;
 

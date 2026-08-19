@@ -383,7 +383,6 @@
     "rolePerformance": "როლის შედეგები",
     "plays": "თამაში",
     "winRate": "მოგების პროცენტი",
-    "filterAllModes": "ყველა რეჟიმი",
     "filterAllOutcomes": "ყველა შედეგი",
     "filterVictories": "მოგებები",
     "filterDefeats": "წაგებები",
@@ -408,8 +407,7 @@
     "levelTooltip": "{elo} ELO — ლეველი {level}",
     "toNextLevel": "{points} ელო {level} ლეველამდე",
     "tableAvgTooltip": "მაგიდის საშუალო: {avg}",
-    "tableAvgLabel": "მაგიდის საშ.",
-    "statsForMode": "სტატისტიკა"
+    "tableAvgLabel": "მაგიდის საშ."
   },
   "leaderboard": {
     "pageTitle": "ლიდერბორდი",
