@@ -278,9 +278,12 @@ type RatableGameType =
  *
  * Where an entry's numbers come from is per variant, and it decides whether
  * recalibration applies: Japanese's E values are MEASURED (production data,
- * 2026-07, 269 decided games — re-derive every ~200 decided games), Sports'
- * are DECLARED and fixed. Each variant's rating doc under /docs/variants/ owns
- * the derivation; this file only holds the result.
+ * 2026-07, 269 decided games — re-derive every ~200 decided games), Sports' and
+ * Serial Killer's are DECLARED and fixed. Each variant's rating doc under
+ * /docs/variants/ owns the derivation; this file only holds the result.
+ *
+ * K is per variant too, and it is NOT 80 everywhere — see the Serial Killer
+ * entry, where 81 is what makes a three-way declared split land on integers.
  */
 export const RATING_CONFIG: Partial<Record<RatableGameType, RatingConfig>> = {
   japanese_mafia: {
@@ -311,6 +314,33 @@ export const RATING_CONFIG: Partial<Record<RatableGameType, RatingConfig>> = {
     // shared level brackets stay honest (/docs/variants/sports/rating.md §4).
     tableAdjustment: { divisor: 20, cap: 16 },
   },
+  // DECLARED like Sports, but three-way: mafia, the solo Serial Killer and the
+  // citizens are asserted to win equally often, so E = 1/3 for all three and
+  // every row is identical (/docs/variants/serial_killer/rating.md §2). Fixed —
+  // this variant does not recalibrate.
+  //
+  // K = 81, NOT the 80 its siblings use, and that is the whole reason these
+  // numbers look odd next to the others: 80 × (1 − 1/3) = 53.33 does not exist
+  // as a payout. 81 is the only K that lands BOTH sides on integers at E = 1/3,
+  // and it is what buys the three properties the ladder is checked against —
+  // an exact 2:1 ratio (54/27 = (1−E)/E, so no seat is more profitable), exactly
+  // zero drift (⅓·54 + ⅔·−27 = 0, no inflation), and a rating std of ≈ 38.2 per
+  // game, inside the 38–40 band that lets this variant share the level brackets
+  // (/docs/ranking-system.md §5). Rounding to 80's +53/−27 instead would deflate
+  // the ladder by ~33 rating per 100 games.
+  serial_killer_mafia: {
+    start: 1000,
+    floor: 100,
+    deltas: {
+      mafia: { win: 54, loss: -27 }, // E = 0.333 (declared)
+      serial_killer: { win: 54, loss: -27 }, // E = 0.333 (declared)
+      citizens: { win: 54, loss: -27 }, // E = 0.333 (declared)
+    },
+    // Unchanged from both siblings. The cap clears the smallest base payout
+    // here by 11 (27 − 16), the narrowest margin of any rated variant, so a win
+    // still pays at least +38 and a loss still costs at least −11.
+    tableAdjustment: { divisor: 20, cap: 16 },
+  },
 };
 
 /**
@@ -334,8 +364,10 @@ export const BACKFILL_POLICY: Record<RatableGameType, "replay" | "never"> = {
   sports_mafia: "never",
   // No definition registered, so there is no archive and no ladder.
   city_mafia: "never",
-  // Launched UNRATED by decision (docs/variants/serial_killer/rating.md §1):
-  // a solo faction has no comparable ladder to calibrate E against until there
-  // is production data. Absent from RATING_CONFIG, so nothing to backfill.
+  // Rated from 2026-08-19, and the archive that predates the config stays
+  // unrated: those games were played, and shown to players, without a ladder
+  // (docs/variants/serial_killer/rating.md §5). Same call as Sports, for the
+  // same reason — and unlike Sports, this one is now a live "never" rather than
+  // a vacuous one, because there IS a config to replay with.
   serial_killer_mafia: "never",
 };

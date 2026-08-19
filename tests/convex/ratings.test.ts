@@ -52,6 +52,24 @@ describe("computeRatingDelta — base payouts", () => {
     expect(computeRatingDelta(config, faction, "loss", 1000, 1000).delta).toBe(loss);
   });
 
+  // Pinned from /docs/variants/serial_killer/rating.md §3. The one variant whose
+  // K is not 80: three factions declared equally likely puts E at exactly 1/3,
+  // where 80 would pay 53.33 and only 81 lands on whole numbers.
+  const SERIAL_KILLER: Array<[Faction, number, number]> = [
+    ["mafia", 54, -27],
+    ["serial_killer", 54, -27],
+    ["citizens", 54, -27],
+  ];
+
+  it.each(SERIAL_KILLER)(
+    "serial killer %s pays %d on a win, %d on a loss",
+    (faction, win, loss) => {
+      const config = RATING_CONFIG.serial_killer_mafia!;
+      expect(computeRatingDelta(config, faction, "win", 1000, 1000).delta).toBe(win);
+      expect(computeRatingDelta(config, faction, "loss", 1000, 1000).delta).toBe(loss);
+    },
+  );
+
   it("moves nothing on a no-contest, in every rated variant", () => {
     for (const [, config] of RATED) {
       for (const faction of factionsOf(config)) {
@@ -138,31 +156,53 @@ describe("computeRatingDelta — table-strength term b", () => {
   });
 });
 
-describe("sports_mafia — the two properties its declared symmetry buys", () => {
-  const config = RATING_CONFIG.sports_mafia!;
-  const factions = factionsOf(config);
+/**
+ * The variants whose calibration is DECLARED rather than measured, each with the
+ * E that was declared. Both properties below follow from the declaration alone,
+ * which is what makes them assertable at all — Japanese, measured, holds
+ * neither, and asserting them there would be wrong rather than merely strict.
+ *
+ * E is not in `RATING_CONFIG`; it lives in a comment beside each row. Pinning it
+ * here from the variant's own rating doc is the duplication that matters: edit a
+ * payout without revisiting the declared win rate and the drift check notices.
+ */
+const DECLARED: Array<[GameType, number]> = [
+  ["sports_mafia", 0.5], // /docs/variants/sports/rating.md §2
+  ["serial_killer_mafia", 1 / 3], // /docs/variants/serial_killer/rating.md §2
+];
 
-  it("prices every faction identically — no faction spread", () => {
-    // Japanese pays its hardest faction more for a win and charges it less for
-    // a loss, because its factions win at different rates. Sports declares one
-    // shared E, so there is nothing to compensate for and the rows must match
-    // (/docs/variants/sports/rating.md §3). A spread appearing here means
-    // someone measured Sports without also removing the "declared" stance.
-    const rows = factions.map((f) => config.deltas[f]!);
-    for (const row of rows) expect(row).toEqual(rows[0]);
-  });
+describe.each(DECLARED)(
+  "%s — the two properties its declared symmetry buys",
+  (gameType, expectedWinRate) => {
+    const config = RATING_CONFIG[gameType]!;
+    const factions = factionsOf(config);
 
-  it("neither inflates nor decays the ladder — zero drift", () => {
-    // With E = 0.5, an average player's expected move per game is
-    // 0.5·win + 0.5·loss, and 80 × (S − 0.5) is exact at both outcomes, so that
-    // is 0 — unlike Japanese's deliberate +0.16…+0.32/game rounding drift.
-    for (const faction of factions) {
-      const win = computeRatingDelta(config, faction, "win", 1500, 1500).delta;
-      const loss = computeRatingDelta(config, faction, "loss", 1500, 1500).delta;
-      expect(win + loss, `${faction} drifts ${win + loss} per game`).toBe(0);
-    }
-  });
-});
+    it("prices every faction identically — no faction spread", () => {
+      // Japanese pays its hardest faction more for a win and charges it less for
+      // a loss, because its factions win at different rates. A declared variant
+      // asserts ONE shared E, so there is nothing to compensate for and the rows
+      // must match. A spread appearing here means someone measured the variant
+      // without also removing the "declared" stance from its doc.
+      const rows = factions.map((f) => config.deltas[f]!);
+      for (const row of rows) expect(row).toEqual(rows[0]);
+    });
+
+    it("neither inflates nor decays the ladder — zero drift", () => {
+      // An average player wins at the declared rate, so their expected move per
+      // game is E·win + (1−E)·loss. Zero requires K × (S − E) to be exact at
+      // both outcomes with no rounding left over — which is why Sports uses
+      // K = 80 at E = 0.5 and Serial Killer uses K = 81 at E = 1/3, where 80
+      // would leave −0.33/game of deflation. Japanese, measured, carries a
+      // deliberate +0.16…+0.32/game.
+      for (const faction of factions) {
+        const win = computeRatingDelta(config, faction, "win", 1500, 1500).delta;
+        const loss = computeRatingDelta(config, faction, "loss", 1500, 1500).delta;
+        const drift = expectedWinRate * win + (1 - expectedWinRate) * loss;
+        expect(drift, `${faction} drifts ${drift} per game`).toBeCloseTo(0, 10);
+      }
+    });
+  },
+);
 
 describe("computeRatingDelta — invariants that must hold for every rated variant", () => {
   /** Table averages spanning far past the cap in both directions. */

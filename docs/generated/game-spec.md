@@ -19,33 +19,22 @@
 
 ## Variants
 
-| | `sports_mafia` | `japanese_mafia` | `serial_killer_mafia` |
+| | `japanese_mafia` | `sports_mafia` | `serial_killer_mafia` |
 | --- | --- | --- | --- |
-| Seats | 10 | 12 | 11 |
-| Roles | 4 | 7 | 6 |
-| Deck size | 10 | 12 | 11 |
-| Factions | mafia, citizens | mafia, yakuza, citizens | mafia, serial_killer, citizens |
-| Phases | 17 | 20 | 21 |
-| Night model | `unanimous-vote` | `single-authority` | `single-authority` |
-| `firstDaySingleNomineeSkipsToNight` | yes | — | — |
-| `hasBestMove` | yes | — | — |
+| Seats | 12 | 10 | 11 |
+| Roles | 7 | 4 | 6 |
+| Deck size | 12 | 10 | 11 |
+| Factions | mafia, yakuza, citizens | mafia, citizens | mafia, serial_killer, citizens |
+| Phases | 20 | 17 | 21 |
+| Night model | `single-authority` | `unanimous-vote` | `single-authority` |
+| `firstDaySingleNomineeSkipsToNight` | — | yes | — |
+| `hasBestMove` | — | yes | — |
 | `hasFarewellSpeech` | yes | yes | yes |
-| `hasIntroductionPhase` | — | yes | yes |
-| `mafiaKillsOnFirstNight` | yes | — | yes |
-| `thirdFoulSpeakingBan` | yes | — | — |
+| `hasIntroductionPhase` | yes | — | yes |
+| `mafiaKillsOnFirstNight` | — | yes | yes |
+| `thirdFoulSpeakingBan` | — | yes | — |
 
 ## Roles
-
-### `sports_mafia`
-
-| Role | In deck | Faction | Acts at night |
-| --- | --- | --- | --- |
-| `DON` | ×1 | mafia | yes |
-| `MAFIA` | ×2 | mafia | yes |
-| `DETECTIVE` | ×1 | citizens | yes |
-| `CITIZEN` | ×6 | citizens | — |
-
-Deck is 10 cards for 10 seats.
 
 ### `japanese_mafia`
 
@@ -61,6 +50,17 @@ Deck is 10 cards for 10 seats.
 
 Deck is 12 cards for 12 seats.
 
+### `sports_mafia`
+
+| Role | In deck | Faction | Acts at night |
+| --- | --- | --- | --- |
+| `DON` | ×1 | mafia | yes |
+| `MAFIA` | ×2 | mafia | yes |
+| `DETECTIVE` | ×1 | citizens | yes |
+| `CITIZEN` | ×6 | citizens | — |
+
+Deck is 10 cards for 10 seats.
+
 ### `serial_killer_mafia`
 
 | Role | In deck | Faction | Acts at night |
@@ -75,32 +75,6 @@ Deck is 12 cards for 12 seats.
 Deck is 11 cards for 11 seats.
 
 ## Phases
-
-### `sports_mafia`
-
-| # | Phase | Label | Timer | Awake | Host advances to | Via buffer |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `game_session_started` | Game Started | — | — | server-owned | — |
-| 2 | `picking_roles` | Picking Roles | — | — | `mafia_meet` | — |
-| 3 | `mafia_meet` | Mafia Meeting | 60s | `DON` `MAFIA` | `don_meet` | yes |
-| 4 | `don_meet` | Don Meeting | — | `DON` | `detective_meet` | yes |
-| 5 | `detective_meet` | Detective Meeting | 15s | `DETECTIVE` | `day_phase` | yes |
-| 6 | `day_phase` | Day Phase | — | — | server-owned | — |
-| 7 | `nominated_players_speak` | Self-Justification | — | — | server-owned | — |
-| 8 | `voting` | Voting | — | — | `repeat` | — |
-| 9 | `night_phase` | Night Phase | — | — | `mafia_chooses_target` | — |
-| 10 | `mafia_chooses_target` | Mafia Chooses Target | 20s | `DON` `MAFIA` | `don_checks_for_detective` | — |
-| 11 | `don_checks_for_detective` | Don Checks for Detective | 15s | `DON` | `detective_checks_for_mafia` | yes |
-| 12 | `detective_checks_for_mafia` | Detective Checks for Mafia | 15s | `DETECTIVE` | `farewell_speech` | yes |
-| 13 | `best_move` | Best Move | 30s | — | `farewell_speech` | — |
-| 14 | `farewell_speech` | Farewell Speech | — | — | server-owned | — |
-| 15 | `repeat` | Next Round | — | — | server-owned | — |
-| 16 | `end_game` | Game Over | — | — | server-owned | — |
-| 17 | `phase_transition` | Everyone Asleep | — | — | server-owned | — |
-
-`server-owned` means `nextPhase` returns null: the next phase depends on
-database state, so a Convex mutation decides it. Those edges are listed
-under **Branching edges** below.
 
 ### `japanese_mafia`
 
@@ -126,6 +100,32 @@ under **Branching edges** below.
 | 18 | `voting` | Voting | — | — | `repeat` | — |
 | 19 | `repeat` | Next Round | — | — | server-owned | — |
 | 20 | `end_game` | Game Over | — | — | server-owned | — |
+
+`server-owned` means `nextPhase` returns null: the next phase depends on
+database state, so a Convex mutation decides it. Those edges are listed
+under **Branching edges** below.
+
+### `sports_mafia`
+
+| # | Phase | Label | Timer | Awake | Host advances to | Via buffer |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `game_session_started` | Game Started | — | — | server-owned | — |
+| 2 | `picking_roles` | Picking Roles | — | — | `mafia_meet` | — |
+| 3 | `mafia_meet` | Mafia Meeting | 60s | `DON` `MAFIA` | `don_meet` | yes |
+| 4 | `don_meet` | Don Meeting | — | `DON` | `detective_meet` | yes |
+| 5 | `detective_meet` | Detective Meeting | 15s | `DETECTIVE` | `day_phase` | yes |
+| 6 | `day_phase` | Day Phase | — | — | server-owned | — |
+| 7 | `nominated_players_speak` | Self-Justification | — | — | server-owned | — |
+| 8 | `voting` | Voting | — | — | `repeat` | — |
+| 9 | `night_phase` | Night Phase | — | — | `mafia_chooses_target` | — |
+| 10 | `mafia_chooses_target` | Mafia Chooses Target | 20s | `DON` `MAFIA` | `don_checks_for_detective` | — |
+| 11 | `don_checks_for_detective` | Don Checks for Detective | 15s | `DON` | `detective_checks_for_mafia` | yes |
+| 12 | `detective_checks_for_mafia` | Detective Checks for Mafia | 15s | `DETECTIVE` | `farewell_speech` | yes |
+| 13 | `best_move` | Best Move | 30s | — | `farewell_speech` | — |
+| 14 | `farewell_speech` | Farewell Speech | — | — | server-owned | — |
+| 15 | `repeat` | Next Round | — | — | server-owned | — |
+| 16 | `end_game` | Game Over | — | — | server-owned | — |
+| 17 | `phase_transition` | Everyone Asleep | — | — | server-owned | — |
 
 `server-owned` means `nextPhase` returns null: the next phase depends on
 database state, so a Convex mutation decides it. Those edges are listed
@@ -168,58 +168,36 @@ Three phase lists exist and they are not the same length:
 `src/shared/lib/constants/game.ts` (24),
 and each variant's own `definition.phases`.
 
-| Phase | backend list | UI list | `sports_mafia` | `japanese_mafia` | `serial_killer_mafia` | verdict |
+| Phase | backend list | UI list | `japanese_mafia` | `sports_mafia` | `serial_killer_mafia` | verdict |
 | --- | --- | --- | --- | --- | --- | --- |
-| `best_move` | — | yes | yes | — | — | variant-specific |
+| `best_move` | — | yes | — | yes | — | variant-specific |
 | `day_phase` | yes | yes | yes | yes | yes | shared |
 | `detective_checks_for_mafia` | yes | yes | yes | yes | yes | shared |
 | `detective_meet` | yes | yes | yes | yes | yes | shared |
-| `doctor_heals_player` | yes | yes | — | yes | yes | variant-specific |
-| `doctor_meet` | yes | yes | — | yes | yes | variant-specific |
+| `doctor_heals_player` | yes | yes | yes | — | yes | variant-specific |
+| `doctor_meet` | yes | yes | yes | — | yes | variant-specific |
 | `don_checks_for_detective` | yes | yes | yes | yes | yes | shared |
 | `don_meet` | yes | yes | yes | yes | yes | shared |
 | `end_game` | yes | yes | yes | yes | yes | shared |
 | `farewell_speech` | yes | yes | yes | yes | yes | shared |
 | `game_session_started` | yes | yes | yes | yes | yes | shared |
-| `introduction_phase` | yes | yes | — | yes | yes | variant-specific |
+| `introduction_phase` | yes | yes | yes | — | yes | variant-specific |
 | `mafia_chooses_target` | yes | yes | yes | yes | yes | shared |
 | `mafia_meet` | yes | yes | yes | yes | yes | shared |
 | `night_phase` | yes | yes | yes | yes | yes | shared |
 | `nominated_players_speak` | yes | yes | yes | yes | yes | shared |
-| `phase_transition` | — | yes | yes | — | yes | ⚠️ reachable in a flow that omits it |
+| `phase_transition` | — | yes | — | yes | yes | ⚠️ reachable in a flow that omits it |
 | `picking_roles` | yes | yes | yes | yes | yes | shared |
 | `repeat` | yes | yes | yes | yes | yes | shared |
 | `serial_killer_chooses_target` | — | yes | — | — | yes | variant-specific |
 | `serial_killer_meet` | — | yes | — | — | yes | variant-specific |
 | `voting` | yes | yes | yes | yes | yes | shared |
-| `yakuda_shogun_meet` | yes | yes | — | yes | — | variant-specific |
-| `yakuza_and_shogun_chooses_target` | yes | yes | — | yes | — | variant-specific |
+| `yakuda_shogun_meet` | yes | yes | yes | — | — | variant-specific |
+| `yakuza_and_shogun_chooses_target` | yes | yes | yes | — | — | variant-specific |
 
 ## State machine
 
 Solid = derived from `definition.nextPhase`. Dotted = branch owned by a Convex mutation.
-
-### `sports_mafia`
-
-```mermaid
-stateDiagram-v2
-    picking_roles --> mafia_meet
-    mafia_meet --> don_meet : via buffer
-    don_meet --> detective_meet : via buffer
-    detective_meet --> day_phase : via buffer
-    voting --> repeat
-    night_phase --> mafia_chooses_target
-    mafia_chooses_target --> don_checks_for_detective
-    don_checks_for_detective --> detective_checks_for_mafia : via buffer
-    detective_checks_for_mafia --> farewell_speech : via buffer
-    best_move --> farewell_speech
-    day_phase --> night_phase : first day round AND exactly one nominee
-    day_phase --> farewell_speech : later day round AND exactly one nominee — eliminated without a vote
-    day_phase --> voting : self-justification skipped, or exactly one nominee
-    night_phase --> day_phase : night resolved to zero kills — the farewell is skipped
-    night_phase --> best_move : variant grants best move AND the victim is eligible
-    voting --> night_phase : repeated tie — nobody is eliminated
-```
 
 ### `japanese_mafia`
 
@@ -243,6 +221,28 @@ stateDiagram-v2
     voting --> night_phase : repeated tie — nobody is eliminated
 ```
 
+### `sports_mafia`
+
+```mermaid
+stateDiagram-v2
+    picking_roles --> mafia_meet
+    mafia_meet --> don_meet : via buffer
+    don_meet --> detective_meet : via buffer
+    detective_meet --> day_phase : via buffer
+    voting --> repeat
+    night_phase --> mafia_chooses_target
+    mafia_chooses_target --> don_checks_for_detective
+    don_checks_for_detective --> detective_checks_for_mafia : via buffer
+    detective_checks_for_mafia --> farewell_speech : via buffer
+    best_move --> farewell_speech
+    day_phase --> night_phase : first day round AND exactly one nominee
+    day_phase --> farewell_speech : later day round AND exactly one nominee — eliminated without a vote
+    day_phase --> voting : self-justification skipped, or exactly one nominee
+    night_phase --> day_phase : night resolved to zero kills — the farewell is skipped
+    night_phase --> best_move : variant grants best move AND the victim is eligible
+    voting --> night_phase : repeated tie — nobody is eliminated
+```
+
 ### `serial_killer_mafia`
 
 ```mermaid
@@ -263,52 +263,6 @@ stateDiagram-v2
 ```
 
 ## Win conditions
-
-### `sports_mafia`
-
-Every reachable alive-roster was enumerated and collapsed by the smallest
-sufficient key. The key had to include **nothing beyond N and m** —
-that is a derived result, not an assumption: those are exactly the roles
-whose presence changes the answer.
-
-`N` = alive players, `m` = alive mafia-faction players.
-**0 of 32 rows disagree with naive parity** (`2m ≥ N`),
-which is why a parity rule cannot be used as a shortcut.
-
-| N | m | beforeNight | beforeDay | naive parity | ≠ |
-| --- | --- | --- | --- | --- | --- |
-| 0 | 0 | no_contest | no_contest | no_contest |  |
-| 1 | 0 | citizens | citizens | citizens |  |
-| 1 | 1 | mafia | mafia | mafia |  |
-| 2 | 0 | citizens | citizens | citizens |  |
-| 2 | 1 | mafia | mafia | mafia |  |
-| 2 | 2 | mafia | mafia | mafia |  |
-| 3 | 0 | citizens | citizens | citizens |  |
-| 3 | 1 | continue | continue | continue |  |
-| 3 | 2 | mafia | mafia | mafia |  |
-| 3 | 3 | mafia | mafia | mafia |  |
-| 4 | 0 | citizens | citizens | citizens |  |
-| 4 | 1 | continue | continue | continue |  |
-| 4 | 2 | mafia | mafia | mafia |  |
-| 4 | 3 | mafia | mafia | mafia |  |
-| 5 | 0 | citizens | citizens | citizens |  |
-| 5 | 1 | continue | continue | continue |  |
-| 5 | 2 | continue | continue | continue |  |
-| 5 | 3 | mafia | mafia | mafia |  |
-| 6 | 0 | citizens | citizens | citizens |  |
-| 6 | 1 | continue | continue | continue |  |
-| 6 | 2 | continue | continue | continue |  |
-| 6 | 3 | mafia | mafia | mafia |  |
-| 7 | 0 | citizens | citizens | citizens |  |
-| 7 | 1 | continue | continue | continue |  |
-| 7 | 2 | continue | continue | continue |  |
-| 7 | 3 | continue | continue | continue |  |
-| 8 | 1 | continue | continue | continue |  |
-| 8 | 2 | continue | continue | continue |  |
-| 8 | 3 | continue | continue | continue |  |
-| 9 | 2 | continue | continue | continue |  |
-| 9 | 3 | continue | continue | continue |  |
-| 10 | 3 | continue | continue | continue |  |
 
 ### `japanese_mafia`
 
@@ -548,6 +502,52 @@ which is why a parity rule cannot be used as a shortcut.
 | 11 | 3 | yes | yes | yes | continue | continue | continue |  |
 | 12 | 3 | yes | yes | yes | continue | continue | continue |  |
 
+### `sports_mafia`
+
+Every reachable alive-roster was enumerated and collapsed by the smallest
+sufficient key. The key had to include **nothing beyond N and m** —
+that is a derived result, not an assumption: those are exactly the roles
+whose presence changes the answer.
+
+`N` = alive players, `m` = alive mafia-faction players.
+**0 of 32 rows disagree with naive parity** (`2m ≥ N`),
+which is why a parity rule cannot be used as a shortcut.
+
+| N | m | beforeNight | beforeDay | naive parity | ≠ |
+| --- | --- | --- | --- | --- | --- |
+| 0 | 0 | no_contest | no_contest | no_contest |  |
+| 1 | 0 | citizens | citizens | citizens |  |
+| 1 | 1 | mafia | mafia | mafia |  |
+| 2 | 0 | citizens | citizens | citizens |  |
+| 2 | 1 | mafia | mafia | mafia |  |
+| 2 | 2 | mafia | mafia | mafia |  |
+| 3 | 0 | citizens | citizens | citizens |  |
+| 3 | 1 | continue | continue | continue |  |
+| 3 | 2 | mafia | mafia | mafia |  |
+| 3 | 3 | mafia | mafia | mafia |  |
+| 4 | 0 | citizens | citizens | citizens |  |
+| 4 | 1 | continue | continue | continue |  |
+| 4 | 2 | mafia | mafia | mafia |  |
+| 4 | 3 | mafia | mafia | mafia |  |
+| 5 | 0 | citizens | citizens | citizens |  |
+| 5 | 1 | continue | continue | continue |  |
+| 5 | 2 | continue | continue | continue |  |
+| 5 | 3 | mafia | mafia | mafia |  |
+| 6 | 0 | citizens | citizens | citizens |  |
+| 6 | 1 | continue | continue | continue |  |
+| 6 | 2 | continue | continue | continue |  |
+| 6 | 3 | mafia | mafia | mafia |  |
+| 7 | 0 | citizens | citizens | citizens |  |
+| 7 | 1 | continue | continue | continue |  |
+| 7 | 2 | continue | continue | continue |  |
+| 7 | 3 | continue | continue | continue |  |
+| 8 | 1 | continue | continue | continue |  |
+| 8 | 2 | continue | continue | continue |  |
+| 8 | 3 | continue | continue | continue |  |
+| 9 | 2 | continue | continue | continue |  |
+| 9 | 3 | continue | continue | continue |  |
+| 10 | 3 | continue | continue | continue |  |
+
 ### `serial_killer_mafia`
 
 Every reachable alive-roster was enumerated and collapsed by the smallest
@@ -680,20 +680,6 @@ and still resolve differently.
 
 ## Night model
 
-### `sports_mafia`
-
-Kind: `unanimous-vote`. Acting roles: `DON`, `MAFIA`, `DETECTIVE`.
-
-| Night state | Resolves to seats |
-| --- | --- |
-| mafia only | nobody |
-| mafia target healed | nobody |
-| two factions, distinct targets | nobody |
-| two factions, same target | nobody |
-| nothing chosen | nobody |
-| unanimous private picks | 4 |
-| split private picks | nobody |
-
 ### `japanese_mafia`
 
 Kind: `single-authority`. Acting roles: `DON`, `MAFIA`, `SHOGUN`, `YAKUZA`, `DETECTIVE`, `DOCTOR`.
@@ -706,6 +692,20 @@ Kind: `single-authority`. Acting roles: `DON`, `MAFIA`, `SHOGUN`, `YAKUZA`, `DET
 | two factions, same target | 3 |
 | nothing chosen | nobody |
 | unanimous private picks | nobody |
+| split private picks | nobody |
+
+### `sports_mafia`
+
+Kind: `unanimous-vote`. Acting roles: `DON`, `MAFIA`, `DETECTIVE`.
+
+| Night state | Resolves to seats |
+| --- | --- |
+| mafia only | nobody |
+| mafia target healed | nobody |
+| two factions, distinct targets | nobody |
+| two factions, same target | nobody |
+| nothing chosen | nobody |
+| unanimous private picks | 4 |
 | split private picks | nobody |
 
 ### `serial_killer_mafia`

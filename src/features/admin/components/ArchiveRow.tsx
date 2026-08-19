@@ -1,33 +1,37 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, Clock, Trophy, Users } from "lucide-react";
+import { ChevronDown, Clock, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/shared/lib/cn";
-import {
-  roleToFaction,
-  factionIcon,
-  factionBadgeClass,
-} from "@/shared/lib/game/roleDisplay";
-import { useRoleLabel } from "@/shared/lib/game/useRoleLabel";
+import { factionIcon, factionBadgeClass } from "@/shared/lib/game/roleDisplay";
+import type { Faction } from "@/shared/lib/constants/factions";
 import {
   formatDate,
   formatTime,
   formatDuration,
 } from "@/shared/lib/format";
 import type { AdminGameLogRow } from "@convex/refs/admin";
+import ArchiveRosterPanel from "./ArchiveRosterPanel";
 import ArchiveRowActions from "./ArchiveRowActions";
 
-const WINNER_BAR: Record<string, string> = {
+/**
+ * TOTAL over `Faction`, not `Record<string, string>`. It was the loose version,
+ * and a `serial_killer` win indexed to `undefined` — `winner` is truthy so the
+ * fallback below never ran, and the row's accent bar rendered transparent. A
+ * missing hue is now a compile error instead of an invisible one. Hues track
+ * `FACTION_HEX`, in this file's neon register.
+ */
+const WINNER_BAR: Record<Faction, string> = {
   mafia: "bg-[#ff2a2a] shadow-[0_0_12px_rgba(255,42,42,0.6)]",
   yakuza: "bg-[#a855f7] shadow-[0_0_12px_rgba(168,85,247,0.6)]",
   citizens: "bg-[#00ff66] shadow-[0_0_12px_rgba(0,255,102,0.6)]",
+  serial_killer: "bg-[#fbbf24] shadow-[0_0_12px_rgba(251,191,36,0.6)]",
 };
 
 export default function ArchiveRow({ row }: { row: AdminGameLogRow }) {
   const t = useTranslations("admin");
   const tg = useTranslations("game");
-  const roleLabel = useRoleLabel();
   const [expanded, setExpanded] = useState(false);
 
   const winner = row.winner;
@@ -126,74 +130,12 @@ export default function ArchiveRow({ row }: { row: AdminGameLogRow }) {
         </div>
       </div>
 
-      {/* Roster panel */}
-      <div
-        className={cn(
-          "grid bg-[#0c0c12]/80 transition-[grid-template-rows,opacity] duration-300 ease-in-out",
-          expanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
-        )}
-      >
-        <div className="overflow-hidden">
-          <div className="border-t border-white/5 px-7 py-6">
-              <h4 className="mb-5 flex items-center gap-2 font-inter text-xs font-bold uppercase tracking-widest text-zinc-400">
-                <Users className="h-4 w-4 text-blue-400" /> {t("archive.roster")}
-              </h4>
-
-              <div className="grid grid-cols-1 gap-x-12 gap-y-1 md:grid-cols-2">
-                {row.players.map((player) => {
-                  const faction = roleToFaction(player.role);
-                  const Icon = factionIcon(faction);
-                  const isWinner = winner !== null && faction === winner;
-                  return (
-                    <div
-                      key={player.playerId}
-                      className="-mx-2 grid grid-cols-[1fr_auto_auto] items-center gap-4 rounded-lg border-b border-white/5 px-2 py-2.5 transition-colors last:border-0 hover:bg-white/[0.02]"
-                    >
-                      <div className="flex min-w-0 items-center gap-2.5">
-                        <div className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-purple-500 to-red-600 text-[11px] font-bold text-white shadow">
-                          {player.nickname[0]?.toUpperCase() ?? "?"}
-                        </div>
-                        <span className="truncate font-inter text-sm font-medium text-zinc-300">
-                          {typeof player.seatNumber === "number" && (
-                            <span className="mr-1 text-xs text-zinc-600">
-                              #{player.seatNumber}
-                            </span>
-                          )}
-                          {player.nickname}
-                        </span>
-                        {isWinner && (
-                          <Trophy className="h-3.5 w-3.5 shrink-0 text-yellow-500/50" />
-                        )}
-                      </div>
-
-                      <div
-                        className={cn(
-                          "flex items-center gap-1.5 rounded border px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest",
-                          factionBadgeClass(faction),
-                        )}
-                      >
-                        <Icon className="h-3 w-3" />
-                        {roleLabel(player.role)}
-                      </div>
-
-                      <div className="flex w-16 items-center justify-end">
-                        {player.isAlive ? (
-                          <span className="text-xs font-bold uppercase tracking-widest text-[#2a5cff]">
-                            {t("archive.alive")}
-                          </span>
-                        ) : (
-                          <span className="text-xs font-bold uppercase tracking-widest text-[#ff2a2a]">
-                            {t("archive.dead")}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </div>
+      <ArchiveRosterPanel
+        players={row.players}
+        gameType={row.gameType}
+        winner={winner}
+        expanded={expanded}
+      />
     </div>
   );
 }

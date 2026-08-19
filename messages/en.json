@@ -383,7 +383,6 @@
     "rolePerformance": "Role Performance",
     "plays": "Plays",
     "winRate": "Win Rate",
-    "filterAllModes": "All Modes",
     "filterAllOutcomes": "All Outcomes",
     "filterVictories": "Victories",
     "filterDefeats": "Defeats",
@@ -408,8 +407,7 @@
     "levelTooltip": "{elo} ELO — Level {level}",
     "toNextLevel": "{points} to Level {level}",
     "tableAvgTooltip": "Table average: {avg}",
-    "tableAvgLabel": "Table avg",
-    "statsForMode": "Stats for"
+    "tableAvgLabel": "Table avg"
   },
   "leaderboard": {
     "pageTitle": "Leaderboard",
@@ -822,7 +820,16 @@
     "player": {
       "waitingToStart": "Waiting for players"
     },
-    "chooseLadder": "Choose ladder"
+    "chooseLadder": "Choose ladder",
+    "variantSelector": {
+      "chooseVariant": "Choose game mode",
+      "allVariants": "All",
+      "seats": "{seatCount} seats",
+      "rated": "Rated",
+      "unrated": "Unrated",
+      "unratedHint": "This mode has no ladder yet",
+      "unbuiltHint": "This mode is not available yet"
+    }
   },
   "errors": {
     "_fallback": "Something went wrong. Please try again.",

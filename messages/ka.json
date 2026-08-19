@@ -383,7 +383,6 @@
     "rolePerformance": "როლის შედეგები",
     "plays": "თამაში",
     "winRate": "მოგების პროცენტი",
-    "filterAllModes": "ყველა რეჟიმი",
     "filterAllOutcomes": "ყველა შედეგი",
     "filterVictories": "მოგებები",
     "filterDefeats": "წაგებები",
@@ -395,7 +394,7 @@
     "noMatchesYetBody": "თამაშის დასრულების შემდეგ ის გამოჩნდება აქ თქვენი როლით, შედეგით და სრული სიით.",
     "noMatchesFoundTitle": "მატჩები ვერ მოიძებნა",
     "noMatchesFoundBody": "არცერთი თამაში არ შეესაბამება არჩეულ ფილტრებს. სცადეთ მათი შეცვლა მეტი ისტორიის სანახავად.",
-    "assigned": "დანიშნული:",
+    "assigned": "როლი:",
     "victory": "მოგება",
     "defeat": "წაგება",
     "noContest": "შეუფასებელი",
@@ -408,8 +407,7 @@
     "levelTooltip": "{elo} ELO — ლეველი {level}",
     "toNextLevel": "{points} ელო {level} ლეველამდე",
     "tableAvgTooltip": "მაგიდის საშუალო: {avg}",
-    "tableAvgLabel": "მაგიდის საშ.",
-    "statsForMode": "სტატისტიკა"
+    "tableAvgLabel": "მაგიდის საშ."
   },
   "leaderboard": {
     "pageTitle": "ლიდერბორდი",
@@ -598,7 +596,7 @@
       "dawnCounter": "გამთენია {night}",
       "speakingNow": "საუბრობს",
       "nextUp": "შემდეგი",
-      "waitingToStart": "დაწყების მოლოდინი",
+      "waitingToStart": "ველოდებით დაწყებას",
       "allSpokenCount": "ყველა მოთამაშემ ისაუბრა",
       "allSpokenShort": "ყველამ ისაუბრა",
       "nominatedLabel": "დასახელებულები",
@@ -669,7 +667,7 @@
       "leaveRoom": "მოსაცდელი ოთახის დატოვება",
       "tipTitle": "რჩევა",
       "tip": "ჰოსტი მალე განიხილავს თქვენს მოთხოვნას. შეგიძლიათ დატოვოთ და სცადოთ სხვა ოთახი, თუ მოლოდინი დიდია.",
-      "awaitingApproval": "მოწონების მოლოდინი",
+      "awaitingApproval": "დადასტურების მოლოდინი",
       "joinRequestSent": "თქვენი შესვლის მოთხოვნა გაეგზავნა ჰოსტს",
       "youreIn": "შემოხვედი!",
       "hostApproved": "ჰოსტმა დაადასტურა თქვენი მოთხოვნა. თამაშთან დაკავშირება…",
@@ -822,7 +820,16 @@
     "player": {
       "waitingToStart": "ველოდებით მოთამაშეებს"
     },
-    "chooseLadder": "აირჩიე რეიტინგი"
+    "chooseLadder": "აირჩიე რეიტინგი",
+    "variantSelector": {
+      "chooseVariant": "აირჩიე რეჟიმი",
+      "allVariants": "ყველა",
+      "seats": "{seatCount} ადგილი",
+      "rated": "რეიტინგული",
+      "unrated": "არარეიტინგული",
+      "unratedHint": "ამ რეჟიმს ჯერ არ აქვს რეიტინგი",
+      "unbuiltHint": "ეს რეჟიმი ჯერ მიუწვდომელია"
+    }
   },
   "errors": {
     "_fallback": "რაღაც შეცდომა მოხდა. გთხოვთ სცადოთ თავიდან.",

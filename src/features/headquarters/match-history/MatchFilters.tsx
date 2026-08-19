@@ -1,65 +1,56 @@
 "use client";
 
+import { useMemo } from "react";
 import { useTranslations } from "next-intl";
-import { GAME_TYPES } from "@/shared/lib/constants/game";
+import VariantChips from "@/shared/ui/variants-selector/VariantChips";
+import type { VariantOption } from "@/shared/ui/variants-selector";
 
 export type OutcomeFilter = "all" | "win" | "loss" | "no_contest";
-export type GameTypeFilter = "all" | (typeof GAME_TYPES)[number];
 
 interface Props {
   outcome: OutcomeFilter;
-  gameType: GameTypeFilter;
   onOutcomeChange: (v: OutcomeFilter) => void;
-  onGameTypeChange: (v: GameTypeFilter) => void;
 }
 
-const SELECT_CLASS =
-  "min-w-[180px] cursor-pointer appearance-none rounded-xl border border-white/5 bg-[#13131a]/70 px-5 py-3.5 font-inter font-medium text-white transition focus:border-[#00ff66]/50 focus:bg-[#13131a]/90 focus:outline-none";
-
-export default function MatchFilters({
-  outcome,
-  gameType,
-  onOutcomeChange,
-  onGameTypeChange,
-}: Props) {
+/**
+ * Outcome filter for the match list — form C of the variant selector kit.
+ *
+ * Mode is deliberately NOT here. It moved to the one centred switcher in
+ * `StatsHeader`, which scopes the stats and this list together; a second mode
+ * control at this altitude was the same question asked twice, and the two could
+ * disagree. So this row narrows WITHIN the selected mode and sits right-aligned
+ * above the table, out of the hero's way.
+ *
+ * The `"all"` sentinel stays in the exported type because `MatchHistoryList`
+ * passes it straight to the query. The kit models "no filter" as `null`, so the
+ * two are mapped at this boundary only.
+ */
+export default function MatchFilters({ outcome, onOutcomeChange }: Props) {
   const t = useTranslations("matchHistory");
-  const tg = useTranslations("game");
+
+  // Borrows the accents the rows below already use — emerald win, red loss — so
+  // the filter and the result it produces are the same colour.
+  const outcomeOptions = useMemo<
+    VariantOption<Exclude<OutcomeFilter, "all">>[]
+  >(
+    () => [
+      { value: "win", label: t("filterVictories"), accent: "emerald" },
+      { value: "loss", label: t("filterDefeats"), accent: "red" },
+      { value: "no_contest", label: t("filterNoContest"), accent: "neutral" },
+    ],
+    [t],
+  );
 
   return (
-    <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:justify-end">
-      <select
-        value={gameType}
-        onChange={(e) => onGameTypeChange(e.target.value as GameTypeFilter)}
-        className={SELECT_CLASS}
-      >
-        <option value="all" className="bg-[#0a0a12]">
-          {t("filterAllModes")}
-        </option>
-        {GAME_TYPES.map((gt) => (
-          <option key={gt} value={gt} className="bg-[#0a0a12]">
-            {tg(`gameTypes.${gt}` as Parameters<typeof tg>[0])}
-          </option>
-        ))}
-      </select>
-
-      <select
-        value={outcome}
-        onChange={(e) => onOutcomeChange(e.target.value as OutcomeFilter)}
-        className={SELECT_CLASS}
-      >
-        <option value="all" className="bg-[#0a0a12]">
-          {t("filterAllOutcomes")}
-        </option>
-        <option value="win" className="bg-[#0a0a12]">
-          {t("filterVictories")}
-        </option>
-        <option value="loss" className="bg-[#0a0a12]">
-          {t("filterDefeats")}
-        </option>
-        <option value="no_contest" className="bg-[#0a0a12]">
-          {t("filterNoContest")}
-        </option>
-      </select>
+    <div className="mb-4 flex justify-end">
+      <VariantChips
+        options={outcomeOptions}
+        value={outcome === "all" ? null : outcome}
+        onChange={(value) => onOutcomeChange(value ?? "all")}
+        allLabel={t("filterAllOutcomes")}
+        size="sm"
+        className="justify-end"
+      />
     </div>
   );
 }

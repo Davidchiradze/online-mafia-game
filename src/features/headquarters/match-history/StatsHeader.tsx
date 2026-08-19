@@ -19,12 +19,18 @@ interface Props {
 }
 
 /**
- * Page heading plus the ELO/win-rate/matches cards for ONE ladder.
+ * Page hero: heading, the ONE variant switcher, and the ELO/win-rate/matches
+ * cards for the selected ladder.
  *
- * The switcher lives here rather than on the page because these three cards are
- * the only thing it changes. It is independent of the match-list filter below —
- * that filter offers "all" and unrated variants, neither of which has a record
- * to show, so they cannot be the same control (/docs/ranking-system.md §12).
+ * The switcher is the page's primary control and is centred and `lg` to say so.
+ * It scopes BOTH this block and the match list below it — the two used to be
+ * separate selectors, which put the same question on screen twice and let the
+ * stats and the list disagree about which mode you were looking at.
+ *
+ * The cost of merging is that the list can no longer show every mode at once:
+ * "all" names no ladder, so it cannot drive an ELO or a record and there is no
+ * honest number to invent for it (/docs/ranking-system.md §12). One always-true
+ * scope beats two controls that contradict each other.
  */
 export default function StatsHeader({
   stats,
@@ -32,43 +38,44 @@ export default function StatsHeader({
   onGameTypeChange,
 }: Props) {
   const t = useTranslations("matchHistory");
+  const tg = useTranslations("game");
 
   return (
-    <div className="mb-10 flex flex-col justify-between gap-8 lg:flex-row lg:items-end">
-      <div>
-        <h1 className="mb-3 font-orbitron text-4xl font-bold uppercase tracking-widest text-white drop-shadow-sm sm:text-5xl">
-          {t("pageTitle")}
-        </h1>
-        <p className="max-w-2xl font-inter text-lg text-zinc-400">
-          {t("pageSubtitle")}
-        </p>
+    <div className="mb-10 flex flex-col items-center text-center">
+      <h1 className="mb-3 font-orbitron text-4xl font-bold uppercase tracking-widest text-white drop-shadow-sm sm:text-5xl">
+        {t("pageTitle")}
+      </h1>
+      <p className="max-w-2xl font-inter text-lg text-zinc-400">
+        {t("pageSubtitle")}
+      </p>
+
+      {/* Names what the switcher governs. Without it the ELO, W/L and match
+          rows all read as lifetime totals across every mode. */}
+      <div className="mt-7 flex flex-col items-center gap-2.5">
+        <span className="font-inter text-[0.65rem] font-bold uppercase tracking-widest text-zinc-500">
+          {tg("variantSelector.chooseVariant")}
+        </span>
+        <RatedVariantTabs
+          value={gameType}
+          onChange={onGameTypeChange}
+          size="lg"
+        />
       </div>
 
-      <div className="flex shrink-0 flex-col gap-3">
-        {/* Says which ladder the cards below belong to — without it the W/L and
-            total-matches numbers read as lifetime totals across every game. */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <span className="font-inter text-[0.65rem] font-bold uppercase tracking-widest text-zinc-500">
-            {t("statsForMode")}
-          </span>
-          <RatedVariantTabs value={gameType} onChange={onGameTypeChange} />
-        </div>
-
-        <div className="flex flex-wrap gap-4">
-          <RatingCard stats={stats} />
-          <StatCard
-            icon={<Crosshair className="h-3.5 w-3.5" />}
-            label={t("overallWinRate")}
-            value={stats === undefined ? "—" : `${stats.winRate}%`}
-            accent="bg-[#00ff66]/80 shadow-[0_0_10px_rgba(0,255,102,0.8)]"
-          />
-          <StatCard
-            icon={<Gamepad2 className="h-3.5 w-3.5" />}
-            label={t("totalMatches")}
-            value={stats === undefined ? "—" : String(stats.totalMatches)}
-            accent="bg-blue-500/80 shadow-[0_0_10px_rgba(59,130,246,0.8)]"
-          />
-        </div>
+      <div className="mt-8 flex flex-wrap justify-center gap-4">
+        <RatingCard stats={stats} />
+        <StatCard
+          icon={<Crosshair className="h-3.5 w-3.5" />}
+          label={t("overallWinRate")}
+          value={stats === undefined ? "—" : `${stats.winRate}%`}
+          accent="bg-[#00ff66]/80 shadow-[0_0_10px_rgba(0,255,102,0.8)]"
+        />
+        <StatCard
+          icon={<Gamepad2 className="h-3.5 w-3.5" />}
+          label={t("totalMatches")}
+          value={stats === undefined ? "—" : String(stats.totalMatches)}
+          accent="bg-blue-500/80 shadow-[0_0_10px_rgba(59,130,246,0.8)]"
+        />
       </div>
     </div>
   );

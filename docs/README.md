@@ -22,7 +22,7 @@ The folder a doc lives in is a contract:
 | how a game ends, and when the check runs | [engine/win-check-seam.md](./engine/win-check-seam.md) | which faction wins — that is per-variant |
 | the Japanese rules | [variants/japanese/rules.md](./variants/japanese/rules.md), [win-conditions.md](./variants/japanese/win-conditions.md) | anything about Sports |
 | the Sports rules | [variants/sports/rules.md](./variants/sports/rules.md), [win-conditions.md](./variants/sports/win-conditions.md) | the Japanese baseline it diffs against |
-| what a win is worth in one variant | [variants/japanese/rating.md](./variants/japanese/rating.md), [variants/sports/rating.md](./variants/sports/rating.md) | how the formula works — that is shared |
+| what a win is worth in one variant | [variants/japanese/rating.md](./variants/japanese/rating.md), [variants/sports/rating.md](./variants/sports/rating.md), [variants/serial_killer/rating.md](./variants/serial_killer/rating.md) | how the formula works — that is shared |
 | how to add or change a variant | [engine/variant-architecture.md](./engine/variant-architecture.md) | current values — those are generated |
 | the Serial Killer rules | [variants/serial_killer/rules.md](./variants/serial_killer/rules.md), [win-conditions.md](./variants/serial_killer/win-conditions.md) | anything that exists — this variant is **designed, not built**, and its win formula is TBD |
 | the stack and how data flows | [architecture.md](./architecture.md) | any game rule |
