@@ -13,6 +13,7 @@
 > | --- | --- | --- |
 > | `japanese_mafia` | rated | [variants/japanese/rating.md](./variants/japanese/rating.md) — measured from 269 decided games |
 > | `sports_mafia` | rated | [variants/sports/rating.md](./variants/sports/rating.md) — declared 0.50 / 0.50, never recalibrated |
+> | `serial_killer_mafia` | rated | [variants/serial_killer/rating.md](./variants/serial_killer/rating.md) — declared 1/3 three ways, never recalibrated, and the one variant whose `K` is not 80 |
 > | `city_mafia` | unrated | no definition registered, so no ladder |
 >
 > Rating math runs server-side inside `archiveGameLog` (`convex/lib/games.ts`);
@@ -77,6 +78,7 @@ Nothing about a rating is global:
 > | --- | --- | --- |
 > | `japanese_mafia` | **measured** — 269 decided games, 2026-07 | [variants/japanese/rating.md](./variants/japanese/rating.md) |
 > | `sports_mafia` | **declared** — a balanced two-faction contest, 0.50 / 0.50 | [variants/sports/rating.md](./variants/sports/rating.md) |
+> | `serial_killer_mafia` | **declared** — a balanced three-faction contest, 1/3 each | [variants/serial_killer/rating.md](./variants/serial_killer/rating.md) |
 >
 > This heading keeps its number: `convex/lib/constants.ts` cites §2–§3.
 
@@ -111,7 +113,8 @@ K = 40 ratios scaled 2×, see below) plus a
 ```
 ΔR = base + b
 
-base = K × (S − E)          K = 80 (the K = 40 ratios scaled 2×)
+base = K × (S − E)          K is PER VARIANT — 80 in two of the three,
+                            81 in serial_killer_mafia (see below)
 S    = 1 (faction won) | 0 (faction lost)
 E    = faction's calibrated win rate (§2)
 
@@ -131,20 +134,33 @@ Rounded to integers, the **base** payouts per rated variant are:
 | `japanese_mafia` | Yakuza | 0.286 | **+56** | **−22** |
 | `sports_mafia` | Mafia | 0.500 | **+40** | **−40** |
 | `sports_mafia` | Citizens | 0.500 | **+40** | **−40** |
-| either | No contest | — | 0 | 0 |
+| `serial_killer_mafia` | Mafia | 0.333 | **+54** | **−27** |
+| `serial_killer_mafia` | Serial Killer | 0.333 | **+54** | **−27** |
+| `serial_killer_mafia` | Citizens | 0.333 | **+54** | **−27** |
+| any | No contest | — | 0 | 0 |
 
 Rationale for each column belongs to the variant:
 [japanese/rating.md §2](./variants/japanese/rating.md) explains the 2× scaling
 and the ~2:1 win/loss ratio; [sports/rating.md §3](./variants/sports/rating.md)
 explains why a symmetric E collapses that spread to a single pair of numbers and
-removes the drift.
+removes the drift; [serial_killer/rating.md §3](./variants/serial_killer/rating.md)
+explains why the same symmetry across *three* factions needs a different K.
 
-> **Why K = 80 for both?** In Japanese, the K = 40 base over-compressed the
-> ladder — replaying the real archive left 85% of players stuck in Level 4
-> (rating std ≈ 46); doubling it spread the same players across Levels 3–6
-> (std ≈ 92) with their ranking order preserved. Sports then inherits K = 80 not
-> by copying but because it lands on the same per-game volatility (≈40 vs ≈38),
-> which is the condition for sharing level brackets (§5).
+> **Why K = 80 in two variants and 81 in the third?** In Japanese, the K = 40
+> base over-compressed the ladder — replaying the real archive left 85% of
+> players stuck in Level 4 (rating std ≈ 46); doubling it spread the same players
+> across Levels 3–6 (std ≈ 92) with their ranking order preserved. Sports then
+> inherits K = 80 not by copying but because it lands on the same per-game
+> volatility (≈40 vs ≈38), which is the condition for sharing level brackets
+> (§5).
+>
+> Serial Killer is the case that shows K is a per-variant number rather than a
+> shared constant. Its declared `E = 1/3` puts `80 × (1 − 1/3)` at 53.33, which
+> is not a payout; rounding it would leave a −0.33/game deflation and a
+> volatility of ≈ 37.7, under the band. `K = 81` is the only value that lands
+> both sides on integers there — `+54 / −27`, an exact 2:1 ratio, zero drift,
+> ≈ 38.2 — so it is the value that satisfies the same condition Sports satisfies
+> with 80. **Copying a sibling's K is what §13 step 5 exists to prevent.**
 
 ### The table adjustment `b`
 
@@ -234,8 +250,8 @@ Properties:
   keeps their faction's outcome (usually a loss). No extra penalty in v1.
 - **Peak rating** is stored alongside current rating (same pattern as
   `bestStreak`), and is per game type like everything else.
-- **Scope**: ratings are per game type (§1). `japanese_mafia` and
-  `sports_mafia` are rated, each with its own config and E table;
+- **Scope**: ratings are per game type (§1). `japanese_mafia`, `sports_mafia`
+  and `serial_killer_mafia` are rated, each with its own config, K and E table;
   `city_mafia` has no definition registered at all, so it cannot be played and
   is not a ladder. A player carries an independent rating, peak, level and
   record on each ladder, starting at 1000 / Level 4 on a ladder they have never
@@ -289,11 +305,14 @@ chosen with that in mind:
 | --- | --- | --- | --- |
 | `japanese_mafia` | +48 / −30 (mafia seat) | ~33.5% | ≈ **38** |
 | `sports_mafia` | +40 / −40 | 50% | ≈ **40** |
+| `serial_killer_mafia` | +54 / −27 | 33.3% | ≈ **38.2** |
 
 Wider payouts are cancelled by a lower win rate and vice versa. **A new
 variant's K should be chosen to land in this band** rather than copied blindly
 (§13); if one ever cannot, that variant overrides the brackets in its own config
-instead of quietly climbing twice as fast on the shared ones.
+instead of quietly climbing twice as fast on the shared ones. Serial Killer is
+the worked example: hitting the band there took `K = 81`, and copying its
+siblings' 80 would have landed outside it (§3).
 
 ## 6. Level badges (our own design)
 
@@ -403,7 +422,11 @@ re-run as-is** — see the warning below.
 >
 > Sports is `"never"` ([sports/rating.md §5](./variants/sports/rating.md)): its
 > ladder starts empty and fills from the first game finished after its config
-> ships.
+> ships. Serial Killer is `"never"` on the same reasoning
+> ([serial_killer/rating.md §5](./variants/serial_killer/rating.md)) — and it is
+> the entry that shows why the lock is not redundant: it sat at `"never"`
+> vacuously while the variant was unrated, and became load-bearing the moment a
+> config existed for the migration to replay with.
 
 ## 9. Recalibration policy
 
@@ -414,6 +437,7 @@ part of its calibration decision.**
 | --- | --- |
 | `japanese_mafia` | **Recalibrates.** Its E values are measurements (~±3pp standard error at 269 games), so they go stale — re-derive every ~200 new decided games or quarterly ([japanese/rating.md §3](./variants/japanese/rating.md)). |
 | `sports_mafia` | **Does not.** Its E values are declared 0.50, not derived, so there is nothing to re-derive. Changing them is a deliberate decision with its own trade-off, recorded in [sports/rating.md §2](./variants/sports/rating.md). |
+| `serial_killer_mafia` | **Does not.** Declared 1/3 three ways, same stance and same trade-off — sharper, because one seat per game absorbs the whole error if the split is not even ([serial_killer/rating.md §2](./variants/serial_killer/rating.md)). |
 
 Rules that apply to any recalibration:
 
@@ -448,9 +472,10 @@ gap analysis for making a second variant rated — not a sequenced plan.
 | Leaderboard query | `convex/games/core/leaderboard.ts` | ✓ every column belongs to the board's own variant, rating and record alike. |
 | Deliberately cross-variant readers | `convex/integrations/playerStats.ts`, `convex/admin/stats.ts` | ✓ by design — they fold a player's rows with `mergePlayerStats` (public `gamesPlayed` is global by contract, /docs/public-api.md §3). |
 | Leaderboard ref | `convex/refs/leaderboard.ts` | ✓ `gameType` is already an argument. |
-| Leaderboard page | `src/features/headquarters/leaderboard/LeaderboardContent.tsx` | ✗ hardcodes `gameType: "japanese_mafia"`; no tabs. |
+| Leaderboard page | `src/features/headquarters/leaderboard/LeaderboardContent.tsx`, `src/features/headquarters/components/RatedVariantTabs.tsx` | ✓ holds the game type in state, seeded from `DEFAULT_RATED_GAME_TYPE`, and the tab list derives from `RATED_GAME_TYPES` — so rating a variant gives it a board with no edit here. `tests/structure/ratedVariants.test.ts` forbids this surface from naming a variant at all, comments included. |
 | Levels, brackets, `<LevelBadge />` | `src/shared/lib/constants/ranking.ts`, `src/shared/lib/ranking/levels.ts`, `src/shared/ui/LevelBadge.tsx` | ✓ variant-agnostic by design (§5) — shared brackets are the intended behaviour, not an oversight. |
-| Faction union + log validators | `convex/lib/roles.ts`, `convex/tables/gameLogPlayers.ts` | ⚠️ `"mafia" \| "yakuza" \| "citizens"` is a global union. A future variant with a **new** faction touches the schema, not just a config (§13). |
+| Faction union + log validators | `convex/lib/roles.ts`, `convex/tables/gameLogs.ts`, `convex/tables/gameLogPlayers.ts`, `convex/tables/gameSessions.ts` | ⚠️ `Faction` is a **global** union — now `"mafia" \| "yakuza" \| "citizens" \| "serial_killer"`, widened when Serial Killer shipped. Still the warning it was: a variant with a **new** faction is schema work before it is config work, across four validators plus several local re-declarations that are copies rather than imports and so raise no compile error ([serial_killer/rules.md §10](./variants/serial_killer/rules.md)). |
+| Variant-blind `roleToFaction` | `convex/lib/roles.ts`, `src/shared/lib/game/roleDisplay.ts` | ⚠️ answers `"citizens"` for `SERIAL_KILLER`; the rating path is safe because `archiveGameLog` resolves `definition.roleToFaction` first, but display code must call `factionForRole(gameType, role)` or it will badge a Serial Killer as town. |
 | Variant labels for tabs/filters | `messages/en.json`, `messages/ka.json` (`game.gameTypes.*`) | ✓ keys already exist for all three ids, at parity in both locales. |
 
 The gate for any of it is `npm run lint && npm run typecheck && npm test`.
@@ -555,15 +580,21 @@ none of this should require touching the engine.
    a third faction's row, and a variant that introduces a **new** faction needs
    the shared `Faction` union and the `gameLogPlayers` / `gameLogs` validators
    widened first. That is schema work, not config work.
-5. **Check K against the volatility band** (§5): std per game ≈ 38–40 keeps the
-   shared level brackets meaningful. Then check the safety property (§3): the
-   table-adjustment cap must stay below the smallest base payout, or a win at a
-   weak table can round to nothing.
+5. **Derive K, do not copy it** (§5): pick the K that puts std per game in the
+   ≈ 38–40 band **and** lands both payouts on integers at your E, which is not
+   necessarily a sibling's K — Serial Killer needed 81 where the others use 80,
+   and copying 80 there would have shipped a deflating ladder. Then check the
+   safety property (§3): the table-adjustment cap must stay below the smallest
+   base payout, or a win at a weak table can round to nothing.
 6. **Decide backfill explicitly** (§8). The migration will otherwise sweep the
-   new variant's whole archive in as soon as its config exists.
+   new variant's whole archive in as soon as its config exists. An entry already
+   sitting at `"never"` while the variant was unrated was vacuous — re-read it,
+   because rating the variant is what makes it mean something.
 7. **Add the ladder to the surfaces that enumerate variants** — leaderboard tab,
-   profile block — not to any that branch on one (§10). If a new `if (gameType
-   === …)` is needed anywhere in the rating path, the config is missing a field.
+   profile block — not to any that branch on one (§10). Both already derive from
+   `RATED_GAME_TYPES`, so in practice this step is now "confirm, do not edit".
+   If a new `if (gameType === …)` is needed anywhere in the rating path, the
+   config is missing a field.
 8. **Docs**: a `docs/variants/<id>/rating.md` alongside the variant's other
    docs, and a row in the calibration table in §2 here. The variant doc owns
    the numbers; this doc owns the mechanism.

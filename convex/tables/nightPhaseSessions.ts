@@ -27,6 +27,14 @@ export const nightPhaseSessions = defineTable({
   // The 0-3 seats they named, in pick order. Completion is DERIVED
   // (`length === 3`) — there is no separate lock flag to keep in sync.
   bestMoveSuspects: v.optional(v.array(v.number())),
+  // Serial Killer's one-per-game shot (docs/variants/serial_killer/rules.md §5).
+  // The seat they fired at on this night, if any. Additive + optional, so every
+  // existing row validates unchanged.
+  //
+  // "Already fired" is DERIVED from these rows, not stored as a flag — see
+  // `isSerialKillerShotSpent` in `convex/lib/nightSessions.ts`. A flag would be
+  // a second source of truth that could disagree with the night it came from.
+  serialKillerTarget: v.optional(v.number()),
 })
   .index("by_gameId", ["gameId"])
   .index("by_gameId_nightNumber", ["gameId", "nightNumber"]);

@@ -25,10 +25,13 @@ import {
   type HostPanelDescriptor,
   type HostPanelMeta,
 } from "@/features/game-room/lib/hostPanel";
+import { PHASE_TIMERS } from "@/shared/lib/constants/game";
 import { JAPANESE_PHASE_CONTROLS } from "@/features/game-room/variants/japanese/phaseControls";
 import { SPORTS_PHASE_CONTROLS } from "@/features/game-room/variants/sports/phaseControls";
+import { SERIAL_KILLER_PHASE_CONTROLS } from "@/features/game-room/variants/serialkiller/phaseControls";
 import { JAPANESE_PHASES } from "@convex/games/japanese/phases";
 import { SPORTS_PHASES } from "@convex/games/sports/phases";
+import { SERIAL_KILLER_PHASES } from "@convex/games/serialkiller/phases";
 
 describe("resolveHostPanelLayout", () => {
   it("gives a desktop centre cell the full three-zone panel", () => {
@@ -335,6 +338,11 @@ describe("HOST_PANEL_PHASES", () => {
   const VARIANTS = [
     ["japanese", new Set<string>(JAPANESE_PHASES), JAPANESE_PHASE_CONTROLS],
     ["sports", new Set<string>(SPORTS_PHASES), SPORTS_PHASE_CONTROLS],
+    [
+      "serialkiller",
+      new Set<string>(SERIAL_KILLER_PHASES),
+      SERIAL_KILLER_PHASE_CONTROLS,
+    ],
   ] as const;
 
   it("is registered by every variant that actually has the phase", () => {
@@ -357,6 +365,23 @@ describe("HOST_PANEL_PHASES", () => {
     for (const phase of HOST_PANEL_PHASES) {
       const owners = VARIANTS.filter(([, phases]) => phases.has(phase));
       expect(owners.length, phase).toBeGreaterThan(0);
+    }
+  });
+
+  it("covers every phase that has a countdown", () => {
+    // The other direction, and the one a new variant actually gets wrong.
+    // `PHASE_TIMERS` is exactly the set of phases that draw a countdown, and
+    // BOTH renderers draw one: `PhaseTitle` mounts `<PhaseCountdown>`, the panel
+    // puts its own timer beside the eyebrow. So a countdown phase missing from
+    // this set does not fail loudly — it renders the phase TWICE over, two
+    // clocks and two titles, in a cell sized for one. Portrait clips it with no
+    // scroll; landscape pushes the advance button out of the cell entirely and
+    // the host cannot move the game on.
+    for (const [name, phases] of VARIANTS) {
+      for (const phase of Object.keys(PHASE_TIMERS)) {
+        if (!phases.has(phase)) continue;
+        expect(HOST_PANEL_PHASES.has(phase), `${name}: ${phase}`).toBe(true);
+      }
     }
   });
 });

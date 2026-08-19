@@ -7,6 +7,7 @@ import yakuza from "@/features/game-room/assets/cards/yakuza.png";
 import detective from "@/features/game-room/assets/cards/detective.png";
 import doctor from "@/features/game-room/assets/cards/doctor.png";
 import citizen from "@/features/game-room/assets/cards/citizen.png";
+import serialKiller from "@/features/game-room/assets/cards/serialKiller.png";
 
 /** Decorative back face used for face-down cards. */
 export const CARD_BACK_IMAGE: StaticImageData = cardBack;
@@ -20,6 +21,7 @@ const ROLE_IMAGE_MAP: Record<string, StaticImageData> = {
   DETECTIVE: detective,
   DOCTOR: doctor,
   CITIZEN: citizen,
+  SERIAL_KILLER: serialKiller,
 };
 
 /**

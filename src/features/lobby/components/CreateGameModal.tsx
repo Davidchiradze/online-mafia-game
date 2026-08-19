@@ -9,6 +9,8 @@ import { createLivekitRoom } from "@/shared/lib/livekit/actions";
 import { GAME_TYPES } from "@/shared/lib/constants/game";
 import { Globe, Loader2, Lock } from "lucide-react";
 import Modal from "@/shared/ui/Modal";
+import VariantCardGroup from "@/shared/ui/variants-selector/VariantCardGroup";
+import { useGameVariantOptions } from "@/shared/hooks/useGameVariantOptions";
 import { useErrorMessage } from "@/shared/lib/i18n/errorMessage";
 import type { Id } from "@convex/_generated/dataModel";
 
@@ -54,7 +56,7 @@ export default function CreateGameModal(props: Props) {
   const getErrorMessage = useErrorMessage();
   const t = useTranslations("lobby");
   const tc = useTranslations("common");
-  const tg = useTranslations("game");
+  const variantOptions = useGameVariantOptions();
 
   useEffect(() => {
     if (!open) return;
@@ -197,24 +199,18 @@ export default function CreateGameModal(props: Props) {
             <label className="block text-sm font-medium text-gray-400 font-sans">
               {t("gameMode")}
             </label>
-            <select
+            {/* Row density, not a dropdown: seats and rated-ness are what
+                actually decide the mode, and a <select> could show neither.
+                `city_mafia` needs no filter here any more — the options come
+                from variants that have a definition, which is the same test
+                `create` applies server-side. */}
+            <VariantCardGroup
+              options={variantOptions}
               value={type}
-              onChange={(e) =>
-                setType(e.target.value as (typeof GAME_TYPES)[number])
-              }
-              className="w-full px-4 py-3 rounded-xl bg-white/[0.05] border border-white/[0.08] text-white font-sans text-sm focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 transition appearance-none cursor-pointer"
-            >
-              {GAME_TYPES.filter(
-                // sports_mafia is hidden for now (pre-deploy) — not offered as a
-                // creatable option. city_mafia stays hidden until it has a
-                // ruleset. See docs/variants/sports.md.
-                (gt) => gt !== "city_mafia" && gt !== "sports_mafia",
-              ).map((gt) => (
-                <option key={gt} value={gt} className="bg-[#0f0f1a]">
-                  {tg(`gameTypes.${gt}` as Parameters<typeof tg>[0])}
-                </option>
-              ))}
-            </select>
+              onChange={setType}
+              density="row"
+              label={t("gameMode")}
+            />
           </div>
         )}
 

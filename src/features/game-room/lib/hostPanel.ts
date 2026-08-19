@@ -197,7 +197,13 @@ export type HostPanelNote = { text: string; tone: HostPanelNoteTone };
  * one private pick per living mafia. Both resolve to label→value pills, so the
  * panel renders them identically and only `ruleset.useNightSummary` differs.
  */
-export type HostPanelMetaTone = "rose" | "violet" | "emerald" | "slate";
+// `amber` is the Serial Killer faction hue (see shared/lib/constants/factions).
+export type HostPanelMetaTone =
+  | "rose"
+  | "violet"
+  | "emerald"
+  | "amber"
+  | "slate";
 
 /**
  * How loudly the pill's VALUE is read.
@@ -435,9 +441,17 @@ export function hostPanelHasCollapsedData(
  * their `phaseControls` entry owns the whole centre cell, including the phase
  * title, so `GamePhaseControls` must not also stack a `<PhaseTitle>` above it.
  *
- * Every phase named here exists in BOTH variants' phase maps, so this stays
- * variant-agnostic. It grows one phase group at a time as the rest of the host
- * states move onto the panel, and disappears once it covers all of them.
+ * This is a set of phase NAMES, never of variants — a phase only some variants
+ * have is fine (Sports has no introduction phase, only Serial Killer has the
+ * Serial Killer's two). What is NOT fine is omitting a phase a variant has and
+ * renders through the panel: it drops into the legacy branch below, which
+ * stacks a `<PhaseTitle>` — and therefore a SECOND countdown — above a panel
+ * that already draws its own, then pushes the action button out of the cell on
+ * a short one. `tests/game/hostPanel.test.ts` checks every variant's map
+ * against this set for exactly that reason.
+ *
+ * It grows one phase group at a time as the rest of the host states move onto
+ * the panel, and disappears once it covers all of them.
  */
 export const HOST_PANEL_PHASES: ReadonlySet<string> = new Set<string>([
   // Pre-game
@@ -450,12 +464,14 @@ export const HOST_PANEL_PHASES: ReadonlySet<string> = new Set<string>([
   // Night — meetings, actions and the neutral buffer between them
   GamePhase.MAFIA_MEET,
   GamePhase.YAKUDA_SHOGUN_MEET,
+  GamePhase.SERIAL_KILLER_MEET, // Serial Killer
   GamePhase.DETECTIVE_MEET,
   GamePhase.DOCTOR_MEET,
   GamePhase.NIGHT_PHASE,
   GamePhase.MAFIA_CHOOSES_TARGET,
   GamePhase.DON_CHECKS_FOR_DETECTIVE,
   GamePhase.YAKUZA_AND_SHOGUN_CHOOSES_TARGET,
+  GamePhase.SERIAL_KILLER_CHOOSES_TARGET, // Serial Killer
   GamePhase.DETECTIVE_CHECKS_FOR_MAFIA,
   GamePhase.DOCTOR_HEALS_PLAYER,
   GamePhase.PHASE_TRANSITION,

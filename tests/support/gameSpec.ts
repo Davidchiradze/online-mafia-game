@@ -25,7 +25,11 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { getGameDefinition } from "@convex/games/registry";
-import type { GameDefinition, NightState } from "@convex/games/core/types";
+import type {
+  GameDefinition,
+  NightState,
+  WinStateContext,
+} from "@convex/games/core/types";
 import { GAME_PHASES as BACKEND_PHASES } from "@convex/lib/constants";
 import {
   GAME_PHASES as UI_PHASES,
@@ -34,8 +38,10 @@ import {
   PHASE_TIMERS, GamePhase } from "@/shared/lib/constants/game";
 import { advanceUpdates } from "@/features/game-room/variants/japanese/phaseFlow";
 import { sportsAdvanceUpdates } from "@/features/game-room/variants/sports/phaseFlow";
+import { serialKillerAdvanceUpdates } from "@/features/game-room/variants/serialkiller/phaseFlow";
 import { JAPANESE_VISIBILITY } from "@/features/game-room/variants/japanese/visibility";
 import { SPORTS_VISIBILITY } from "@/features/game-room/variants/sports/visibility";
+import { SERIAL_KILLER_VISIBILITY } from "@/features/game-room/variants/serialkiller/visibility";
 import type { VisibilityRuleset } from "@/features/game-room/variants/core/types";
 
 const REPO_ROOT = new URL("../../", import.meta.url).pathname;
@@ -60,6 +66,10 @@ const UI_BY_ID: Record<
 > = {
   japanese_mafia: { advance: advanceUpdates, visibility: JAPANESE_VISIBILITY },
   sports_mafia: { advance: sportsAdvanceUpdates, visibility: SPORTS_VISIBILITY },
+  serial_killer_mafia: {
+    advance: serialKillerAdvanceUpdates,
+    visibility: SERIAL_KILLER_VISIBILITY,
+  },
 };
 
 export type Variant = {
@@ -265,6 +275,61 @@ type Ctx = (typeof CONTEXTS)[number];
 
 type Roster = { roles: string[]; counts: Map<string, number> };
 
+type StateAxis = { id: string; state?: WinStateContext };
+
+/**
+ * The SECOND enumerated axis: `WinStateContext` — facts a win rule may read
+ * that the alive roster cannot express.
+ *
+ * SILENT FAILURE MODE this exists to close. The enumeration used to call
+ * `decideWinner(roles, ctx)` with `state` left undefined. A rule that reads
+ * `state` would then answer ONCE per roster, every key would map to exactly one
+ * outcome, `ambiguous` would stay empty, `tests/docs/gameSpec.test.ts` would
+ * pass, and `docs/generated/game-spec.md` would publish a confidently wrong
+ * table. The ambiguity alarm cannot fire on a variable the generator never
+ * varies — so the variable has to be enumerated, not merely allowed.
+ */
+const WIN_STATES: readonly StateAxis[] = [
+  { id: "shot held", state: { serialKillerHasShot: true } },
+  { id: "shot spent", state: { serialKillerHasShot: false } },
+];
+
+/** The single column set for a variant whose rules ignore `WinStateContext`. */
+const NO_WIN_STATE: readonly StateAxis[] = [{ id: "" }];
+
+type Column = { label: string; ctx: Ctx; state?: WinStateContext };
+
+/**
+ * The outcome columns for a variant — one per context, multiplied by the state
+ * axis only if the variant's rules actually read it.
+ *
+ * PROBED, not declared. A variant is given the axis iff some roster answers
+ * differently under two states. So Japanese and Sports collapse back to plain
+ * `beforeNight` / `beforeDay` columns and their generated tables are
+ * byte-identical to before this axis existed — the spec gains noise only where
+ * the extra dimension carries real information.
+ */
+function columnsFor(def: GameDefinition, rosters: Roster[]): Column[] {
+  const varies = rosters.some((r) =>
+    CONTEXTS.some(
+      (c) =>
+        new Set(
+          WIN_STATES.map(
+            (s) => def.decideWinner([...r.roles], c, s.state) ?? "continue",
+          ),
+        ).size > 1,
+    ),
+  );
+
+  return (varies ? WIN_STATES : NO_WIN_STATE).flatMap((s) =>
+    CONTEXTS.map((c) => ({
+      label: s.id ? `${c} (${s.id})` : c,
+      ctx: c,
+      state: s.state,
+    })),
+  );
+}
+
 /** Every alive-roster reachable from the deck (Japanese 2304, Sports 84). */
 function enumerateRosters(def: GameDefinition): Roster[] {
   const max = maxRoleCounts(def);
@@ -297,7 +362,8 @@ export type WinRow = {
   n: number;
   m: number;
   flags: Record<string, boolean>;
-  outcomes: Record<Ctx, string>;
+  /** Keyed by column label — see `columnsFor`. */
+  outcomes: Record<string, string>;
   naive: string;
   differsFromNaive: boolean;
 };
@@ -305,6 +371,8 @@ export type WinRow = {
 export type WinTable = {
   /** Roles the key had to include, discovered rather than assumed. */
   keyRoles: string[];
+  /** Outcome column labels in render order, discovered the same way. */
+  columns: string[];
   rows: WinRow[];
   /** Keys that map to more than one outcome — must be empty. */
   ambiguous: string[];
@@ -323,20 +391,23 @@ export type WinTable = {
 export function winTable(def: GameDefinition): WinTable {
   const rosters = enumerateRosters(def);
   const mafiaFaction = "mafia";
+  const columns = columnsFor(def, rosters);
 
   // Outcomes are pure and the roster space is walked many times during the
   // key search, so evaluate once up front.
-  const outcomeOf = new Map<Roster, Record<Ctx, string>>();
+  const outcomeOf = new Map<Roster, Record<string, string>>();
   for (const r of rosters) {
     outcomeOf.set(
       r,
-      Object.fromEntries(CONTEXTS.map((c) => [c, def.decideWinner([...r.roles], c) ?? "continue"])) as Record<
-        Ctx,
-        string
-      >,
+      Object.fromEntries(
+        columns.map((col) => [
+          col.label,
+          def.decideWinner([...r.roles], col.ctx, col.state) ?? "continue",
+        ]),
+      ),
     );
   }
-  const evaluate = (r: Roster, ctx: Ctx) => outcomeOf.get(r)![ctx];
+  const evaluate = (r: Roster, label: string) => outcomeOf.get(r)![label];
 
   const keyFor = (r: Roster, roles: string[]) => {
     const n = r.roles.length;
@@ -355,7 +426,7 @@ export function winTable(def: GameDefinition): WinTable {
     const groups = new Map<string, Map<string, number>>();
     for (const r of rosters) {
       const key = keyFor(r, roles);
-      const value = CONTEXTS.map((c) => evaluate(r, c)).join("/");
+      const value = columns.map((col) => evaluate(r, col.label)).join("/");
       let group = groups.get(key);
       if (!group) groups.set(key, (group = new Map()));
       group.set(value, (group.get(value) ?? 0) + 1);
@@ -400,7 +471,9 @@ export function winTable(def: GameDefinition): WinTable {
     if (byKey.has(key)) continue;
     const n = r.roles.length;
     const m = factionCount(def, r, mafiaFaction);
-    const outcomes = Object.fromEntries(CONTEXTS.map((c) => [c, evaluate(r, c)])) as Record<Ctx, string>;
+    const outcomes = Object.fromEntries(
+      columns.map((col) => [col.label, evaluate(r, col.label)]),
+    );
     // The rule game-design.md claimed for years: mafia win on bare parity.
     const naive = n === 0 ? "no_contest" : m === 0 ? "citizens" : 2 * m >= n ? "mafia" : "continue";
     byKey.set(key, {
@@ -410,12 +483,17 @@ export function winTable(def: GameDefinition): WinTable {
       flags: Object.fromEntries(keyRoles.map((role) => [role, (r.counts.get(role) ?? 0) > 0])),
       outcomes,
       naive,
-      differsFromNaive: CONTEXTS.some((c) => outcomes[c] !== naive),
+      differsFromNaive: columns.some((col) => outcomes[col.label] !== naive),
     });
   }
 
   const rows = [...byKey.values()].sort((a, b) => a.n - b.n || a.m - b.m || a.key.localeCompare(b.key));
-  return { keyRoles, rows, ambiguous: [...bad].sort() };
+  return {
+    keyRoles,
+    columns: columns.map((col) => col.label),
+    rows,
+    ambiguous: [...bad].sort(),
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -607,13 +685,27 @@ function renderWinConditions(variants: Variant[]): string {
       `which is why a parity rule cannot be used as a shortcut.`,
       "",
     );
+    // Only variants whose rules read `WinStateContext` get the extra columns,
+    // so this paragraph appears exactly where it carries information.
+    if (table.columns.length > CONTEXTS.length) {
+      out.push(
+        `This variant's outcome also depends on state the alive roster does not`,
+        `carry, so each context is split across it. Two rosters can be identical`,
+        `and still resolve differently.`,
+        "",
+      );
+    }
     const flagCols = table.keyRoles.map((r) => ` ${r} |`).join("");
-    out.push(`| N | m |${flagCols} beforeNight | beforeDay | naive parity | ≠ |`);
-    out.push(`| --- | --- |${table.keyRoles.map(() => " --- |").join("")} --- | --- | --- | --- |`);
+    const outcomeCols = table.columns.map((c) => ` ${c} |`).join("");
+    out.push(`| N | m |${flagCols}${outcomeCols} naive parity | ≠ |`);
+    out.push(
+      `| --- | --- |${table.keyRoles.map(() => " --- |").join("")}${table.columns.map(() => " --- |").join("")} --- | --- |`,
+    );
     for (const row of table.rows) {
       const flags = table.keyRoles.map((r) => ` ${row.flags[r] ? "yes" : "—"} |`).join("");
+      const outs = table.columns.map((c) => ` ${row.outcomes[c]} |`).join("");
       out.push(
-        `| ${row.n} | ${row.m} |${flags} ${row.outcomes.beforeNight} | ${row.outcomes.beforeDay} | ${row.naive} | ${row.differsFromNaive ? "⚠️" : ""} |`,
+        `| ${row.n} | ${row.m} |${flags}${outs} ${row.naive} | ${row.differsFromNaive ? "⚠️" : ""} |`,
       );
     }
     out.push("");

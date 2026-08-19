@@ -8,7 +8,7 @@ The folder a doc lives in is a contract:
 | --- | --- |
 | `docs/` | cross-cutting — true regardless of game variant |
 | `docs/engine/` | shared game engine. A test forbids naming a role, phase or seat count that only some variants have |
-| `docs/variants/<id>/` | one variant's rules. Registering a variant fails the build until its doc exists |
+| `docs/variants/<id>/` | one variant's rules. Registering a variant fails the build until its doc exists. A variant documented but **not yet registered** is allowed here, and must say "not built" in its opening banner — the banner is what earns it |
 | `docs/integrations/` | written to be **handed to another team**. The audience is outside this repo, so it describes a contract, never our internals |
 | `docs/generated/` | derived from code. **Never hand-edit** — run `npm run docs:generate` |
 | `docs/archive/` | frozen at the date in the filename. Historical, deliberately not current |
@@ -22,8 +22,9 @@ The folder a doc lives in is a contract:
 | how a game ends, and when the check runs | [engine/win-check-seam.md](./engine/win-check-seam.md) | which faction wins — that is per-variant |
 | the Japanese rules | [variants/japanese/rules.md](./variants/japanese/rules.md), [win-conditions.md](./variants/japanese/win-conditions.md) | anything about Sports |
 | the Sports rules | [variants/sports/rules.md](./variants/sports/rules.md), [win-conditions.md](./variants/sports/win-conditions.md) | the Japanese baseline it diffs against |
-| what a win is worth in one variant | [variants/japanese/rating.md](./variants/japanese/rating.md), [variants/sports/rating.md](./variants/sports/rating.md) | how the formula works — that is shared |
+| what a win is worth in one variant | [variants/japanese/rating.md](./variants/japanese/rating.md), [variants/sports/rating.md](./variants/sports/rating.md), [variants/serial_killer/rating.md](./variants/serial_killer/rating.md) | how the formula works — that is shared |
 | how to add or change a variant | [engine/variant-architecture.md](./engine/variant-architecture.md) | current values — those are generated |
+| the Serial Killer rules | [variants/serial_killer/rules.md](./variants/serial_killer/rules.md), [win-conditions.md](./variants/serial_killer/win-conditions.md) | anything that exists — this variant is **designed, not built**, and its win formula is TBD |
 | the stack and how data flows | [architecture.md](./architecture.md) | any game rule |
 | Convex patterns, mutations, queries | [backend.md](./backend.md) | React conventions |
 | React and UI conventions | [frontend.md](./frontend.md) | where files go — that is [AGENTS.md](../AGENTS.md) |

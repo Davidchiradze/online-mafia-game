@@ -20,6 +20,7 @@
 /auth/not-verified  [page]  ← src/app/auth/not-verified/page.tsx
 /auth/required  [page]  ← src/app/auth/required/page.tsx
 /dev/deck  [page]  ← src/app/dev/deck/page.tsx
+/dev/variants-selector  [page]  ← src/app/dev/variants-selector/page.tsx
 /game  [layout]  ← src/app/game/layout.tsx
 /game/[id]  [page]  ← src/app/game/[id]/page.tsx
 /leaderboard  [page]  ← src/app/(headquarters)/leaderboard/page.tsx

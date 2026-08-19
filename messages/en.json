@@ -176,7 +176,8 @@
       "faction": {
         "mafia": "Mafia",
         "yakuza": "Yakuza",
-        "citizens": "Citizens"
+        "citizens": "Citizens",
+        "serial_killer": "Serial Killer"
       }
     },
     "errors": {
@@ -382,7 +383,6 @@
     "rolePerformance": "Role Performance",
     "plays": "Plays",
     "winRate": "Win Rate",
-    "filterAllModes": "All Modes",
     "filterAllOutcomes": "All Outcomes",
     "filterVictories": "Victories",
     "filterDefeats": "Defeats",
@@ -407,8 +407,7 @@
     "levelTooltip": "{elo} ELO — Level {level}",
     "toNextLevel": "{points} to Level {level}",
     "tableAvgTooltip": "Table average: {avg}",
-    "tableAvgLabel": "Table avg",
-    "statsForMode": "Stats for"
+    "tableAvgLabel": "Table avg"
   },
   "leaderboard": {
     "pageTitle": "Leaderboard",
@@ -432,7 +431,8 @@
     "gameTypes": {
       "sports_mafia": "Sports Mafia",
       "city_mafia": "City mafia",
-      "japanese_mafia": "Japanese"
+      "japanese_mafia": "Japanese",
+      "serial_killer_mafia": "Serial Killer"
     },
     "phaseTitle": {
       "nightLabel": "N{night} — {label}",
@@ -453,7 +453,8 @@
       "YAKUZA": "Yakuza",
       "DETECTIVE": "Detective",
       "CITIZEN": "Citizen",
-      "DOCTOR": "Doctor"
+      "DOCTOR": "Doctor",
+      "SERIAL_KILLER": "Serial Killer"
     },
     "phases": {
       "game_session_started": "Game Started",
@@ -478,7 +479,9 @@
       "voting": "Voting",
       "repeat": "Next Round",
       "end_game": "Game Over",
-      "phase_transition": "Everyone is asleep"
+      "phase_transition": "Everyone is asleep",
+      "serial_killer_meet": "Serial Killer Meeting",
+      "serial_killer_chooses_target": "Serial Killer Chooses Target"
     },
     "killConfirmTitle": "Kill Player",
     "killConfirmBody": "Are you sure you want to kill Player {seatNumber}? This action cannot be undone.",
@@ -551,6 +554,7 @@
       "endVoting": "End Voting",
       "endYakuzaPhase": "End Yakuza Phase",
       "waitingForYakuza": "Waiting for Yakuza…",
+      "waitingForSerialKiller": "Waiting for Serial Killer…",
       "noFarewellNeeded": "No farewell speeches needed",
       "sayingGoodbye": "Saying goodbye",
       "next": "Next:",
@@ -773,6 +777,7 @@
       "mafiaWinner": "Mafia",
       "yakuzaWinner": "Yakuza and Shogun",
       "citizensWinner": "Citizens",
+      "serialKillerWinner": "Serial Killer",
       "roomClosing": "Room closes in {seconds}s"
     },
     "livekit": {
@@ -815,7 +820,16 @@
     "player": {
       "waitingToStart": "Waiting for players"
     },
-    "chooseLadder": "Choose ladder"
+    "chooseLadder": "Choose ladder",
+    "variantSelector": {
+      "chooseVariant": "Choose game mode",
+      "allVariants": "All",
+      "seats": "{seatCount} seats",
+      "rated": "Rated",
+      "unrated": "Unrated",
+      "unratedHint": "This mode has no ladder yet",
+      "unbuiltHint": "This mode is not available yet"
+    }
   },
   "errors": {
     "_fallback": "Something went wrong. Please try again.",

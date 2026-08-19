@@ -5,25 +5,10 @@ import { useTranslations } from "next-intl";
 import { SPEAKING_STATE, GamePhase } from "@/shared/lib/constants/game";
 import PickerIndicator from "@/features/game-room/components/card-picking/PickerIndicator";
 import PhaseCountdown from "@/features/game-room/components/phase/PhaseCountdown";
+import { useGameFlags } from "@/features/game-room/hooks/game/useGameFlags";
+import { nightPhaseLabelKey } from "@/features/game-room/lib/nightPhase";
 
 type Translator = ReturnType<typeof useTranslations<"game">>;
-
-/**
- * Phases whose label depends on the night number. Each entry swaps in an
- * alternate `phases.*` key when its predicate matches — e.g. on the first night
- * the Mafia don't kill, they only meet and plan.
- */
-const NIGHT_DEPENDENT_PHASE_LABELS: ReadonlyArray<{
-  phase: string;
-  appliesOn: (night: number) => boolean;
-  labelKey: string;
-}> = [
-  {
-    phase: GamePhase.MAFIA_CHOOSES_TARGET,
-    appliesOn: (night) => night === 1,
-    labelKey: "mafia_meets_first_night",
-  },
-];
 
 type GameSessionState = {
   gamePhase: string;
@@ -44,6 +29,7 @@ function getPhaseTitle(
   nightNumber: number | null | undefined,
   isHost: boolean,
   nextPhase: string | undefined,
+  mafiaKillsOnFirstNight: boolean,
 ): string {
   // Neutral sleep buffer: the host sees where the game is headed; players only
   // see the generic "asleep" label (never the next phase — that would leak).
@@ -57,10 +43,9 @@ function getPhaseTitle(
 
   const night = nightNumber ?? 0;
 
-  const override = NIGHT_DEPENDENT_PHASE_LABELS.find(
-    (o) => o.phase === phase && o.appliesOn(night),
-  );
-  const key = `phases.${override?.labelKey ?? phase}`;
+  // Shared with the host panel and the player title — this used to be a private
+  // second copy of the same rule, which is how it stayed Japanese-only.
+  const key = `phases.${nightPhaseLabelKey(phase, night, mafiaKillsOnFirstNight)}`;
   const label = t.has(key) ? t(key) : phase;
 
   const nightPhases: string[] = [
@@ -68,6 +53,7 @@ function getPhaseTitle(
     GamePhase.MAFIA_CHOOSES_TARGET,
     GamePhase.DON_CHECKS_FOR_DETECTIVE,
     GamePhase.YAKUZA_AND_SHOGUN_CHOOSES_TARGET,
+    GamePhase.SERIAL_KILLER_CHOOSES_TARGET,
     GamePhase.DETECTIVE_CHECKS_FOR_MAFIA,
     GamePhase.DOCTOR_HEALS_PLAYER,
   ];
@@ -143,6 +129,9 @@ function getSpeakerInfo(
 
 export default function PhaseTitle(props: PhaseTitleProps) {
   const t = useTranslations("game");
+  // Before the early return below — the `title` branch renders no phase label,
+  // but a hook may not be called conditionally.
+  const { mafiaKillsOnFirstNight } = useGameFlags();
 
   if ("title" in props && props.title) {
     return (
@@ -173,6 +162,7 @@ export default function PhaseTitle(props: PhaseTitleProps) {
     currentNightNumber,
     isHost,
     nextPhase,
+    mafiaKillsOnFirstNight,
   );
   const speakerInfo = getSpeakerInfo(
     t,

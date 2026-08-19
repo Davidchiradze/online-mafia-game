@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { cn } from "@/shared/lib/cn";
 import { gameLogs as historyRefs } from "@convex/refs/history";
 import {
-  roleToFaction,
+  factionForRole,
   factionIcon,
   factionBadgeClass,
 } from "@/shared/lib/game/roleDisplay";
@@ -40,39 +40,43 @@ export default function MatchRosterPanel({
     >
       <div className="overflow-hidden">
         <div className="border-t border-white/5 px-7 py-6">
-            <div className="mb-5 flex items-center justify-between">
-              <h4 className="flex items-center gap-2 font-inter text-xs font-bold uppercase tracking-widest text-zinc-400">
-                <Users className="h-4 w-4 text-blue-400" /> {t("operationRoster")}
-              </h4>
-              {detail?.winMethodLabel && (
-                <span className="font-inter text-xs text-zinc-500">
-                  {detail.winMethodLabel}
-                </span>
-              )}
-            </div>
+          <div className="mb-5 flex items-center justify-between">
+            <h4 className="flex items-center gap-2 font-inter text-xs font-bold uppercase tracking-widest text-zinc-400">
+              <Users className="h-4 w-4 text-blue-400" /> {t("operationRoster")}
+            </h4>
+            {detail?.winMethodLabel && (
+              <span className="font-inter text-xs text-zinc-500">
+                {detail.winMethodLabel}
+              </span>
+            )}
+          </div>
 
-            {detail === undefined ? (
-              <div className="space-y-2">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-9 animate-pulse rounded-lg bg-white/[0.03]"
-                  />
-                ))}
-              </div>
-            ) : detail === null ? (
-              <p className="font-inter text-sm text-zinc-500">
-                {t("rosterUnavailable")}
-              </p>
-            ) : (
-              <div className="grid grid-cols-1 gap-x-12 gap-y-1 md:grid-cols-2">
-                {[...detail.players]
-                  .sort(
-                    (a, b) =>
-                      (a.seatNumber ?? Infinity) - (b.seatNumber ?? Infinity),
-                  )
-                  .map((player) => {
-                  const faction = roleToFaction(player.role);
+          {detail === undefined ? (
+            <div className="space-y-2">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="h-9 animate-pulse rounded-lg bg-white/[0.03]"
+                />
+              ))}
+            </div>
+          ) : detail === null ? (
+            <p className="font-inter text-sm text-zinc-500">
+              {t("rosterUnavailable")}
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 gap-x-12 gap-y-1 md:grid-cols-2">
+              {[...detail.players]
+                .sort(
+                  (a, b) =>
+                    (a.seatNumber ?? Infinity) - (b.seatNumber ?? Infinity),
+                )
+                .map((player) => {
+                  // Variant-aware, and `isWinner` is why it has to be: the
+                  // variant-blind map answers "citizens" for a Serial Killer,
+                  // which would both mis-colour the card and crown them on a
+                  // citizen win.
+                  const faction = factionForRole(detail.gameType, player.role);
                   const Icon = factionIcon(faction);
                   const isYou = player.playerId === currentPlayerId;
                   const isWinner =
@@ -145,10 +149,10 @@ export default function MatchRosterPanel({
                     </div>
                   );
                 })}
-              </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
+    </div>
   );
 }

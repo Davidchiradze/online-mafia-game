@@ -19,32 +19,22 @@
 
 ## Variants
 
-| | `sports_mafia` | `japanese_mafia` |
-| --- | --- | --- |
-| Seats | 10 | 12 |
-| Roles | 4 | 7 |
-| Deck size | 10 | 12 |
-| Factions | mafia, citizens | mafia, yakuza, citizens |
-| Phases | 17 | 20 |
-| Night model | `unanimous-vote` | `single-authority` |
-| `firstDaySingleNomineeSkipsToNight` | yes | — |
-| `hasBestMove` | yes | — |
-| `hasFarewellSpeech` | yes | yes |
-| `hasIntroductionPhase` | — | yes |
-| `thirdFoulSpeakingBan` | yes | — |
+| | `japanese_mafia` | `sports_mafia` | `serial_killer_mafia` |
+| --- | --- | --- | --- |
+| Seats | 12 | 10 | 11 |
+| Roles | 7 | 4 | 6 |
+| Deck size | 12 | 10 | 11 |
+| Factions | mafia, yakuza, citizens | mafia, citizens | mafia, serial_killer, citizens |
+| Phases | 20 | 17 | 21 |
+| Night model | `single-authority` | `unanimous-vote` | `single-authority` |
+| `firstDaySingleNomineeSkipsToNight` | — | yes | — |
+| `hasBestMove` | — | yes | — |
+| `hasFarewellSpeech` | yes | yes | yes |
+| `hasIntroductionPhase` | yes | — | yes |
+| `mafiaKillsOnFirstNight` | — | yes | yes |
+| `thirdFoulSpeakingBan` | — | yes | — |
 
 ## Roles
-
-### `sports_mafia`
-
-| Role | In deck | Faction | Acts at night |
-| --- | --- | --- | --- |
-| `DON` | ×1 | mafia | yes |
-| `MAFIA` | ×2 | mafia | yes |
-| `DETECTIVE` | ×1 | citizens | yes |
-| `CITIZEN` | ×6 | citizens | — |
-
-Deck is 10 cards for 10 seats.
 
 ### `japanese_mafia`
 
@@ -60,33 +50,31 @@ Deck is 10 cards for 10 seats.
 
 Deck is 12 cards for 12 seats.
 
-## Phases
-
 ### `sports_mafia`
 
-| # | Phase | Label | Timer | Awake | Host advances to | Via buffer |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `game_session_started` | Game Started | — | — | server-owned | — |
-| 2 | `picking_roles` | Picking Roles | — | — | `mafia_meet` | — |
-| 3 | `mafia_meet` | Mafia Meeting | 60s | `DON` `MAFIA` | `don_meet` | yes |
-| 4 | `don_meet` | Don Meeting | — | `DON` | `detective_meet` | yes |
-| 5 | `detective_meet` | Detective Meeting | 15s | `DETECTIVE` | `day_phase` | yes |
-| 6 | `day_phase` | Day Phase | — | — | server-owned | — |
-| 7 | `nominated_players_speak` | Self-Justification | — | — | server-owned | — |
-| 8 | `voting` | Voting | — | — | `repeat` | — |
-| 9 | `night_phase` | Night Phase | — | — | `mafia_chooses_target` | — |
-| 10 | `mafia_chooses_target` | Mafia Chooses Target | 20s | `DON` `MAFIA` | `don_checks_for_detective` | — |
-| 11 | `don_checks_for_detective` | Don Checks for Detective | 15s | `DON` | `detective_checks_for_mafia` | yes |
-| 12 | `detective_checks_for_mafia` | Detective Checks for Mafia | 15s | `DETECTIVE` | `farewell_speech` | yes |
-| 13 | `best_move` | Best Move | 30s | — | `farewell_speech` | — |
-| 14 | `farewell_speech` | Farewell Speech | — | — | server-owned | — |
-| 15 | `repeat` | Next Round | — | — | server-owned | — |
-| 16 | `end_game` | Game Over | — | — | server-owned | — |
-| 17 | `phase_transition` | Everyone Asleep | — | — | server-owned | — |
+| Role | In deck | Faction | Acts at night |
+| --- | --- | --- | --- |
+| `DON` | ×1 | mafia | yes |
+| `MAFIA` | ×2 | mafia | yes |
+| `DETECTIVE` | ×1 | citizens | yes |
+| `CITIZEN` | ×6 | citizens | — |
 
-`server-owned` means `nextPhase` returns null: the next phase depends on
-database state, so a Convex mutation decides it. Those edges are listed
-under **Branching edges** below.
+Deck is 10 cards for 10 seats.
+
+### `serial_killer_mafia`
+
+| Role | In deck | Faction | Acts at night |
+| --- | --- | --- | --- |
+| `DON` | ×1 | mafia | yes |
+| `MAFIA` | ×2 | mafia | yes |
+| `SERIAL_KILLER` | ×1 | serial_killer | yes |
+| `DETECTIVE` | ×1 | citizens | yes |
+| `DOCTOR` | ×1 | citizens | yes |
+| `CITIZEN` | ×5 | citizens | — |
+
+Deck is 11 cards for 11 seats.
+
+## Phases
 
 ### `japanese_mafia`
 
@@ -117,63 +105,99 @@ under **Branching edges** below.
 database state, so a Convex mutation decides it. Those edges are listed
 under **Branching edges** below.
 
+### `sports_mafia`
+
+| # | Phase | Label | Timer | Awake | Host advances to | Via buffer |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `game_session_started` | Game Started | — | — | server-owned | — |
+| 2 | `picking_roles` | Picking Roles | — | — | `mafia_meet` | — |
+| 3 | `mafia_meet` | Mafia Meeting | 60s | `DON` `MAFIA` | `don_meet` | yes |
+| 4 | `don_meet` | Don Meeting | — | `DON` | `detective_meet` | yes |
+| 5 | `detective_meet` | Detective Meeting | 15s | `DETECTIVE` | `day_phase` | yes |
+| 6 | `day_phase` | Day Phase | — | — | server-owned | — |
+| 7 | `nominated_players_speak` | Self-Justification | — | — | server-owned | — |
+| 8 | `voting` | Voting | — | — | `repeat` | — |
+| 9 | `night_phase` | Night Phase | — | — | `mafia_chooses_target` | — |
+| 10 | `mafia_chooses_target` | Mafia Chooses Target | 20s | `DON` `MAFIA` | `don_checks_for_detective` | — |
+| 11 | `don_checks_for_detective` | Don Checks for Detective | 15s | `DON` | `detective_checks_for_mafia` | yes |
+| 12 | `detective_checks_for_mafia` | Detective Checks for Mafia | 15s | `DETECTIVE` | `farewell_speech` | yes |
+| 13 | `best_move` | Best Move | 30s | — | `farewell_speech` | — |
+| 14 | `farewell_speech` | Farewell Speech | — | — | server-owned | — |
+| 15 | `repeat` | Next Round | — | — | server-owned | — |
+| 16 | `end_game` | Game Over | — | — | server-owned | — |
+| 17 | `phase_transition` | Everyone Asleep | — | — | server-owned | — |
+
+`server-owned` means `nextPhase` returns null: the next phase depends on
+database state, so a Convex mutation decides it. Those edges are listed
+under **Branching edges** below.
+
+### `serial_killer_mafia`
+
+| # | Phase | Label | Timer | Awake | Host advances to | Via buffer |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `game_session_started` | Game Started | — | — | server-owned | — |
+| 2 | `picking_roles` | Picking Roles | — | — | `mafia_meet` | — |
+| 3 | `mafia_meet` | Mafia Meeting | 60s | `DON` `MAFIA` | `don_meet` | yes |
+| 4 | `don_meet` | Don Meeting | — | `DON` | `serial_killer_meet` | yes |
+| 5 | `serial_killer_meet` | Serial Killer Meeting | 40s | `SERIAL_KILLER` | `detective_meet` | yes |
+| 6 | `detective_meet` | Detective Meeting | 15s | `DETECTIVE` | `doctor_meet` | yes |
+| 7 | `doctor_meet` | Doctor Meeting | 15s | `DOCTOR` | `introduction_phase` | yes |
+| 8 | `introduction_phase` | Introduction | — | — | server-owned | — |
+| 9 | `night_phase` | Night Phase | — | — | `mafia_chooses_target` | — |
+| 10 | `mafia_chooses_target` | Mafia Chooses Target | 20s | `DON` `MAFIA` | `don_checks_for_detective` | — |
+| 11 | `don_checks_for_detective` | Don Checks for Detective | 15s | `DON` | `serial_killer_chooses_target` | yes |
+| 12 | `serial_killer_chooses_target` | Serial Killer Chooses Target | 20s | `SERIAL_KILLER` | `detective_checks_for_mafia` | yes |
+| 13 | `detective_checks_for_mafia` | Detective Checks for Mafia | 15s | `DETECTIVE` | `doctor_heals_player` | yes |
+| 14 | `doctor_heals_player` | Doctor Heals | 15s | `DOCTOR` | `farewell_speech` | yes |
+| 15 | `farewell_speech` | Farewell Speech | — | — | server-owned | — |
+| 16 | `day_phase` | Day Phase | — | — | server-owned | — |
+| 17 | `nominated_players_speak` | Self-Justification | — | — | server-owned | — |
+| 18 | `voting` | Voting | — | — | `repeat` | — |
+| 19 | `repeat` | Next Round | — | — | server-owned | — |
+| 20 | `end_game` | Game Over | — | — | server-owned | — |
+| 21 | `phase_transition` | Everyone Asleep | — | — | server-owned | — |
+
+`server-owned` means `nextPhase` returns null: the next phase depends on
+database state, so a Convex mutation decides it. Those edges are listed
+under **Branching edges** below.
+
 ## Phase universe
 
 Three phase lists exist and they are not the same length:
 `convex/lib/constants.ts` (20),
-`src/shared/lib/constants/game.ts` (22),
+`src/shared/lib/constants/game.ts` (24),
 and each variant's own `definition.phases`.
 
-| Phase | backend list | UI list | `sports_mafia` | `japanese_mafia` | verdict |
-| --- | --- | --- | --- | --- | --- |
-| `best_move` | — | yes | yes | — | variant-specific |
-| `day_phase` | yes | yes | yes | yes | shared |
-| `detective_checks_for_mafia` | yes | yes | yes | yes | shared |
-| `detective_meet` | yes | yes | yes | yes | shared |
-| `doctor_heals_player` | yes | yes | — | yes | variant-specific |
-| `doctor_meet` | yes | yes | — | yes | variant-specific |
-| `don_checks_for_detective` | yes | yes | yes | yes | shared |
-| `don_meet` | yes | yes | yes | yes | shared |
-| `end_game` | yes | yes | yes | yes | shared |
-| `farewell_speech` | yes | yes | yes | yes | shared |
-| `game_session_started` | yes | yes | yes | yes | shared |
-| `introduction_phase` | yes | yes | — | yes | variant-specific |
-| `mafia_chooses_target` | yes | yes | yes | yes | shared |
-| `mafia_meet` | yes | yes | yes | yes | shared |
-| `night_phase` | yes | yes | yes | yes | shared |
-| `nominated_players_speak` | yes | yes | yes | yes | shared |
-| `phase_transition` | — | yes | yes | — | ⚠️ reachable in a flow that omits it |
-| `picking_roles` | yes | yes | yes | yes | shared |
-| `repeat` | yes | yes | yes | yes | shared |
-| `voting` | yes | yes | yes | yes | shared |
-| `yakuda_shogun_meet` | yes | yes | — | yes | variant-specific |
-| `yakuza_and_shogun_chooses_target` | yes | yes | — | yes | variant-specific |
+| Phase | backend list | UI list | `japanese_mafia` | `sports_mafia` | `serial_killer_mafia` | verdict |
+| --- | --- | --- | --- | --- | --- | --- |
+| `best_move` | — | yes | — | yes | — | variant-specific |
+| `day_phase` | yes | yes | yes | yes | yes | shared |
+| `detective_checks_for_mafia` | yes | yes | yes | yes | yes | shared |
+| `detective_meet` | yes | yes | yes | yes | yes | shared |
+| `doctor_heals_player` | yes | yes | yes | — | yes | variant-specific |
+| `doctor_meet` | yes | yes | yes | — | yes | variant-specific |
+| `don_checks_for_detective` | yes | yes | yes | yes | yes | shared |
+| `don_meet` | yes | yes | yes | yes | yes | shared |
+| `end_game` | yes | yes | yes | yes | yes | shared |
+| `farewell_speech` | yes | yes | yes | yes | yes | shared |
+| `game_session_started` | yes | yes | yes | yes | yes | shared |
+| `introduction_phase` | yes | yes | yes | — | yes | variant-specific |
+| `mafia_chooses_target` | yes | yes | yes | yes | yes | shared |
+| `mafia_meet` | yes | yes | yes | yes | yes | shared |
+| `night_phase` | yes | yes | yes | yes | yes | shared |
+| `nominated_players_speak` | yes | yes | yes | yes | yes | shared |
+| `phase_transition` | — | yes | — | yes | yes | ⚠️ reachable in a flow that omits it |
+| `picking_roles` | yes | yes | yes | yes | yes | shared |
+| `repeat` | yes | yes | yes | yes | yes | shared |
+| `serial_killer_chooses_target` | — | yes | — | — | yes | variant-specific |
+| `serial_killer_meet` | — | yes | — | — | yes | variant-specific |
+| `voting` | yes | yes | yes | yes | yes | shared |
+| `yakuda_shogun_meet` | yes | yes | yes | — | — | variant-specific |
+| `yakuza_and_shogun_chooses_target` | yes | yes | yes | — | — | variant-specific |
 
 ## State machine
 
 Solid = derived from `definition.nextPhase`. Dotted = branch owned by a Convex mutation.
-
-### `sports_mafia`
-
-```mermaid
-stateDiagram-v2
-    picking_roles --> mafia_meet
-    mafia_meet --> don_meet : via buffer
-    don_meet --> detective_meet : via buffer
-    detective_meet --> day_phase : via buffer
-    voting --> repeat
-    night_phase --> mafia_chooses_target
-    mafia_chooses_target --> don_checks_for_detective
-    don_checks_for_detective --> detective_checks_for_mafia : via buffer
-    detective_checks_for_mafia --> farewell_speech : via buffer
-    best_move --> farewell_speech
-    day_phase --> night_phase : first day round AND exactly one nominee
-    day_phase --> farewell_speech : later day round AND exactly one nominee — eliminated without a vote
-    day_phase --> voting : self-justification skipped, or exactly one nominee
-    night_phase --> day_phase : night resolved to zero kills — the farewell is skipped
-    night_phase --> best_move : variant grants best move AND the victim is eligible
-    voting --> night_phase : repeated tie — nobody is eliminated
-```
 
 ### `japanese_mafia`
 
@@ -197,53 +221,48 @@ stateDiagram-v2
     voting --> night_phase : repeated tie — nobody is eliminated
 ```
 
-## Win conditions
-
 ### `sports_mafia`
 
-Every reachable alive-roster was enumerated and collapsed by the smallest
-sufficient key. The key had to include **nothing beyond N and m** —
-that is a derived result, not an assumption: those are exactly the roles
-whose presence changes the answer.
+```mermaid
+stateDiagram-v2
+    picking_roles --> mafia_meet
+    mafia_meet --> don_meet : via buffer
+    don_meet --> detective_meet : via buffer
+    detective_meet --> day_phase : via buffer
+    voting --> repeat
+    night_phase --> mafia_chooses_target
+    mafia_chooses_target --> don_checks_for_detective
+    don_checks_for_detective --> detective_checks_for_mafia : via buffer
+    detective_checks_for_mafia --> farewell_speech : via buffer
+    best_move --> farewell_speech
+    day_phase --> night_phase : first day round AND exactly one nominee
+    day_phase --> farewell_speech : later day round AND exactly one nominee — eliminated without a vote
+    day_phase --> voting : self-justification skipped, or exactly one nominee
+    night_phase --> day_phase : night resolved to zero kills — the farewell is skipped
+    night_phase --> best_move : variant grants best move AND the victim is eligible
+    voting --> night_phase : repeated tie — nobody is eliminated
+```
 
-`N` = alive players, `m` = alive mafia-faction players.
-**0 of 32 rows disagree with naive parity** (`2m ≥ N`),
-which is why a parity rule cannot be used as a shortcut.
+### `serial_killer_mafia`
 
-| N | m | beforeNight | beforeDay | naive parity | ≠ |
-| --- | --- | --- | --- | --- | --- |
-| 0 | 0 | no_contest | no_contest | no_contest |  |
-| 1 | 0 | citizens | citizens | citizens |  |
-| 1 | 1 | mafia | mafia | mafia |  |
-| 2 | 0 | citizens | citizens | citizens |  |
-| 2 | 1 | mafia | mafia | mafia |  |
-| 2 | 2 | mafia | mafia | mafia |  |
-| 3 | 0 | citizens | citizens | citizens |  |
-| 3 | 1 | continue | continue | continue |  |
-| 3 | 2 | mafia | mafia | mafia |  |
-| 3 | 3 | mafia | mafia | mafia |  |
-| 4 | 0 | citizens | citizens | citizens |  |
-| 4 | 1 | continue | continue | continue |  |
-| 4 | 2 | mafia | mafia | mafia |  |
-| 4 | 3 | mafia | mafia | mafia |  |
-| 5 | 0 | citizens | citizens | citizens |  |
-| 5 | 1 | continue | continue | continue |  |
-| 5 | 2 | continue | continue | continue |  |
-| 5 | 3 | mafia | mafia | mafia |  |
-| 6 | 0 | citizens | citizens | citizens |  |
-| 6 | 1 | continue | continue | continue |  |
-| 6 | 2 | continue | continue | continue |  |
-| 6 | 3 | mafia | mafia | mafia |  |
-| 7 | 0 | citizens | citizens | citizens |  |
-| 7 | 1 | continue | continue | continue |  |
-| 7 | 2 | continue | continue | continue |  |
-| 7 | 3 | continue | continue | continue |  |
-| 8 | 1 | continue | continue | continue |  |
-| 8 | 2 | continue | continue | continue |  |
-| 8 | 3 | continue | continue | continue |  |
-| 9 | 2 | continue | continue | continue |  |
-| 9 | 3 | continue | continue | continue |  |
-| 10 | 3 | continue | continue | continue |  |
+```mermaid
+stateDiagram-v2
+    picking_roles --> mafia_meet
+    mafia_meet --> don_meet : via buffer
+    don_meet --> serial_killer_meet : via buffer
+    serial_killer_meet --> detective_meet : via buffer
+    detective_meet --> doctor_meet : via buffer
+    doctor_meet --> introduction_phase : via buffer
+    night_phase --> mafia_chooses_target
+    mafia_chooses_target --> don_checks_for_detective
+    don_checks_for_detective --> serial_killer_chooses_target : via buffer
+    serial_killer_chooses_target --> detective_checks_for_mafia : via buffer
+    detective_checks_for_mafia --> doctor_heals_player : via buffer
+    doctor_heals_player --> farewell_speech : via buffer
+    voting --> repeat
+```
+
+## Win conditions
 
 ### `japanese_mafia`
 
@@ -483,7 +502,197 @@ which is why a parity rule cannot be used as a shortcut.
 | 11 | 3 | yes | yes | yes | continue | continue | continue |  |
 | 12 | 3 | yes | yes | yes | continue | continue | continue |  |
 
+### `sports_mafia`
+
+Every reachable alive-roster was enumerated and collapsed by the smallest
+sufficient key. The key had to include **nothing beyond N and m** —
+that is a derived result, not an assumption: those are exactly the roles
+whose presence changes the answer.
+
+`N` = alive players, `m` = alive mafia-faction players.
+**0 of 32 rows disagree with naive parity** (`2m ≥ N`),
+which is why a parity rule cannot be used as a shortcut.
+
+| N | m | beforeNight | beforeDay | naive parity | ≠ |
+| --- | --- | --- | --- | --- | --- |
+| 0 | 0 | no_contest | no_contest | no_contest |  |
+| 1 | 0 | citizens | citizens | citizens |  |
+| 1 | 1 | mafia | mafia | mafia |  |
+| 2 | 0 | citizens | citizens | citizens |  |
+| 2 | 1 | mafia | mafia | mafia |  |
+| 2 | 2 | mafia | mafia | mafia |  |
+| 3 | 0 | citizens | citizens | citizens |  |
+| 3 | 1 | continue | continue | continue |  |
+| 3 | 2 | mafia | mafia | mafia |  |
+| 3 | 3 | mafia | mafia | mafia |  |
+| 4 | 0 | citizens | citizens | citizens |  |
+| 4 | 1 | continue | continue | continue |  |
+| 4 | 2 | mafia | mafia | mafia |  |
+| 4 | 3 | mafia | mafia | mafia |  |
+| 5 | 0 | citizens | citizens | citizens |  |
+| 5 | 1 | continue | continue | continue |  |
+| 5 | 2 | continue | continue | continue |  |
+| 5 | 3 | mafia | mafia | mafia |  |
+| 6 | 0 | citizens | citizens | citizens |  |
+| 6 | 1 | continue | continue | continue |  |
+| 6 | 2 | continue | continue | continue |  |
+| 6 | 3 | mafia | mafia | mafia |  |
+| 7 | 0 | citizens | citizens | citizens |  |
+| 7 | 1 | continue | continue | continue |  |
+| 7 | 2 | continue | continue | continue |  |
+| 7 | 3 | continue | continue | continue |  |
+| 8 | 1 | continue | continue | continue |  |
+| 8 | 2 | continue | continue | continue |  |
+| 8 | 3 | continue | continue | continue |  |
+| 9 | 2 | continue | continue | continue |  |
+| 9 | 3 | continue | continue | continue |  |
+| 10 | 3 | continue | continue | continue |  |
+
+### `serial_killer_mafia`
+
+Every reachable alive-roster was enumerated and collapsed by the smallest
+sufficient key. The key had to include `SERIAL_KILLER`, `DOCTOR` —
+that is a derived result, not an assumption: those are exactly the roles
+whose presence changes the answer.
+
+`N` = alive players, `m` = alive mafia-faction players.
+**18 of 112 rows disagree with naive parity** (`2m ≥ N`),
+which is why a parity rule cannot be used as a shortcut.
+
+This variant's outcome also depends on state the alive roster does not
+carry, so each context is split across it. Two rosters can be identical
+and still resolve differently.
+
+| N | m | SERIAL_KILLER | DOCTOR | beforeNight (shot held) | beforeDay (shot held) | beforeNight (shot spent) | beforeDay (shot spent) | naive parity | ≠ |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 0 | 0 | — | — | no_contest | no_contest | no_contest | no_contest | no_contest |  |
+| 1 | 0 | — | — | citizens | citizens | citizens | citizens | citizens |  |
+| 1 | 0 | — | yes | citizens | citizens | citizens | citizens | citizens |  |
+| 1 | 0 | yes | — | serial_killer | serial_killer | serial_killer | serial_killer | citizens | ⚠️ |
+| 1 | 1 | — | — | mafia | mafia | mafia | mafia | mafia |  |
+| 2 | 0 | — | — | citizens | citizens | citizens | citizens | citizens |  |
+| 2 | 0 | — | yes | citizens | citizens | citizens | citizens | citizens |  |
+| 2 | 0 | yes | — | serial_killer | serial_killer | serial_killer | serial_killer | citizens | ⚠️ |
+| 2 | 0 | yes | yes | serial_killer | serial_killer | serial_killer | serial_killer | citizens | ⚠️ |
+| 2 | 1 | — | — | mafia | mafia | mafia | mafia | mafia |  |
+| 2 | 1 | — | yes | mafia | mafia | mafia | mafia | mafia |  |
+| 2 | 1 | yes | — | serial_killer | serial_killer | serial_killer | serial_killer | mafia | ⚠️ |
+| 2 | 2 | — | — | mafia | mafia | mafia | mafia | mafia |  |
+| 3 | 0 | — | — | citizens | citizens | citizens | citizens | citizens |  |
+| 3 | 0 | — | yes | citizens | citizens | citizens | citizens | citizens |  |
+| 3 | 0 | yes | — | continue | continue | continue | continue | citizens | ⚠️ |
+| 3 | 0 | yes | yes | continue | continue | continue | continue | citizens | ⚠️ |
+| 3 | 1 | — | — | continue | continue | continue | continue | continue |  |
+| 3 | 1 | — | yes | continue | continue | continue | continue | continue |  |
+| 3 | 1 | yes | — | continue | continue | continue | continue | continue |  |
+| 3 | 1 | yes | yes | continue | continue | continue | continue | continue |  |
+| 3 | 2 | — | — | mafia | mafia | mafia | mafia | mafia |  |
+| 3 | 2 | — | yes | mafia | mafia | mafia | mafia | mafia |  |
+| 3 | 2 | yes | — | mafia | mafia | mafia | mafia | mafia |  |
+| 3 | 3 | — | — | mafia | mafia | mafia | mafia | mafia |  |
+| 4 | 0 | — | — | citizens | citizens | citizens | citizens | citizens |  |
+| 4 | 0 | — | yes | citizens | citizens | citizens | citizens | citizens |  |
+| 4 | 0 | yes | — | continue | continue | continue | continue | citizens | ⚠️ |
+| 4 | 0 | yes | yes | continue | continue | continue | continue | citizens | ⚠️ |
+| 4 | 1 | — | — | continue | continue | continue | continue | continue |  |
+| 4 | 1 | — | yes | continue | continue | continue | continue | continue |  |
+| 4 | 1 | yes | — | continue | continue | continue | continue | continue |  |
+| 4 | 1 | yes | yes | continue | continue | continue | continue | continue |  |
+| 4 | 2 | — | — | mafia | mafia | mafia | mafia | mafia |  |
+| 4 | 2 | — | yes | mafia | mafia | mafia | mafia | mafia |  |
+| 4 | 2 | yes | — | continue | continue | mafia | mafia | mafia | ⚠️ |
+| 4 | 2 | yes | yes | continue | continue | mafia | mafia | mafia | ⚠️ |
+| 4 | 3 | — | — | mafia | mafia | mafia | mafia | mafia |  |
+| 4 | 3 | — | yes | mafia | mafia | mafia | mafia | mafia |  |
+| 4 | 3 | yes | — | mafia | mafia | mafia | mafia | mafia |  |
+| 5 | 0 | — | — | citizens | citizens | citizens | citizens | citizens |  |
+| 5 | 0 | — | yes | citizens | citizens | citizens | citizens | citizens |  |
+| 5 | 0 | yes | — | continue | continue | continue | continue | citizens | ⚠️ |
+| 5 | 0 | yes | yes | continue | continue | continue | continue | citizens | ⚠️ |
+| 5 | 1 | — | — | continue | continue | continue | continue | continue |  |
+| 5 | 1 | — | yes | continue | continue | continue | continue | continue |  |
+| 5 | 1 | yes | — | continue | continue | continue | continue | continue |  |
+| 5 | 1 | yes | yes | continue | continue | continue | continue | continue |  |
+| 5 | 2 | — | — | continue | continue | continue | continue | continue |  |
+| 5 | 2 | — | yes | continue | continue | continue | continue | continue |  |
+| 5 | 2 | yes | — | continue | continue | continue | continue | continue |  |
+| 5 | 2 | yes | yes | continue | continue | continue | continue | continue |  |
+| 5 | 3 | — | — | mafia | mafia | mafia | mafia | mafia |  |
+| 5 | 3 | — | yes | mafia | mafia | mafia | mafia | mafia |  |
+| 5 | 3 | yes | — | mafia | mafia | mafia | mafia | mafia |  |
+| 5 | 3 | yes | yes | mafia | mafia | mafia | mafia | mafia |  |
+| 6 | 0 | — | — | citizens | citizens | citizens | citizens | citizens |  |
+| 6 | 0 | — | yes | citizens | citizens | citizens | citizens | citizens |  |
+| 6 | 0 | yes | — | continue | continue | continue | continue | citizens | ⚠️ |
+| 6 | 0 | yes | yes | continue | continue | continue | continue | citizens | ⚠️ |
+| 6 | 1 | — | — | continue | continue | continue | continue | continue |  |
+| 6 | 1 | — | yes | continue | continue | continue | continue | continue |  |
+| 6 | 1 | yes | — | continue | continue | continue | continue | continue |  |
+| 6 | 1 | yes | yes | continue | continue | continue | continue | continue |  |
+| 6 | 2 | — | — | continue | continue | continue | continue | continue |  |
+| 6 | 2 | — | yes | continue | continue | continue | continue | continue |  |
+| 6 | 2 | yes | — | continue | continue | continue | continue | continue |  |
+| 6 | 2 | yes | yes | continue | continue | continue | continue | continue |  |
+| 6 | 3 | — | — | mafia | mafia | mafia | mafia | mafia |  |
+| 6 | 3 | — | yes | mafia | mafia | mafia | mafia | mafia |  |
+| 6 | 3 | yes | — | mafia | mafia | mafia | mafia | mafia |  |
+| 6 | 3 | yes | yes | continue | continue | mafia | mafia | mafia | ⚠️ |
+| 7 | 0 | — | yes | citizens | citizens | citizens | citizens | citizens |  |
+| 7 | 0 | yes | — | continue | continue | continue | continue | citizens | ⚠️ |
+| 7 | 0 | yes | yes | continue | continue | continue | continue | citizens | ⚠️ |
+| 7 | 1 | — | — | continue | continue | continue | continue | continue |  |
+| 7 | 1 | — | yes | continue | continue | continue | continue | continue |  |
+| 7 | 1 | yes | — | continue | continue | continue | continue | continue |  |
+| 7 | 1 | yes | yes | continue | continue | continue | continue | continue |  |
+| 7 | 2 | — | — | continue | continue | continue | continue | continue |  |
+| 7 | 2 | — | yes | continue | continue | continue | continue | continue |  |
+| 7 | 2 | yes | — | continue | continue | continue | continue | continue |  |
+| 7 | 2 | yes | yes | continue | continue | continue | continue | continue |  |
+| 7 | 3 | — | — | continue | continue | continue | continue | continue |  |
+| 7 | 3 | — | yes | continue | continue | continue | continue | continue |  |
+| 7 | 3 | yes | — | continue | continue | continue | continue | continue |  |
+| 7 | 3 | yes | yes | continue | continue | continue | continue | continue |  |
+| 8 | 0 | yes | yes | continue | continue | continue | continue | citizens | ⚠️ |
+| 8 | 1 | — | yes | continue | continue | continue | continue | continue |  |
+| 8 | 1 | yes | — | continue | continue | continue | continue | continue |  |
+| 8 | 1 | yes | yes | continue | continue | continue | continue | continue |  |
+| 8 | 2 | — | — | continue | continue | continue | continue | continue |  |
+| 8 | 2 | — | yes | continue | continue | continue | continue | continue |  |
+| 8 | 2 | yes | — | continue | continue | continue | continue | continue |  |
+| 8 | 2 | yes | yes | continue | continue | continue | continue | continue |  |
+| 8 | 3 | — | — | continue | continue | continue | continue | continue |  |
+| 8 | 3 | — | yes | continue | continue | continue | continue | continue |  |
+| 8 | 3 | yes | — | continue | continue | continue | continue | continue |  |
+| 8 | 3 | yes | yes | continue | continue | continue | continue | continue |  |
+| 9 | 1 | yes | yes | continue | continue | continue | continue | continue |  |
+| 9 | 2 | — | yes | continue | continue | continue | continue | continue |  |
+| 9 | 2 | yes | — | continue | continue | continue | continue | continue |  |
+| 9 | 2 | yes | yes | continue | continue | continue | continue | continue |  |
+| 9 | 3 | — | — | continue | continue | continue | continue | continue |  |
+| 9 | 3 | — | yes | continue | continue | continue | continue | continue |  |
+| 9 | 3 | yes | — | continue | continue | continue | continue | continue |  |
+| 9 | 3 | yes | yes | continue | continue | continue | continue | continue |  |
+| 10 | 2 | yes | yes | continue | continue | continue | continue | continue |  |
+| 10 | 3 | — | yes | continue | continue | continue | continue | continue |  |
+| 10 | 3 | yes | — | continue | continue | continue | continue | continue |  |
+| 10 | 3 | yes | yes | continue | continue | continue | continue | continue |  |
+| 11 | 3 | yes | yes | continue | continue | continue | continue | continue |  |
+
 ## Night model
+
+### `japanese_mafia`
+
+Kind: `single-authority`. Acting roles: `DON`, `MAFIA`, `SHOGUN`, `YAKUZA`, `DETECTIVE`, `DOCTOR`.
+
+| Night state | Resolves to seats |
+| --- | --- |
+| mafia only | 3 |
+| mafia target healed | nobody |
+| two factions, distinct targets | 3, 5 |
+| two factions, same target | 3 |
+| nothing chosen | nobody |
+| unanimous private picks | nobody |
+| split private picks | nobody |
 
 ### `sports_mafia`
 
@@ -499,15 +708,15 @@ Kind: `unanimous-vote`. Acting roles: `DON`, `MAFIA`, `DETECTIVE`.
 | unanimous private picks | 4 |
 | split private picks | nobody |
 
-### `japanese_mafia`
+### `serial_killer_mafia`
 
-Kind: `single-authority`. Acting roles: `DON`, `MAFIA`, `SHOGUN`, `YAKUZA`, `DETECTIVE`, `DOCTOR`.
+Kind: `single-authority`. Acting roles: `DON`, `MAFIA`, `SERIAL_KILLER`, `DETECTIVE`, `DOCTOR`.
 
 | Night state | Resolves to seats |
 | --- | --- |
 | mafia only | 3 |
 | mafia target healed | nobody |
-| two factions, distinct targets | 3, 5 |
+| two factions, distinct targets | 3 |
 | two factions, same target | 3 |
 | nothing chosen | nobody |
 | unanimous private picks | nobody |

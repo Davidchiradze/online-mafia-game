@@ -23,7 +23,7 @@ import type { Doc, Id } from "../_generated/dataModel";
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-type Faction = "mafia" | "yakuza" | "citizens";
+type Faction = "mafia" | "yakuza" | "citizens" | "serial_killer";
 
 /** Headline counts for the KPI strip. Requires USER_VIEW (admin panel roles). */
 export const overviewKpis = query({
@@ -156,6 +156,7 @@ export const gameAnalytics = query({
       mafia: 0,
       yakuza: 0,
       citizens: 0,
+      serial_killer: 0,
     };
     let noWinner = 0;
 

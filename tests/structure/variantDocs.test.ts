@@ -51,6 +51,31 @@ const registered = GAME_TYPES.flatMap((id) => {
 /** `japanese_mafia` → `japanese`. A variant not named `*_mafia` keeps its id. */
 const docSlug = (id: string) => id.replace(/_mafia$/, "");
 
+/**
+ * Variant docs that may sit under `docs/variants/` with NO definition
+ * registered — a variant designed but not yet built.
+ *
+ * The coverage check's mirror image normally forbids this, because a doc for an
+ * uncreatable variant is a reader trap. The exemption exists because the
+ * alternative is worse: parking a designed variant under `docs/proposals/`
+ * splits one variant's documentation away from its siblings, and the folder it
+ * eventually belongs in is the folder people look in.
+ *
+ * The listing does NOT grant the exemption on its own — the doc has to declare
+ * itself unbuilt in its opening banner (checked below), exactly as
+ * `docs/archive/*` earns its path-check exemption in
+ * tests/structure/docLinks.test.ts by carrying a frozen banner. Without that,
+ * dropping a file in here would be a way to dodge the guard rather than a way
+ * to stage a design.
+ *
+ * TO ADD: a variant with a written design and no definition yet.
+ * TO REMOVE: the moment it registers — enforced as a stale entry below.
+ */
+const UNREGISTERED_VARIANT_DOCS = new Map<string, string>([]);
+
+/** The banner that earns a slot in the map above. */
+const UNBUILT_BANNER = /\bnot built\b/i;
+
 // ---------------------------------------------------------------------------
 // Coverage
 // ---------------------------------------------------------------------------
@@ -62,7 +87,7 @@ describe("variant documentation coverage", () => {
     expect(
       registered.map((v) => v.id).sort(),
       "the registry probe found no variants — the firewall below would be vacuous",
-    ).toEqual(["japanese_mafia", "sports_mafia"]);
+    ).toEqual(["japanese_mafia", "serial_killer_mafia", "sports_mafia"]);
   });
 
   it("documents every registered variant", () => {
@@ -81,14 +106,55 @@ describe("variant documentation coverage", () => {
 
   it("has no variant docs for unregistered variants", () => {
     // The reverse direction. A doc for a variant nobody registered is a reader
-    // trap: it describes a game that cannot be created.
+    // trap: it describes a game that cannot be created. Designed-but-unbuilt
+    // variants are exempt, and pay for it with a banner (next test).
     const slugs = new Set(registered.map(({ id }) => docSlug(id)));
     const orphans = readdirSync(p("docs/variants"), { withFileTypes: true })
       .map((e) => e.name.replace(/\.md$/, ""))
-      .filter((name) => !slugs.has(name))
+      .filter((name) => !slugs.has(name) && !UNREGISTERED_VARIANT_DOCS.has(name))
       .map((name) => `docs/variants/${name} → no registered variant resolves to this`);
 
     expect(orphans, "these variant docs describe a variant the registry does not know").toEqual([]);
+  });
+
+  it("makes every unregistered variant doc announce that it is not built", () => {
+    // The banner IS the exemption. A reader who lands on one of these files
+    // must learn in the first paragraph that none of it ships — otherwise it
+    // reads exactly like its registered siblings, which is the trap the
+    // coverage mirror exists to prevent.
+    const unmarked: string[] = [];
+    for (const slug of UNREGISTERED_VARIANT_DOCS.keys()) {
+      const dir = p(`docs/variants/${slug}`);
+      const files = existsSync(dir)
+        ? readdirSync(dir)
+            .filter((f) => f.endsWith(".md"))
+            .map((f) => `docs/variants/${slug}/${f}`)
+        : [`docs/variants/${slug}.md`];
+      for (const repoPath of files) {
+        if (!existsSync(p(repoPath))) continue; // reported as stale below
+        const text = readFileSync(p(repoPath), "utf8");
+        if (!UNBUILT_BANNER.test(text.slice(0, 600))) unmarked.push(repoPath);
+      }
+    }
+    expect(
+      unmarked,
+      'an unregistered variant doc does not say "not built" up front — it reads as a shipped variant',
+    ).toEqual([]);
+  });
+
+  it("has no stale unregistered-variant exemptions", () => {
+    const registeredSlugs = new Set(registered.map(({ id }) => docSlug(id)));
+    const stale = [
+      ...[...UNREGISTERED_VARIANT_DOCS.keys()]
+        .filter((slug) => registeredSlugs.has(slug))
+        .map((slug) => `${slug} — now REGISTERED, delete this entry and drop the "not built" banners`),
+      ...[...UNREGISTERED_VARIANT_DOCS.keys()]
+        .filter(
+          (slug) => !existsSync(p(`docs/variants/${slug}`)) && !existsSync(p(`docs/variants/${slug}.md`)),
+        )
+        .map((slug) => `${slug} — no such doc, delete this entry`),
+    ];
+    expect(stale, "exempted but no longer needed — delete these").toEqual([]);
   });
 });
 
@@ -150,7 +216,12 @@ describe("engine docs stay variant-agnostic", () => {
   it("derives the banned vocabulary from the registry", () => {
     // Pinned so the firewall cannot quietly become a no-op. If a variant gains
     // or loses a role, this is where you find out.
-    expect(VARIANT_ROLES).toEqual(["DOCTOR", "SHOGUN", "YAKUZA"]);
+    expect(VARIANT_ROLES).toEqual([
+      "DOCTOR",
+      "SERIAL_KILLER",
+      "SHOGUN",
+      "YAKUZA",
+    ]);
     expect(bannedPhases.length, "no variant-specific phases derived — firewall would be toothless")
       .toBeGreaterThan(0);
   });

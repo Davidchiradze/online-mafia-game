@@ -44,14 +44,29 @@
       "Bash(curl -s -i --max-time 3 http://localhost:8000/api/auth/user-by-session -H 'X-Internal-Api-Key: fake-test-key' -H 'X-Session-Id: fake-session-id-for-testing' -H 'Accept: application/json')",
       "Edit(/.claude/skills/mafia-rules/**)",
       "Edit(/.claude/skills/add-game-variant/**)",
-      "Bash(git --no-pager diff convex/lib/constants.ts convex/migrations.ts)"
+      "Bash(git --no-pager diff convex/lib/constants.ts convex/migrations.ts)",
+      "Bash(cp /Users/david/Desktop/online-mafia/docs/variants/serial_killer/rating.md /tmp/sk-rating.bak)",
+      "Bash(sed -i '' 's/NOT BUILT/SHIPPED/' /Users/david/Desktop/online-mafia/docs/variants/serial_killer/rating.md)",
+      "Bash(sed -i *)",
+      "Bash(git --no-pager diff --stat -- . ':!.claude/settings.json')",
+      "Bash(git --no-pager diff convex/games/core/roles.ts)",
+      "Bash(git --no-pager diff convex/lobby/games.ts convex/lib/games.ts src/shared/lib/constants/game.ts src/shared/lib/game/visibility.ts)",
+      "Bash(git --no-pager show 213dff8 --stat --format=\"\")",
+      "Bash(git --no-pager show 213dff8 --format=\"\" -- convex/lobby/games.ts src/shared/lib/constants/game.ts)",
+      "Bash(git --no-pager show 213dff8 --format=\"\" -- convex/games/core/roles.ts convex/lib/games.ts)",
+      "Bash(git --no-pager show 213dff8 --format=\"\" -- src/shared/lib/game/visibility.ts src/features/game-room/components/participant/ParticipantRoleBadge.tsx messages/en.json messages/ka.json .claude/skills/add-game-variant/SKILL.md)",
+      "Bash(git --no-pager diff --stat)",
+      "Bash(git --no-pager diff docs/generated/game-spec.md)",
+      "Bash(git --no-pager diff --stat convex/_generated/)",
+      "Bash(git --no-pager diff convex/_generated/api.d.ts)"
     ],
     "deny": [
       "Bash(rm -rf *)",
       "Bash(sudo *)"
     ],
     "additionalDirectories": [
-      "/Users/david/Desktop/online-mafia/messages"
+      "/Users/david/Desktop/online-mafia/messages",
+      "/dev"
     ]
   },
   "hooks": {

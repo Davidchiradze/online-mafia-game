@@ -5,6 +5,7 @@ export const gameType = v.union(
   v.literal("sports_mafia"),
   v.literal("city_mafia"),
   v.literal("japanese_mafia"),
+  v.literal("serial_killer_mafia"),
 );
 
 export const gameStatus = v.union(

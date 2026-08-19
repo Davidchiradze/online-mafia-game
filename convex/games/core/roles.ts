@@ -3,7 +3,35 @@ import { query, mutation } from "../../_generated/server";
 import { getAuthenticatedUser, getAuthenticatedProfile } from "../../lib/auth";
 import { PERMISSIONS, roleHasPermission } from "../../lib/access";
 import { getGameById, assertIsHost, getPlayerInGame } from "../../lib/games";
-import { MAFIA_TEAM_ROLES, YAKUZA_TEAM_ROLES } from "../../lib/constants";
+import { getGameDefinition } from "../registry";
+
+/**
+ * The set of roles that see each other alongside `role`, per THIS variant.
+ *
+ * Reads `definition.teams` rather than the global `MAFIA_TEAM_ROLES` /
+ * `YAKUZA_TEAM_ROLES` tuples it used to hardcode. Those agreed with the
+ * Japanese definition by coincidence, not by construction, so a variant whose
+ * teams differ would have leaked the wrong roles to each other.
+ *
+ * A role in no team gets `null` — no teammates — which is the correct answer
+ * for a solo faction BY RULE rather than by omission.
+ *
+ * Returns `null` for a game type with no registered definition (`city_mafia`
+ * is reserved in the union but unbuilt). Failing closed is the safe direction:
+ * this decides who may see a hidden role, and a throw would take the whole
+ * game room down over card decoration.
+ */
+function teammatesOf(gameType: string, role: string | null): ReadonlySet<string> | null {
+  if (!role) return null;
+  let teams: Record<string, readonly string[]>;
+  try {
+    teams = getGameDefinition(gameType).teams;
+  } catch {
+    return null;
+  }
+  const team = Object.values(teams).find((roles) => roles.includes(role));
+  return team ? new Set(team) : null;
+}
 
 /**
  * Get player roles filtered by team visibility.
@@ -15,8 +43,7 @@ import { MAFIA_TEAM_ROLES, YAKUZA_TEAM_ROLES } from "../../lib/constants";
  * - Host → sees all roles
  * - Staff spectator (GAME_REVEAL_ROLES) with `revealAll` → sees all roles, but
  *   only if NOT a seated player in this game (no self-cheating)
- * - Mafia team (DON, MAFIA) → see each other
- * - Yakuza team (YAKUZA, SHOGUN) → see each other
+ * - Same team in `definition.teams` (Japanese: mafia, yakuza) → see each other
  * - Everyone else → null
  */
 export const getVisible = query({
@@ -51,6 +78,8 @@ export const getVisible = query({
       !callerIsPlayer &&
       roleHasPermission(profile.role, PERMISSIONS.GAME_REVEAL_ROLES);
 
+    const teammates = teammatesOf(game.gameType, requestingRole);
+
     const roles = allRoles.map((roleDoc) => {
       let canSeeRole = false;
 
@@ -62,15 +91,7 @@ export const getVisible = query({
         canSeeRole = true;
       } else if (canRevealAll) {
         canSeeRole = true;
-      } else if (
-        (MAFIA_TEAM_ROLES as readonly string[]).includes(requestingRole ?? "") &&
-        (MAFIA_TEAM_ROLES as readonly string[]).includes(roleDoc.role)
-      ) {
-        canSeeRole = true;
-      } else if (
-        (YAKUZA_TEAM_ROLES as readonly string[]).includes(requestingRole ?? "") &&
-        (YAKUZA_TEAM_ROLES as readonly string[]).includes(roleDoc.role)
-      ) {
+      } else if (teammates?.has(roleDoc.role)) {
         canSeeRole = true;
       }
 

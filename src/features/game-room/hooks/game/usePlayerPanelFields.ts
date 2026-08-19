@@ -9,6 +9,7 @@ import { canSeePhaseTimer, phaseClock } from "@/features/game-room/lib/playerPan
 import { farewellRun } from "@/features/game-room/lib/farewellRun";
 import { speakingRun } from "@/features/game-room/lib/speakingRun";
 import type { HostPanelDescriptor } from "@/features/game-room/lib/hostPanel";
+import { useGameFlags } from "./useGameFlags";
 import { useHostPanelTimer } from "./useHostPanelTimer";
 
 /** The descriptor slice every player-side state shares. */
@@ -39,6 +40,7 @@ export function usePlayerPanelFields(): PlayerPanelFields {
     isSpectator,
     ruleset,
   } = useGameRoom();
+  const { mafiaKillsOnFirstNight } = useGameFlags();
 
   const phase = gameSessionState?.gamePhase ?? "";
   const nightNumber = gameSessionState?.currentNightNumber ?? 0;
@@ -71,7 +73,9 @@ export function usePlayerPanelFields(): PlayerPanelFields {
           ? t("dawnCounter", { night: clock.value })
           : t("nightCounter", { night: clock.value })
       : t("preGame"),
-    title: tPhases(nightPhaseLabelKey(phase, nightNumber)),
+    title: tPhases(
+      nightPhaseLabelKey(phase, nightNumber, mafiaKillsOnFirstNight),
+    ),
     timer,
     speakers,
   };

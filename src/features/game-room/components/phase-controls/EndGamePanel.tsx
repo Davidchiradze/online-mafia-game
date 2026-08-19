@@ -72,6 +72,7 @@ export default function EndGamePanel({ state }: EndGamePanelProps) {
     mafia: t("mafiaWinner"),
     yakuza: t("yakuzaWinner"),
     citizens: t("citizensWinner"),
+    serial_killer: t("serialKillerWinner"),
     no_contest: t("noContest"),
   };
 

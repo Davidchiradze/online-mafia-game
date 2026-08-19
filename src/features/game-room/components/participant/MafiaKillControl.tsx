@@ -5,6 +5,7 @@ import { useMutation, useQuery } from "convex/react";
 import { nightPhase, sportsNightPhase } from "@convex/refs/game";
 import type { Id } from "@convex/_generated/dataModel";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
+import { useGameFlags } from "@/features/game-room/hooks/game/useGameFlags";
 import { MAFIA_TEAM_ROLES } from "@/shared/lib/constants/game";
 import MafiaKillButton from "@/features/game-room/components/actions/MafiaKillButton";
 import MafiaTargetIndicator from "./MafiaTargetIndicator";
@@ -69,6 +70,7 @@ function useSingleAuthorityMafiaKill({
   isMafiaPhase,
 }: MafiaKillProps): MafiaKillState {
   const { gameId, nightPhaseSession, viewerRole } = useGameRoom();
+  const { mafiaKillsOnFirstNight } = useGameFlags();
   const [isLoading, setIsLoading] = useState(false);
   const selectTarget = useMutation(nightPhase.selectMafiaTarget);
 
@@ -87,7 +89,15 @@ function useSingleAuthorityMafiaKill({
     hasMafiaKillAuthority &&
     !isTargetHost &&
     isPlayerAlive &&
-    nightPhaseSession?.nightNumber !== 1 &&
+    // The FOURTH copy of "no mafia kill on night 1", missed when the other
+    // three moved onto the flag: it is written `!== 1`, so a grep for
+    // `nightNumber === 1` could not find it.
+    //
+    // Left hardcoded it deadlocked Serial Killer: `canEndMafiaPhase` correctly
+    // waits for a target on night 1 (the variant DOES kill), while this hid the
+    // only button that could record one. The host sat on "Waiting for Mafia"
+    // forever. Japanese declares the flag false, so its behaviour is unchanged.
+    (mafiaKillsOnFirstNight || nightPhaseSession?.nightNumber !== 1) &&
     nightPhaseSession?.mafiaTarget === undefined;
 
   const onSelect = useCallback(async () => {

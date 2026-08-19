@@ -107,6 +107,10 @@
   @apply text-violet-400;
 }
 
+.host-panel__title-accent--serial_killer {
+  @apply text-amber-400;
+}
+
 /* ── Zone 2: data ────────────────────────────────────────────────────────── */
 
 /* The only zone allowed to scroll, and only after everything in it has already

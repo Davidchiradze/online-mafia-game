@@ -6,19 +6,22 @@
  * (docs/engine/variant-architecture.md §8). Shared engine code calls `getGameDefinition(...)`
  * and reads the definition instead of branching on `gameType`.
  *
- * Registers Japanese and Sports. Both are creatable and both are rated; a
- * variant registered here is playable, and whether it is rated is a separate
- * answer given by `RATING_CONFIG` in lib/constants.ts.
+ * Registers Japanese, Sports and Serial Killer. A variant registered here is
+ * playable; whether it is RATED is a separate answer given by `RATING_CONFIG`
+ * in lib/constants.ts, and Serial Killer deliberately has no entry there
+ * (docs/variants/serial_killer/rating.md).
  */
 
 import { ConvexError } from "convex/values";
 import type { GameDefinition } from "./core/types";
 import { JAPANESE_DEFINITION } from "./japanese/definition";
 import { SPORTS_DEFINITION } from "./sports/definition";
+import { SERIAL_KILLER_DEFINITION } from "./serialkiller/definition";
 
 const DEFINITIONS: Record<string, GameDefinition> = {
   japanese_mafia: JAPANESE_DEFINITION,
   sports_mafia: SPORTS_DEFINITION,
+  serial_killer_mafia: SERIAL_KILLER_DEFINITION,
 };
 
 /**

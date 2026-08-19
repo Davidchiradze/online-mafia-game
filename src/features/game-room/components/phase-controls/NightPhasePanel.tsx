@@ -17,7 +17,11 @@ import type {
 } from "@/features/game-room/lib/hostPanel";
 
 /** Which acting role must have submitted before the host may close the phase. */
-export type NightPhaseGate = "mafia" | "yakuza" | "doctor";
+export type NightPhaseGate =
+  | "mafia"
+  | "yakuza"
+  | "doctor"
+  | "serial_killer";
 
 type NightPhasePanelProps = {
   gameSessionState: GameSessionState;
@@ -59,13 +63,18 @@ export default function NightPhasePanel({
   const fields = useNightPanelFields(gameSessionState);
   const readiness = useNightPhaseReadiness();
 
-  const isOpen =
-    gate === undefined ||
-    (gate === "mafia"
-      ? readiness.canEndMafiaPhase
-      : gate === "yakuza"
-        ? readiness.canEndYakuzaPhase
-        : readiness.canEndDoctorPhase);
+  // A LOOKUP, not a ternary chain. As a chain the final `else` silently
+  // absorbed every unhandled gate into the doctor's readiness — a new gate
+  // would have compiled, run, and gated on the wrong role. `Record` makes an
+  // unanswered gate a compile error instead.
+  const gateIsOpen: Record<NightPhaseGate, boolean> = {
+    mafia: readiness.canEndMafiaPhase,
+    yakuza: readiness.canEndYakuzaPhase,
+    doctor: readiness.canEndDoctorPhase,
+    serial_killer: readiness.canEndSerialKillerPhase,
+  };
+
+  const isOpen = gate === undefined || gateIsOpen[gate];
 
   const handleAdvance = async () => {
     if (isLoading || !isOpen) return;

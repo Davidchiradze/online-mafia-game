@@ -9,9 +9,10 @@ import { GamePhase } from "@convex/lib/constants";
 export { GamePhase };
 
 export const GAME_TYPES = [
+  "japanese_mafia",
   "sports_mafia",
   "city_mafia",
-  "japanese_mafia",
+  "serial_killer_mafia",
 ] as const;
 
 export const GAME_STATUSES = ["not_started", "playing", "finished"] as const;
@@ -26,6 +27,7 @@ export const GAME_TYPE_LABEL: Record<(typeof GAME_TYPES)[number], string> = {
   sports_mafia: "Sports Mafia",
   city_mafia: "City mafia",
   japanese_mafia: "Japanese",
+  serial_killer_mafia: "Serial Killer",
 };
 
 export const GAME_STATUS_LABEL: Record<(typeof GAME_STATUSES)[number], string> =
@@ -34,15 +36,6 @@ export const GAME_STATUS_LABEL: Record<(typeof GAME_STATUSES)[number], string> =
     playing: "Playing",
     finished: "Finished",
   };
-
-export const GAME_TYPE_MAX_PLAYER_NUMBER: Record<
-  (typeof GAME_TYPES)[number],
-  number
-> = {
-  sports_mafia: 10,
-  city_mafia: 12,
-  japanese_mafia: 12,
-};
 
 export const JAPANESE_MAFIA_ROLES = [
   "DON",
@@ -53,6 +46,20 @@ export const JAPANESE_MAFIA_ROLES = [
   "CITIZEN",
   "DOCTOR",
 ] as const;
+
+/**
+ * Every role ANY variant can deal — the frontend's role vocabulary.
+ *
+ * `Role` in `src/shared/lib/game/visibility.ts` is built from this, so a role
+ * missing here is not assignable and gets cast away at the boundary instead of
+ * type-checked. It was the JAPANESE tuple, which happened to work only because
+ * Sports' deck is a strict subset of Japanese's.
+ *
+ * Not derivable from the registry: that yields runtime values, and this has to
+ * be a literal-typed tuple. Composed from the Japanese tuple plus each later
+ * variant's additions so the shared roles still have exactly one definition.
+ */
+export const ALL_ROLES = [...JAPANESE_MAFIA_ROLES, "SERIAL_KILLER"] as const;
 
 /** Mafia team roles - can see mafia target selection */
 export const MAFIA_TEAM_ROLES = ["DON", "MAFIA"] as const;
@@ -104,6 +111,11 @@ export const GAME_PHASES = [
   GamePhase.END_GAME,
   GamePhase.PHASE_TRANSITION,
   GamePhase.BEST_MOVE,
+  // Appended, not inserted in reading order: `tests/game/phases.test.ts` pins
+  // the first 20 entries against the backend list, so a variant-only phase must
+  // land past that prefix.
+  GamePhase.SERIAL_KILLER_MEET,
+  GamePhase.SERIAL_KILLER_CHOOSES_TARGET,
 ] as const;
 
 /** Human-readable labels for each game phase */
@@ -130,6 +142,8 @@ export const GAME_PHASE_LABELS: Record<GamePhase, string> = {
   [GamePhase.PHASE_TRANSITION]: "Everyone Asleep",
   [GamePhase.DON_MEET]: "Don Meeting",
   [GamePhase.BEST_MOVE]: "Best Move",
+  [GamePhase.SERIAL_KILLER_MEET]: "Serial Killer Meeting",
+  [GamePhase.SERIAL_KILLER_CHOOSES_TARGET]: "Serial Killer Chooses Target",
 };
 
 // Day Phase Speaking Constants
@@ -240,9 +254,11 @@ export const PHASE_TIMERS: Partial<
   [GamePhase.YAKUDA_SHOGUN_MEET]: 40 * 1000,
   [GamePhase.DETECTIVE_MEET]: 15 * 1000,
   [GamePhase.DOCTOR_MEET]: 15 * 1000,
+  [GamePhase.SERIAL_KILLER_MEET]: 40 * 1000,
   [GamePhase.MAFIA_CHOOSES_TARGET]: 20 * 1000,
   [GamePhase.DON_CHECKS_FOR_DETECTIVE]: 15 * 1000,
   [GamePhase.YAKUZA_AND_SHOGUN_CHOOSES_TARGET]: 20 * 1000,
+  [GamePhase.SERIAL_KILLER_CHOOSES_TARGET]: 20 * 1000,
   [GamePhase.DETECTIVE_CHECKS_FOR_MAFIA]: 15 * 1000,
   [GamePhase.DOCTOR_HEALS_PLAYER]: 15 * 1000,
   // Sports best move (§6.3): shown to all living players + the host, since the

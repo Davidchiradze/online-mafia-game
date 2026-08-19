@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 import { MAFIA_TEAM_ROLES } from "@/shared/lib/constants/game";
+import { useGameFlags } from "./useGameFlags";
 
 /**
  * Determines whether the host can end each night action phase.
@@ -10,6 +11,10 @@ import { MAFIA_TEAM_ROLES } from "@/shared/lib/constants/game";
  * A phase button is disabled when the responsible player is alive but
  * has not yet submitted their action. Once the action is recorded in
  * `nightPhaseSession`, the reactive query fires and the button enables.
+ *
+ * That bargain only holds for an action the role is OBLIGED to take. An optional
+ * ability has no "not yet" state to wait out, so its gate stays open — see
+ * `canEndSerialKillerPhase` below.
  */
 export function useNightPhaseReadiness() {
   const {
@@ -19,11 +24,21 @@ export function useNightPhaseReadiness() {
     healedPlayers,
     hostUserId,
   } = useGameRoom();
+  const { mafiaKillsOnFirstNight } = useGameFlags();
 
-  const isFirstNight = nightPhaseSession?.nightNumber === 1;
+  /**
+   * A first night on which the mafia only meet — there is no target to wait
+   * for, so the host may advance immediately.
+   *
+   * This used to be a bare `nightNumber === 1`, which is the Japanese rule
+   * applied to every variant. A variant that DOES kill on night 1 would let the
+   * host skip past a kill the mafia are entitled to make.
+   */
+  const isNonKillingFirstNight =
+    nightPhaseSession?.nightNumber === 1 && !mafiaKillsOnFirstNight;
 
   const canEndMafiaPhase = useMemo(() => {
-    if (isFirstNight) return true;
+    if (isNonKillingFirstNight) return true;
 
     const hasAliveMafia = players.some(
       (p) =>
@@ -36,7 +51,12 @@ export function useNightPhaseReadiness() {
     if (!hasAliveMafia) return true;
 
     return nightPhaseSession?.mafiaTarget !== undefined;
-  }, [isFirstNight, players, playerRolesMap, nightPhaseSession?.mafiaTarget]);
+  }, [
+    isNonKillingFirstNight,
+    players,
+    playerRolesMap,
+    nightPhaseSession?.mafiaTarget,
+  ]);
 
   const canEndYakuzaPhase = useMemo(() => {
     const hasAliveYakuza = players.some(
@@ -85,5 +105,26 @@ export function useNightPhaseReadiness() {
     hostUserId,
   ]);
 
-  return { canEndMafiaPhase, canEndYakuzaPhase, canEndDoctorPhase };
+  /**
+   * The Serial Killer's phase is ALWAYS closable — the host may skip it.
+   *
+   * Unconditional on purpose, not an oversight. Every other gate here asks "is
+   * this role still owed an action", and the Serial Killer never is: the single
+   * shot is optional tonight and optional for the whole game
+   * (docs/variants/serial_killer/rules.md §5.1). Enumerating the cases where
+   * there is provably nothing to wait for — dead, night 1, shot already spent —
+   * still leaves the ordinary one, alive with the shot in hand and choosing not
+   * to fire, waiting on a target that is never coming.
+   *
+   * Kept as a gate the panel reads rather than dropped, so re-tightening later
+   * is a change to this one function.
+   */
+  const canEndSerialKillerPhase = true;
+
+  return {
+    canEndMafiaPhase,
+    canEndYakuzaPhase,
+    canEndDoctorPhase,
+    canEndSerialKillerPhase,
+  };
 }

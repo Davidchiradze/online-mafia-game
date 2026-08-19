@@ -9,6 +9,7 @@ import {
 } from "@/features/game-room/context/gameRoomContext";
 import { nightPhaseLabelKey } from "@/features/game-room/lib/nightPhase";
 import type { HostPanelDescriptor } from "@/features/game-room/lib/hostPanel";
+import { useGameFlags } from "./useGameFlags";
 import { useHostPanelTimer } from "./useHostPanelTimer";
 
 /** The descriptor slice every night phase shares. */
@@ -42,6 +43,7 @@ export function useNightPanelFields(
   const t = useTranslations("game.host");
   const tPhases = useTranslations("game.phases");
   const { ruleset } = useGameRoom();
+  const { mafiaKillsOnFirstNight } = useGameFlags();
 
   const phase = gameSessionState.gamePhase;
   const nightNumber = gameSessionState.currentNightNumber;
@@ -54,7 +56,9 @@ export function useNightPanelFields(
 
   return {
     eyebrow: t("nightCounter", { night: Math.max(1, nightNumber) }),
-    title: tPhases(nightPhaseLabelKey(phase, nightNumber)),
+    title: tPhases(
+      nightPhaseLabelKey(phase, nightNumber, mafiaKillsOnFirstNight),
+    ),
     timer: timerOverride === "none" ? undefined : (timerOverride ?? phaseTimer),
     meta: meta.length > 0 ? meta : undefined,
   };

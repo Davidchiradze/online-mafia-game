@@ -59,7 +59,7 @@ type ConvexGameSession = {
   withoutSelfJustification?: boolean;
   phaseStartedAt?: number;
   finishedAt?: number;
-  winner?: "mafia" | "yakuza" | "citizens" | "no_contest";
+  winner?: "mafia" | "yakuza" | "citizens" | "serial_killer" | "no_contest";
 };
 
 type ConvexNightPhaseSession = {
@@ -70,6 +70,8 @@ type ConvexNightPhaseSession = {
   mafiaTarget?: number;
   yakuzaTarget?: number;
   healedPlayer?: number;
+  // Serial Killer's shot for this night (docs/variants/serial_killer/rules.md §5).
+  serialKillerTarget?: number;
   // Sports unanimous-vote window (§5). Per-mafia selections are NOT surfaced
   // here (privacy §5.4) — a mafia reads only their own pick via getMySelection.
   mafiaTargetWindowActive?: boolean;

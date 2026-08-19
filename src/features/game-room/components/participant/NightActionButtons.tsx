@@ -8,6 +8,7 @@ import DoctorHealIndicator from "./DoctorHealIndicator";
 import NightActionWrapper from "./NightActionWrapper";
 import MafiaKillControl from "./MafiaKillControl";
 import BestMoveControl from "./BestMoveControl";
+import SerialKillerKillControl from "./SerialKillerKillControl";
 
 interface NightActionButtonsProps {
   seatNumber: number | null;
@@ -64,6 +65,15 @@ export default function NightActionButtons({
           their pick buttons. Self-gated on the `best_move` phase, so this is
           inert for Japanese and for every other Sports phase. */}
       <BestMoveControl seatNumber={seatNumber} isTargetHost={isTargetHost} />
+
+      {/* Serial Killer's one shot (§5). Self-gated on its own phase and
+          authority, so this is inert for Japanese and Sports — both declare
+          `isSerialKillerPhase: false`. */}
+      <SerialKillerKillControl
+        seatNumber={seatNumber}
+        isTargetHost={isTargetHost}
+        isPlayerAlive={isPlayerAlive}
+      />
 
       {canShowYakuzaKillButton && (
         <NightActionWrapper isSelected={isYakuzaTargetSelected}>
