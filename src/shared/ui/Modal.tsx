@@ -56,7 +56,7 @@ export default function Modal({
       onRequestClose={onClose}
       shouldCloseOnOverlayClick={true}
       shouldCloseOnEsc={true}
-      className={`relative w-full ${sizeClass[size]} rounded-2xl ${variantClass[variant]} p-6 shadow-2xl outline-none`}
+      className={`relative flex max-h-[calc(100dvh-2rem)] w-full flex-col ${sizeClass[size]} rounded-2xl ${variantClass[variant]} p-6 shadow-2xl outline-none`}
       style={
         isDark
           ? {
@@ -69,10 +69,10 @@ export default function Modal({
             }
           : undefined
       }
-      overlayClassName={`fixed inset-0 z-50 flex items-center justify-center px-4 ${isDark ? "bg-black/75" : "bg-black/50"}`}
+      overlayClassName={`fixed inset-0 z-50 flex items-center justify-center p-4 ${isDark ? "bg-black/75" : "bg-black/50"}`}
       bodyOpenClassName="overflow-hidden"
     >
-      <div className="flex items-start justify-between">
+      <div className="flex shrink-0 items-start justify-between">
         {title ? (
           <h3
             className={`text-xl font-semibold ${isDark ? "text-white font-orbitron tracking-tight" : "text-gray-900 dark:text-white"}`}
@@ -92,9 +92,14 @@ export default function Modal({
           </button>
         ) : null}
       </div>
-      <div className="mt-6">{children}</div>
+
+      <div className="-mx-1 mt-6 min-h-0 flex-1 overflow-y-auto overscroll-contain px-1">
+        {children}
+      </div>
       {footer ? (
-        <div className="mt-8 flex items-center justify-end gap-3">{footer}</div>
+        <div className="mt-8 flex shrink-0 items-center justify-end gap-3">
+          {footer}
+        </div>
       ) : null}
     </ReactModal>
   );
