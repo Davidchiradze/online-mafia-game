@@ -266,7 +266,7 @@
     "joinGame": "თამაშში შესვლა",
     "spectateRoomTitle": "ოთახის ყურება",
     "spectateRoomBody": "თქვენ აპირებთ უყუროთ <strong>{name}</strong>-ს მაყურებლების სახით. შეგიძლიათ დაკვირვება, მაგრამ მონაწილეობა — არა.",
-    "watchGame": "თამაშის ყურება",
+    "watchGame": "ყურება",
     "joinRequestStatus": {
       "accepted": "თქვენი მოთხოვნა <b>{room}</b>-ში შესვლის შესახებ დადასტურდა.",
       "enterRoom": "ოთახში შესვლა",
@@ -644,7 +644,6 @@
       "ended": "დასრულდა",
       "rejoin": "დაბრუნება",
       "rejoinGame": "ხელახლა შესვლა თამაშში",
-      "private": "დახურული",
       "spectate": "ყურება",
       "join": "შესვლა",
       "full": "სავსეა",
@@ -694,8 +693,9 @@
     },
     "spectatorJoin": {
       "connectingAsSpectator": "მაყურებლად დაკავშირება…",
-      "privateGame": "დახურული თამაში",
-      "privateGameDesc": "{name} არის დახურული ოთახი. მაყურებლებს არ აქვთ შესვლის უფლება.",
+      "privatePinTitle": "დახურული ოთახი",
+      "privatePinDesc": "{name} დახურულია. სანახავად შეიყვანეთ 4-ციფრიანი პინკოდი, რომელიც ჰოსტმა გაგიზიარათ.",
+      "pinPlaceholder": "0000",
       "backToLobby": "ლობიში დაბრუნება",
       "gameInProgress": "თამაში მიმდინარეობს",
       "gameInProgressDesc": "{name} უკვე დაიწყო. შემოდი მაყურებლად, რომ ნახო მოქმედება.",
@@ -706,7 +706,7 @@
       "cannotParticipate": "ვერ მონაწილეობ ან ვერ ურთიერთობ",
       "back": "უკან",
       "joining": "შესვლა…",
-      "watchGame": "თამაშის ყურება"
+      "watchGame": "ყურება"
     },
     "foul": {
       "eliminateByFoulTitle": "ფოლით გარიცხვა",
@@ -865,7 +865,6 @@
     "GAME_ALREADY_FINISHED": "ეს თამაში უკვე დასრულდა.",
     "SESSION_NOT_FOUND": "თამაშის სესია ვერ მოიძებნა.",
     "SPECTATE_NOT_IN_PROGRESS": "დაკვირვება შესაძლებელია მხოლოდ მიმდინარე თამაშებზე.",
-    "SPECTATE_PRIVATE": "ეს თამაში დახურულია — მაყურებლები ვერ შემოვლენ.",
     "ALREADY_PLAYER": "თქვენ უკვე ხართ ამ თამაშის მოთამაშე.",
     "SPECTATOR_LIMIT": "ამ თამაშმა მაყურებლების ლიმიტს მიაღწია.",
     "SUBSCRIPTION_REQUIRED": "საჭიროა აქტიური გამოწერა. აირჩიეთ პაკეტი დასაწყებად.",

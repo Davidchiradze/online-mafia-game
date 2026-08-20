@@ -429,6 +429,91 @@ describe("private room PIN — replaces the join request", () => {
   });
 });
 
+describe("private room PIN — spectators", () => {
+  /** A private game already in progress, plus a would-be spectator. */
+  async function playingPrivateRoom() {
+    const { t, host, other } = await setup();
+    const gameId = await host.mutation(api.lobby.games.create, {
+      name: "Locked",
+      gameType: "sports_mafia",
+      isPrivate: true,
+      pin: "4821",
+    });
+    await t.run((ctx) => ctx.db.patch(gameId, { gameStatus: "playing" }));
+    return { t, host, other, gameId };
+  }
+
+  it("refuses a wrong PIN and admits the right one", async () => {
+    const { t, other, gameId } = await playingPrivateRoom();
+
+    expect(
+      await other.mutation(api.games.core.spectators.join, {
+        gameId,
+        pin: "1111",
+      }),
+    ).toEqual({ ok: false, code: "GAME_PIN_WRONG" });
+    expect(
+      await t.run((ctx) => ctx.db.query("gameSpectators").collect()),
+    ).toEqual([]);
+
+    const result = await other.mutation(api.games.core.spectators.join, {
+      gameId,
+      pin: "4821",
+    });
+    expect(result.ok).toBe(true);
+    expect(
+      await other.query(api.games.core.spectators.isSpectator, { gameId }),
+    ).toMatchObject({ isSpectator: true });
+  });
+
+  it("refuses when no PIN is supplied at all", async () => {
+    const { other, gameId } = await playingPrivateRoom();
+    expect(
+      await other.mutation(api.games.core.spectators.join, { gameId }),
+    ).toEqual({ ok: false, code: "GAME_PIN_WRONG" });
+  });
+
+  it("lets an existing spectator reconnect without the PIN", async () => {
+    const { other, gameId } = await playingPrivateRoom();
+    await other.mutation(api.games.core.spectators.join, {
+      gameId,
+      pin: "4821",
+    });
+    // `join` doubles as the reconnect path — a page reload must not re-prompt.
+    expect(
+      await other.mutation(api.games.core.spectators.join, { gameId }),
+    ).toMatchObject({ ok: true });
+  });
+
+  it("lets staff watch without the PIN", async () => {
+    const { t, gameId } = await playingPrivateRoom();
+    await t.run(async (ctx) => {
+      const mod = await ctx.db
+        .query("profiles")
+        .withIndex("by_accountId", (q) => q.eq("accountId", OTHER))
+        .unique();
+      await ctx.db.patch(mod!._id, { role: "moderator" });
+    });
+    const asModerator = t.withIdentity({ subject: OTHER });
+    expect(
+      await asModerator.mutation(api.games.core.spectators.join, { gameId }),
+    ).toMatchObject({ ok: true });
+  });
+
+  it("needs no PIN for a public game", async () => {
+    const { t, host, other } = await setup();
+    const gameId = await host.mutation(api.lobby.games.create, {
+      name: "Open",
+      gameType: "sports_mafia",
+      isPrivate: false,
+    });
+    await t.run((ctx) => ctx.db.patch(gameId, { gameStatus: "playing" }));
+    expect(
+      await other.mutation(api.games.core.spectators.join, { gameId }),
+    ).toMatchObject({ ok: true });
+  });
+});
+
 describe("verifyGamePin", () => {
   /** Seeds a private room and returns a runner bound to the joiner. */
   async function pinFixture() {

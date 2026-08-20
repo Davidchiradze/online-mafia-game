@@ -80,7 +80,7 @@ query | public | games/core/sessions:get | eddbc4df9e94 | 74234e98afe7
 mutation | public | games/core/sessions:startGame | b310450d55ee | 74234e98afe7
 mutation | public | games/core/sessions:update | 9c7e759d7244 | 74234e98afe7
 query | public | games/core/spectators:isSpectator | eddbc4df9e94 | 74234e98afe7
-mutation | public | games/core/spectators:join | eddbc4df9e94 | 74234e98afe7
+mutation | public | games/core/spectators:join | fb5d7454132c | 74234e98afe7
 mutation | public | games/core/spectators:leave | eddbc4df9e94 | 74234e98afe7
 mutation | public | games/core/spectators:leaveAdmin | ae5bf95b82bc | 74234e98afe7
 mutation | internal | games/core/spectators:leaveAdminInternal | ae5bf95b82bc | 74234e98afe7
