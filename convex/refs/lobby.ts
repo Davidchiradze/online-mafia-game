@@ -181,14 +181,18 @@ export const lobbyGames = {
   ),
   create: makeFunctionReference<
     "mutation",
-    { name: string; gameType: GameType; isPrivate: boolean },
+    { name: string; gameType: GameType; isPrivate: boolean; pin?: string },
     Id<"games">
   >("lobby/games:create"),
   update: makeFunctionReference<
     "mutation",
-    { gameId: Id<"games">; name?: string; isPrivate?: boolean },
+    { gameId: Id<"games">; name?: string; isPrivate?: boolean; pin?: string },
     null
   >("lobby/games:update"),
+  /** Host-only. The one read path for a private room's access PIN. */
+  getPin: makeFunctionReference<"query", { gameId: Id<"games"> }, string | null>(
+    "lobby/games:getPin",
+  ),
   remove: makeFunctionReference<"mutation", { gameId: Id<"games"> }, null>(
     "lobby/games:remove",
   ),

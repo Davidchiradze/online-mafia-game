@@ -9,6 +9,7 @@ import {
   generateGameCode,
   isCodeTaken,
   assertIsHost,
+  assertValidPin,
   deleteGameAndRelations,
 } from "../lib/games";
 import { getLiveTableAvgRating } from "../lib/playerRatings";
@@ -79,17 +80,23 @@ function seatCountFor(gameType: string): number | null {
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    const games = await ctx.db
-      .query("games")
-      .order("desc")
-      .collect();
+    const games = await ctx.db.query("games").order("desc").collect();
 
     return await Promise.all(
       games.map(async (game) => {
         const players = await getPlayersByGameId(ctx.db, game._id);
         const spectators = await getSpectatorsByGameId(ctx.db, game._id);
-        const enriched = await withRosterAvatars(ctx, game, players, spectators);
-        const tableAvgRating = await getLiveTableAvgRating(ctx.db, game, players);
+        const enriched = await withRosterAvatars(
+          ctx,
+          game,
+          players,
+          spectators,
+        );
+        const tableAvgRating = await getLiveTableAvgRating(
+          ctx.db,
+          game,
+          players,
+        );
         return {
           _id: enriched._id,
           _creationTime: enriched._creationTime,
@@ -116,10 +123,25 @@ export const getById = query({
     const players = await getPlayersByGameId(ctx.db, game._id);
     const spectators = await getSpectatorsByGameId(ctx.db, game._id);
     const enriched = await withRosterAvatars(ctx, game, players, spectators);
+    const { pin: _pin, ...safe } = enriched;
     return {
-      ...enriched,
+      ...safe,
       tableAvgRating: await getLiveTableAvgRating(ctx.db, game, players),
     };
+  },
+});
+
+/**
+ * The room's access PIN — host only.
+ *
+ * The single read path for `games.pin`. Every other projection strips it.
+ */
+export const getPin = query({
+  args: { gameId: v.id("games") },
+  handler: async (ctx, { gameId }) => {
+    const userId = await getAuthenticatedUser(ctx);
+    const game = await assertIsHost(ctx.db, gameId, userId);
+    return game.pin ?? null;
   },
 });
 
@@ -128,25 +150,48 @@ export const create = mutation({
     name: v.string(),
     gameType,
     isPrivate: v.boolean(),
+    pin: v.optional(v.string()),
   },
-  handler: async (ctx, { name, gameType, isPrivate }) => {
+  handler: async (ctx, { name, gameType, isPrivate, pin }) => {
     const { _id: userId } = await requireFeature(ctx, FEATURES.PLAY_GAME);
 
     const trimmedName = name.trim();
     if (trimmedName.length === 0) {
-      throw new ConvexError({ code: "GAME_NAME_REQUIRED", message: "Game name is required" });
+      throw new ConvexError({
+        code: "GAME_NAME_REQUIRED",
+        message: "Game name is required",
+      });
+    }
+
+    // A private room is gated by its PIN, so it cannot exist without one.
+    // A public room stores none, whatever the client sent.
+    let accessPin: string | undefined;
+    if (isPrivate) {
+      if (!pin) {
+        throw new ConvexError({
+          code: "GAME_PIN_REQUIRED",
+          message: "A private room needs a PIN",
+        });
+      }
+      accessPin = assertValidPin(pin);
     }
 
     const maxPlayers = seatCountFor(gameType);
     if (maxPlayers === null) {
-      throw new ConvexError({ code: "INVALID_GAME_TYPE", message: "Invalid game type" });
+      throw new ConvexError({
+        code: "INVALID_GAME_TYPE",
+        message: "Invalid game type",
+      });
     }
 
     let code = generateGameCode();
     let attempts = 0;
     while (await isCodeTaken(ctx.db, code)) {
       if (++attempts >= MAX_CODE_ATTEMPTS) {
-        throw new ConvexError({ code: "GAME_CODE_GEN_FAILED", message: "Unable to generate a unique game code. Try again." });
+        throw new ConvexError({
+          code: "GAME_CODE_GEN_FAILED",
+          message: "Unable to generate a unique game code. Try again.",
+        });
       }
       code = generateGameCode();
     }
@@ -159,6 +204,7 @@ export const create = mutation({
       gameStatus: "not_started",
       maxPlayers,
       isPrivate,
+      pin: accessPin,
     });
 
     return gameId;
@@ -180,21 +226,43 @@ export const update = mutation({
     gameId: v.id("games"),
     name: v.optional(v.string()),
     isPrivate: v.optional(v.boolean()),
+    pin: v.optional(v.string()),
   },
-  handler: async (ctx, { gameId, name, isPrivate }) => {
+  handler: async (ctx, { gameId, name, isPrivate, pin }) => {
     const userId = await getAuthenticatedUser(ctx);
-    await assertIsHost(ctx.db, gameId, userId);
+    const game = await assertIsHost(ctx.db, gameId, userId);
 
     const patch: Record<string, unknown> = {};
 
     if (name !== undefined) {
       const trimmed = name.trim();
-      if (trimmed.length === 0) throw new ConvexError({ code: "ROOM_NAME_EMPTY", message: "Room name cannot be empty" });
+      if (trimmed.length === 0)
+        throw new ConvexError({
+          code: "ROOM_NAME_EMPTY",
+          message: "Room name cannot be empty",
+        });
       patch.name = trimmed;
     }
 
     if (isPrivate !== undefined) {
       patch.isPrivate = isPrivate;
+    }
+
+    // Privacy and the PIN move together: a room that ends up private must have
+    // one, and going public drops it so a later re-privatise cannot reuse a
+    // stale PIN the old players still know.
+    const willBePrivate = isPrivate ?? game.isPrivate;
+    if (willBePrivate) {
+      if (pin !== undefined) {
+        patch.pin = assertValidPin(pin);
+      } else if (!game.pin) {
+        throw new ConvexError({
+          code: "GAME_PIN_REQUIRED",
+          message: "A private room needs a PIN",
+        });
+      }
+    } else if (game.pin !== undefined) {
+      patch.pin = undefined;
     }
 
     if (Object.keys(patch).length > 0) {
@@ -211,4 +279,3 @@ export const removeInternal = internalMutation({
     await deleteGameAndRelations(ctx.db, gameId);
   },
 });
-

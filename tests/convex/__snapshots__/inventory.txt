@@ -114,12 +114,13 @@ mutation | public | games/sports/nightPhase:selectMafiaTarget | 621801e94ba0 | 7
 mutation | public | games/sports/nightPhase:startMafiaTargetWindow | eddbc4df9e94 | 74234e98afe7
 query | internal | integrations/playerStats:byAccountIds | 06a0f03bbe49 | 74234e98afe7
 httpAction | public | integrations/playerStats:handleGetPlayerStats | - | -
-mutation | public | lobby/games:create | dbf07c43184f | 74234e98afe7
+mutation | public | lobby/games:create | 5cbe79176866 | 74234e98afe7
 query | public | lobby/games:getById | eddbc4df9e94 | 74234e98afe7
+query | public | lobby/games:getPin | eddbc4df9e94 | 74234e98afe7
 query | public | lobby/games:list | 5151b7eb8536 | 74234e98afe7
 mutation | public | lobby/games:remove | eddbc4df9e94 | 74234e98afe7
 mutation | internal | lobby/games:removeInternal | eddbc4df9e94 | 74234e98afe7
-mutation | public | lobby/games:update | 415cb5552783 | 74234e98afe7
+mutation | public | lobby/games:update | 76c3bc222282 | 74234e98afe7
 mutation | public | lobby/hostTransfer:transfer | 953092f694d4 | 74234e98afe7
 mutation | public | lobby/joinRequests:accept | e7fede0e4e63 | 74234e98afe7
 mutation | public | lobby/joinRequests:checkOrRequest | eddbc4df9e94 | 74234e98afe7
