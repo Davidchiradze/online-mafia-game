@@ -20,7 +20,7 @@ import {
   loadRatingSnapshot,
 } from "./playerRatings";
 import { bumpPlayerStats, recomputePlayerStats } from "./playerStats";
-import { RATING_CONFIG } from "./constants";
+import { RATING_CONFIG, ROOM_PIN } from "./constants";
 
 export async function getGameById(db: DatabaseReader, gameId: Id<"games">) {
   const game = await db.get(gameId);
@@ -107,12 +107,6 @@ export async function getPlayerInGame(
     .unique();
 }
 
-/** A room PIN is exactly four digits — short enough to read out loud. */
-export const PIN_PATTERN = /^\d{4}$/;
-
-const MAX_PIN_ATTEMPTS = 5;
-const PIN_ATTEMPT_WINDOW_MS = 5 * 60_000;
-
 /**
  * Validates a host-supplied PIN and returns it trimmed.
  *
@@ -121,7 +115,7 @@ const PIN_ATTEMPT_WINDOW_MS = 5 * 60_000;
  */
 export function assertValidPin(pin: string): string {
   const trimmed = pin.trim();
-  if (!PIN_PATTERN.test(trimmed)) {
+  if (!ROOM_PIN.PATTERN.test(trimmed)) {
     throw new ConvexError({
       code: "GAME_PIN_INVALID",
       message: "The room PIN must be exactly 4 digits",
@@ -170,9 +164,9 @@ export async function verifyGamePin(
 
   const now = Date.now();
   const withinWindow =
-    attempt !== null && now - attempt.lastFailedAt < PIN_ATTEMPT_WINDOW_MS;
+    attempt !== null && now - attempt.lastFailedAt < ROOM_PIN.ATTEMPT_WINDOW_MS;
 
-  if (withinWindow && attempt.failedCount >= MAX_PIN_ATTEMPTS) return "locked";
+  if (withinWindow && attempt.failedCount >= ROOM_PIN.MAX_ATTEMPTS) return "locked";
 
   if (!pin || pin.trim() !== game.pin) {
     const failedCount = withinWindow ? attempt.failedCount + 1 : 1;

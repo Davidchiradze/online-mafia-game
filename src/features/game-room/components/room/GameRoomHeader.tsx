@@ -3,9 +3,10 @@
 import { useState } from "react";
 import { useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
-import { joinRequests } from "@convex/refs/lobby";
+import { joinRequests, lobbyGames } from "@convex/refs/lobby";
 import { useGameRoom } from "@/features/game-room/context/gameRoomContext";
 import { LandingLogo } from "@/shared/ui/LandingLogo";
+import RoomPinChip from "@/features/game-room/components/room/RoomPinChip";
 import {
   EyeIcon,
   UsersIcon,
@@ -88,6 +89,12 @@ export default function GameRoomHeader() {
     isHost ? { gameId: gameId as Id<"games"> } : "skip",
   );
 
+  // Host-only: the PIN they hand out to let anyone into this private room.
+  const roomPin = useQuery(
+    lobbyGames.getPin,
+    isHost && gameData?.isPrivate ? { gameId: gameId as Id<"games"> } : "skip",
+  );
+
   useJoinRequestNotification(gameId, isHost);
 
   const roomName = gameData?.name ?? "Game Room";
@@ -104,7 +111,7 @@ export default function GameRoomHeader() {
       <header className="relative z-20 px-4 sm:px-6 py-3 border-b border-white/10 bg-black/60">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 sm:gap-3">
-            <LandingLogo size="sm" />
+            {roomPin ? <RoomPinChip pin={roomPin} /> : <LandingLogo size="sm" />}
 
             {tableAvgRating !== undefined && (
               <div
