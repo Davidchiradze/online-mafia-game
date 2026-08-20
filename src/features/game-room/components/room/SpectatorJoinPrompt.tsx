@@ -9,12 +9,17 @@ import {
   ArrowLeft,
   Check,
   Eye,
+  KeyRound,
   Loader2,
   Lock,
   Moon,
   X,
 } from "lucide-react";
+import { ROOM_PIN } from "@convex/lib/constants";
 import type { LucideIcon } from "lucide-react";
+import PromptCard, {
+  BACK_BUTTON_CLASS,
+} from "@/features/game-room/components/room/PromptCard";
 import { useErrorMessage } from "@/shared/lib/i18n/errorMessage";
 import { useEntitlements } from "@/features/auth/hooks/useEntitlements";
 import { useAccess } from "@/features/auth/hooks/useAccess";
@@ -40,62 +45,13 @@ type Props = {
   isPrivate?: boolean;
 };
 
-type Accent = "red" | "amber" | "zinc";
-
-const ACCENT_CHIP: Record<Accent, string> = {
-  red: "border-red-500/20 bg-red-500/10 text-red-400",
-  amber: "border-amber-500/20 bg-amber-500/10 text-amber-400",
-  zinc: "border-white/10 bg-white/[0.05] text-zinc-400",
-};
-
-/** Shared card shell so the three states stay visually identical. */
-function PromptCard({
-  icon: Icon,
-  accent,
-  title,
-  description,
-  children,
-}: {
-  icon: LucideIcon;
-  accent: Accent;
-  title: string;
-  description: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="mx-auto w-full max-w-md">
-      <div className="rounded-2xl border border-white/5 bg-[#13131a] p-8 text-center shadow-xl">
-        <div
-          className={cn(
-            "mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border",
-            ACCENT_CHIP[accent],
-          )}
-        >
-          <Icon className="h-7 w-7" />
-        </div>
-
-        <h2 className="mb-2 font-orbitron text-xl font-bold tracking-tight text-white">
-          {title}
-        </h2>
-        <p className="mb-7 font-sans text-sm leading-relaxed text-zinc-400">
-          {description}
-        </p>
-
-        {children}
-      </div>
-    </div>
-  );
-}
-
-const BACK_BUTTON_CLASS =
-  "flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border border-white/10 py-3 font-sans text-sm font-medium text-zinc-400 transition hover:border-white/20 hover:text-white disabled:cursor-not-allowed disabled:opacity-40";
-
 export default function SpectatorJoinPrompt({ gameId, game, isPrivate }: Props) {
   const t = useTranslations("game.spectatorJoin");
   const router = useRouter();
   const [isJoining, setIsJoining] = useState(false);
   const [hasJoined, setHasJoined] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pin, setPin] = useState("");
 
   const joinSpectator = useMutation(gameSpectators.join);
   const getErrorMessage = useErrorMessage();
@@ -103,16 +59,31 @@ export default function SpectatorJoinPrompt({ gameId, game, isPrivate }: Props) 
   const { isLoading: entLoading, has } = useEntitlements();
   const canSpectate = has(FEATURES.SPECTATE_GAME);
   const { can } = useAccess();
-  // Staff (moderators/admins) bypass the private-game block — the server
-  // authorizes this in `game.spectators.join` via GAME_SPECTATE_ANY.
+  // Staff (moderators/admins) watch a private game without its PIN — the
+  // server authorizes this in `game.spectators.join` via GAME_SPECTATE_ANY.
   const canBypassPrivate = can(PERMISSIONS.GAME_SPECTATE_ANY);
 
+  const needsPin = Boolean(isPrivate) && !canBypassPrivate;
+  const canJoin = !isJoining && (!needsPin || ROOM_PIN.PATTERN.test(pin));
+
   const handleJoinAsSpectator = async () => {
-    if (isJoining) return;
+    if (!canJoin) return;
     setIsJoining(true);
     setError(null);
     try {
-      await joinSpectator({ gameId: gameId as Id<"games"> });
+      const result = await joinSpectator({
+        gameId: gameId as Id<"games">,
+        pin: needsPin ? pin : undefined,
+      });
+      if (!result.ok) {
+        // A wrong or throttled PIN comes back as a value, not a throw, so the
+        // server keeps the attempt it just counted. Same shape as a
+        // ConvexError's `.data`, so it translates identically.
+        setError(getErrorMessage({ data: { code: result.code } }));
+        setPin("");
+        setIsJoining(false);
+        return;
+      }
       setHasJoined(true);
     } catch (err) {
       setError(getErrorMessage(err));
@@ -158,25 +129,6 @@ export default function SpectatorJoinPrompt({ gameId, game, isPrivate }: Props) 
     );
   }
 
-  if (isPrivate && !canBypassPrivate) {
-    return (
-      <PromptCard
-        icon={Lock}
-        accent="zinc"
-        title={t("privateGame")}
-        description={t("privateGameDesc", { name: game.name })}
-      >
-        <button
-          onClick={() => router.push("/lobby")}
-          className={cn(BACK_BUTTON_CLASS, "w-full")}
-        >
-          <ArrowLeft className="h-4 w-4" />
-          {t("backToLobby")}
-        </button>
-      </PromptCard>
-    );
-  }
-
   const spectatorRules: {
     icon: LucideIcon;
     chip: string;
@@ -210,10 +162,14 @@ export default function SpectatorJoinPrompt({ gameId, game, isPrivate }: Props) 
 
   return (
     <PromptCard
-      icon={Eye}
-      accent="red"
-      title={t("gameInProgress")}
-      description={t("gameInProgressDesc", { name: game.name })}
+      icon={needsPin ? KeyRound : Eye}
+      accent={needsPin ? "amber" : "red"}
+      title={needsPin ? t("privatePinTitle") : t("gameInProgress")}
+      description={
+        needsPin
+          ? t("privatePinDesc", { name: game.name })
+          : t("gameInProgressDesc", { name: game.name })
+      }
     >
       {error && (
         <div className="mb-6 flex items-start gap-2.5 rounded-xl border border-red-500/20 bg-red-500/[0.08] px-4 py-3 text-left">
@@ -242,6 +198,23 @@ export default function SpectatorJoinPrompt({ gameId, game, isPrivate }: Props) 
         ))}
       </div>
 
+      {needsPin && (
+        <input
+          value={pin}
+          onChange={(e) =>
+            setPin(e.target.value.replace(/\D/g, "").slice(0, ROOM_PIN.LENGTH))
+          }
+          onKeyDown={(e) => e.key === "Enter" && handleJoinAsSpectator()}
+          placeholder={t("pinPlaceholder")}
+          inputMode="numeric"
+          autoComplete="off"
+          autoFocus
+          maxLength={ROOM_PIN.LENGTH}
+          aria-label={t("privatePinTitle")}
+          className="mb-6 w-full rounded-xl border border-white/[0.08] bg-white/[0.05] px-4 py-3 text-center font-orbitron text-2xl tracking-[0.6em] text-white placeholder-gray-600 transition focus:border-amber-500/50 focus:outline-none focus:ring-1 focus:ring-amber-500/20"
+        />
+      )}
+
       {/* Actions */}
       <div className="flex gap-3">
         <button
@@ -254,8 +227,13 @@ export default function SpectatorJoinPrompt({ gameId, game, isPrivate }: Props) 
         </button>
         <button
           onClick={handleJoinAsSpectator}
-          disabled={isJoining}
-          className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-red-700 py-3 font-sans text-sm font-semibold text-white shadow-[0_0_20px_rgba(220,38,38,0.3)] transition hover:from-red-500 hover:to-red-600 hover:shadow-[0_0_30px_rgba(220,38,38,0.5)] disabled:cursor-not-allowed disabled:opacity-50"
+          disabled={!canJoin}
+          className={cn(
+            "flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl py-3 font-sans text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-50",
+            needsPin
+              ? "bg-gradient-to-r from-amber-600 to-amber-700 shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:from-amber-500 hover:to-amber-600 hover:shadow-[0_0_30px_rgba(245,158,11,0.5)]"
+              : "bg-gradient-to-r from-red-600 to-red-700 shadow-[0_0_20px_rgba(220,38,38,0.3)] hover:from-red-500 hover:to-red-600 hover:shadow-[0_0_30px_rgba(220,38,38,0.5)]",
+          )}
         >
           {isJoining ? (
             <>
@@ -264,7 +242,11 @@ export default function SpectatorJoinPrompt({ gameId, game, isPrivate }: Props) 
             </>
           ) : (
             <>
-              <Eye className="h-4 w-4" />
+              {needsPin ? (
+                <KeyRound className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
               {t("watchGame")}
             </>
           )}

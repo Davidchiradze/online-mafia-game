@@ -118,6 +118,10 @@ type JoinRequestDoc = {
   status: JoinRequestStatus;
 };
 
+/**
+ * `"locked"` is private-room-only and comes from `checkOrRequest`, never from
+ * `myStatus`: it means "this room wants its PIN", not a stored request state.
+ */
 type MyJoinStatus = {
   allowed: boolean;
   status: "accepted" | "pending" | "rejected" | "none";
@@ -142,6 +146,12 @@ export const joinRequests = {
     { gameId: Id<"games"> },
     { allowed: boolean; status: string; requestId?: Id<"joinRequests"> }
   >("lobby/joinRequests:checkOrRequest"),
+  /** Unlock a private room with its PIN. Failures come back as `ok: false`. */
+  submitPin: makeFunctionReference<
+    "mutation",
+    { gameId: Id<"games">; pin: string },
+    { ok: true } | { ok: false; code: string }
+  >("lobby/joinRequests:submitPin"),
   countPending: makeFunctionReference<"query", { gameId: Id<"games"> }, number>(
     "lobby/joinRequests:countPending",
   ),
@@ -181,14 +191,18 @@ export const lobbyGames = {
   ),
   create: makeFunctionReference<
     "mutation",
-    { name: string; gameType: GameType; isPrivate: boolean },
+    { name: string; gameType: GameType; isPrivate: boolean; pin?: string },
     Id<"games">
   >("lobby/games:create"),
   update: makeFunctionReference<
     "mutation",
-    { gameId: Id<"games">; name?: string; isPrivate?: boolean },
+    { gameId: Id<"games">; name?: string; isPrivate?: boolean; pin?: string },
     null
   >("lobby/games:update"),
+  /** Host-only. The one read path for a private room's access PIN. */
+  getPin: makeFunctionReference<"query", { gameId: Id<"games"> }, string | null>(
+    "lobby/games:getPin",
+  ),
   remove: makeFunctionReference<"mutation", { gameId: Id<"games"> }, null>(
     "lobby/games:remove",
   ),

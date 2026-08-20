@@ -8,12 +8,16 @@ import {
   assertIsHost,
   getJoinRequestByRequester,
   getPlayerInGame,
+  getPlayersByGameId,
+  verifyGamePin,
+  PIN_VERDICT_CODE,
 } from "../lib/games";
 
 /**
  * Determines the caller's access status for a game.
  *
- * Priority: host → existing player → accepted → pending → rejected → create pending.
+ * Priority: host → existing player → private (locked) → accepted → pending →
+ * rejected → create pending.
  */
 export const checkOrRequest = mutation({
   args: { gameId: v.id("games") },
@@ -42,6 +46,13 @@ export const checkOrRequest = mutation({
       };
     }
 
+    // A private room is gated by its PIN, not by the host: no request row is
+    // created, so the host is never asked to approve anyone and no waiting
+    // room is ever shown. `submitPin` writes the grant once the PIN is right.
+    if (game.isPrivate) {
+      return { allowed: false, status: "locked" as const };
+    }
+
     const profile = await ctx.db.get(userId);
     const nickname = profile?.nickname ?? "Player";
 
@@ -57,6 +68,70 @@ export const checkOrRequest = mutation({
       status: "pending" as const,
       requestId,
     };
+  },
+});
+
+/**
+ * Unlock a private room with its PIN. The PIN replaces host approval entirely:
+ * a correct one writes an already-`accepted` join request, which is the same
+ * grant the host would have created, so the rest of the join flow (`myStatus`
+ * → `gamePlayers:join` → LiveKit) is untouched.
+ *
+ * RETURNS the failure instead of throwing it, because a throw would roll back
+ * the failed-attempt row `verifyGamePin` just wrote and defeat the throttle.
+ * Genuine precondition failures (not authenticated, no such game) still throw.
+ */
+export const submitPin = mutation({
+  args: { gameId: v.id("games"), pin: v.string() },
+  handler: async (ctx, { gameId, pin }) => {
+    const { _id: userId } = await requireFeature(ctx, FEATURES.PLAY_GAME);
+    const game = await getGameById(ctx.db, gameId);
+
+    // Already in — the host, a seated player reconnecting, or someone who
+    // unlocked earlier. Never ask any of them for the PIN again.
+    if (game.hostId === userId) return { ok: true as const };
+    if (await getPlayerInGame(ctx.db, gameId, userId)) {
+      return { ok: true as const };
+    }
+    const existing = await getJoinRequestByRequester(ctx.db, gameId, userId);
+    if (existing?.status === "accepted") return { ok: true as const };
+
+    if (game.gameStatus !== "not_started") {
+      return { ok: false as const, code: "GAME_NOT_PLAYING" };
+    }
+
+    const verdict = await verifyGamePin(ctx.db, game, userId, pin);
+    if (verdict !== "ok") {
+      return { ok: false as const, code: PIN_VERDICT_CODE[verdict] };
+    }
+
+    // Check capacity before granting, so a full room says so plainly instead
+    // of letting `gamePlayers:join` fail later with nowhere to show it.
+    const players = await getPlayersByGameId(ctx.db, gameId);
+    const takenSeats = players.filter(
+      (p) => p.seatNumber !== undefined && p.seatNumber >= 1,
+    ).length;
+    if (takenSeats >= game.maxPlayers) {
+      return { ok: false as const, code: "ROOM_FULL" };
+    }
+
+    // A pending/rejected row can survive a room being switched from public to
+    // private. Promote it rather than inserting a second one —
+    // `getJoinRequestByRequester` is a `.unique()` read and would then throw.
+    if (existing) {
+      await ctx.db.patch(existing._id, { status: "accepted" });
+      return { ok: true as const };
+    }
+
+    const profile = await ctx.db.get(userId);
+    await ctx.db.insert("joinRequests", {
+      gameId,
+      requesterId: userId,
+      requesterNickname: profile?.nickname ?? "Player",
+      status: "accepted",
+    });
+
+    return { ok: true as const };
   },
 });
 

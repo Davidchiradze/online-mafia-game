@@ -2,7 +2,12 @@ import { ConvexError, v } from "convex/values";
 import { query, mutation, internalMutation } from "../../_generated/server";
 import { getAuthenticatedUser, requireFeature } from "../../lib/auth";
 import { FEATURES } from "../../lib/entitlements";
-import { getGameById, assertIsHost, getPlayerInGame } from "../../lib/games";
+import {
+  getGameById,
+  assertIsHost,
+  getPlayerInGame,
+  getJoinRequestByRequester,
+} from "../../lib/games";
 
 function isGameStarted(status: string) {
   return status === "playing" || status === "finished";
@@ -51,6 +56,9 @@ export const join = mutation({
       .withIndex("by_gameId", (q) => q.eq("gameId", gameId))
       .collect();
 
+    // Reconnect path: anyone already seated is let straight back in, mid-game
+    // reloads included. Deliberately ahead of the PIN gate below — a player who
+    // is already in the game must never be asked for the PIN again.
     const existing = players.find((p) => p.playerId === userId);
     if (existing) {
       await ctx.db.patch(existing._id, { state: "joined" });
@@ -59,6 +67,19 @@ export const join = mutation({
 
     const isHost = game.hostId === userId;
     const maxSeats = game.maxPlayers;
+
+    // A private room hands out seats only against the grant that
+    // `lobby/joinRequests:submitPin` writes on a correct PIN. Without this the
+    // PIN would be a UI formality: `join` is a public mutation anyone can call.
+    if (game.isPrivate && !isHost) {
+      const grant = await getJoinRequestByRequester(ctx.db, gameId, userId);
+      if (grant?.status !== "accepted") {
+        throw new ConvexError({
+          code: "GAME_PIN_REQUIRED",
+          message: "This room needs its PIN before you can take a seat",
+        });
+      }
+    }
 
     const usedSeats = new Set<number>();
     for (const p of players) {

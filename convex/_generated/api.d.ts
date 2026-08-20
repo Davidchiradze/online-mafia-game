@@ -87,6 +87,7 @@ import type * as tables_communityReadState from "../tables/communityReadState.js
 import type * as tables_gameBroadcasts from "../tables/gameBroadcasts.js";
 import type * as tables_gameLogPlayers from "../tables/gameLogPlayers.js";
 import type * as tables_gameLogs from "../tables/gameLogs.js";
+import type * as tables_gamePinAttempts from "../tables/gamePinAttempts.js";
 import type * as tables_gamePlayerRoles from "../tables/gamePlayerRoles.js";
 import type * as tables_gamePlayers from "../tables/gamePlayers.js";
 import type * as tables_gameSessions from "../tables/gameSessions.js";
@@ -187,6 +188,7 @@ declare const fullApi: ApiFromModules<{
   "tables/gameBroadcasts": typeof tables_gameBroadcasts;
   "tables/gameLogPlayers": typeof tables_gameLogPlayers;
   "tables/gameLogs": typeof tables_gameLogs;
+  "tables/gamePinAttempts": typeof tables_gamePinAttempts;
   "tables/gamePlayerRoles": typeof tables_gamePlayerRoles;
   "tables/gamePlayers": typeof tables_gamePlayers;
   "tables/gameSessions": typeof tables_gameSessions;
