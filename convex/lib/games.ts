@@ -20,7 +20,7 @@ import {
   loadRatingSnapshot,
 } from "./playerRatings";
 import { bumpPlayerStats, recomputePlayerStats } from "./playerStats";
-import { RATING_CONFIG } from "./constants";
+import { RATING_CONFIG, ROOM_PIN } from "./constants";
 
 export async function getGameById(db: DatabaseReader, gameId: Id<"games">) {
   const game = await db.get(gameId);
@@ -107,10 +107,91 @@ export async function getPlayerInGame(
     .unique();
 }
 
+/**
+ * Validates a host-supplied PIN and returns it trimmed.
+ *
+ * Called by `lobby/games:create` and `:update` — the only two places a PIN is
+ * ever written.
+ */
+export function assertValidPin(pin: string): string {
+  const trimmed = pin.trim();
+  if (!ROOM_PIN.PATTERN.test(trimmed)) {
+    throw new ConvexError({
+      code: "GAME_PIN_INVALID",
+      message: "The room PIN must be exactly 4 digits",
+    });
+  }
+  return trimmed;
+}
+
+export type PinVerdict = "ok" | "wrong" | "locked" | "unset";
+
+/** The client-translatable error code each failed verdict maps to. */
+export const PIN_VERDICT_CODE: Record<Exclude<PinVerdict, "ok">, string> = {
+  wrong: "GAME_PIN_WRONG",
+  locked: "PIN_TOO_MANY_ATTEMPTS",
+  unset: "GAME_PIN_REQUIRED",
+};
+
+/**
+ * Gate on a private room's PIN, with throttling. `"ok"` for any public room, so
+ * callers can call it unconditionally.
+ *
+ * RETURNS A VERDICT, NEVER THROWS — and that is load-bearing. A Convex mutation
+ * that throws rolls back every write it made, so throwing here would also
+ * discard the failed-attempt row written moments earlier and the throttle would
+ * count to one forever. Callers must therefore RETURN the failure to the client
+ * (see `PIN_VERDICT_CODE`) instead of rethrowing it.
+ */
+export async function verifyGamePin(
+  db: DatabaseWriter,
+  game: Doc<"games">,
+  profileId: Id<"profiles">,
+  pin: string | undefined,
+): Promise<PinVerdict> {
+  if (!game.isPrivate) return "ok";
+
+  // A private room with no stored PIN predates this feature — treat it as
+  // locked rather than silently open, and let the host set one in Room Settings.
+  if (!game.pin) return "unset";
+
+  const attempt = await db
+    .query("gamePinAttempts")
+    .withIndex("by_gameId_profileId", (q) =>
+      q.eq("gameId", game._id).eq("profileId", profileId),
+    )
+    .unique();
+
+  const now = Date.now();
+  const withinWindow =
+    attempt !== null && now - attempt.lastFailedAt < ROOM_PIN.ATTEMPT_WINDOW_MS;
+
+  if (withinWindow && attempt.failedCount >= ROOM_PIN.MAX_ATTEMPTS) return "locked";
+
+  if (!pin || pin.trim() !== game.pin) {
+    const failedCount = withinWindow ? attempt.failedCount + 1 : 1;
+    if (attempt) {
+      await db.patch(attempt._id, { failedCount, lastFailedAt: now });
+    } else {
+      await db.insert("gamePinAttempts", {
+        gameId: game._id,
+        profileId,
+        failedCount,
+        lastFailedAt: now,
+      });
+    }
+    return "wrong";
+  }
+
+  if (attempt) await db.delete(attempt._id);
+  return "ok";
+}
+
 const GAME_RELATED_TABLES = [
   "gamePlayers",
   "gameSpectators",
   "joinRequests",
+  "gamePinAttempts",
   "gameSessions",
   "gamePlayerRoles",
   "nightPhaseSessions",

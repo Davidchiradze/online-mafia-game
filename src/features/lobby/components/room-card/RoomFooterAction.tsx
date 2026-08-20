@@ -60,21 +60,15 @@ export default function RoomFooterAction({
         </button>
       );
     }
-    // Private games block normal spectators; staff with GAME_SPECTATE_ANY may watch.
-    if (room.isPrivate && !canSpectateAny) {
-      return (
-        <button disabled className={disabledClass}>
-          <Lock className="h-3.5 w-3.5" />
-          {t("row.private")}
-        </button>
-      );
-    }
+    // A private game is watchable behind its PIN — the prompt on the game page
+    // asks for it. Staff with GAME_SPECTATE_ANY skip the PIN entirely.
+    const pinGated = room.isPrivate && !canSpectateAny;
     return (
       <button onClick={onSpectate} className={ghostClass}>
-        {canSpectate || isGuest ? (
-          <Eye className="h-3.5 w-3.5" />
-        ) : (
+        {pinGated || !(canSpectate || isGuest) ? (
           <Lock className="h-3.5 w-3.5" />
+        ) : (
+          <Eye className="h-3.5 w-3.5" />
         )}
         {t("row.spectate")}
       </button>

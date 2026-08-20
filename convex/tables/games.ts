@@ -22,6 +22,7 @@ export const games = defineTable({
   gameStatus,
   maxPlayers: v.number(),
   isPrivate: v.boolean(),
+  pin: v.optional(v.string()),
 })
   .index("by_hostId", ["hostId"])
   .index("by_code", ["code"])

@@ -3,6 +3,7 @@ export { games } from "./games";
 export { gamePlayers } from "./gamePlayers";
 export { gameSpectators } from "./gameSpectators";
 export { joinRequests } from "./joinRequests";
+export { gamePinAttempts } from "./gamePinAttempts";
 export { gameSessions } from "./gameSessions";
 export { gamePlayerRoles } from "./gamePlayerRoles";
 export { nightPhaseSessions } from "./nightPhaseSessions";

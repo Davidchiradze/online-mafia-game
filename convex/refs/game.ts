@@ -257,9 +257,12 @@ export const gameSpectators = {
     { gameId: Id<"games"> },
     { isSpectator: boolean; spectator: unknown }
   >("games/core/spectators:isSpectator"),
-  join: makeFunctionReference<"mutation", { gameId: Id<"games"> }, Id<"gameSpectators">>(
-    "games/core/spectators:join",
-  ),
+  /** A private game needs `pin`. Failures come back as `ok: false`. */
+  join: makeFunctionReference<
+    "mutation",
+    { gameId: Id<"games">; pin?: string },
+    { ok: true; spectatorId: Id<"gameSpectators"> } | { ok: false; code: string }
+  >("games/core/spectators:join"),
   leave: makeFunctionReference<"mutation", { gameId: Id<"games"> }, null>(
     "games/core/spectators:leave",
   ),

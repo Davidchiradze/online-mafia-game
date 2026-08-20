@@ -80,7 +80,7 @@ query | public | games/core/sessions:get | eddbc4df9e94 | 74234e98afe7
 mutation | public | games/core/sessions:startGame | b310450d55ee | 74234e98afe7
 mutation | public | games/core/sessions:update | 9c7e759d7244 | 74234e98afe7
 query | public | games/core/spectators:isSpectator | eddbc4df9e94 | 74234e98afe7
-mutation | public | games/core/spectators:join | eddbc4df9e94 | 74234e98afe7
+mutation | public | games/core/spectators:join | fb5d7454132c | 74234e98afe7
 mutation | public | games/core/spectators:leave | eddbc4df9e94 | 74234e98afe7
 mutation | public | games/core/spectators:leaveAdmin | ae5bf95b82bc | 74234e98afe7
 mutation | internal | games/core/spectators:leaveAdminInternal | ae5bf95b82bc | 74234e98afe7
@@ -114,12 +114,13 @@ mutation | public | games/sports/nightPhase:selectMafiaTarget | 621801e94ba0 | 7
 mutation | public | games/sports/nightPhase:startMafiaTargetWindow | eddbc4df9e94 | 74234e98afe7
 query | internal | integrations/playerStats:byAccountIds | 06a0f03bbe49 | 74234e98afe7
 httpAction | public | integrations/playerStats:handleGetPlayerStats | - | -
-mutation | public | lobby/games:create | dbf07c43184f | 74234e98afe7
+mutation | public | lobby/games:create | 5cbe79176866 | 74234e98afe7
 query | public | lobby/games:getById | eddbc4df9e94 | 74234e98afe7
+query | public | lobby/games:getPin | eddbc4df9e94 | 74234e98afe7
 query | public | lobby/games:list | 5151b7eb8536 | 74234e98afe7
 mutation | public | lobby/games:remove | eddbc4df9e94 | 74234e98afe7
 mutation | internal | lobby/games:removeInternal | eddbc4df9e94 | 74234e98afe7
-mutation | public | lobby/games:update | 415cb5552783 | 74234e98afe7
+mutation | public | lobby/games:update | 76c3bc222282 | 74234e98afe7
 mutation | public | lobby/hostTransfer:transfer | 953092f694d4 | 74234e98afe7
 mutation | public | lobby/joinRequests:accept | e7fede0e4e63 | 74234e98afe7
 mutation | public | lobby/joinRequests:checkOrRequest | eddbc4df9e94 | 74234e98afe7
@@ -131,6 +132,7 @@ query | public | lobby/joinRequests:myActiveRequests | 5151b7eb8536 | 74234e98af
 query | public | lobby/joinRequests:myStatus | eddbc4df9e94 | 74234e98afe7
 mutation | public | lobby/joinRequests:reject | e7fede0e4e63 | 74234e98afe7
 mutation | public | lobby/joinRequests:request | eddbc4df9e94 | 74234e98afe7
+mutation | public | lobby/joinRequests:submitPin | 764b56602400 | 74234e98afe7
 mutation | internal | migrations:backfillRatings | d9d716b3923a | 74234e98afe7
 mutation | internal | migrations:clearLegacyRoles | 5151b7eb8536 | 74234e98afe7
 mutation | internal | migrations:clearLegacyUsername | 5151b7eb8536 | 74234e98afe7

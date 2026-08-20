@@ -60,7 +60,6 @@ one-component-per-file | src/features/game-room/components/participant/BestMoveI
 one-component-per-file | src/features/game-room/components/participant/MafiaKillControl.tsx
 one-component-per-file | src/features/game-room/components/phase/PhaseCountdown.tsx
 one-component-per-file | src/features/game-room/components/room/GameRoomHeader.tsx
-one-component-per-file | src/features/game-room/components/room/SpectatorJoinPrompt.tsx
 one-component-per-file | src/features/game-room/components/room/SpectatorView.tsx
 one-component-per-file | src/features/game-room/components/room/WaitingRoom.tsx
 one-component-per-file | src/features/game-room/context/gameRoomContext.tsx

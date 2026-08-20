@@ -131,6 +131,22 @@ export const SPECTATOR = {
   MAX_SPECTATORS_PER_GAME: 10,
 } as const;
 
+/**
+ * The access PIN that gates a private room, for players and spectators alike.
+ *
+ * Lives here rather than in `lib/games.ts` because the create/edit form has to
+ * apply the same shape rule before it submits, and `src/` may import this file
+ * but not a module that pulls in `ctx.db`.
+ */
+export const ROOM_PIN = {
+  LENGTH: 4,
+  /** Exactly four digits — short enough to read out loud. */
+  PATTERN: /^\d{4}$/,
+  /** Wrong tries allowed per user per room inside `ATTEMPT_WINDOW_MS`. */
+  MAX_ATTEMPTS: 5,
+  ATTEMPT_WINDOW_MS: 5 * 60_000,
+} as const;
+
 export const SPEAKING_STATE = {
   COMPLETED: -99,
   isPaused: (value: number | null): boolean =>

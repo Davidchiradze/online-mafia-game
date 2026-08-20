@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { lobbyGames } from "@convex/refs/lobby";
+import { ROOM_PIN } from "@convex/lib/constants";
 import { gameSessions } from "@convex/refs/game";
 import { createLivekitRoom } from "@/shared/lib/livekit/actions";
 import { GAME_TYPES } from "@/shared/lib/constants/game";
@@ -44,11 +45,21 @@ export default function CreateGameModal(props: Props) {
   const [type, setType] =
     useState<(typeof GAME_TYPES)[number]>("japanese_mafia");
   const [isPrivate, setIsPrivate] = useState(false);
+  const [pin, setPin] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [isFinishing, setIsFinishing] = useState(false);
   const [showFinishConfirm, setShowFinishConfirm] = useState(false);
+
+  // Host-only read of the stored PIN, so editing a private room prefills the
+  // current one instead of silently asking the host to invent a new one.
+  const storedPin = useQuery(
+    lobbyGames.getPin,
+    isEdit && open && props.initialValues.isPrivate
+      ? { gameId: props.gameId as Id<"games"> }
+      : "skip",
+  );
 
   const createGame = useMutation(lobbyGames.create);
   const updateGame = useMutation(lobbyGames.update);
@@ -58,28 +69,44 @@ export default function CreateGameModal(props: Props) {
   const tc = useTranslations("common");
   const variantOptions = useGameVariantOptions();
 
+  // Depend on the initial VALUES, not on `props`: the parent rebuilds that
+  // object literal on every render, and in a game room a reactive update lands
+  // often enough to wipe whatever the host is halfway through typing.
+  const initialName = isEdit ? props.initialValues.name : "";
+  const initialType = isEdit ? props.initialValues.gameType : "japanese_mafia";
+  const initialPrivate = isEdit ? props.initialValues.isPrivate : false;
+
   useEffect(() => {
     if (!open) return;
-    if (isEdit) {
-      setName(props.initialValues.name);
-      setType(props.initialValues.gameType);
-      setIsPrivate(props.initialValues.isPrivate);
-    } else {
-      setName("");
-      setType("japanese_mafia");
-      setIsPrivate(false);
-    }
+    setName(initialName);
+    setType(initialType);
+    setIsPrivate(initialPrivate);
+    setPin("");
     setError(null);
     setShowFinishConfirm(false);
-  }, [open, isEdit, props]);
+  }, [open, initialName, initialType, initialPrivate]);
 
-  const canSubmit = useMemo(() => name.trim().length > 0, [name]);
+  // `getPin` resolves after the reset above, so the prefill is its own effect.
+  // `open` is a dependency so reopening the modal prefills again — `storedPin`
+  // alone is unchanged on a second open, and the effect would never re-run.
+  useEffect(() => {
+    if (open && storedPin) setPin(storedPin);
+  }, [open, storedPin]);
+
+  const canSubmit = useMemo(
+    () => name.trim().length > 0 && (!isPrivate || ROOM_PIN.PATTERN.test(pin)),
+    [name, isPrivate, pin],
+  );
 
   const hasChanges = useMemo(() => {
     if (!isEdit) return true;
     const init = (props as EditModeProps).initialValues;
-    return name.trim() !== init.name || isPrivate !== init.isPrivate;
-  }, [isEdit, name, isPrivate, props]);
+    return (
+      name.trim() !== init.name ||
+      isPrivate !== init.isPrivate ||
+      (isPrivate && pin !== (storedPin ?? ""))
+    );
+  }, [isEdit, name, isPrivate, pin, storedPin, props]);
 
   const handleCreate = async () => {
     if (!canSubmit || loading) return;
@@ -90,6 +117,7 @@ export default function CreateGameModal(props: Props) {
         name: name.trim(),
         gameType: type,
         isPrivate,
+        pin: isPrivate ? pin : undefined,
       });
       await createLivekitRoom(gameId);
       (props as CreateModeProps).onCreated?.(gameId);
@@ -111,6 +139,7 @@ export default function CreateGameModal(props: Props) {
         gameId: editProps.gameId as Id<"games">,
         name: name.trim(),
         isPrivate,
+        pin: isPrivate ? pin : undefined,
       });
       onClose();
     } catch (err) {
@@ -272,6 +301,31 @@ export default function CreateGameModal(props: Props) {
             </button>
           </div>
         </div>
+
+        {isPrivate && (
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium text-gray-400 font-sans">
+              {t("accessPin")}
+            </label>
+            <input
+              value={pin}
+              onChange={(e) =>
+                setPin(
+                  e.target.value.replace(/\D/g, "").slice(0, ROOM_PIN.LENGTH),
+                )
+              }
+              onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+              placeholder={t("accessPinPlaceholder")}
+              inputMode="numeric"
+              autoComplete="off"
+              maxLength={ROOM_PIN.LENGTH}
+              className="w-full px-4 py-3 rounded-xl bg-white/[0.05] border border-white/[0.08] text-white placeholder-gray-600 font-orbitron text-lg tracking-[0.4em] focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 transition"
+            />
+            <p className="text-[0.7rem] text-gray-500 font-sans">
+              {t("accessPinHint")}
+            </p>
+          </div>
+        )}
       </div>
     </Modal>
   );
