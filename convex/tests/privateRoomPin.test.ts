@@ -217,6 +217,218 @@ describe("private room PIN — who can read it", () => {
   });
 });
 
+describe("private room PIN — replaces the join request", () => {
+  /** A private room owned by HOST, plus a runner for the OTHER account. */
+  async function privateRoom() {
+    const { t, host, other } = await setup();
+    const gameId = await host.mutation(api.lobby.games.create, {
+      name: "Locked",
+      gameType: "sports_mafia",
+      isPrivate: true,
+      pin: "4821",
+    });
+    return { t, host, other, gameId };
+  }
+
+  it("reports `locked` and writes no request row", async () => {
+    const { t, other, gameId } = await privateRoom();
+
+    const result = await other.mutation(api.lobby.joinRequests.checkOrRequest, {
+      gameId,
+    });
+    expect(result).toEqual({ allowed: false, status: "locked" });
+
+    // The whole point: the host is never asked to approve anyone.
+    expect(await t.run((ctx) => ctx.db.query("joinRequests").collect())).toEqual(
+      [],
+    );
+    expect(
+      await other.query(api.lobby.joinRequests.countPending, { gameId }),
+    ).toBe(0);
+  });
+
+  it("still queues a request for a public room", async () => {
+    const { t, host, other } = await setup();
+    const gameId = await host.mutation(api.lobby.games.create, {
+      name: "Open",
+      gameType: "sports_mafia",
+      isPrivate: false,
+    });
+    const result = await other.mutation(api.lobby.joinRequests.checkOrRequest, {
+      gameId,
+    });
+    expect(result.status).toBe("pending");
+    expect(
+      await t.run((ctx) => ctx.db.query("joinRequests").collect()),
+    ).toHaveLength(1);
+  });
+
+  it("grants an accepted request on the right PIN, and a seat follows", async () => {
+    const { other, gameId } = await privateRoom();
+
+    expect(await other.mutation(api.lobby.joinRequests.submitPin, {
+      gameId,
+      pin: "4821",
+    })).toEqual({ ok: true });
+
+    // The grant is the same shape host approval would have produced, so the
+    // rest of the join flow is untouched.
+    expect(
+      await other.query(api.lobby.joinRequests.myStatus, { gameId }),
+    ).toEqual({ allowed: true, status: "accepted" });
+
+    const { playerId } = await other.mutation(api.games.core.players.join, {
+      gameId,
+    });
+    expect(playerId).toBeDefined();
+  });
+
+  it("returns the failure instead of throwing, so the throttle survives", async () => {
+    const { t, other, gameId } = await privateRoom();
+
+    for (let i = 0; i < 5; i++) {
+      expect(
+        await other.mutation(api.lobby.joinRequests.submitPin, {
+          gameId,
+          pin: "1111",
+        }),
+      ).toEqual({ ok: false, code: "GAME_PIN_WRONG" });
+    }
+    // A thrown error would have rolled back every increment above and this
+    // would still read GAME_PIN_WRONG.
+    expect(
+      await other.mutation(api.lobby.joinRequests.submitPin, {
+        gameId,
+        pin: "4821",
+      }),
+    ).toEqual({ ok: false, code: "PIN_TOO_MANY_ATTEMPTS" });
+
+    expect(await t.run((ctx) => ctx.db.query("joinRequests").collect())).toEqual(
+      [],
+    );
+  });
+
+  it("refuses a seat in a private room without a grant", async () => {
+    const { other, gameId } = await privateRoom();
+    // `players:join` is a public mutation — the PIN has to bind here too, or
+    // it is only a UI formality.
+    expect(
+      await errorCode(other.mutation(api.games.core.players.join, { gameId })),
+    ).toBe("GAME_PIN_REQUIRED");
+  });
+
+  it("lets the host and a seated player back in without the PIN", async () => {
+    const { host, other, gameId } = await privateRoom();
+
+    // Host: never gated.
+    await host.mutation(api.games.core.players.join, { gameId });
+    expect(await host.mutation(api.lobby.joinRequests.submitPin, {
+      gameId,
+      pin: "0000",
+    })).toEqual({ ok: true });
+
+    // Player who already unlocked and took a seat: reconnecting re-joins.
+    await other.mutation(api.lobby.joinRequests.submitPin, {
+      gameId,
+      pin: "4821",
+    });
+    const first = await other.mutation(api.games.core.players.join, { gameId });
+    const again = await other.mutation(api.games.core.players.join, { gameId });
+    expect(again.playerId).toBe(first.playerId);
+  });
+
+  it("lets a seated player reconnect after the game has started", async () => {
+    const { t, other, gameId } = await privateRoom();
+    await other.mutation(api.lobby.joinRequests.submitPin, {
+      gameId,
+      pin: "4821",
+    });
+    const seated = await other.mutation(api.games.core.players.join, { gameId });
+
+    await t.run((ctx) => ctx.db.patch(gameId, { gameStatus: "playing" }));
+
+    // A mid-game page reload must not ask for the PIN again.
+    const rejoined = await other.mutation(api.games.core.players.join, {
+      gameId,
+    });
+    expect(rejoined.playerId).toBe(seated.playerId);
+    expect(
+      await other.query(api.lobby.joinRequests.myStatus, { gameId }),
+    ).toEqual({ allowed: true, status: "accepted" });
+  });
+
+  it("promotes a stale request row instead of inserting a second one", async () => {
+    const { t, host, other } = await setup();
+    // Public first, so `other` queues a request the host then rejects.
+    const gameId = await host.mutation(api.lobby.games.create, {
+      name: "Open",
+      gameType: "sports_mafia",
+      isPrivate: false,
+    });
+    await other.mutation(api.lobby.joinRequests.checkOrRequest, { gameId });
+    const requestId = (await t.run((ctx) =>
+      ctx.db.query("joinRequests").collect(),
+    ))[0]._id;
+    await host.mutation(api.lobby.joinRequests.reject, { requestId });
+
+    // Host switches the room to private; the rejected player knows the PIN.
+    await host.mutation(api.lobby.games.update, {
+      gameId,
+      isPrivate: true,
+      pin: "4821",
+    });
+    expect(
+      await other.mutation(api.lobby.joinRequests.submitPin, {
+        gameId,
+        pin: "4821",
+      }),
+    ).toEqual({ ok: true });
+
+    // A second row would break `getJoinRequestByRequester`, a `.unique()` read.
+    const rows = await t.run((ctx) => ctx.db.query("joinRequests").collect());
+    expect(rows).toHaveLength(1);
+    expect(rows[0].status).toBe("accepted");
+  });
+
+  it("refuses to unlock a room that is already full", async () => {
+    const { t, host, other, gameId } = await privateRoom();
+    await t.run(async (ctx) => {
+      const game = (await ctx.db.get(gameId))!;
+      for (let seat = 1; seat <= game.maxPlayers; seat++) {
+        const filler = await ctx.db.insert("profiles", {
+          accountId: `filler-${seat}`,
+          nickname: `Filler ${seat}`,
+          verified: true,
+          createdAt: 0,
+          updatedAt: 0,
+        });
+        await ctx.db.insert("gamePlayers", {
+          gameId,
+          playerId: filler,
+          nickname: `Filler ${seat}`,
+          seatNumber: seat,
+          isAlive: true,
+          fouls: 0,
+        });
+      }
+    });
+
+    expect(
+      await other.mutation(api.lobby.joinRequests.submitPin, {
+        gameId,
+        pin: "4821",
+      }),
+    ).toEqual({ ok: false, code: "ROOM_FULL" });
+    // The host is still unaffected by capacity — they sit off-ring.
+    expect(
+      await host.mutation(api.lobby.joinRequests.submitPin, {
+        gameId,
+        pin: "4821",
+      }),
+    ).toEqual({ ok: true });
+  });
+});
+
 describe("verifyGamePin", () => {
   /** Seeds a private room and returns a runner bound to the joiner. */
   async function pinFixture() {

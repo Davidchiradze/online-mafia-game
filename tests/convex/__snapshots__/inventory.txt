@@ -132,6 +132,7 @@ query | public | lobby/joinRequests:myActiveRequests | 5151b7eb8536 | 74234e98af
 query | public | lobby/joinRequests:myStatus | eddbc4df9e94 | 74234e98afe7
 mutation | public | lobby/joinRequests:reject | e7fede0e4e63 | 74234e98afe7
 mutation | public | lobby/joinRequests:request | eddbc4df9e94 | 74234e98afe7
+mutation | public | lobby/joinRequests:submitPin | 764b56602400 | 74234e98afe7
 mutation | internal | migrations:backfillRatings | d9d716b3923a | 74234e98afe7
 mutation | internal | migrations:clearLegacyRoles | 5151b7eb8536 | 74234e98afe7
 mutation | internal | migrations:clearLegacyUsername | 5151b7eb8536 | 74234e98afe7

@@ -15,6 +15,9 @@ import {
   X,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import PromptCard, {
+  BACK_BUTTON_CLASS,
+} from "@/features/game-room/components/room/PromptCard";
 import { useErrorMessage } from "@/shared/lib/i18n/errorMessage";
 import { useEntitlements } from "@/features/auth/hooks/useEntitlements";
 import { useAccess } from "@/features/auth/hooks/useAccess";
@@ -39,56 +42,6 @@ type Props = {
   currentSpectatorCount: number;
   isPrivate?: boolean;
 };
-
-type Accent = "red" | "amber" | "zinc";
-
-const ACCENT_CHIP: Record<Accent, string> = {
-  red: "border-red-500/20 bg-red-500/10 text-red-400",
-  amber: "border-amber-500/20 bg-amber-500/10 text-amber-400",
-  zinc: "border-white/10 bg-white/[0.05] text-zinc-400",
-};
-
-/** Shared card shell so the three states stay visually identical. */
-function PromptCard({
-  icon: Icon,
-  accent,
-  title,
-  description,
-  children,
-}: {
-  icon: LucideIcon;
-  accent: Accent;
-  title: string;
-  description: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="mx-auto w-full max-w-md">
-      <div className="rounded-2xl border border-white/5 bg-[#13131a] p-8 text-center shadow-xl">
-        <div
-          className={cn(
-            "mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border",
-            ACCENT_CHIP[accent],
-          )}
-        >
-          <Icon className="h-7 w-7" />
-        </div>
-
-        <h2 className="mb-2 font-orbitron text-xl font-bold tracking-tight text-white">
-          {title}
-        </h2>
-        <p className="mb-7 font-sans text-sm leading-relaxed text-zinc-400">
-          {description}
-        </p>
-
-        {children}
-      </div>
-    </div>
-  );
-}
-
-const BACK_BUTTON_CLASS =
-  "flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border border-white/10 py-3 font-sans text-sm font-medium text-zinc-400 transition hover:border-white/20 hover:text-white disabled:cursor-not-allowed disabled:opacity-40";
 
 export default function SpectatorJoinPrompt({ gameId, game, isPrivate }: Props) {
   const t = useTranslations("game.spectatorJoin");

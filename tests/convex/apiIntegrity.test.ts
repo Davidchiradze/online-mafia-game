@@ -1,5 +1,5 @@
 /**
- * Convex API integrity — the standing guard on the 109 raw function-path strings
+ * Convex API integrity — the standing guard on the 110 raw function-path strings
  * that `tsc` cannot see.
  *
  * WHY: see the header of `tests/support/convexModules.ts`. Short version —
@@ -16,7 +16,7 @@
  * Three concerns, one shared module import:
  *   1. refs integrity   — every raw path resolves, and its declared kind is right
  *   2. _generated drift — `api.d.ts` matches the bundler's real module set
- *   3. inventory snapshot — signature-level pin on all 142 functions
+ *   3. inventory snapshot — signature-level pin on all 143 functions
  */
 
 import { describe, expect, it } from "vitest";
@@ -205,11 +205,11 @@ const inventoryPromise = loadConvexFunctions();
 
 describe("refs integrity", () => {
   it("extracts every makeFunctionReference call site", () => {
-    // 108 makeFunctionReference calls across 8 files (refs/game 78, refs/lobby 19,
+    // 109 makeFunctionReference calls across 8 files (refs/game 78, refs/lobby 20,
     // refs/history 3, refs/admin 2, refs/leaderboard 1, games/core/webhookHandler 3,
-    // games/core/sessions 1, admin/games 1) + 1 sendBeacon path = the 109 raw strings.
-    expect(refs.length).toBe(108);
-    expect(refs.length + EXTRA_RAW_PATHS.length).toBe(109);
+    // games/core/sessions 1, admin/games 1) + 1 sendBeacon path = the 110 raw strings.
+    expect(refs.length).toBe(109);
+    expect(refs.length + EXTRA_RAW_PATHS.length).toBe(110);
   });
 
   it("passes a string literal as the path to every ref", () => {
@@ -394,9 +394,9 @@ describe("function inventory", () => {
     expect(importErrors).toEqual([]);
   });
 
-  it("has 142 registered functions", async () => {
+  it("has 143 registered functions", async () => {
     const { functions } = await inventoryPromise;
-    expect(functions.length).toBe(142);
+    expect(functions.length).toBe(143);
   });
 
   it("matches the signature snapshot", async () => {

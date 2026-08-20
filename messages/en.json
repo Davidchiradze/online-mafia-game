@@ -669,6 +669,14 @@
       "stopSpectating": "Stop spectating",
       "leaveRoom": "Leave room"
     },
+    "pinPrompt": {
+      "title": "Private Room",
+      "description": "{name} is locked. Enter the 4-digit PIN the host shared with you.",
+      "placeholder": "0000",
+      "enter": "Enter Room",
+      "unlocking": "Unlocking…",
+      "back": "Back to Lobby"
+    },
     "waitingRoom": {
       "leaveRoom": "Leave Waiting Room",
       "tipTitle": "Tip",
